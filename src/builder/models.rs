@@ -30,6 +30,11 @@ pub enum TxIn {
     ScriptTxIn(ScriptTxIn),
 }
 
+pub struct RefTxIn {
+    pub tx_hash: String,
+    pub tx_index: u64,
+}
+
 pub struct PubKeyTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
@@ -100,4 +105,14 @@ pub enum Data {
     Array(Vec<Data>),
     Map(HashMap<Data, Data>),
     Alternative { alternative: u64, fields: Vec<Data> },
+}
+
+pub struct Metadata {
+    pub tag: String,
+    pub metadata: HashMap<String, Data>,
+}
+
+pub struct Datum {
+    pub type_: String,
+    pub data: Data,
 }
