@@ -33,10 +33,30 @@ impl MeshTxBuilderCore {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         }
-        self
+        return self.serialize_tx_body();
     }
 
-    pub fn serialize_tx_body(self, tx_body: MeshTxBuilderBody) -> MeshTxBuilderCore {
+    pub fn serialize_tx_body(mut self) -> MeshTxBuilderCore {
+        self.mesh_tx_builder_body
+            .mints
+            .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
+
+        self.mesh_tx_builder_body.inputs.sort_by(|a, b| {
+            let tx_in_data_a: &TxInParameter = match a {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
+            };
+
+            let tx_in_data_b: &TxInParameter = match b {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
+            };
+
+            tx_in_data_a
+            .tx_hash
+            .cmp(&tx_in_data_b.tx_hash)
+            .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
+        });
         self
     }
 }
