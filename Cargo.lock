@@ -917,6 +917,7 @@ version = "0.1.0"
 dependencies = [
  "cardano-serialization-lib",
  "getrandom",
+ "hex",
  "js-sys",
  "noop_proc_macro",
  "rand_os",

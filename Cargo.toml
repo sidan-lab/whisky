@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 uplc = { git = "https://github.com/aiken-lang/aiken.git", rev = "49bd4ba33d9fd99180cd77321ad799e19f23c6ba", default-features = false}
 getrandom = { version = "0.2", features = ["js"] }
 cardano-serialization-lib = "11.5.0"
+hex = "0.4"
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
