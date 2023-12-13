@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Clone, Debug)]
 pub struct MeshTxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
@@ -13,6 +14,7 @@ pub struct MeshTxBuilderBody {
     pub signing_key: Vec<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct Output {
     pub address: String,
     pub amount: Vec<Asset>,
@@ -20,61 +22,72 @@ pub struct Output {
     pub reference_script: Option<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct ValidityRange {
     pub invalid_before: Option<u64>,
     pub invalid_hereafter: Option<u64>,
 }
 
+#[derive(Clone, Debug)]
 pub enum TxIn {
     PubKeyTxIn(PubKeyTxIn),
     ScriptTxIn(ScriptTxIn),
 }
 
+#[derive(Clone, Debug)]
 pub struct RefTxIn {
     pub tx_hash: String,
     pub tx_index: u64,
 }
 
+#[derive(Clone, Debug)]
 pub struct PubKeyTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
 }
 
+#[derive(Clone, Debug)]
 pub struct ScriptTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
     pub script_tx_in: ScriptTxInParameter,
 }
 
+#[derive(Clone, Debug)]
 pub struct TxInParameter {
     pub tx_hash: String,
-    pub tx_index: u64,
+    pub tx_index: u32,
     pub amount: Option<Vec<Asset>>,
     pub address: Option<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct ScriptTxInParameter {
     pub script_source: Option<ScriptSource>,
     pub datum_source: Option<DatumSource>,
     pub redeemer: Option<Redeemer>,
 }
 
+#[derive(Clone, Debug)]
 pub struct ScriptSource {
     pub type_: String,
     pub script_cbor: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct DatumSource {
     pub type_: String,
     pub data: Data,
 }
 
+#[derive(Clone, Debug)]
 pub struct ScriptSourceInfo {
     pub tx_hash: String,
     pub tx_index: u64,
     pub spending_script_hash: Option<String>,
 }
 
+#[derive(Clone, Debug)]
 pub struct MintItem {
     pub type_: String,
     pub policy_id: String,
@@ -84,21 +97,25 @@ pub struct MintItem {
     pub script_source: Option<ScriptSource>,
 }
 
+#[derive(Clone, Debug)]
 pub struct Redeemer {
     pub data: Data,
     pub ex_units: Budget,
 }
 
+#[derive(Clone, Debug)]
 pub struct Asset {
     pub unit: String,
     pub quantity: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct Budget {
     pub mem: u64,
     pub steps: u64,
 }
 
+#[derive(Clone, Debug)]
 pub enum Data {
     String(String),
     Number(u64),
@@ -107,11 +124,13 @@ pub enum Data {
     Alternative { alternative: u64, fields: Vec<Data> },
 }
 
+#[derive(Clone, Debug)]
 pub struct Metadata {
     pub tag: String,
     pub metadata: HashMap<String, Data>,
 }
 
+#[derive(Clone, Debug)]
 pub struct Datum {
     pub type_: String,
     pub data: Data,
