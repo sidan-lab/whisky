@@ -1,9 +1,12 @@
-use cardano_serialization_lib::tx_builder::TransactionBuilder;
+use cardano_serialization_lib as csl;
 
-use crate::{builder::models::*, utils::csl::build_tx_builder};
+use crate::{
+    builder::models::*,
+    utils::csl::{build_tx_builder, to_value},
+};
 
 pub struct MeshTxBuilderCore {
-    tx_builder: TransactionBuilder,
+    tx_builder: csl::tx_builder::TransactionBuilder,
     mesh_tx_builder_body: MeshTxBuilderBody,
 }
 
@@ -29,14 +32,17 @@ impl MeshTxBuilderCore {
         }
     }
 
-    pub fn complete_sync(mut self, customized_tx: Option<MeshTxBuilderBody>) -> MeshTxBuilderCore {
+    pub fn complete_sync(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> &mut MeshTxBuilderCore {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         }
         return self.serialize_tx_body();
     }
 
-    pub fn serialize_tx_body(mut self) -> MeshTxBuilderCore {
+    pub fn serialize_tx_body(&mut self) -> &mut MeshTxBuilderCore {
         self.mesh_tx_builder_body
             .mints
             .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
@@ -53,10 +59,33 @@ impl MeshTxBuilderCore {
             };
 
             tx_in_data_a
-            .tx_hash
-            .cmp(&tx_in_data_b.tx_hash)
-            .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
+                .tx_hash
+                .cmp(&tx_in_data_b.tx_hash)
+                .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
         self
     }
+
+    fn add_all_inputs(&mut self, inputs: &Vec<TxIn>) {
+        for input in inputs.iter() {
+            match input {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => self.addTxIn(pub_key_tx_in),
+                TxIn::ScriptTxIn(script_tx_in) => self.addScriptTxIn(script_tx_in),
+            };
+        }
+    }
+
+    fn addTxIn(&mut self, input: &PubKeyTxIn) {
+        self.tx_builder.add_input(
+            &csl::address::Address::from_bech32(&input.tx_in.address.clone().unwrap().to_string())
+                .unwrap(),
+            &csl::TransactionInput::new(
+                &csl::crypto::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
+                input.tx_in.tx_index,
+            ),
+            &to_value(&input.tx_in.amount.clone().unwrap()),
+        )
+    }
+
+    fn addScriptTxIn(&mut self, input: &ScriptTxIn) {}
 }
