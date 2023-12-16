@@ -63,29 +63,29 @@ impl MeshTxBuilderCore {
                 .cmp(&tx_in_data_b.tx_hash)
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
+        self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self
     }
 
-    fn add_all_inputs(&mut self, inputs: &Vec<TxIn>) {
-        for input in inputs.iter() {
+    fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
+        for input in inputs {
             match input {
-                TxIn::PubKeyTxIn(pub_key_tx_in) => self.addTxIn(pub_key_tx_in),
-                TxIn::ScriptTxIn(script_tx_in) => self.addScriptTxIn(script_tx_in),
+                TxIn::PubKeyTxIn(pub_key_tx_in) => self.add_tx_in(pub_key_tx_in),
+                TxIn::ScriptTxIn(script_tx_in) => self.add_script_tx_in(script_tx_in),
             };
         }
     }
 
-    fn addTxIn(&mut self, input: &PubKeyTxIn) {
+    fn add_tx_in(&mut self, input: PubKeyTxIn) {
         self.tx_builder.add_input(
-            &csl::address::Address::from_bech32(&input.tx_in.address.clone().unwrap().to_string())
-                .unwrap(),
+            &csl::address::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
             &csl::TransactionInput::new(
                 &csl::crypto::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
                 input.tx_in.tx_index,
             ),
-            &to_value(&input.tx_in.amount.clone().unwrap()),
+            &to_value(&input.tx_in.amount.unwrap()),
         )
     }
 
-    fn addScriptTxIn(&mut self, input: &ScriptTxIn) {}
+    fn add_script_tx_in(&mut self, input: ScriptTxIn) {}
 }
