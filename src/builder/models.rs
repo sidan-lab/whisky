@@ -69,21 +69,52 @@ pub struct ScriptTxInParameter {
 }
 
 #[derive(Clone, Debug)]
-pub struct ScriptSource {
-    pub type_: String,
-    pub script_cbor: String,
+pub enum ScriptSource {
+    ProvidedScriptSource(ProvidedScriptSource),
+    InlineScriptSource(InlineScriptSource),
 }
 
 #[derive(Clone, Debug)]
-pub struct DatumSource {
-    pub type_: String,
-    pub data: Data,
+pub struct ProvidedScriptSource {
+    pub script_cbor: String,
+    pub language_version: LanguageVersion,
+}
+
+#[derive(Clone, Debug)]
+pub struct InlineScriptSource {
+    pub tx_hash: String,
+    pub tx_index: u32,
+    pub spending_script_hash: String,
+    pub language_version: LanguageVersion
+}
+
+#[derive(Clone, Debug)]
+pub enum LanguageVersion {
+    V1,
+    V2,
+}
+
+#[derive(Clone, Debug)]
+pub enum DatumSource {
+    ProvidedDatumSource(ProvidedDatumSource),
+    InlineDatumSource(InlineDatumSource),
+}
+
+#[derive(Clone, Debug)]
+pub struct ProvidedDatumSource {
+    pub data: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct InlineDatumSource {
+    pub tx_hash: String,
+    pub tx_index: u32,
 }
 
 #[derive(Clone, Debug)]
 pub struct ScriptSourceInfo {
     pub tx_hash: String,
-    pub tx_index: u64,
+    pub tx_index: u32,
     pub spending_script_hash: Option<String>,
 }
 
@@ -99,7 +130,7 @@ pub struct MintItem {
 
 #[derive(Clone, Debug)]
 pub struct Redeemer {
-    pub data: Data,
+    pub data: String,
     pub ex_units: Budget,
 }
 
@@ -116,22 +147,13 @@ pub struct Budget {
 }
 
 #[derive(Clone, Debug)]
-pub enum Data {
-    String(String),
-    Number(u64),
-    Array(Vec<Data>),
-    Map(HashMap<Data, Data>),
-    Alternative { alternative: u64, fields: Vec<Data> },
-}
-
-#[derive(Clone, Debug)]
 pub struct Metadata {
     pub tag: String,
-    pub metadata: HashMap<String, Data>,
+    pub metadata: HashMap<String, String>,
 }
 
 #[derive(Clone, Debug)]
 pub struct Datum {
     pub type_: String,
-    pub data: Data,
+    pub data: String,
 }
