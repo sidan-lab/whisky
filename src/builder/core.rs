@@ -178,7 +178,53 @@ impl MeshTxBuilderCore {
 
     fn add_all_outputs(&mut self, outputs: Vec<Output>) {
         for output in outputs {
+            self.add_output(output);
+        }
+    }
 
+    fn add_output(&mut self, output: Output) {
+        let tx_value = to_value(&output.amount);
+        let mut output_builder = csl::output_builder::TransactionOutputBuilder::new()
+            .with_address(&csl::address::Address::from_bech32(&output.address).unwrap());
+        if output.datum.is_some() {
+            let datum = output.datum.unwrap();
+
+            match datum.type_.as_str() {
+                "Hash" => {
+                    output_builder = output_builder.with_data_hash(&csl::utils::hash_plutus_data(
+                        &csl::plutus::PlutusData::from_json(
+                            &datum.data,
+                            csl::plutus::PlutusDatumSchema::DetailedSchema,
+                        )
+                        .unwrap(),
+                    ))
+                }
+                "Inline" => {
+                    output_builder = output_builder.with_plutus_data(
+                        &csl::plutus::PlutusData::from_json(
+                            &datum.data,
+                            csl::plutus::PlutusDatumSchema::DetailedSchema,
+                        )
+                        .unwrap(),
+                    )
+                }
+                _ => {}
+            };
+        }
+
+        if output.reference_script.is_some() {
+            let output_script = output.reference_script.unwrap();
+            let language_version: csl::plutus::Language = match output_script.language_version {
+                LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
+                LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
+            };
+            output_builder = output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
+                &csl::plutus::PlutusScript::from_hex_with_version(
+                    &output_script.script_cbor,
+                    &language_version,
+                )
+                .unwrap(),
+            ))
         }
     }
 }
