@@ -66,6 +66,7 @@ impl MeshTxBuilderCore {
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
+        self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self
     }
 
@@ -173,5 +174,11 @@ impl MeshTxBuilderCore {
             ),
             &to_value(&input.tx_in.amount.unwrap()),
         )
+    }
+
+    fn add_all_outputs(&mut self, outputs: Vec<Output>) {
+        for output in outputs {
+
+        }
     }
 }
