@@ -68,6 +68,7 @@ impl MeshTxBuilderCore {
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
+        self.add_all_reference_inputs(self.mesh_tx_builder_body.reference_inputs.clone());
         self
     }
 
@@ -275,4 +276,8 @@ impl MeshTxBuilderCore {
             &to_value(&collateral.tx_in.amount.unwrap()),
         )
     }
+
+    fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>) {}
+
+    fn add_reference_input(&mut self, ref_input: RefTxIn) {}
 }
