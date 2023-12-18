@@ -68,6 +68,7 @@ impl MeshTxBuilderCore {
         });
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
+        self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
         self
     }
 
@@ -251,5 +252,15 @@ impl MeshTxBuilderCore {
             built_output = amount_builder.with_coin(&tx_value.coin()).build().unwrap();
         }
         let _ = self.tx_builder.add_output(&built_output);
+    }
+
+    fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
+        for collteral in collaterals {
+
+        }
+    }
+
+    fn add_collateral(&mut self, collateral: PubKeyTxIn) {
+
     }
 }
