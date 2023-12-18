@@ -255,12 +255,25 @@ impl MeshTxBuilderCore {
     }
 
     fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
-        for collteral in collaterals {
-
+        let mut collateral_builder = csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new();
+        for collateral in collaterals {
+            self.add_collateral(&mut collateral_builder, collateral)
         }
+        self.tx_builder.set_collateral(&collateral_builder)
     }
 
-    fn add_collateral(&mut self, collateral: PubKeyTxIn) {
-
+    fn add_collateral(
+        &mut self,
+        collateral_builder: &mut csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
+        collateral: PubKeyTxIn,
+    ) {
+        collateral_builder.add_input(
+            &csl::address::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
+            &csl::TransactionInput::new(
+                &csl::crypto::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
+                collateral.tx_in.tx_index,
+            ),
+            &to_value(&collateral.tx_in.amount.unwrap()),
+        )
     }
 }
