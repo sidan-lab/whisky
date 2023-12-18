@@ -19,7 +19,7 @@ pub struct Output {
     pub address: String,
     pub amount: Vec<Asset>,
     pub datum: Option<Datum>,
-    pub reference_script: Option<String>,
+    pub reference_script: Option<ProvidedScriptSource>,
 }
 
 #[derive(Clone, Debug)]
