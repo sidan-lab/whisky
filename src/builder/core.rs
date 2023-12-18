@@ -1,5 +1,4 @@
 use cardano_serialization_lib as csl;
-use csl::TransactionOutput;
 
 use crate::{
     builder::models::*,
