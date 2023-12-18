@@ -1,4 +1,5 @@
 use cardano_serialization_lib as csl;
+use csl::TransactionOutput;
 
 use crate::{
     builder::models::*,
@@ -183,7 +184,6 @@ impl MeshTxBuilderCore {
     }
 
     fn add_output(&mut self, output: Output) {
-        let tx_value = to_value(&output.amount);
         let mut output_builder = csl::output_builder::TransactionOutputBuilder::new()
             .with_address(&csl::address::Address::from_bech32(&output.address).unwrap());
         if output.datum.is_some() {
@@ -226,5 +226,30 @@ impl MeshTxBuilderCore {
                 .unwrap(),
             ))
         }
+
+        let tx_value = to_value(&output.amount);
+        let amount_builder = output_builder.next().unwrap();
+        let built_output: csl::TransactionOutput;
+
+        if tx_value.multiasset().is_some() {
+            built_output = if tx_value.coin().is_zero() {
+                amount_builder
+                    .with_asset_and_min_required_coin_by_utxo_cost(
+                        &tx_value.multiasset().unwrap(),
+                        &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
+                    )
+                    .unwrap()
+                    .build()
+                    .unwrap()
+            } else {
+                amount_builder
+                    .with_coin_and_asset(&tx_value.coin(), &tx_value.multiasset().unwrap())
+                    .build()
+                    .unwrap()
+            };
+        } else {
+            built_output = amount_builder.with_coin(&tx_value.coin()).build().unwrap();
+        }
+        let _ = self.tx_builder.add_output(&built_output);
     }
 }
