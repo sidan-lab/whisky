@@ -69,6 +69,7 @@ impl MeshTxBuilderCore {
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
         self.add_all_reference_inputs(self.mesh_tx_builder_body.reference_inputs.clone());
+        self.add_all_mints(self.mesh_tx_builder_body.mints.clone());
         self
     }
 
@@ -274,7 +275,7 @@ impl MeshTxBuilderCore {
                 collateral.tx_in.tx_index,
             ),
             &to_value(&collateral.tx_in.amount.unwrap()),
-        )
+        );
     }
 
     fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>) {
@@ -289,5 +290,84 @@ impl MeshTxBuilderCore {
             ref_input.tx_index,
         );
         self.tx_builder.add_reference_input(&csl_ref_input);
+    }
+
+    fn add_all_mints(&mut self, mints: Vec<MintItem>) {
+        let mut mint_builder = csl::tx_builder::mint_builder::MintBuilder::new();
+        for (index, mint) in mints.into_iter().enumerate() {
+            match mint.type_.as_str() {
+                "Plutus" => self.add_plutus_mint(&mut mint_builder, mint, index as u64),
+                "Native" => self.add_native_mint(&mut mint_builder, mint),
+                _ => {}
+            };
+        }
+    }
+
+    fn add_plutus_mint(
+        &mut self,
+        mint_builder: &mut csl::tx_builder::mint_builder::MintBuilder,
+        mint: MintItem,
+        index: u64,
+    ) {
+        let redeemer_info = mint.redeemer.unwrap();
+        let mint_redeemer = csl::plutus::Redeemer::new(
+            &csl::plutus::RedeemerTag::new_mint(),
+            &to_bignum(index),
+            &csl::plutus::PlutusData::from_json(
+                &redeemer_info.data,
+                csl::plutus::PlutusDatumSchema::DetailedSchema,
+            )
+            .unwrap(),
+            &csl::plutus::ExUnits::new(
+                &to_bignum(redeemer_info.ex_units.mem),
+                &to_bignum(redeemer_info.ex_units.steps),
+            ),
+        );
+        let script_source_info = mint.script_source.unwrap();
+        let mint_script = match script_source_info {
+            ScriptSource::InlineScriptSource(script) => {
+                let language_version: csl::plutus::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
+                };
+                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new_ref_input_with_lang_ver(
+                    &csl::crypto::ScriptHash::from_hex(&mint.policy_id.as_str()).unwrap(),
+                    &csl::TransactionInput::new(
+                        &csl::crypto::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        script.tx_index,
+                    ),
+                    &language_version,
+                )
+            }
+            ScriptSource::ProvidedScriptSource(script) => {
+                let language_version: csl::plutus::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
+                };
+                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
+                    &csl::plutus::PlutusScript::from_hex_with_version(
+                        &script.script_cbor.as_str(),
+                        &language_version,
+                    )
+                    .unwrap(),
+                )
+            }
+        };
+
+        mint_builder.add_asset(
+            &csl::tx_builder::mint_builder::MintWitness::new_plutus_script(
+                &mint_script,
+                &mint_redeemer,
+            ),
+            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+            &csl::utils::Int::new_i32(mint.amount.try_into().unwrap()),
+        );
+    }
+
+    fn add_native_mint(
+        &mut self,
+        mint_builder: &mut csl::tx_builder::mint_builder::MintBuilder,
+        mint: MintItem,
+    ) {
     }
 }
