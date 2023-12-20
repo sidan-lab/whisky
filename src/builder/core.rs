@@ -73,6 +73,8 @@ impl MeshTxBuilderCore {
         self.add_validity_range(self.mesh_tx_builder_body.validity_range.clone());
         self.add_all_required_signature(self.mesh_tx_builder_body.required_signatures.clone());
         self.add_all_metadata(self.mesh_tx_builder_body.metadata.clone());
+
+        self.add_script_hash();
         self
     }
 
@@ -416,5 +418,11 @@ impl MeshTxBuilderCore {
                 )
                 .unwrap()
         }
+    }
+
+    fn add_script_hash(&mut self) {
+        let _ = self.tx_builder.calc_script_data_hash(
+            &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models()
+        );
     }
 }
