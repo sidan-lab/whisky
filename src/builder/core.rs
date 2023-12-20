@@ -75,6 +75,18 @@ impl MeshTxBuilderCore {
         self.add_all_metadata(self.mesh_tx_builder_body.metadata.clone());
 
         self.add_script_hash();
+        if self.mesh_tx_builder_body.change_address != "" {
+            let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
+            let collateral_vec: Vec<u64> = collateral_inputs.into_iter().map(|pub_key_tx_in| {
+                let assets = pub_key_tx_in.tx_in.amount.unwrap();
+                let lovelace = assets
+                    .into_iter()
+                    .find(|asset| asset.unit == "lovelace")
+                    .unwrap();
+                lovelace.quantity.parse::<u64>().unwrap()
+            }).collect();
+            let total_collateral: u64 = collateral_vec.into_iter().sum();
+        }
         self
     }
 
@@ -422,7 +434,7 @@ impl MeshTxBuilderCore {
 
     fn add_script_hash(&mut self) {
         let _ = self.tx_builder.calc_script_data_hash(
-            &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models()
+            &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
         );
     }
 }
