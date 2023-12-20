@@ -37,7 +37,7 @@ pub enum TxIn {
 #[derive(Clone, Debug)]
 pub struct RefTxIn {
     pub tx_hash: String,
-    pub tx_index: u64,
+    pub tx_index: u32,
 }
 
 #[derive(Clone, Debug)]
