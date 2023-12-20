@@ -77,15 +77,31 @@ impl MeshTxBuilderCore {
         self.add_script_hash();
         if self.mesh_tx_builder_body.change_address != "" {
             let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
-            let collateral_vec: Vec<u64> = collateral_inputs.into_iter().map(|pub_key_tx_in| {
-                let assets = pub_key_tx_in.tx_in.amount.unwrap();
-                let lovelace = assets
-                    .into_iter()
-                    .find(|asset| asset.unit == "lovelace")
-                    .unwrap();
-                lovelace.quantity.parse::<u64>().unwrap()
-            }).collect();
+            let collateral_vec: Vec<u64> = collateral_inputs
+                .into_iter()
+                .map(|pub_key_tx_in| {
+                    let assets = pub_key_tx_in.tx_in.amount.unwrap();
+                    let lovelace = assets
+                        .into_iter()
+                        .find(|asset| asset.unit == "lovelace")
+                        .unwrap();
+                    lovelace.quantity.parse::<u64>().unwrap()
+                })
+                .collect();
             let total_collateral: u64 = collateral_vec.into_iter().sum();
+
+            let collateral_estimate: u64 = (150
+                * self
+                    .tx_builder
+                    .min_fee()
+                    .unwrap()
+                    .checked_add(&to_bignum(10000))
+                    .unwrap()
+                    .to_string()
+                    .parse::<u64>()
+                    .unwrap())
+                / 100;
+
         }
         self
     }
