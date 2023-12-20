@@ -277,7 +277,17 @@ impl MeshTxBuilderCore {
         )
     }
 
-    fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>) {}
+    fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>) {
+        for ref_input in ref_inputs {
+            self.add_reference_input(ref_input);
+        }
+    }
 
-    fn add_reference_input(&mut self, ref_input: RefTxIn) {}
+    fn add_reference_input(&mut self, ref_input: RefTxIn) {
+        let csl_ref_input = csl::TransactionInput::new(
+            &csl::crypto::TransactionHash::from_hex(&ref_input.tx_hash).unwrap(),
+            ref_input.tx_index,
+        );
+        self.tx_builder.add_reference_input(&csl_ref_input);
+    }
 }
