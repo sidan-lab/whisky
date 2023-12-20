@@ -369,5 +369,18 @@ impl MeshTxBuilderCore {
         mint_builder: &mut csl::tx_builder::mint_builder::MintBuilder,
         mint: MintItem,
     ) {
+        let script_info = mint.script_source.unwrap();
+        match script_info {
+            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
+                &csl::tx_builder::mint_builder::MintWitness::new_native_script(
+                    &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
+                ),
+                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+                &csl::utils::Int::new_i32(mint.amount.try_into().unwrap()),
+            ),
+            ScriptSource::InlineScriptSource(_) => {
+                panic!("Native scripts cannot be referenced")
+            }
+        }
     }
 }
