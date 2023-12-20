@@ -85,7 +85,7 @@ pub struct InlineScriptSource {
     pub tx_hash: String,
     pub tx_index: u32,
     pub spending_script_hash: String,
-    pub language_version: LanguageVersion
+    pub language_version: LanguageVersion,
 }
 
 #[derive(Clone, Debug)]
