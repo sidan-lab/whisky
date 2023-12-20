@@ -70,6 +70,7 @@ impl MeshTxBuilderCore {
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
         self.add_all_reference_inputs(self.mesh_tx_builder_body.reference_inputs.clone());
         self.add_all_mints(self.mesh_tx_builder_body.mints.clone());
+        self.add_validity_range(self.mesh_tx_builder_body.validity_range.clone());
         self
     }
 
@@ -381,6 +382,19 @@ impl MeshTxBuilderCore {
             ScriptSource::InlineScriptSource(_) => {
                 panic!("Native scripts cannot be referenced")
             }
+        }
+    }
+
+    fn add_validity_range(&mut self, validity_range: ValidityRange) {
+        if validity_range.invalid_before.is_some() {
+            self.tx_builder
+                .set_validity_start_interval_bignum(to_bignum(
+                    validity_range.invalid_before.unwrap(),
+                ));
+        }
+        if validity_range.invalid_hereafter.is_some() {
+            self.tx_builder
+                .set_ttl_bignum(&to_bignum(validity_range.invalid_hereafter.unwrap()));
         }
     }
 }
