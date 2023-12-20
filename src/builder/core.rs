@@ -102,6 +102,44 @@ impl MeshTxBuilderCore {
                     .unwrap())
                 / 100;
 
+            let mut collateral_return_needed = false;
+
+            if total_collateral - collateral_estimate > 0 {
+                let collateral_estimate_output = csl::TransactionOutput::new(
+                    &csl::address::Address::from_bech32(&self.mesh_tx_builder_body.change_address)
+                        .unwrap(),
+                    &csl::utils::Value::new(&to_bignum(collateral_estimate)),
+                );
+
+                let min_ada = csl::utils::min_ada_for_output(
+                    &collateral_estimate_output,
+                    &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
+                )
+                .unwrap()
+                .to_string()
+                .parse::<u64>()
+                .unwrap();
+
+                if total_collateral - collateral_estimate > min_ada {
+                    self.tx_builder
+                        .set_collateral_return(&csl::TransactionOutput::new(
+                            &csl::address::Address::from_bech32(
+                                &self.mesh_tx_builder_body.change_address,
+                            )
+                            .unwrap(),
+                            &csl::utils::Value::new(&to_bignum(total_collateral)),
+                        ));
+
+                    self.tx_builder
+                        .set_total_collateral(&to_bignum(total_collateral));
+
+                    collateral_return_needed = true;
+                }
+            }
+            self.add_change(self.mesh_tx_builder_body.change_address.clone());
+            if collateral_return_needed {
+                self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
+            }
         }
         self
     }
@@ -452,5 +490,15 @@ impl MeshTxBuilderCore {
         let _ = self.tx_builder.calc_script_data_hash(
             &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
         );
+    }
+
+    fn add_change(&mut self, change_address: String) {
+        let _ = self
+            .tx_builder
+            .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap());
+    }
+
+    fn add_collateral_return(&mut self, change_address: String) {
+        
     }
 }
