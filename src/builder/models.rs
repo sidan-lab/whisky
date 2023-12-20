@@ -149,7 +149,7 @@ pub struct Budget {
 #[derive(Clone, Debug)]
 pub struct Metadata {
     pub tag: String,
-    pub metadata: HashMap<String, String>,
+    pub metadata: String,
 }
 
 #[derive(Clone, Debug)]
