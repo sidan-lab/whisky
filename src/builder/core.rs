@@ -6,6 +6,7 @@ use crate::{
 };
 
 pub struct MeshTxBuilderCore {
+    pub tx_hex: String,
     pub tx_builder: csl::tx_builder::TransactionBuilder,
     pub tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
@@ -14,6 +15,7 @@ pub struct MeshTxBuilderCore {
 impl MeshTxBuilderCore {
     pub fn new() -> Self {
         Self {
+            tx_hex: "".to_string(),
             tx_builder: build_tx_builder(),
             tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new(),
             mesh_tx_builder_body: MeshTxBuilderBody {
@@ -23,7 +25,7 @@ impl MeshTxBuilderCore {
                 required_signatures: vec![],
                 reference_inputs: vec![],
                 mints: vec![],
-                change_address: String::from(""),
+                change_address: "".to_string(),
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -141,6 +143,7 @@ impl MeshTxBuilderCore {
                 self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
             }
         }
+        self.build_tx();
         self
     }
 
@@ -499,6 +502,23 @@ impl MeshTxBuilderCore {
     }
 
     fn add_collateral_return(&mut self, change_address: String) {
-        
+        let current_fee = self
+            .tx_builder
+            .get_fee_if_set()
+            .unwrap()
+            .to_string()
+            .parse::<u64>()
+            .unwrap();
+
+        let collateral_amount = 150 * ((current_fee / 100) + 1);
+        let _ = self.tx_builder.set_total_collateral_and_return(
+            &to_bignum(collateral_amount),
+            &csl::address::Address::from_bech32(&change_address).unwrap(),
+        );
+    }
+
+    fn build_tx(&mut self) {
+        let tx = self.tx_builder.build_tx().unwrap();
+        self.tx_hex = tx.to_hex();
     }
 }
