@@ -72,6 +72,7 @@ impl MeshTxBuilderCore {
         self.add_all_mints(self.mesh_tx_builder_body.mints.clone());
         self.add_validity_range(self.mesh_tx_builder_body.validity_range.clone());
         self.add_all_required_signature(self.mesh_tx_builder_body.required_signatures.clone());
+        self.add_all_metadata(self.mesh_tx_builder_body.metadata.clone());
         self
     }
 
@@ -401,9 +402,19 @@ impl MeshTxBuilderCore {
 
     fn add_all_required_signature(&mut self, required_signatures: Vec<String>) {
         for pub_key_hash in required_signatures {
-            self.tx_builder.add_required_signer(
-                &csl::crypto::Ed25519KeyHash::from_hex(&pub_key_hash).unwrap()
-            )
+            self.tx_builder
+                .add_required_signer(&csl::crypto::Ed25519KeyHash::from_hex(&pub_key_hash).unwrap())
+        }
+    }
+
+    fn add_all_metadata(&mut self, all_metadata: Vec<Metadata>) {
+        for metadata in all_metadata {
+            self.tx_builder
+                .add_json_metadatum(
+                    &csl::utils::BigNum::from_str(&metadata.tag).unwrap(),
+                    metadata.metadata,
+                )
+                .unwrap()
         }
     }
 }
