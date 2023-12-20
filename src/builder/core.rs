@@ -6,9 +6,9 @@ use crate::{
 };
 
 pub struct MeshTxBuilderCore {
-    tx_builder: csl::tx_builder::TransactionBuilder,
-    tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
-    mesh_tx_builder_body: MeshTxBuilderBody,
+    pub tx_builder: csl::tx_builder::TransactionBuilder,
+    pub tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
+    pub mesh_tx_builder_body: MeshTxBuilderBody,
 }
 
 impl MeshTxBuilderCore {
