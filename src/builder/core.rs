@@ -1,4 +1,5 @@
 use cardano_serialization_lib as csl;
+use uplc::tx;
 
 use crate::{
     builder::models::*,
@@ -10,6 +11,9 @@ pub struct MeshTxBuilderCore {
     pub tx_builder: csl::tx_builder::TransactionBuilder,
     pub tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
+
+    tx_in_item: Option<TxIn>,
+    adding_script_input: bool,
 }
 
 impl MeshTxBuilderCore {
@@ -33,6 +37,8 @@ impl MeshTxBuilderCore {
                 },
                 signing_key: vec![],
             },
+            tx_in_item: None,
+            adding_script_input: false,
         }
     }
 
@@ -145,6 +151,70 @@ impl MeshTxBuilderCore {
         }
         self.build_tx();
         self
+    }
+
+    pub fn tx_in(
+        &mut self,
+        tx_hash: String,
+        tx_index: u32,
+        amount: Vec<Asset>,
+        address: String,
+    ) -> &mut MeshTxBuilderCore {
+        if self.tx_in_item.is_some() {
+            self.queue_input();
+        }
+        if !self.adding_script_input {
+            let item = TxIn::PubKeyTxIn(PubKeyTxIn {
+                type_: "PubKey".to_string(),
+                tx_in: TxInParameter {
+                    tx_hash: tx_hash,
+                    tx_index: tx_index,
+                    amount: Some(amount),
+                    address: Some(address),
+                },
+            });
+            self.tx_in_item = Some(item);
+        } else {
+            let item = TxIn::ScriptTxIn(ScriptTxIn {
+                type_: "Script".to_string(),
+                tx_in: TxInParameter {
+                    tx_hash: tx_hash,
+                    tx_index: tx_index,
+                    amount: Some(amount),
+                    address: Some(address),
+                },
+                script_tx_in: ScriptTxInParameter {
+                    script_source: None,
+                    datum_source: None,
+                    redeemer: None,
+                },
+            });
+            self.tx_in_item = Some(item);
+        }
+        self
+    }
+
+    fn queue_input(&mut self) {
+        let tx_in_item = self.tx_in_item.clone().unwrap();
+        match tx_in_item {
+            TxIn::ScriptTxIn(tx_in) => {
+                match (
+                    tx_in.script_tx_in.datum_source,
+                    tx_in.script_tx_in.redeemer,
+                    tx_in.script_tx_in.script_source,
+                ) {
+                    (None, _, _) => panic!("Datum in a script input cannot be None"),
+                    (_, None, _) => panic!("Redeemer in script input cannot be None"),
+                    (_, _, None) => panic!("Script source in script input cannot be None"),
+                    _ => {}
+                }
+            }
+            TxIn::PubKeyTxIn(_) => {}
+        }
+        self.mesh_tx_builder_body
+            .inputs
+            .push(self.tx_in_item.clone().unwrap());
+        self.tx_in_item = None
     }
 
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
