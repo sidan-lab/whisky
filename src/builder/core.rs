@@ -270,8 +270,8 @@ impl MeshTxBuilderCore {
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::InlineDatumSource(InlineDatumSource {
-                        tx_hash: input.tx_in.tx_hash,
-                        tx_index: input.tx_in.tx_index,
+                        tx_hash: input.tx_in.tx_hash.clone(),
+                        tx_index: input.tx_in.tx_index.clone(),
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
