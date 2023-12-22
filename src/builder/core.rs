@@ -241,6 +241,25 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn tx_in_datum_value(&mut self, data: String) -> &mut MeshTxBuilderCore {
+        let tx_in_item = self.tx_in_item.take();
+        if tx_in_item.is_none() {
+            panic!("Undefined input")
+        }
+        let tx_in_item = tx_in_item.unwrap();
+        match tx_in_item {
+            TxIn::PubKeyTxIn(_) => panic!("Datum cannot be defined for a pubkey tx in"),
+            TxIn::ScriptTxIn(mut input) => {
+                input.script_tx_in.datum_source =
+                    Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
+                        data,
+                    }));
+                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+            }
+        }
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
