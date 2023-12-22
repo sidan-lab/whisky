@@ -167,8 +167,8 @@ impl MeshTxBuilderCore {
             let item = TxIn::PubKeyTxIn(PubKeyTxIn {
                 type_: "PubKey".to_string(),
                 tx_in: TxInParameter {
-                    tx_hash: tx_hash,
-                    tx_index: tx_index,
+                    tx_hash,
+                    tx_index,
                     amount: Some(amount),
                     address: Some(address),
                 },
@@ -178,8 +178,8 @@ impl MeshTxBuilderCore {
             let item = TxIn::ScriptTxIn(ScriptTxIn {
                 type_: "Script".to_string(),
                 tx_in: TxInParameter {
-                    tx_hash: tx_hash,
-                    tx_index: tx_index,
+                    tx_hash,
+                    tx_index,
                     amount: Some(amount),
                     address: Some(address),
                 },
