@@ -1,5 +1,4 @@
 use cardano_serialization_lib as csl;
-use uplc::tx;
 
 use crate::{
     builder::models::*,
@@ -253,6 +252,26 @@ impl MeshTxBuilderCore {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
                         data,
+                    }));
+                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+            }
+        }
+        self
+    }
+
+    pub fn tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
+        let tx_in_item = self.tx_in_item.take();
+        if tx_in_item.is_none() {
+            panic!("Undefined input")
+        }
+        let tx_in_item = tx_in_item.unwrap();
+        match tx_in_item {
+            TxIn::PubKeyTxIn(_) => panic!("Datum cannot be defined for a pubkey tx in"),
+            TxIn::ScriptTxIn(mut input) => {
+                input.script_tx_in.datum_source =
+                    Some(DatumSource::InlineDatumSource(InlineDatumSource {
+                        tx_hash: input.tx_in.tx_hash,
+                        tx_index: input.tx_in.tx_index,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
