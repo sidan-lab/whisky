@@ -12,6 +12,7 @@ pub struct MeshTxBuilderCore {
     pub mesh_tx_builder_body: MeshTxBuilderBody,
 
     tx_in_item: Option<TxIn>,
+    tx_output: Option<Output>,
     adding_script_input: bool,
 }
 
@@ -37,6 +38,7 @@ impl MeshTxBuilderCore {
                 signing_key: vec![],
             },
             tx_in_item: None,
+            tx_output: None,
             adding_script_input: false,
         }
     }
@@ -276,6 +278,24 @@ impl MeshTxBuilderCore {
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
         }
+        self
+    }
+
+    pub fn tx_out_reference_script(
+        &mut self,
+        script_cbor: String,
+        version: LanguageVersion,
+    ) -> &mut MeshTxBuilderCore {
+        let tx_output = self.tx_output.take();
+        if tx_output.is_none() {
+            panic!("Undefined output")
+        }
+        let mut tx_output = tx_output.unwrap();
+        tx_output.reference_script = Some(ProvidedScriptSource {
+            script_cbor,
+            language_version: version,
+        });
+        self.tx_output = Some(tx_output);
         self
     }
 
