@@ -504,6 +504,11 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn change_address(&mut self, address: String) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body.change_address = address;
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
