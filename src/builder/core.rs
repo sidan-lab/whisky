@@ -426,6 +426,28 @@ impl MeshTxBuilderCore {
             script_cbor,
             language_version: version,
         }));
+        self.mint_item = Some(mint_item);
+        self
+    }
+
+    pub fn mint_tx_in_reference(
+        &mut self,
+        tx_hash: String,
+        tx_index: u32,
+        spending_script_hash: String,
+        version: LanguageVersion,
+    ) -> &mut MeshTxBuilderCore {
+        let mint_item = self.mint_item.take();
+        if mint_item.is_none() {
+            panic!("Undefined mint");
+        }
+        let mut mint_item = mint_item.unwrap();
+        mint_item.script_source = Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+            tx_hash,
+            tx_index,
+            spending_script_hash,
+            language_version: version,
+        }));
         self
     }
 
