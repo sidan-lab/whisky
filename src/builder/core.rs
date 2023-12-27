@@ -12,6 +12,7 @@ pub struct MeshTxBuilderCore {
     pub mesh_tx_builder_body: MeshTxBuilderBody,
 
     tx_in_item: Option<TxIn>,
+    mint_item: Option<MintItem>,
     tx_output: Option<Output>,
     adding_script_input: bool,
     adding_plutus_mint: bool,
@@ -39,6 +40,7 @@ impl MeshTxBuilderCore {
                 signing_key: vec![],
             },
             tx_in_item: None,
+            mint_item: None,
             tx_output: None,
             adding_script_input: false,
             adding_plutus_mint: false,
@@ -218,6 +220,15 @@ impl MeshTxBuilderCore {
             .inputs
             .push(self.tx_in_item.clone().unwrap());
         self.tx_in_item = None
+    }
+
+    fn queue_mint(&mut self) {
+        let mint_item = self.mint_item.clone().unwrap();
+        if mint_item.script_source.is_none() {
+            panic!("Missing mint script information");
+        }
+        self.mesh_tx_builder_body.mints.push(mint_item);
+        self.mint_item = None;
     }
 
     pub fn tx_in_script(
