@@ -361,6 +361,17 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn read_only_tx_in_reference(
+        &mut self,
+        tx_hash: String,
+        tx_index: u32,
+    ) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body
+            .reference_inputs
+            .push(RefTxIn { tx_hash, tx_index });
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
