@@ -519,6 +519,13 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn metadata_value(&mut self, tag: String, metadata: String) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body
+            .metadata
+            .push(Metadata { tag, metadata });
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
