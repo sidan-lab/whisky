@@ -324,11 +324,16 @@ impl MeshTxBuilderCore {
                         tx_hash,
                         tx_index,
                         spending_script_hash,
-                        language_version: version
+                        language_version: version,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
         }
+        self
+    }
+
+    pub fn spending_reference_tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
+        self.tx_in_inline_datum_present();
         self
     }
 
