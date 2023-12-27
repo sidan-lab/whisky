@@ -1,5 +1,4 @@
 use cardano_serialization_lib as csl;
-use csl::Mint;
 
 use crate::{
     builder::models::*,
@@ -55,7 +54,7 @@ impl MeshTxBuilderCore {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         }
-        return self.serialize_tx_body();
+        self.serialize_tx_body()
     }
 
     pub fn serialize_tx_body(&mut self) -> &mut MeshTxBuilderCore {
@@ -363,16 +362,14 @@ impl MeshTxBuilderCore {
     }
 
     pub fn spending_reference_tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
-        self.tx_in_inline_datum_present();
-        self
+        self.tx_in_inline_datum_present()
     }
 
     pub fn spending_reference_tx_in_redeemer_value(
         &mut self,
         redeemer: Redeemer,
     ) -> &mut MeshTxBuilderCore {
-        self.tx_in_redeemer_value(redeemer);
-        self
+        self.tx_in_redeemer_value(redeemer)
     }
 
     pub fn read_only_tx_in_reference(
@@ -464,6 +461,13 @@ impl MeshTxBuilderCore {
         mint_item.redeemer = Some(redeemer);
         self.mint_item = Some(mint_item);
         self
+    }
+
+    pub fn mint_reference_tx_in_redeemer_value(
+        &mut self,
+        redeemer: Redeemer,
+    ) -> &mut MeshTxBuilderCore {
+        self.mint_redeemer_value(redeemer)
     }
 
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
