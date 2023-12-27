@@ -353,7 +353,10 @@ impl MeshTxBuilderCore {
         self
     }
 
-    pub fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+    pub fn spending_reference_tx_in_redeemer_value(
+        &mut self,
+        redeemer: Redeemer,
+    ) -> &mut MeshTxBuilderCore {
         self.tx_in_redeemer_value(redeemer);
         self
     }
