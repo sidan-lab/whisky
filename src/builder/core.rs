@@ -14,6 +14,7 @@ pub struct MeshTxBuilderCore {
     tx_in_item: Option<TxIn>,
     tx_output: Option<Output>,
     adding_script_input: bool,
+    adding_plutus_mint: bool,
 }
 
 impl MeshTxBuilderCore {
@@ -40,6 +41,7 @@ impl MeshTxBuilderCore {
             tx_in_item: None,
             tx_output: None,
             adding_script_input: false,
+            adding_plutus_mint: false,
         }
     }
 
@@ -369,6 +371,11 @@ impl MeshTxBuilderCore {
         self.mesh_tx_builder_body
             .reference_inputs
             .push(RefTxIn { tx_hash, tx_index });
+        self
+    }
+
+    pub fn mint_plutus_script_v2(&mut self) -> &mut MeshTxBuilderCore {
+        self.adding_plutus_mint = true;
         self
     }
 
