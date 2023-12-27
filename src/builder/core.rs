@@ -1,4 +1,5 @@
 use cardano_serialization_lib as csl;
+use csl::Mint;
 
 use crate::{
     builder::models::*,
@@ -387,6 +388,27 @@ impl MeshTxBuilderCore {
 
     pub fn mint_plutus_script_v2(&mut self) -> &mut MeshTxBuilderCore {
         self.adding_plutus_mint = true;
+        self
+    }
+
+    pub fn mint(&mut self, quantity: u64, policy: String, name: String) -> &mut MeshTxBuilderCore {
+        if self.mint_item.is_some() {
+            self.queue_mint();
+        }
+        let mint_type = if self.adding_plutus_mint {
+            "Plutus"
+        } else {
+            "Native"
+        };
+        self.mint_item = Some(MintItem {
+            type_: mint_type.to_string(),
+            policy_id: policy,
+            asset_name: name,
+            amount: quantity,
+            redeemer: None,
+            script_source: None,
+        });
+        self.adding_plutus_mint = false;
         self
     }
 
