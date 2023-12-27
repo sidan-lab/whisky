@@ -514,6 +514,11 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn invalid_hereafter(&mut self, slot: u64) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body.validity_range.invalid_hereafter = Some(slot);
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
