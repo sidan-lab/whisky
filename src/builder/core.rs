@@ -448,6 +448,21 @@ impl MeshTxBuilderCore {
             spending_script_hash,
             language_version: version,
         }));
+        self.mint_item = Some(mint_item);
+        self
+    }
+
+    pub fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+        let mint_item = self.mint_item.take();
+        if mint_item.is_none() {
+            panic!("Undefined mint");
+        }
+        let mut mint_item = mint_item.unwrap();
+        if mint_item.type_ == "Native" {
+            panic!("Redeemer cannot be defined for Native script mints");
+        }
+        mint_item.redeemer = Some(redeemer);
+        self.mint_item = Some(mint_item);
         self
     }
 
