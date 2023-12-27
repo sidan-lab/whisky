@@ -13,6 +13,7 @@ pub struct MeshTxBuilderCore {
 
     tx_in_item: Option<TxIn>,
     mint_item: Option<MintItem>,
+    collateral_item: Option<PubKeyTxIn>,
     tx_output: Option<Output>,
     adding_script_input: bool,
     adding_plutus_mint: bool,
@@ -41,6 +42,7 @@ impl MeshTxBuilderCore {
             },
             tx_in_item: None,
             mint_item: None,
+            collateral_item: None,
             tx_output: None,
             adding_script_input: false,
             adding_plutus_mint: false,
@@ -474,6 +476,31 @@ impl MeshTxBuilderCore {
         self.mesh_tx_builder_body
             .required_signatures
             .push(pub_key_hash);
+        self
+    }
+
+    pub fn tx_in_collateral(
+        &mut self,
+        tx_hash: String,
+        tx_index: u32,
+        amount: Vec<Asset>,
+        address: String,
+    ) -> &mut MeshTxBuilderCore {
+        let collateral_item = self.collateral_item.take();
+        if self.collateral_item.is_some() {
+            self.mesh_tx_builder_body
+                .collaterals
+                .push(collateral_item.unwrap());
+        }
+        self.collateral_item = Some(PubKeyTxIn {
+            type_: "PubKey".to_string(),
+            tx_in: TxInParameter {
+                tx_hash,
+                tx_index,
+                amount: Some(amount),
+                address: Some(address),
+            },
+        });
         self
     }
 
