@@ -281,6 +281,22 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+        let tx_in_item = self.tx_in_item.take();
+        if tx_in_item.is_none() {
+            panic!("Undefined input")
+        }
+        let tx_in_item = tx_in_item.unwrap();
+        match tx_in_item {
+            TxIn::PubKeyTxIn(_) => panic!("Redeemer cannot be defined for a pubkey tx in"),
+            TxIn::ScriptTxIn(mut input) => {
+                input.script_tx_in.redeemer = Some(redeemer);
+                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+            }
+        }
+        self
+    }
+
     pub fn tx_out_reference_script(
         &mut self,
         script_cbor: String,
@@ -334,6 +350,11 @@ impl MeshTxBuilderCore {
 
     pub fn spending_reference_tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
         self.tx_in_inline_datum_present();
+        self
+    }
+
+    pub fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+        self.tx_in_redeemer_value(redeemer);
         self
     }
 
