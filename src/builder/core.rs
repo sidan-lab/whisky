@@ -304,6 +304,34 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn spending_tx_in_reference(
+        &mut self,
+        tx_hash: String,
+        tx_index: u32,
+        spending_script_hash: String,
+        version: LanguageVersion,
+    ) -> &mut MeshTxBuilderCore {
+        let tx_in_item = self.tx_in_item.take();
+        if tx_in_item.is_none() {
+            panic!("Undefined output")
+        }
+        let tx_in_item = tx_in_item.unwrap();
+        match tx_in_item {
+            TxIn::PubKeyTxIn(_) => panic!("Script reference cannot be defined for a pubkey tx in"),
+            TxIn::ScriptTxIn(mut input) => {
+                input.script_tx_in.script_source =
+                    Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+                        tx_hash,
+                        tx_index,
+                        spending_script_hash,
+                        language_version: version
+                    }));
+                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+            }
+        }
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
