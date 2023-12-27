@@ -412,6 +412,23 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn minting_script(
+        &mut self,
+        script_cbor: String,
+        version: LanguageVersion,
+    ) -> &mut MeshTxBuilderCore {
+        let mint_item = self.mint_item.take();
+        if mint_item.is_none() {
+            panic!("Undefined mint");
+        }
+        let mut mint_item = mint_item.unwrap();
+        mint_item.script_source = Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+            script_cbor,
+            language_version: version,
+        }));
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
