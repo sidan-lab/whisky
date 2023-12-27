@@ -470,6 +470,13 @@ impl MeshTxBuilderCore {
         self.mint_redeemer_value(redeemer)
     }
 
+    pub fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body
+            .required_signatures
+            .push(pub_key_hash);
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
