@@ -526,6 +526,11 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn signing_key(&mut self, skey_hex: String) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body.signing_key.push(skey_hex);
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
