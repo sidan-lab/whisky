@@ -59,6 +59,12 @@ impl MeshTxBuilderCore {
         self.serialize_tx_body()
     }
 
+    pub fn complete_signing(&mut self) -> String {
+        let signing_keys = self.mesh_tx_builder_body.signing_key.clone();
+        self.add_all_signing_keys(signing_keys);
+        self.tx_hex.to_string()
+    }
+
     pub fn serialize_tx_body(&mut self) -> &mut MeshTxBuilderCore {
         self.mesh_tx_builder_body
             .mints
@@ -529,6 +535,34 @@ impl MeshTxBuilderCore {
     pub fn signing_key(&mut self, skey_hex: String) -> &mut MeshTxBuilderCore {
         self.mesh_tx_builder_body.signing_key.push(skey_hex);
         self
+    }
+
+    fn add_all_signing_keys(&mut self, signing_keys: Vec<String>) {
+        if signing_keys.len() > 0 {
+            let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
+            let unsigned_transaction: csl::Transaction =
+                csl::Transaction::from_hex(&self.tx_hex).unwrap();
+            let tx_body = unsigned_transaction.body();
+            for key in signing_keys {
+                let clean_hex = if &key[0..4] == "5820" {
+                    key[4..].to_string()
+                } else {
+                    key
+                };
+                let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
+                let vkey_witness =
+                    csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
+                vkey_witnesses.add(&vkey_witness);
+            }
+            let mut witness_set = unsigned_transaction.witness_set();
+            witness_set.set_vkeys(&vkey_witnesses);
+            let signed_transaction = csl::Transaction::new(
+                &tx_body,
+                &witness_set,
+                unsigned_transaction.auxiliary_data(),
+            );
+            self.tx_hex = signed_transaction.to_hex();
+        }
     }
 
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
