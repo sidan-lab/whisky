@@ -299,6 +299,11 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn spending_plutus_script_v2(&mut self) -> &mut MeshTxBuilderCore {
+        self.adding_script_input = true;
+        self
+    }
+
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
