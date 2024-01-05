@@ -55,4 +55,35 @@ mod tests {
                 },
             });
     }
+
+    #[test]
+    fn test_script_tx_in_with_datum_value() {
+        let mut mesh = MeshTxBuilderCore::new();
+        let asset = Asset {
+            unit: "lovelace".to_string(),
+            quantity: "30000000".to_string(),
+        };
+
+        let data = to_string(&json!({
+            "constructor": 0,
+            "fields": []
+        }))
+        .unwrap();
+
+        mesh.spending_plutus_script_v2()
+            .tx_in(
+                "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a".to_string(),
+                1,
+                vec![asset],
+                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6".to_string(),
+            )
+            .tx_in_datum_value(data.clone())
+            .spending_reference_tx_in_redeemer_value(Redeemer {
+                data: data.clone(),
+                ex_units: Budget {
+                    mem: 3386819,
+                    steps: 1048170931,
+                },
+            });
+    }
 }
