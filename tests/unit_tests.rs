@@ -200,4 +200,41 @@ mod tests {
                 1,
             );
     }
+
+    #[test]
+    fn test_mint() {
+        let mut mesh = MeshTxBuilderCore::new();
+        mesh.tx_in(
+            "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c".to_string(),
+            3,
+            vec![Asset {
+                unit: "lovelace".to_string(),
+                quantity: "9692479606".to_string(),
+            }],
+            "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x".to_string(),
+        )
+        .mint_plutus_script_v2()
+        .mint(
+            1,
+            "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700".to_string(),
+            "test".to_string(),
+        )
+        .mint_tx_in_reference(
+            "63210437b543c8a11afbbc6765aa205eb2733cb74e2805afd4c1c8cb72bd8e22".to_string(),
+            0,
+            "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700".to_string(),
+            sidan_csl_rs::builder::models::LanguageVersion::V2,
+        )
+        .mint_redeemer_value(Redeemer {
+            data: to_string(&json!({
+                "constructor": 0,
+                "fields": ["test"]
+            }))
+            .unwrap(),
+            ex_units: Budget {
+                mem: 3386819,
+                steps: 1048170931 
+            }
+        });
+    }
 }
