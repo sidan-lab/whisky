@@ -318,6 +318,20 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn tx_out(&mut self, address: String, amount: Vec<Asset>) -> &mut MeshTxBuilderCore {
+        if self.tx_output.is_some() {
+            let tx_output = self.tx_output.take();
+            self.mesh_tx_builder_body.outputs.push(tx_output.unwrap());
+        }
+        self.tx_output = Some(Output {
+            address,
+            amount,
+            datum: None,
+            reference_script: None,
+        });
+        self
+    }
+
     pub fn tx_out_reference_script(
         &mut self,
         script_cbor: String,
