@@ -32,6 +32,9 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::utils::Value {
     let mut multi_asset = csl::MultiAsset::new();
 
     for asset in assets {
+        if asset.unit == "lovelace" {
+            continue;
+        }
         let mut policy_assets = csl::Assets::new();
         let name_bytes = Vec::<u8>::from_hex(asset.unit[56..].to_string())
             .expect("Failed to parse hex asset name");
