@@ -55,6 +55,8 @@ impl MeshTxBuilderCore {
     ) -> &mut MeshTxBuilderCore {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
+        } else {
+            self.queue_all_last_item();
         }
         self.serialize_tx_body()
     }
@@ -96,72 +98,72 @@ impl MeshTxBuilderCore {
         self.add_all_metadata(self.mesh_tx_builder_body.metadata.clone());
 
         self.add_script_hash();
-        if self.mesh_tx_builder_body.change_address != "" {
-            let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
-            let collateral_vec: Vec<u64> = collateral_inputs
-                .into_iter()
-                .map(|pub_key_tx_in| {
-                    let assets = pub_key_tx_in.tx_in.amount.unwrap();
-                    let lovelace = assets
-                        .into_iter()
-                        .find(|asset| asset.unit == "lovelace")
-                        .unwrap();
-                    lovelace.quantity.parse::<u64>().unwrap()
-                })
-                .collect();
-            let total_collateral: u64 = collateral_vec.into_iter().sum();
+        // if self.mesh_tx_builder_body.change_address != "" {
+        //     let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
+        //     let collateral_vec: Vec<u64> = collateral_inputs
+        //         .into_iter()
+        //         .map(|pub_key_tx_in| {
+        //             let assets = pub_key_tx_in.tx_in.amount.unwrap();
+        //             let lovelace = assets
+        //                 .into_iter()
+        //                 .find(|asset| asset.unit == "lovelace")
+        //                 .unwrap();
+        //             lovelace.quantity.parse::<u64>().unwrap()
+        //         })
+        //         .collect();
+        //     let total_collateral: u64 = collateral_vec.into_iter().sum();
 
-            let collateral_estimate: u64 = (150
-                * self
-                    .tx_builder
-                    .min_fee()
-                    .unwrap()
-                    .checked_add(&to_bignum(10000))
-                    .unwrap()
-                    .to_string()
-                    .parse::<u64>()
-                    .unwrap())
-                / 100;
+        //     let collateral_estimate: u64 = (150
+        //         * self
+        //             .tx_builder
+        //             .min_fee()
+        //             .unwrap()
+        //             .checked_add(&to_bignum(10000))
+        //             .unwrap()
+        //             .to_string()
+        //             .parse::<u64>()
+        //             .unwrap())
+        //         / 100;
 
-            let mut collateral_return_needed = false;
+        //     let mut collateral_return_needed = false;
+        // if (total_collateral - collateral_estimate) > 0 {
+        // let collateral_estimate_output = csl::TransactionOutput::new(
+        //     &csl::address::Address::from_bech32(&self.mesh_tx_builder_body.change_address)
+        //         .unwrap(),
+        //     &csl::utils::Value::new(&to_bignum(collateral_estimate)),
+        // );
 
-            if total_collateral - collateral_estimate > 0 {
-                let collateral_estimate_output = csl::TransactionOutput::new(
-                    &csl::address::Address::from_bech32(&self.mesh_tx_builder_body.change_address)
-                        .unwrap(),
-                    &csl::utils::Value::new(&to_bignum(collateral_estimate)),
-                );
+        // let min_ada = csl::utils::min_ada_for_output(
+        //     &collateral_estimate_output,
+        //     &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
+        // )
+        // .unwrap()
+        // .to_string()
+        // .parse::<u64>()
+        // .unwrap();
 
-                let min_ada = csl::utils::min_ada_for_output(
-                    &collateral_estimate_output,
-                    &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
-                )
-                .unwrap()
-                .to_string()
-                .parse::<u64>()
-                .unwrap();
+        // if total_collateral - collateral_estimate > min_ada {
+        //     self.tx_builder
+        //         .set_collateral_return(&csl::TransactionOutput::new(
+        //             &csl::address::Address::from_bech32(
+        //                 &self.mesh_tx_builder_body.change_address,
+        //             )
+        //             .unwrap(),
+        //             &csl::utils::Value::new(&to_bignum(total_collateral)),
+        //         ));
 
-                if total_collateral - collateral_estimate > min_ada {
-                    self.tx_builder
-                        .set_collateral_return(&csl::TransactionOutput::new(
-                            &csl::address::Address::from_bech32(
-                                &self.mesh_tx_builder_body.change_address,
-                            )
-                            .unwrap(),
-                            &csl::utils::Value::new(&to_bignum(total_collateral)),
-                        ));
+        //     self.tx_builder
+        //         .set_total_collateral(&to_bignum(total_collateral));
 
-                    self.tx_builder
-                        .set_total_collateral(&to_bignum(total_collateral));
-
-                    collateral_return_needed = true;
-                }
-            }
-            self.add_change(self.mesh_tx_builder_body.change_address.clone());
-            if collateral_return_needed {
-                self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
-            }
-        }
+        //     collateral_return_needed = true;
+        // }
+        // }
+        // self.add_change(self.mesh_tx_builder_body.change_address.clone());
+        // if collateral_return_needed {
+        //     self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
+        // }
+        // }
+        self.add_change(self.mesh_tx_builder_body.change_address.clone());
         self.build_tx();
         self
     }
@@ -340,7 +342,7 @@ impl MeshTxBuilderCore {
         let mut tx_output = tx_output.unwrap();
         tx_output.datum = Some(Datum {
             type_: "Hash".to_string(),
-            data
+            data,
         });
         self
     }
@@ -353,7 +355,7 @@ impl MeshTxBuilderCore {
         let mut tx_output = tx_output.unwrap();
         tx_output.datum = Some(Datum {
             type_: "Inline".to_string(),
-            data
+            data,
         });
         self
     }
@@ -784,7 +786,7 @@ impl MeshTxBuilderCore {
         } else {
             built_output = amount_builder.with_coin(&tx_value.coin()).build().unwrap();
         }
-        let _ = self.tx_builder.add_output(&built_output);
+        let _ = self.tx_builder.add_output(&built_output).unwrap();
     }
 
     fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
@@ -833,6 +835,7 @@ impl MeshTxBuilderCore {
                 _ => {}
             };
         }
+        self.tx_builder.set_mint_builder(&mint_builder)
     }
 
     fn add_plutus_mint(
@@ -948,15 +951,19 @@ impl MeshTxBuilderCore {
     }
 
     fn add_script_hash(&mut self) {
-        let _ = self.tx_builder.calc_script_data_hash(
-            &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
-        );
+        let _ = self
+            .tx_builder
+            .calc_script_data_hash(
+                &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
+            )
+            .unwrap();
     }
 
     fn add_change(&mut self, change_address: String) {
         let _ = self
             .tx_builder
-            .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap());
+            .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap())
+            .unwrap();
     }
 
     fn add_collateral_return(&mut self, change_address: String) {
@@ -969,10 +976,34 @@ impl MeshTxBuilderCore {
             .unwrap();
 
         let collateral_amount = 150 * ((current_fee / 100) + 1);
-        let _ = self.tx_builder.set_total_collateral_and_return(
-            &to_bignum(collateral_amount),
-            &csl::address::Address::from_bech32(&change_address).unwrap(),
-        );
+        let _ = self
+            .tx_builder
+            .set_total_collateral_and_return(
+                &to_bignum(collateral_amount),
+                &csl::address::Address::from_bech32(&change_address).unwrap(),
+            )
+            .unwrap();
+    }
+
+    fn queue_all_last_item(&mut self) {
+        if self.tx_output.is_some() {
+            self.mesh_tx_builder_body
+                .outputs
+                .push(self.tx_output.clone().unwrap());
+            self.tx_output = None;
+        }
+        if self.tx_in_item.is_some() {
+            self.queue_input();
+        }
+        if self.collateral_item.is_some() {
+            self.mesh_tx_builder_body
+                .collaterals
+                .push(self.collateral_item.clone().unwrap());
+            self.collateral_item = None;
+        }
+        if self.mint_item.is_some() {
+            self.queue_mint();
+        }
     }
 
     fn build_tx(&mut self) {
