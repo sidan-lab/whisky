@@ -345,6 +345,19 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn tx_out_inline_datum_value(&mut self, data: String) -> &mut MeshTxBuilderCore {
+        let tx_output = self.tx_output.take();
+        if tx_output.is_none() {
+            panic!("Undefined output")
+        }
+        let mut tx_output = tx_output.unwrap();
+        tx_output.datum = Some(Datum {
+            type_: "Inline".to_string(),
+            data
+        });
+        self
+    }
+
     pub fn tx_out_reference_script(
         &mut self,
         script_cbor: String,
