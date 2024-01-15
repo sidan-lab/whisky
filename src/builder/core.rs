@@ -966,24 +966,24 @@ impl MeshTxBuilderCore {
             .unwrap();
     }
 
-    fn add_collateral_return(&mut self, change_address: String) {
-        let current_fee = self
-            .tx_builder
-            .get_fee_if_set()
-            .unwrap()
-            .to_string()
-            .parse::<u64>()
-            .unwrap();
+    // fn add_collateral_return(&mut self, change_address: String) {
+    //     let current_fee = self
+    //         .tx_builder
+    //         .get_fee_if_set()
+    //         .unwrap()
+    //         .to_string()
+    //         .parse::<u64>()
+    //         .unwrap();
 
-        let collateral_amount = 150 * ((current_fee / 100) + 1);
-        let _ = self
-            .tx_builder
-            .set_total_collateral_and_return(
-                &to_bignum(collateral_amount),
-                &csl::address::Address::from_bech32(&change_address).unwrap(),
-            )
-            .unwrap();
-    }
+    //     let collateral_amount = 150 * ((current_fee / 100) + 1);
+    //     let _ = self
+    //         .tx_builder
+    //         .set_total_collateral_and_return(
+    //             &to_bignum(collateral_amount),
+    //             &csl::address::Address::from_bech32(&change_address).unwrap(),
+    //         )
+    //         .unwrap();
+    // }
 
     fn queue_all_last_item(&mut self) {
         if self.tx_output.is_some() {
