@@ -535,7 +535,7 @@ impl MeshTxBuilderCore {
         address: String,
     ) -> &mut MeshTxBuilderCore {
         let collateral_item = self.collateral_item.take();
-        if self.collateral_item.is_some() {
+        if collateral_item.is_some() {
             self.mesh_tx_builder_body
                 .collaterals
                 .push(collateral_item.unwrap());
