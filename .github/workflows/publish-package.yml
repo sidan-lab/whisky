@@ -1,0 +1,133 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+  push:
+    branches:
+      - master
+      - ci/github-action
+  pull_request:
+    branches:
+      - master
+      - ci/github-action
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: yarn ci
+
+  publish-crates:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: katyo/publish-crates@v2
+        with:
+          registry-token: ${{ secrets.PUBLISH_KEY }}
+  #   publish-npm:
+  #     needs: build
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #       - uses: actions/checkout@v3
+  #       - uses: actions/setup-node@v3
+  #         with:
+  #           node-version: 18
+  #           registry-url: https://registry.npmjs.org/
+  #       - run: yarn ci
+  #       - run: |
+  #           if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:) ]]; then
+  #             echo "Skipping npm publish due to commit message."
+  #           else
+  #             npm publish --access public
+  #           fi
+  #         env:
+  #           NODE_AUTH_TOKEN: ${{secrets.PUBLISH_KEY}}
+
+  build-test:
+    name: Build and test (${{ matrix.os }})
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build
+        run: >
+          cargo build
+          --locked
+          --verbose
+
+      - name: Run tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cargo test
+          --verbose
+
+      - name: Run tests (with coverage)
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cargo install cargo-tarpaulin
+          && cargo tarpaulin
+          --verbose
+          --out Xml
+          --engine llvm
+          --skip-clean
+      - name: Upload coverage reports to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v3
+
+  release-please:
+    name: Execute release chores
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    runs-on: ubuntu-latest
+    needs: build-test
+
+    outputs:
+      created: ${{ steps.release.outputs.release_created }}
+
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          release-type: rust
+
+  publish:
+    name: Publish to crates.io
+
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: needs.release-please.outputs.created
+
+    # environment: crates.io
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+
+      - name: Publish
+        run: >
+          cargo publish
+          --verbose
+          --locked
+          --token ${{ secrets.PUBLISH_KEY }}
