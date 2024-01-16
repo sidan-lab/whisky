@@ -61,3 +61,34 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::utils::Value {
     }
     value
 }
+
+pub fn script_to_address(
+    script_hash: String,
+    stake_hash: Option<String>,
+    network_id: u8,
+) -> String {
+    match stake_hash {
+        Some(stake) => csl::address::BaseAddress::new(
+            network_id,
+            &csl::address::StakeCredential::from_scripthash(
+                &csl::crypto::ScriptHash::from_hex(&script_hash).unwrap(),
+            ),
+            &csl::address::StakeCredential::from_keyhash(
+                &csl::crypto::Ed25519KeyHash::from_hex(&stake).unwrap(),
+            ),
+        )
+        .to_address()
+        .to_bech32(None)
+        .unwrap(),
+
+        None => csl::address::EnterpriseAddress::new(
+            network_id,
+            &csl::address::StakeCredential::from_scripthash(
+                &csl::crypto::ScriptHash::from_hex(&script_hash).unwrap(),
+            ),
+        )
+        .to_address()
+        .to_bech32(None)
+        .unwrap(),
+    }
+}
