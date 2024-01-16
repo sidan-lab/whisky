@@ -9,11 +9,9 @@ on:
   push:
     branches:
       - master
-      - ci/github-action
   pull_request:
     branches:
       - master
-      - ci/github-action
 
 jobs:
   build-test:
