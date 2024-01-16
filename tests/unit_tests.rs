@@ -4,6 +4,7 @@ mod tests {
         core::MeshTxBuilderCore,
         models::{Asset, Budget, Redeemer},
     };
+    use sidan_csl_rs::utils::csl::script_to_address;
 
     #[test]
     fn test_mesh_tx_builder_core() {
@@ -233,8 +234,26 @@ mod tests {
             .unwrap(),
             ex_units: Budget {
                 mem: 3386819,
-                steps: 1048170931 
-            }
+                steps: 1048170931,
+            },
         });
+    }
+
+    #[test]
+    fn test_script_to_address() {
+        let addr = script_to_address(
+            "ac43e2abd0909c559966056aaa35d2172717174e224feb81e34c306a".to_string(),
+            None,
+            0,
+        );
+        assert!(addr == "addr_test1wzky8c4t6zgfc4vevczk42346gtjw9chfc3yl6upudxrq6sghz0nw");
+
+        let base_addr = script_to_address(
+            "e55a6e7c9f4e96692a3c23a56f126911cc70a29d2e2ac967dc644432".to_string(),
+            Some("6d913965402b012050e09f12012c533e6c33678d1c5ed2154b328d25".to_string()),
+            0,
+        );
+
+        assert!(base_addr == "addr_test1zrj45mnuna8fv6f28s362mcjdygucu9zn5hz4jt8m3jygvndjyuk2sptqys9pcylzgqjc5e7dsek0rgutmfp2jej35jseqau4y");
     }
 }
