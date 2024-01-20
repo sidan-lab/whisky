@@ -24,7 +24,7 @@ pub fn build_tx_builder() -> csl::tx_builder::TransactionBuilder {
         ))
         .build()
         .unwrap();
-    return csl::tx_builder::TransactionBuilder::new(&cfg);
+    csl::tx_builder::TransactionBuilder::new(&cfg)
 }
 
 pub fn to_value(assets: &Vec<Asset>) -> csl::utils::Value {
@@ -36,15 +36,15 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::utils::Value {
             continue;
         }
         let mut policy_assets = csl::Assets::new();
-        let name_bytes = Vec::<u8>::from_hex(asset.unit[56..].to_string())
-            .expect("Failed to parse hex asset name");
+        let name_bytes =
+            Vec::<u8>::from_hex(&asset.unit[56..]).expect("Failed to parse hex asset name");
         policy_assets.insert(
             &csl::AssetName::new(name_bytes).unwrap(),
             &csl::utils::BigNum::from_str(&asset.quantity.to_string()).unwrap(),
         );
 
         multi_asset.insert(
-            &csl::crypto::ScriptHash::from_hex(&asset.unit[0..56].to_string()).unwrap(),
+            &csl::crypto::ScriptHash::from_hex(&asset.unit[0..56]).unwrap(),
             &policy_assets,
         );
     }
