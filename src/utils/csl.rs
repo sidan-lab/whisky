@@ -144,3 +144,13 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
         }
     }
 }
+
+pub fn get_v2_script_hash(script: &str) -> String {
+    csl::plutus::PlutusScript::from_hex_with_version(
+        script,
+        &csl::plutus::Language::new_plutus_v2(),
+    )
+    .unwrap()
+    .hash()
+    .to_hex()
+}
