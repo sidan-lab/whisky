@@ -92,3 +92,55 @@ pub fn script_to_address(
         .unwrap(),
     }
 }
+
+pub fn serialize_bech32_script_address(bech32_addr: String) -> SerializedAddress {
+    let csl_address = csl::address::BaseAddress::from_address(
+        &csl::address::Address::from_bech32(&bech32_addr).unwrap(),
+    );
+    match csl_address {
+        Some(address) => {
+            let csl_key_hash = address
+                .payment_cred()
+                .to_keyhash()
+                .map_or("".to_string(), |key_hash| key_hash.to_hex());
+
+            let csl_script_hash = address
+                .payment_cred()
+                .to_scripthash()
+                .map_or("".to_string(), |script_hash| script_hash.to_hex());
+
+            let csl_stake_key_hash = address
+                .stake_cred()
+                .to_keyhash()
+                .map_or("".to_string(), |stake_key_hash| stake_key_hash.to_hex());
+
+            SerializedAddress {
+                pub_key_hash: csl_key_hash,
+                script_hash: csl_script_hash,
+                stake_key_hash: csl_stake_key_hash,
+            }
+        }
+        None => {
+            let csl_enterprize_address = csl::address::EnterpriseAddress::from_address(
+                &csl::address::Address::from_bech32(&bech32_addr).unwrap(),
+            )
+            .unwrap();
+
+            let csl_key_hash = csl_enterprize_address
+                .payment_cred()
+                .to_keyhash()
+                .map_or("".to_string(), |key_hash| key_hash.to_hex());
+
+            let csl_script_hash = csl_enterprize_address
+                .payment_cred()
+                .to_scripthash()
+                .map_or("".to_string(), |script_hash| script_hash.to_hex());
+
+            SerializedAddress {
+                pub_key_hash: csl_key_hash,
+                script_hash: csl_script_hash,
+                stake_key_hash: "".to_string(),
+            }
+        }
+    }
+}
