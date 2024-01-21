@@ -158,7 +158,7 @@ pub struct Datum {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SerializedAddress {
-    pub pub_key_hash: String,
-    pub script_hash: String,
-    pub stake_key_hash: String,
+    pub pub_key_hash: Option<String>,
+    pub script_hash: Option<String>,
+    pub stake_key_hash: Option<String>,
 }
