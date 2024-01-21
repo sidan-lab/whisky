@@ -155,3 +155,10 @@ pub struct Datum {
     pub type_: String,
     pub data: String,
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SerializedAddress {
+    pub pub_key_hash: String,
+    pub script_hash: String,
+    pub stake_key_hash: String,
+}
