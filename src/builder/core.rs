@@ -1,7 +1,7 @@
 use cardano_serialization_lib as csl;
 
 use crate::{
-    builder::models::*,
+    model::builder::*,
     utils::csl::{build_tx_builder, to_bignum, to_value},
 };
 

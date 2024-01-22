@@ -1,6 +1,6 @@
 use cardano_serialization_lib as csl;
 
-use crate::builder::models::*;
+use crate::model::builder::*;
 use hex::FromHex;
 
 pub fn to_bignum(val: u64) -> csl::utils::BigNum {
@@ -154,3 +154,12 @@ pub fn get_v2_script_hash(script: &str) -> String {
     .hash()
     .to_hex()
 }
+
+pub fn address_bech32_to_obj(bech32: &str) {}
+
+// export const addrBech32ToObj = <T>(bech32: string): T => {
+//     const hexAddress = csl.Address.from_bech32(bech32).to_hex();
+//     const cslAddress = csl.Address.from_hex(hexAddress);
+//     const json = JSON.parse(csl.PlutusData.from_address(cslAddress).to_json(1));
+//     return json;
+// };

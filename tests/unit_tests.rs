@@ -2,10 +2,8 @@ mod tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::utils::csl::script_to_address;
     use sidan_csl_rs::{
-        builder::{
-            core::MeshTxBuilderCore,
-            models::{Asset, Budget, Redeemer, SerializedAddress},
-        },
+        builder::core::MeshTxBuilderCore,
+        model::builder::{Asset, Budget, LanguageVersion, Redeemer, SerializedAddress},
         utils::csl::{get_v2_script_hash, serialize_bech32_address},
     };
 
@@ -116,7 +114,7 @@ mod tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998".to_string(),
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161".to_string(),
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
+                LanguageVersion::V2,
             )
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -150,10 +148,7 @@ mod tests {
                 vec![asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6".to_string(),
             )
-            .tx_in_script(
-                script_cbor,
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
-            )
+            .tx_in_script(script_cbor, LanguageVersion::V2)
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
                 data: data.clone(),
@@ -189,7 +184,7 @@ mod tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998".to_string(),
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161".to_string(),
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
+                LanguageVersion::V2,
             )
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -227,7 +222,7 @@ mod tests {
             "63210437b543c8a11afbbc6765aa205eb2733cb74e2805afd4c1c8cb72bd8e22".to_string(),
             0,
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700".to_string(),
-            sidan_csl_rs::builder::models::LanguageVersion::V2,
+            LanguageVersion::V2,
         )
         .mint_redeemer_value(Redeemer {
             data: to_string(&json!({

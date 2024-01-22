@@ -1,8 +1,8 @@
 mod int_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::builder::{
-        core::MeshTxBuilderCore,
-        models::{Asset, Budget, Redeemer},
+    use sidan_csl_rs::{
+        builder::core::MeshTxBuilderCore,
+        model::builder::{Asset, Budget, LanguageVersion, Redeemer},
     };
 
     #[test]
@@ -65,7 +65,7 @@ mod int_tests {
             cns_token_mp_script_ref_txhash.to_string(),
             cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
             cns_policy_id.to_string(),
-            sidan_csl_rs::builder::models::LanguageVersion::V2,
+            LanguageVersion::V2,
         )
         .mint_redeemer_value(Redeemer {
             data: to_string(&json!({
@@ -104,7 +104,7 @@ mod int_tests {
             record_validator_script_ref_txhash.to_string(),
             record_validator_script_ref_txid.parse::<u32>().unwrap(),
             "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161".to_string(),
-            sidan_csl_rs::builder::models::LanguageVersion::V2,
+            LanguageVersion::V2,
         )
         .tx_out(
             wallet_address.to_string(),
@@ -169,6 +169,6 @@ mod int_tests {
         .change_address(wallet_address.to_string())
         .complete_sync(None);
 
-        assert!(mesh.tx_hex != "".to_string());
+        assert!(mesh.tx_hex != *"");
     }
 }
