@@ -132,7 +132,7 @@ pub struct Redeemer {
     pub ex_units: Budget,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Asset {
     pub unit: String,
     pub quantity: String,
@@ -161,4 +161,26 @@ pub struct SerializedAddress {
     pub pub_key_hash: String,
     pub script_hash: String,
     pub stake_key_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct UtxoInput {
+    pub output_index: u32,
+    pub tx_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct UtxoOutput {
+    pub address: String,
+    pub amount: Vec<Asset>,
+    pub data_hash: Option<String>,
+    pub plutus_data: Option<String>,
+    pub script_ref: Option<String>,
+    pub script_hash: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct UTxO {
+    pub input: UtxoInput,
+    pub output: UtxoOutput,
 }
