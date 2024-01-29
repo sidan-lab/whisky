@@ -155,7 +155,7 @@ pub fn get_v2_script_hash(script: &str) -> String {
     .to_hex()
 }
 
-pub fn address_bech32_to_obj(bech32: &str) {}
+pub fn address_bech32_to_obj(_bech32: &str) {}
 
 // export const addrBech32ToObj = <T>(bech32: string): T => {
 //     const hexAddress = csl.Address.from_bech32(bech32).to_hex();
