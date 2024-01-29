@@ -2,11 +2,9 @@ mod tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::utils::csl::script_to_address;
     use sidan_csl_rs::{
-        builder::{
-            core::MeshTxBuilderCore,
-            models::{Asset, Budget, Redeemer, SerializedAddress},
-        },
-        utils::csl::serialize_bech32_script_address,
+        builder::core::MeshTxBuilderCore,
+        model::builder::{Asset, Budget, LanguageVersion, Redeemer, SerializedAddress},
+        utils::csl::{get_v2_script_hash, serialize_bech32_address},
     };
 
     #[test]
@@ -116,7 +114,7 @@ mod tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998".to_string(),
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161".to_string(),
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
+                LanguageVersion::V2,
             )
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -150,10 +148,7 @@ mod tests {
                 vec![asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6".to_string(),
             )
-            .tx_in_script(
-                script_cbor,
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
-            )
+            .tx_in_script(script_cbor, LanguageVersion::V2)
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
                 data: data.clone(),
@@ -189,7 +184,7 @@ mod tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998".to_string(),
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161".to_string(),
-                sidan_csl_rs::builder::models::LanguageVersion::V2,
+                LanguageVersion::V2,
             )
             .tx_in_datum_value(data.clone())
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -227,7 +222,7 @@ mod tests {
             "63210437b543c8a11afbbc6765aa205eb2733cb74e2805afd4c1c8cb72bd8e22".to_string(),
             0,
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700".to_string(),
-            sidan_csl_rs::builder::models::LanguageVersion::V2,
+            LanguageVersion::V2,
         )
         .mint_redeemer_value(Redeemer {
             data: to_string(&json!({
@@ -263,7 +258,7 @@ mod tests {
     #[test]
     fn test_serialize_address() {
         let addr1 = "addr_test1qz8j439j54afpl4hw978xcw8qsa0dsmyd6wm9v8xzeyz7ucrj5rt3et7z59mvmmpxnejvn2scwmseezdq5h5fpw08z8s8d93my";
-        let addr1_result = serialize_bech32_script_address(addr1.to_string());
+        let addr1_result = serialize_bech32_address(addr1.to_string());
         assert!(
             addr1_result
                 == SerializedAddress {
@@ -276,7 +271,7 @@ mod tests {
         );
 
         let addr2 = "addr_test1zqjmsmh2sjjy508e3068pck6lgp23k2msypgc52cxcgzjlju5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9s5cdt49";
-        let addr2_result = serialize_bech32_script_address(addr2.to_string());
+        let addr2_result = serialize_bech32_address(addr2.to_string());
         assert!(
             addr2_result
                 == SerializedAddress {
@@ -289,7 +284,7 @@ mod tests {
         );
 
         let addr3 = "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x";
-        let addr3_result = serialize_bech32_script_address(addr3.to_string());
+        let addr3_result = serialize_bech32_address(addr3.to_string());
         assert!(
             addr3_result
                 == SerializedAddress {
@@ -299,5 +294,12 @@ mod tests {
                     stake_key_hash: "".to_string(),
                 }
         )
+    }
+
+    #[test]
+    fn test_get_v2_script_hash() {
+        let correct_hash = "cc1bff3c00536918d99a78bd7548e864ffad95c8b6de562f709f0114";
+        let compiled_code = "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
+        assert_eq!(get_v2_script_hash(compiled_code), correct_hash);
     }
 }

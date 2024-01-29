@@ -1,4 +1,4 @@
-use crate::builder::models::*;
+use crate::model::builder::*;
 use std::collections::{HashMap, HashSet};
 
 pub fn select_utxos(
