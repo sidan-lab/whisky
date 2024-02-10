@@ -344,6 +344,7 @@ impl MeshTxBuilderCore {
             type_: "Hash".to_string(),
             data,
         });
+        self.tx_output = Some(tx_output);
         self
     }
 
@@ -357,6 +358,7 @@ impl MeshTxBuilderCore {
             type_: "Inline".to_string(),
             data,
         });
+        self.tx_output = Some(tx_output);
         self
     }
 
@@ -733,7 +735,7 @@ impl MeshTxBuilderCore {
                             csl::plutus::PlutusDatumSchema::DetailedSchema,
                         )
                         .unwrap(),
-                    ))
+                    ));
                 }
                 "Inline" => {
                     output_builder = output_builder.with_plutus_data(
@@ -742,7 +744,7 @@ impl MeshTxBuilderCore {
                             csl::plutus::PlutusDatumSchema::DetailedSchema,
                         )
                         .unwrap(),
-                    )
+                    );
                 }
                 _ => {}
             };
