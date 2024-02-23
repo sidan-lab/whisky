@@ -28,7 +28,7 @@ pub fn builtin_byte_string(bytes: &str) -> Value {
     json!({ "bytes": bytes })
 }
 
-pub fn integer(int: i32) -> Value {
+pub fn integer(int: i64) -> Value {
     json!({ "int": int })
 }
 
@@ -74,7 +74,7 @@ pub fn asset_class(policy_id: &str, asset_name: &str) -> Value {
     con_str0(vec![currency_symbol(policy_id), token_name(asset_name)])
 }
 
-pub fn tx_out_ref(tx_hash: &str, index: i32) -> Value {
+pub fn tx_out_ref(tx_hash: &str, index: i64) -> Value {
     con_str0(vec![
         con_str0(vec![builtin_byte_string(tx_hash)]),
         integer(index),
@@ -101,7 +101,7 @@ pub fn pub_key_hash(pub_key_hash: &str) -> Value {
     builtin_byte_string(pub_key_hash)
 }
 
-pub fn posix_time(posix_time: i32) -> Value {
+pub fn posix_time(posix_time: i64) -> Value {
     integer(posix_time)
 }
 
