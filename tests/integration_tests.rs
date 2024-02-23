@@ -167,8 +167,15 @@ mod int_tests {
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x".to_string(),
         )
         .change_address(wallet_address.to_string())
+        .change_output_datum(
+            to_string(&json!({
+              "constructor": 0,
+              "fields": [],
+            }))
+            .unwrap(),
+        )
         .complete_sync(None);
-
+        println!("{}", mesh.tx_hex);
         assert!(mesh.tx_hex != *"");
     }
 }

@@ -7,6 +7,7 @@ pub struct MeshTxBuilderBody {
     pub reference_inputs: Vec<RefTxIn>,
     pub mints: Vec<MintItem>,
     pub change_address: String,
+    pub change_datum: Option<Datum>,
     pub metadata: Vec<Metadata>,
     pub validity_range: ValidityRange,
     pub signing_key: Vec<String>,

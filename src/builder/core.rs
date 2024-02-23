@@ -33,6 +33,7 @@ impl MeshTxBuilderCore {
                 reference_inputs: vec![],
                 mints: vec![],
                 change_address: "".to_string(),
+                change_datum: None,
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -344,6 +345,7 @@ impl MeshTxBuilderCore {
             type_: "Hash".to_string(),
             data,
         });
+        self.tx_output = Some(tx_output);
         self
     }
 
@@ -357,6 +359,7 @@ impl MeshTxBuilderCore {
             type_: "Inline".to_string(),
             data,
         });
+        self.tx_output = Some(tx_output);
         self
     }
 
@@ -557,6 +560,14 @@ impl MeshTxBuilderCore {
         self
     }
 
+    pub fn change_output_datum(&mut self, data: String) -> &mut MeshTxBuilderCore {
+        self.mesh_tx_builder_body.change_datum = Some(Datum {
+            type_: "Inline".to_string(),
+            data,
+        });
+        self
+    }
+
     pub fn invalid_before(&mut self, slot: u64) -> &mut MeshTxBuilderCore {
         self.mesh_tx_builder_body.validity_range.invalid_before = Some(slot);
         self
@@ -733,7 +744,7 @@ impl MeshTxBuilderCore {
                             csl::plutus::PlutusDatumSchema::DetailedSchema,
                         )
                         .unwrap(),
-                    ))
+                    ));
                 }
                 "Inline" => {
                     output_builder = output_builder.with_plutus_data(
@@ -742,7 +753,7 @@ impl MeshTxBuilderCore {
                             csl::plutus::PlutusDatumSchema::DetailedSchema,
                         )
                         .unwrap(),
-                    )
+                    );
                 }
                 _ => {}
             };
@@ -960,10 +971,24 @@ impl MeshTxBuilderCore {
     }
 
     fn add_change(&mut self, change_address: String) {
-        let _ = self
-            .tx_builder
-            .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap())
-            .unwrap();
+        if self.mesh_tx_builder_body.change_datum.clone().is_some() {
+            self.tx_builder
+                .add_change_if_needed_with_datum(
+                    &csl::address::Address::from_bech32(&change_address).unwrap(),
+                    &csl::OutputDatum::new_data(
+                        &csl::plutus::PlutusData::from_json(
+                            &self.mesh_tx_builder_body.change_datum.clone().unwrap().data,
+                            csl::plutus::PlutusDatumSchema::DetailedSchema,
+                        )
+                        .unwrap(),
+                    ),
+                )
+                .unwrap();
+        } else {
+            self.tx_builder
+                .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap())
+                .unwrap();
+        }
     }
 
     // fn add_collateral_return(&mut self, change_address: String) {
