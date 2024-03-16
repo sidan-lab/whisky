@@ -1,10 +1,9 @@
 mod tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::utils::csl::script_to_address;
     use sidan_csl_rs::{
         builder::core::MeshTxBuilderCore,
+        csl::utils::{get_v2_script_hash, script_to_address, serialize_bech32_address},
         model::builder::{Asset, Budget, LanguageVersion, Redeemer, SerializedAddress},
-        utils::csl::{get_v2_script_hash, serialize_bech32_address},
     };
 
     #[test]

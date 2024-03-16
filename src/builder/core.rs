@@ -1,8 +1,8 @@
 use cardano_serialization_lib as csl;
 
 use crate::{
+    csl::utils::{build_tx_builder, to_bignum, to_value},
     model::builder::*,
-    utils::csl::{build_tx_builder, to_bignum, to_value},
 };
 
 pub struct MeshTxBuilderCore {
@@ -297,7 +297,7 @@ impl MeshTxBuilderCore {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::InlineDatumSource(InlineDatumSource {
                         tx_hash: input.tx_in.tx_hash.clone(),
-                        tx_index: input.tx_in.tx_index.clone(),
+                        tx_index: input.tx_in.tx_index,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
@@ -538,10 +538,8 @@ impl MeshTxBuilderCore {
         address: String,
     ) -> &mut MeshTxBuilderCore {
         let collateral_item = self.collateral_item.take();
-        if collateral_item.is_some() {
-            self.mesh_tx_builder_body
-                .collaterals
-                .push(collateral_item.unwrap());
+        if let Some(collateral_item) = collateral_item {
+            self.mesh_tx_builder_body.collaterals.push(collateral_item);
         }
         self.collateral_item = Some(PubKeyTxIn {
             type_: "PubKey".to_string(),
@@ -643,11 +641,9 @@ impl MeshTxBuilderCore {
         let datum_source = input.script_tx_in.datum_source.unwrap();
         let script_source = input.script_tx_in.script_source.unwrap();
         let redeemer = input.script_tx_in.redeemer.unwrap();
-        let csl_datum: csl::tx_builder::tx_inputs_builder::DatumSource;
-
-        match datum_source {
+        let csl_datum: csl::tx_builder::tx_inputs_builder::DatumSource = match datum_source {
             DatumSource::ProvidedDatumSource(datum) => {
-                csl_datum = csl::tx_builder::tx_inputs_builder::DatumSource::new(
+                csl::tx_builder::tx_inputs_builder::DatumSource::new(
                     &csl::plutus::PlutusData::from_json(
                         &datum.data,
                         csl::plutus::PlutusDatumSchema::DetailedSchema,
@@ -660,19 +656,18 @@ impl MeshTxBuilderCore {
                     &csl::crypto::TransactionHash::from_hex(&datum.tx_hash).unwrap(),
                     datum.tx_index,
                 );
-                csl_datum =
-                    csl::tx_builder::tx_inputs_builder::DatumSource::new_ref_input(&ref_input)
+                csl::tx_builder::tx_inputs_builder::DatumSource::new_ref_input(&ref_input)
             }
         };
 
-        let csl_script: csl::tx_builder::tx_inputs_builder::PlutusScriptSource;
-        match script_source {
+        let csl_script: csl::tx_builder::tx_inputs_builder::PlutusScriptSource = match script_source
+        {
             ScriptSource::ProvidedScriptSource(script) => {
                 let language_version: csl::plutus::Language = match script.language_version {
                     LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
                     LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
                 };
-                csl_script = csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
+                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
                     &csl::plutus::PlutusScript::from_hex_with_version(
                         &script.script_cbor,
                         &language_version,
@@ -685,17 +680,16 @@ impl MeshTxBuilderCore {
                     LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
                     LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
                 };
-                csl_script =
                 csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new_ref_input_with_lang_ver(
                     &csl::crypto::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
                     &csl::TransactionInput::new(
                         &csl::crypto::TransactionHash::from_hex(&script.tx_hash).unwrap(),
                         script.tx_index,
                     ),
-                    &language_version
-                );
+                    &language_version,
+                )
             }
-        }
+        };
 
         let csl_redeemer: csl::plutus::Redeemer = csl::plutus::Redeemer::new(
             &csl::plutus::RedeemerTag::new_spend(),
@@ -776,10 +770,8 @@ impl MeshTxBuilderCore {
 
         let tx_value = to_value(&output.amount);
         let amount_builder = output_builder.next().unwrap();
-        let built_output: csl::TransactionOutput;
-
-        if tx_value.multiasset().is_some() {
-            built_output = if tx_value.coin().is_zero() {
+        let built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
+            if tx_value.coin().is_zero() {
                 amount_builder
                     .with_asset_and_min_required_coin_by_utxo_cost(
                         &tx_value.multiasset().unwrap(),
@@ -793,11 +785,11 @@ impl MeshTxBuilderCore {
                     .with_coin_and_asset(&tx_value.coin(), &tx_value.multiasset().unwrap())
                     .build()
                     .unwrap()
-            };
+            }
         } else {
-            built_output = amount_builder.with_coin(&tx_value.coin()).build().unwrap();
-        }
-        let _ = self.tx_builder.add_output(&built_output).unwrap();
+            amount_builder.with_coin(&tx_value.coin()).build().unwrap()
+        };
+        self.tx_builder.add_output(&built_output).unwrap();
     }
 
     fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
@@ -877,7 +869,7 @@ impl MeshTxBuilderCore {
                     LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
                 };
                 csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new_ref_input_with_lang_ver(
-                    &csl::crypto::ScriptHash::from_hex(&mint.policy_id.as_str()).unwrap(),
+                    &csl::crypto::ScriptHash::from_hex(mint.policy_id.as_str()).unwrap(),
                     &csl::TransactionInput::new(
                         &csl::crypto::TransactionHash::from_hex(&script.tx_hash).unwrap(),
                         script.tx_index,
@@ -892,7 +884,7 @@ impl MeshTxBuilderCore {
                 };
                 csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
                     &csl::plutus::PlutusScript::from_hex_with_version(
-                        &script.script_cbor.as_str(),
+                        script.script_cbor.as_str(),
                         &language_version,
                     )
                     .unwrap(),
@@ -962,8 +954,7 @@ impl MeshTxBuilderCore {
     }
 
     fn add_script_hash(&mut self) {
-        let _ = self
-            .tx_builder
+        self.tx_builder
             .calc_script_data_hash(
                 &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
             )
