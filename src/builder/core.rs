@@ -1,13 +1,12 @@
 use cardano_serialization_lib as csl;
 
 use crate::{
-    csl::utils::{build_tx_builder, to_bignum, to_value},
+    csl::builder::{IMeshCSL, MeshCSL},
     model::builder::*,
 };
 
 pub struct MeshTxBuilderCore {
-    pub tx_hex: String,
-    pub tx_builder: csl::tx_builder::TransactionBuilder,
+    pub mesh_csl: MeshCSL,
     pub tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
 
@@ -22,8 +21,7 @@ pub struct MeshTxBuilderCore {
 impl MeshTxBuilderCore {
     pub fn new() -> Self {
         Self {
-            tx_hex: "".to_string(),
-            tx_builder: build_tx_builder(),
+            mesh_csl: MeshCSL::new(),
             tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new(),
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
@@ -65,7 +63,7 @@ impl MeshTxBuilderCore {
     pub fn complete_signing(&mut self) -> String {
         let signing_keys = self.mesh_tx_builder_body.signing_key.clone();
         self.add_all_signing_keys(signing_keys);
-        self.tx_hex.to_string()
+        self.mesh_csl.tx_hex.to_string()
     }
 
     pub fn serialize_tx_body(&mut self) -> &mut MeshTxBuilderCore {
@@ -98,7 +96,7 @@ impl MeshTxBuilderCore {
         self.add_all_required_signature(self.mesh_tx_builder_body.required_signatures.clone());
         self.add_all_metadata(self.mesh_tx_builder_body.metadata.clone());
 
-        self.add_script_hash();
+        self.mesh_csl.add_script_hash();
         // if self.mesh_tx_builder_body.change_address != "" {
         //     let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
         //     let collateral_vec: Vec<u64> = collateral_inputs
@@ -164,8 +162,11 @@ impl MeshTxBuilderCore {
         //     self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
         // }
         // }
-        self.add_change(self.mesh_tx_builder_body.change_address.clone());
-        self.build_tx();
+        self.mesh_csl.add_change(
+            self.mesh_tx_builder_body.change_address.clone(),
+            self.mesh_tx_builder_body.change_datum.clone(),
+        );
+        self.mesh_csl.build_tx();
         self
     }
 
@@ -208,38 +209,6 @@ impl MeshTxBuilderCore {
             self.tx_in_item = Some(item);
         }
         self
-    }
-
-    fn queue_input(&mut self) {
-        let tx_in_item = self.tx_in_item.clone().unwrap();
-        match tx_in_item {
-            TxIn::ScriptTxIn(tx_in) => {
-                match (
-                    tx_in.script_tx_in.datum_source,
-                    tx_in.script_tx_in.redeemer,
-                    tx_in.script_tx_in.script_source,
-                ) {
-                    (None, _, _) => panic!("Datum in a script input cannot be None"),
-                    (_, None, _) => panic!("Redeemer in script input cannot be None"),
-                    (_, _, None) => panic!("Script source in script input cannot be None"),
-                    _ => {}
-                }
-            }
-            TxIn::PubKeyTxIn(_) => {}
-        }
-        self.mesh_tx_builder_body
-            .inputs
-            .push(self.tx_in_item.clone().unwrap());
-        self.tx_in_item = None
-    }
-
-    fn queue_mint(&mut self) {
-        let mint_item = self.mint_item.clone().unwrap();
-        if mint_item.script_source.is_none() {
-            panic!("Missing mint script information");
-        }
-        self.mesh_tx_builder_body.mints.push(mint_item);
-        self.mint_item = None;
     }
 
     pub fn tx_in_script(
@@ -589,396 +558,76 @@ impl MeshTxBuilderCore {
     }
 
     fn add_all_signing_keys(&mut self, signing_keys: Vec<String>) {
-        if signing_keys.len() > 0 {
-            let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
-            let unsigned_transaction: csl::Transaction =
-                csl::Transaction::from_hex(&self.tx_hex).unwrap();
-            let tx_body = unsigned_transaction.body();
-            for key in signing_keys {
-                let clean_hex = if &key[0..4] == "5820" {
-                    key[4..].to_string()
-                } else {
-                    key
-                };
-                let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
-                let vkey_witness =
-                    csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
-                vkey_witnesses.add(&vkey_witness);
-            }
-            let mut witness_set = unsigned_transaction.witness_set();
-            witness_set.set_vkeys(&vkey_witnesses);
-            let signed_transaction = csl::Transaction::new(
-                &tx_body,
-                &witness_set,
-                unsigned_transaction.auxiliary_data(),
-            );
-            self.tx_hex = signed_transaction.to_hex();
+        if !signing_keys.is_empty() {
+            self.mesh_csl.add_signing_keys(signing_keys);
         }
     }
 
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>) {
         for input in inputs {
             match input {
-                TxIn::PubKeyTxIn(pub_key_tx_in) => self.add_tx_in(pub_key_tx_in),
-                TxIn::ScriptTxIn(script_tx_in) => self.add_script_tx_in(script_tx_in),
+                TxIn::PubKeyTxIn(pub_key_tx_in) => self.mesh_csl.add_tx_in(pub_key_tx_in),
+                TxIn::ScriptTxIn(script_tx_in) => self.mesh_csl.add_script_tx_in(script_tx_in),
             };
         }
-        self.tx_builder.set_inputs(&self.tx_inputs_builder);
-    }
-
-    fn add_tx_in(&mut self, input: PubKeyTxIn) {
-        self.tx_inputs_builder.add_input(
-            &csl::address::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::crypto::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
-                input.tx_in.tx_index,
-            ),
-            &to_value(&input.tx_in.amount.unwrap()),
-        );
-    }
-
-    fn add_script_tx_in(&mut self, input: ScriptTxIn) {
-        let datum_source = input.script_tx_in.datum_source.unwrap();
-        let script_source = input.script_tx_in.script_source.unwrap();
-        let redeemer = input.script_tx_in.redeemer.unwrap();
-        let csl_datum: csl::tx_builder::tx_inputs_builder::DatumSource = match datum_source {
-            DatumSource::ProvidedDatumSource(datum) => {
-                csl::tx_builder::tx_inputs_builder::DatumSource::new(
-                    &csl::plutus::PlutusData::from_json(
-                        &datum.data,
-                        csl::plutus::PlutusDatumSchema::DetailedSchema,
-                    )
-                    .unwrap(),
-                )
-            }
-            DatumSource::InlineDatumSource(datum) => {
-                let ref_input = csl::TransactionInput::new(
-                    &csl::crypto::TransactionHash::from_hex(&datum.tx_hash).unwrap(),
-                    datum.tx_index,
-                );
-                csl::tx_builder::tx_inputs_builder::DatumSource::new_ref_input(&ref_input)
-            }
-        };
-
-        let csl_script: csl::tx_builder::tx_inputs_builder::PlutusScriptSource = match script_source
-        {
-            ScriptSource::ProvidedScriptSource(script) => {
-                let language_version: csl::plutus::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
-                };
-                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
-                    &csl::plutus::PlutusScript::from_hex_with_version(
-                        &script.script_cbor,
-                        &language_version,
-                    )
-                    .unwrap(),
-                )
-            }
-            ScriptSource::InlineScriptSource(script) => {
-                let language_version: csl::plutus::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
-                };
-                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new_ref_input_with_lang_ver(
-                    &csl::crypto::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
-                    &csl::TransactionInput::new(
-                        &csl::crypto::TransactionHash::from_hex(&script.tx_hash).unwrap(),
-                        script.tx_index,
-                    ),
-                    &language_version,
-                )
-            }
-        };
-
-        let csl_redeemer: csl::plutus::Redeemer = csl::plutus::Redeemer::new(
-            &csl::plutus::RedeemerTag::new_spend(),
-            &to_bignum(0),
-            &csl::plutus::PlutusData::from_json(
-                &redeemer.data,
-                csl::plutus::PlutusDatumSchema::DetailedSchema,
-            )
-            .unwrap(),
-            &csl::plutus::ExUnits::new(
-                &to_bignum(redeemer.ex_units.mem),
-                &to_bignum(redeemer.ex_units.steps),
-            ),
-        );
-        self.tx_inputs_builder.add_plutus_script_input(
-            &csl::tx_builder::tx_inputs_builder::PlutusWitness::new_with_ref(
-                &csl_script,
-                &csl_datum,
-                &csl_redeemer,
-            ),
-            &csl::TransactionInput::new(
-                &csl::crypto::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
-                input.tx_in.tx_index,
-            ),
-            &to_value(&input.tx_in.amount.unwrap()),
-        )
+        self.mesh_csl.tx_builder.set_inputs(&self.tx_inputs_builder);
     }
 
     fn add_all_outputs(&mut self, outputs: Vec<Output>) {
         for output in outputs {
-            self.add_output(output);
+            self.mesh_csl.add_output(output);
         }
-    }
-
-    fn add_output(&mut self, output: Output) {
-        let mut output_builder = csl::output_builder::TransactionOutputBuilder::new()
-            .with_address(&csl::address::Address::from_bech32(&output.address).unwrap());
-        if output.datum.is_some() {
-            let datum = output.datum.unwrap();
-
-            match datum.type_.as_str() {
-                "Hash" => {
-                    output_builder = output_builder.with_data_hash(&csl::utils::hash_plutus_data(
-                        &csl::plutus::PlutusData::from_json(
-                            &datum.data,
-                            csl::plutus::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
-                    ));
-                }
-                "Inline" => {
-                    output_builder = output_builder.with_plutus_data(
-                        &csl::plutus::PlutusData::from_json(
-                            &datum.data,
-                            csl::plutus::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
-                    );
-                }
-                _ => {}
-            };
-        }
-
-        if output.reference_script.is_some() {
-            let output_script = output.reference_script.unwrap();
-            let language_version: csl::plutus::Language = match output_script.language_version {
-                LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
-                LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
-            };
-            output_builder = output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
-                &csl::plutus::PlutusScript::from_hex_with_version(
-                    &output_script.script_cbor,
-                    &language_version,
-                )
-                .unwrap(),
-            ))
-        }
-
-        let tx_value = to_value(&output.amount);
-        let amount_builder = output_builder.next().unwrap();
-        let built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
-            if tx_value.coin().is_zero() {
-                amount_builder
-                    .with_asset_and_min_required_coin_by_utxo_cost(
-                        &tx_value.multiasset().unwrap(),
-                        &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
-                    )
-                    .unwrap()
-                    .build()
-                    .unwrap()
-            } else {
-                amount_builder
-                    .with_coin_and_asset(&tx_value.coin(), &tx_value.multiasset().unwrap())
-                    .build()
-                    .unwrap()
-            }
-        } else {
-            amount_builder.with_coin(&tx_value.coin()).build().unwrap()
-        };
-        self.tx_builder.add_output(&built_output).unwrap();
     }
 
     fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
         let mut collateral_builder = csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new();
         for collateral in collaterals {
-            self.add_collateral(&mut collateral_builder, collateral)
+            self.mesh_csl
+                .add_collateral(&mut collateral_builder, collateral)
         }
-        self.tx_builder.set_collateral(&collateral_builder)
-    }
-
-    fn add_collateral(
-        &mut self,
-        collateral_builder: &mut csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
-        collateral: PubKeyTxIn,
-    ) {
-        collateral_builder.add_input(
-            &csl::address::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::crypto::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
-                collateral.tx_in.tx_index,
-            ),
-            &to_value(&collateral.tx_in.amount.unwrap()),
-        );
+        self.mesh_csl.tx_builder.set_collateral(&collateral_builder)
     }
 
     fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>) {
         for ref_input in ref_inputs {
-            self.add_reference_input(ref_input);
+            self.mesh_csl.add_reference_input(ref_input);
         }
-    }
-
-    fn add_reference_input(&mut self, ref_input: RefTxIn) {
-        let csl_ref_input = csl::TransactionInput::new(
-            &csl::crypto::TransactionHash::from_hex(&ref_input.tx_hash).unwrap(),
-            ref_input.tx_index,
-        );
-        self.tx_builder.add_reference_input(&csl_ref_input);
     }
 
     fn add_all_mints(&mut self, mints: Vec<MintItem>) {
         let mut mint_builder = csl::tx_builder::mint_builder::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
             match mint.type_.as_str() {
-                "Plutus" => self.add_plutus_mint(&mut mint_builder, mint, index as u64),
-                "Native" => self.add_native_mint(&mut mint_builder, mint),
+                "Plutus" => self
+                    .mesh_csl
+                    .add_plutus_mint(&mut mint_builder, mint, index as u64),
+                "Native" => self.mesh_csl.add_native_mint(&mut mint_builder, mint),
                 _ => {}
             };
         }
-        self.tx_builder.set_mint_builder(&mint_builder)
-    }
-
-    fn add_plutus_mint(
-        &mut self,
-        mint_builder: &mut csl::tx_builder::mint_builder::MintBuilder,
-        mint: MintItem,
-        index: u64,
-    ) {
-        let redeemer_info = mint.redeemer.unwrap();
-        let mint_redeemer = csl::plutus::Redeemer::new(
-            &csl::plutus::RedeemerTag::new_mint(),
-            &to_bignum(index),
-            &csl::plutus::PlutusData::from_json(
-                &redeemer_info.data,
-                csl::plutus::PlutusDatumSchema::DetailedSchema,
-            )
-            .unwrap(),
-            &csl::plutus::ExUnits::new(
-                &to_bignum(redeemer_info.ex_units.mem),
-                &to_bignum(redeemer_info.ex_units.steps),
-            ),
-        );
-        let script_source_info = mint.script_source.unwrap();
-        let mint_script = match script_source_info {
-            ScriptSource::InlineScriptSource(script) => {
-                let language_version: csl::plutus::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
-                };
-                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new_ref_input_with_lang_ver(
-                    &csl::crypto::ScriptHash::from_hex(mint.policy_id.as_str()).unwrap(),
-                    &csl::TransactionInput::new(
-                        &csl::crypto::TransactionHash::from_hex(&script.tx_hash).unwrap(),
-                        script.tx_index,
-                    ),
-                    &language_version,
-                )
-            }
-            ScriptSource::ProvidedScriptSource(script) => {
-                let language_version: csl::plutus::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::plutus::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::plutus::Language::new_plutus_v2(),
-                };
-                csl::tx_builder::tx_inputs_builder::PlutusScriptSource::new(
-                    &csl::plutus::PlutusScript::from_hex_with_version(
-                        script.script_cbor.as_str(),
-                        &language_version,
-                    )
-                    .unwrap(),
-                )
-            }
-        };
-
-        mint_builder.add_asset(
-            &csl::tx_builder::mint_builder::MintWitness::new_plutus_script(
-                &mint_script,
-                &mint_redeemer,
-            ),
-            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-            &csl::utils::Int::new_i32(mint.amount.try_into().unwrap()),
-        );
-    }
-
-    fn add_native_mint(
-        &mut self,
-        mint_builder: &mut csl::tx_builder::mint_builder::MintBuilder,
-        mint: MintItem,
-    ) {
-        let script_info = mint.script_source.unwrap();
-        match script_info {
-            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
-                &csl::tx_builder::mint_builder::MintWitness::new_native_script(
-                    &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
-                ),
-                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-                &csl::utils::Int::new_i32(mint.amount.try_into().unwrap()),
-            ),
-            ScriptSource::InlineScriptSource(_) => {
-                panic!("Native scripts cannot be referenced")
-            }
-        }
+        self.mesh_csl.tx_builder.set_mint_builder(&mint_builder)
     }
 
     fn add_validity_range(&mut self, validity_range: ValidityRange) {
         if validity_range.invalid_before.is_some() {
-            self.tx_builder
-                .set_validity_start_interval_bignum(to_bignum(
-                    validity_range.invalid_before.unwrap(),
-                ));
+            self.mesh_csl
+                .add_invalid_before(validity_range.invalid_before.unwrap())
         }
         if validity_range.invalid_hereafter.is_some() {
-            self.tx_builder
-                .set_ttl_bignum(&to_bignum(validity_range.invalid_hereafter.unwrap()));
+            self.mesh_csl
+                .add_invalid_hereafter(validity_range.invalid_hereafter.unwrap())
         }
     }
 
     fn add_all_required_signature(&mut self, required_signatures: Vec<String>) {
         for pub_key_hash in required_signatures {
-            self.tx_builder
-                .add_required_signer(&csl::crypto::Ed25519KeyHash::from_hex(&pub_key_hash).unwrap())
+            self.mesh_csl.add_required_signature(pub_key_hash);
         }
     }
 
     fn add_all_metadata(&mut self, all_metadata: Vec<Metadata>) {
         for metadata in all_metadata {
-            self.tx_builder
-                .add_json_metadatum(
-                    &csl::utils::BigNum::from_str(&metadata.tag).unwrap(),
-                    metadata.metadata,
-                )
-                .unwrap()
-        }
-    }
-
-    fn add_script_hash(&mut self) {
-        self.tx_builder
-            .calc_script_data_hash(
-                &csl::tx_builder_constants::TxBuilderConstants::plutus_vasil_cost_models(),
-            )
-            .unwrap();
-    }
-
-    fn add_change(&mut self, change_address: String) {
-        if self.mesh_tx_builder_body.change_datum.clone().is_some() {
-            self.tx_builder
-                .add_change_if_needed_with_datum(
-                    &csl::address::Address::from_bech32(&change_address).unwrap(),
-                    &csl::OutputDatum::new_data(
-                        &csl::plutus::PlutusData::from_json(
-                            &self.mesh_tx_builder_body.change_datum.clone().unwrap().data,
-                            csl::plutus::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
-                    ),
-                )
-                .unwrap();
-        } else {
-            self.tx_builder
-                .add_change_if_needed(&csl::address::Address::from_bech32(&change_address).unwrap())
-                .unwrap();
+            self.mesh_csl.add_metadata(metadata);
         }
     }
 
@@ -1001,6 +650,38 @@ impl MeshTxBuilderCore {
     //         .unwrap();
     // }
 
+    fn queue_input(&mut self) {
+        let tx_in_item = self.tx_in_item.clone().unwrap();
+        match tx_in_item {
+            TxIn::ScriptTxIn(tx_in) => {
+                match (
+                    tx_in.script_tx_in.datum_source,
+                    tx_in.script_tx_in.redeemer,
+                    tx_in.script_tx_in.script_source,
+                ) {
+                    (None, _, _) => panic!("Datum in a script input cannot be None"),
+                    (_, None, _) => panic!("Redeemer in script input cannot be None"),
+                    (_, _, None) => panic!("Script source in script input cannot be None"),
+                    _ => {}
+                }
+            }
+            TxIn::PubKeyTxIn(_) => {}
+        }
+        self.mesh_tx_builder_body
+            .inputs
+            .push(self.tx_in_item.clone().unwrap());
+        self.tx_in_item = None
+    }
+
+    fn queue_mint(&mut self) {
+        let mint_item = self.mint_item.clone().unwrap();
+        if mint_item.script_source.is_none() {
+            panic!("Missing mint script information");
+        }
+        self.mesh_tx_builder_body.mints.push(mint_item);
+        self.mint_item = None;
+    }
+
     fn queue_all_last_item(&mut self) {
         if self.tx_output.is_some() {
             self.mesh_tx_builder_body
@@ -1021,9 +702,10 @@ impl MeshTxBuilderCore {
             self.queue_mint();
         }
     }
+}
 
-    fn build_tx(&mut self) {
-        let tx = self.tx_builder.build_tx().unwrap();
-        self.tx_hex = tx.to_hex();
+impl Default for MeshTxBuilderCore {
+    fn default() -> Self {
+        Self::new()
     }
 }

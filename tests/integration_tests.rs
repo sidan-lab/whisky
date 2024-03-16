@@ -175,7 +175,7 @@ mod int_tests {
             .unwrap(),
         )
         .complete_sync(None);
-        println!("{}", mesh.tx_hex);
-        assert!(mesh.tx_hex != *"");
+        println!("{}", mesh.mesh_csl.tx_hex);
+        assert!(mesh.mesh_csl.tx_hex != *"");
     }
 }
