@@ -70,7 +70,7 @@ pub fn select_utxos(
     let required_units: Vec<String> = total_required_assets.keys().cloned().collect();
 
     for unit in required_units.clone() {
-        if &unit != &"lovelace".to_string()
+        if unit != *"lovelace"
             && total_required_assets
                 .get(&unit)
                 .unwrap()
