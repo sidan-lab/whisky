@@ -7,7 +7,6 @@ use crate::{
 
 pub struct MeshTxBuilderCore {
     pub mesh_csl: MeshCSL,
-    pub tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
 
     tx_in_item: Option<TxIn>,
@@ -22,7 +21,6 @@ impl MeshTxBuilderCore {
     pub fn new() -> Self {
         Self {
             mesh_csl: MeshCSL::new(),
-            tx_inputs_builder: csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new(),
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
@@ -570,7 +568,9 @@ impl MeshTxBuilderCore {
                 TxIn::ScriptTxIn(script_tx_in) => self.mesh_csl.add_script_tx_in(script_tx_in),
             };
         }
-        self.mesh_csl.tx_builder.set_inputs(&self.tx_inputs_builder);
+        self.mesh_csl
+            .tx_builder
+            .set_inputs(&self.mesh_csl.tx_inputs_builder);
     }
 
     fn add_all_outputs(&mut self, outputs: Vec<Output>) {
