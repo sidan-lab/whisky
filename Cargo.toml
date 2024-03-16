@@ -1,7 +1,7 @@
 [package]
 name = "sidan-csl-rs"
-version = "0.1.12"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 license = "MIT"
 description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
 
