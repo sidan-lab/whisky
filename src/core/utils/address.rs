@@ -1,4 +1,4 @@
-use crate::model::builder::*;
+use crate::model::*;
 use cardano_serialization_lib as csl;
 
 pub fn script_to_address(

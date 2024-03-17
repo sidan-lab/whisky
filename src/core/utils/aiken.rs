@@ -10,7 +10,7 @@ use noop_proc_macro::wasm_bindgen;
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
 use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
-use super::parser::{bytes_to_hex, hex_to_bytes};
+use crate::core::common::{bytes_to_hex, hex_to_bytes};
 
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, Box<dyn Error>> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
@@ -33,11 +33,11 @@ pub fn apply_double_cbor_encoding(script: &str) -> Result<String, Box<dyn Error>
 #[test]
 fn test_apply_double_cbor_encoding() {
     let script =
-        "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
+      "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
     assert_eq!(
-        apply_double_cbor_encoding(script).unwrap(),
-        "5847584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441"
-    );
+      apply_double_cbor_encoding(script).unwrap(),
+      "5847584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441"
+  );
 }
 
 #[wasm_bindgen]
@@ -61,12 +61,12 @@ pub fn apply_params_to_script(
 fn test_apply_params_to_script() {
     use serde_json::{json, to_string};
     let script =
-        "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
+      "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
     let params = vec![to_string(&json!({ "bytes": "1234"})).unwrap()];
     assert_eq!(
-        apply_params_to_script(params, script.to_string()).unwrap(),
-        "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
-    );
+      apply_params_to_script(params, script.to_string()).unwrap(),
+      "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
+  );
 }
 
 #[wasm_bindgen]

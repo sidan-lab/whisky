@@ -1,4 +1,4 @@
-use crate::{csl::builder::MeshCSL, model::builder::*};
+use crate::{core::builder::MeshCSL, model::*};
 
 pub trait IMeshTxBuilderCore {
     /// ## Transaction building method

@@ -1,9 +1,8 @@
-use cardano_serialization_lib as csl;
-
 use crate::{
-    csl::builder::{IMeshCSL, MeshCSL},
-    model::builder::*,
+    core::builder::{IMeshCSL, MeshCSL},
+    model::*,
 };
+use cardano_serialization_lib as csl;
 
 use super::interface::{IMeshTxBuilderCore, MeshTxBuilderCore};
 
