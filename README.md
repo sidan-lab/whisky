@@ -20,32 +20,35 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 
 ### 1. APIs on core CSL logics
 
-| Type               | Name                     | Description                                                                            |
-| ------------------ | ------------------------ | -------------------------------------------------------------------------------------- |
-| `MeshCSL` Property | `tx_hex`                 | This is the transaction hex, used for storing the transaction in hexadecimal format.   |
-| `MeshCSL` Property | `tx_builder`             | This is the transaction builder, used for building transactions.                       |
-| `MeshCSL` Property | `tx_inputs_builder`      | This is the transaction inputs builder, used for building the inputs of a transaction. |
-| `MeshCSL` Method   | `add_tx_in`              | This method is used to add a transaction input.                                        |
-| `MeshCSL` Method   | `add_script_tx_in`       | This method is used to add a script transaction input.                                 |
-| `MeshCSL` Method   | `add_output`             | This method is used to add an output.                                                  |
-| `MeshCSL` Method   | `add_collateral`         | This method is used to add collateral.                                                 |
-| `MeshCSL` Method   | `add_reference_input`    | This method is used to add a reference input.                                          |
-| `MeshCSL` Method   | `add_plutus_mint`        | This method is used to add a Plutus mint.                                              |
-| `MeshCSL` Method   | `add_native_mint`        | This method is used to add a native mint.                                              |
-| `MeshCSL` Method   | `add_invalid_before`     | This method is used to add an invalid before condition.                                |
-| `MeshCSL` Method   | `add_invalid_hereafter`  | This method is used to add an invalid hereafter condition.                             |
-| `MeshCSL` Method   | `add_change`             | This method is used to add change.                                                     |
-| `MeshCSL` Method   | `add_signing_keys`       | This method is used to add signing keys.                                               |
-| `MeshCSL` Method   | `add_required_signature` | This method is used to add a required signature.                                       |
-| `MeshCSL` Method   | `add_metadata`           | This method is used to add metadata.                                                   |
-| `MeshCSL` Method   | `add_script_hash`        | This method is used to add a script hash.                                              |
-| `MeshCSL` Method   | `build_tx`               | This method is used to build the transaction to hex in CSL.                            |
-| Util Function      | `apply_params_to_script` | To compile Aiken parameterized scripts.                                                |
-| Util Function      | `meshToPlutusData`       | To serialize plutus data from mesh data type                                           |
-| Util Function      | `jsonToPlutusData`       | To serialize plutus data from json                                                     |
-| Util Function      | `cborToPlutusData`       | To serialize plutus data from cbor                                                     |
-| Util Function      | `calculate_tx_hash`      | To calculate the transaction hash from signed or unsigned hex                          |
-| Util Function      | To be added              | To be added - A bunch of other methods that need CSL to serialized / deserialized      |
+| Type               | Name                       | Description                                                                            |
+| ------------------ | -------------------------- | -------------------------------------------------------------------------------------- |
+| `MeshCSL` Property | `tx_hex`                   | This is the transaction hex, used for storing the transaction in hexadecimal format.   |
+| `MeshCSL` Property | `tx_builder`               | This is the transaction builder, used for building transactions.                       |
+| `MeshCSL` Property | `tx_inputs_builder`        | This is the transaction inputs builder, used for building the inputs of a transaction. |
+| `MeshCSL` Method   | `add_tx_in`                | This method is used to add a transaction input.                                        |
+| `MeshCSL` Method   | `add_script_tx_in`         | This method is used to add a script transaction input.                                 |
+| `MeshCSL` Method   | `add_output`               | This method is used to add an output.                                                  |
+| `MeshCSL` Method   | `add_collateral`           | This method is used to add collateral.                                                 |
+| `MeshCSL` Method   | `add_reference_input`      | This method is used to add a reference input.                                          |
+| `MeshCSL` Method   | `add_plutus_mint`          | This method is used to add a Plutus mint.                                              |
+| `MeshCSL` Method   | `add_native_mint`          | This method is used to add a native mint.                                              |
+| `MeshCSL` Method   | `add_invalid_before`       | This method is used to add an invalid before condition.                                |
+| `MeshCSL` Method   | `add_invalid_hereafter`    | This method is used to add an invalid hereafter condition.                             |
+| `MeshCSL` Method   | `add_change`               | This method is used to add change.                                                     |
+| `MeshCSL` Method   | `add_signing_keys`         | This method is used to add signing keys.                                               |
+| `MeshCSL` Method   | `add_required_signature`   | This method is used to add a required signature.                                       |
+| `MeshCSL` Method   | `add_metadata`             | This method is used to add metadata.                                                   |
+| `MeshCSL` Method   | `add_script_hash`          | This method is used to add a script hash.                                              |
+| `MeshCSL` Method   | `build_tx`                 | This method is used to build the transaction to hex in CSL.                            |
+| Util Function      | `apply_params_to_script`   | To compile Aiken parameterized scripts.                                                |
+| Util Function      | `script_to_address`        | To obtain script address with provided hash and stake cred                             |
+| Util Function      | `serialize_bech32_address` | To obtain pub key hash, script hash and stake cred from bech32 address                 |
+| Util Function      | `get_v2_script_hash`       | To obtain script hash from script cbor                                                 |
+| Util Function      | `calculate_tx_hash`        | To calculate the transaction hash from signed or unsigned hex                          |
+| Util Function      | `meshToPlutusData`         | To be added -To serialize plutus data from mesh data type                              |
+| Util Function      | `jsonToPlutusData`         | To be added -To serialize plutus data from json                                        |
+| Util Function      | `cborToPlutusData`         | To be added -To serialize plutus data from cbor                                        |
+| Util Function      | To be added                | To be added - A bunch of other methods that need CSL to serialized / deserialized      |
 
 ### 2. `MeshTxBuilderCore`
 
