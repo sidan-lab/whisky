@@ -18,85 +18,82 @@ cargo add sidan-csl-rs
 
 The APIs of `sidan-csl-rs` consists of 3 parts:
 
-### 1. APIs on core CSL logic as `MeshCSL`
+### 1. APIs on core CSL logics
 
-- (Property) `tx_hex`
-- (Property) `tx_builder`
-- (Property) `tx_inputs_builder`
-- `add_tx_in`
-- `add_script_tx_in`
-- `add_output`
-- `add_collateral`
-- `add_reference_input`
-- `add_plutus_mint`
-- `add_native_mint`
-- `add_invalid_before`
-- `add_invalid_hereafter`
-- `add_change`
-- `add_signing_keys`
-- `add_required_signature`
-- `add_metadata`
-- `add_script_hash`
-- `build_tx` - build the transaction to hex in CSL
+| Type               | Name                     | Description                                                                            |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------------- |
+| `MeshCSL` Property | `tx_hex`                 | This is the transaction hex, used for storing the transaction in hexadecimal format.   |
+| `MeshCSL` Property | `tx_builder`             | This is the transaction builder, used for building transactions.                       |
+| `MeshCSL` Property | `tx_inputs_builder`      | This is the transaction inputs builder, used for building the inputs of a transaction. |
+| `MeshCSL` Method   | `add_tx_in`              | This method is used to add a transaction input.                                        |
+| `MeshCSL` Method   | `add_script_tx_in`       | This method is used to add a script transaction input.                                 |
+| `MeshCSL` Method   | `add_output`             | This method is used to add an output.                                                  |
+| `MeshCSL` Method   | `add_collateral`         | This method is used to add collateral.                                                 |
+| `MeshCSL` Method   | `add_reference_input`    | This method is used to add a reference input.                                          |
+| `MeshCSL` Method   | `add_plutus_mint`        | This method is used to add a Plutus mint.                                              |
+| `MeshCSL` Method   | `add_native_mint`        | This method is used to add a native mint.                                              |
+| `MeshCSL` Method   | `add_invalid_before`     | This method is used to add an invalid before condition.                                |
+| `MeshCSL` Method   | `add_invalid_hereafter`  | This method is used to add an invalid hereafter condition.                             |
+| `MeshCSL` Method   | `add_change`             | This method is used to add change.                                                     |
+| `MeshCSL` Method   | `add_signing_keys`       | This method is used to add signing keys.                                               |
+| `MeshCSL` Method   | `add_required_signature` | This method is used to add a required signature.                                       |
+| `MeshCSL` Method   | `add_metadata`           | This method is used to add metadata.                                                   |
+| `MeshCSL` Method   | `add_script_hash`        | This method is used to add a script hash.                                              |
+| `MeshCSL` Method   | `build_tx`               | This method is used to build the transaction to hex in CSL.                            |
+| Util Function      | `apply_params_to_script` | To compile Aiken parameterized scripts.                                                |
+| Util Function      | `meshToPlutusData`       | To serialize plutus data from mesh data type                                           |
+| Util Function      | `jsonToPlutusData`       | To serialize plutus data from json                                                     |
+| Util Function      | `cborToPlutusData`       | To serialize plutus data from cbor                                                     |
+| Util Function      | To be added              | To be added - A bunch of other methods that need CSL to serialized / deserialized      |
 
 ### 2. `MeshTxBuilderCore`
 
 #### 2.1 User-facing wrapper APIs
 
-- `tx_in`
-- `tx_in_script`
-- `tx_in_datum_value`
-- `tx_in_inline_datum_present`
-- `tx_in_redeemer_value`
-- `tx_out`
-- `tx_out_datum_hash_value`
-- `tx_out_inline_datum_value`
-- `tx_out_reference_script`
-- `spending_plutus_script_v2`
-- `spending_tx_in_reference`
-- `spending_reference_tx_in_inline_datum_present`
-- `spending_reference_tx_in_redeemer_value`
-- `read_only_tx_in_reference`
-- `mint_plutus_script_v2`
-- `mint`
-- `minting_script`
-- `mint_tx_in_reference`
-- `mint_redeemer_value`
-- `mint_reference_tx_in_redeemer_value`
-- `required_signer_hash`
-- `tx_in_collateral`
-- `change_address`
-- `change_output_datum`
-- `invalid_before`
-- `invalid_hereafter`
-- `metadata_value`
-- `signing_key`
-- [To be implemented] `protocolParams`
-
-#### 2.2 Logic APIs for package integration
-
-- [To be implemented] `updateRedeemer` - Update `SPEND` and `MINT` exUnits
-- [To be implemented] `reset` - reseting the whole `MeshTxBuilderCore`
-- [To be implemented] `emptyTxBuilderBody` - reseting the body object
-- `complete_sync` - determine whether using customizedTx, if not queue all last items then serialize the tx
-- `complete_signing` - adding signing keys and return `txHex`
-- `serialize_tx_body` - take the tx object and serilized it to `txHex`
-- `queue_input`
-- `queue_mint`
-- `queue_all_last_item`
-- `add_all_signing_keys`
-- `add_all_inputs`
-- `add_all_outputs`
-- `add_all_collaterals`
-- `add_all_reference_inputs`
-- `add_all_mints`
-- [To be implemented] `castRawDataToJsonString` - turn object to string, keep string as string
-- [To be implemented] `castDataToPlutusData`
-
-### 3. Utils APIs
-
-- `apply_params_to_script` - handle Aiken parameterized scripts
-- [To be implemented] `meshToPlutusData`
-- [To be implemented] `jsonToPlutusData`
-- [To be implemented] `cborToPlutusData`
-- A bunch of other methods that need CSL to serialized / deserialized
+| Type                                   | Method                                          | Description                                                                             |
+| -------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `MeshTxBuilderCore` User-facing Method | `tx_in`                                         | Sets the input for the transaction.                                                     |
+| `MeshTxBuilderCore` User-facing Method | `tx_in_script`                                  | Sets the script for the transaction input.                                              |
+| `MeshTxBuilderCore` User-facing Method | `tx_in_datum_value`                             | Sets the input datum for the transaction input.                                         |
+| `MeshTxBuilderCore` User-facing Method | `tx_in_inline_datum_present`                    | Indicates that the input UTxO has inlined datum.                                        |
+| `MeshTxBuilderCore` User-facing Method | `tx_in_redeemer_value`                          | Sets the redeemer for the reference input to be spent in the same transaction.          |
+| `MeshTxBuilderCore` User-facing Method | `tx_out`                                        | Sets the output for the transaction.                                                    |
+| `MeshTxBuilderCore` User-facing Method | `tx_out_datum_hash_value`                       | Sets the output datum hash for the transaction.                                         |
+| `MeshTxBuilderCore` User-facing Method | `tx_out_inline_datum_value`                     | Sets the output inline datum for the transaction.                                       |
+| `MeshTxBuilderCore` User-facing Method | `tx_out_reference_script`                       | Sets the reference script to be attached with the output.                               |
+| `MeshTxBuilderCore` User-facing Method | `spending_plutus_script_v2`                     | Indicates that it is currently using V2 Plutus spending scripts.                        |
+| `MeshTxBuilderCore` User-facing Method | `spending_tx_in_reference`                      | Sets the reference input where it would also be spent in the transaction.               |
+| `MeshTxBuilderCore` User-facing Method | `spending_reference_tx_in_inline_datum_present` | Indicates that the reference input has inline datum.                                    |
+| `MeshTxBuilderCore` User-facing Method | `spending_reference_tx_in_redeemer_value`       | Sets the redeemer for the reference input to be spent in the same transaction.          |
+| `MeshTxBuilderCore` User-facing Method | `read_only_tx_in_reference`                     | Specifies a read-only reference input.                                                  |
+| `MeshTxBuilderCore` User-facing Method | `mint_plutus_script_v2`                         | Indicates that it is currently using V2 Plutus minting scripts.                         |
+| `MeshTxBuilderCore` User-facing Method | `mint`                                          | Sets the minting value of the transaction.                                              |
+| `MeshTxBuilderCore` User-facing Method | `minting_script`                                | Sets the minting script of the current mint.                                            |
+| `MeshTxBuilderCore` User-facing Method | `mint_tx_in_reference`                          | Uses reference script for minting.                                                      |
+| `MeshTxBuilderCore` User-facing Method | `mint_redeemer_value`                           | Sets the redeemer for the reference input to be spent in the same transaction.          |
+| `MeshTxBuilderCore` User-facing Method | `mint_reference_tx_in_redeemer_value`           | Sets the redeemer for minting.                                                          |
+| `MeshTxBuilderCore` User-facing Method | `required_signer_hash`                          | Sets the required signer of the transaction.                                            |
+| `MeshTxBuilderCore` User-facing Method | `tx_in_collateral`                              | Sets the collateral UTxO for the transaction.                                           |
+| `MeshTxBuilderCore` User-facing Method | `change_address`                                | Configures the address to accept change UTxO.                                           |
+| `MeshTxBuilderCore` User-facing Method | `change_output_datum`                           | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` User-facing Method | `invalid_before`                                | Sets the transaction valid interval to be valid only after the slot.                    |
+| `MeshTxBuilderCore` User-facing Method | `invalid_hereafter`                             | Sets the transaction valid interval to be valid only before the slot.                   |
+| `MeshTxBuilderCore` User-facing Method | `metadata_value`                                | Adds metadata to the transaction.                                                       |
+| `MeshTxBuilderCore` User-facing Method | `signing_key`                                   | Signs the transaction with the private key.                                             |
+| `MeshTxBuilderCore` User-facing Method | `reset`                                         | [To be implemented] Resetting the whole MeshTxBuilderCore                               |
+| `MeshTxBuilderCore` User-facing Method | `emptyTxBuilderBody`                            | [To be implemented] Resetting the body object                                           |
+| `MeshTxBuilderCore` User-facing Method | `complete_sync`                                 | Determine whether using customizedTx, if not queue all last items then serialize the tx |
+| `MeshTxBuilderCore` User-facing Method | `complete_signing`                              | Adding signing keys and return txHex                                                    |
+| `MeshTxBuilderCore` Internal Method    | `serialize_tx_body`                             | Take the tx object and serialized it to txHex                                           |
+| `MeshTxBuilderCore` Internal Method    | `updateRedeemer`                                | [To be implemented] Update SPEND and MINT exUnits                                       |
+| `MeshTxBuilderCore` Internal Method    | `queue_input`                                   | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `queue_mint`                                    | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `queue_all_last_item`                           | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_signing_keys`                          | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_inputs`                                | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_outputs`                               | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_collaterals`                           | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_reference_inputs`                      | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `add_all_mints`                                 | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `castRawDataToJsonString`                       | [To be implemented] Turn object to string, keep string as string                        |
+| `MeshTxBuilderCore` Internal Method    | `castDataToPlutusData`                          | [To be implemented]                                                                     |
