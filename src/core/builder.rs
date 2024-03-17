@@ -2,7 +2,7 @@ pub use cardano_serialization_lib as csl;
 
 use crate::model::*;
 
-use super::utils::{build_tx_builder, to_bignum, to_value};
+use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_value};
 
 pub trait IMeshCSL {
     fn new() -> Self;
@@ -345,29 +345,7 @@ impl IMeshCSL for MeshCSL {
     }
 
     fn add_signing_keys(&mut self, signing_keys: Vec<String>) {
-        let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
-        let unsigned_transaction: csl::Transaction =
-            csl::Transaction::from_hex(&self.tx_hex).unwrap();
-        let tx_body = unsigned_transaction.body();
-        for key in signing_keys {
-            let clean_hex = if &key[0..4] == "5820" {
-                key[4..].to_string()
-            } else {
-                key
-            };
-            let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
-            let vkey_witness =
-                csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
-            vkey_witnesses.add(&vkey_witness);
-        }
-        let mut witness_set = unsigned_transaction.witness_set();
-        witness_set.set_vkeys(&vkey_witnesses);
-        let signed_transaction = csl::Transaction::new(
-            &tx_body,
-            &witness_set,
-            unsigned_transaction.auxiliary_data(),
-        );
-        self.tx_hex = signed_transaction.to_hex();
+        self.tx_hex = sign_transaction(self.tx_hex.to_string(), signing_keys);
     }
 
     fn add_required_signature(&mut self, pub_key_hash: String) {

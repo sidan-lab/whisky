@@ -37,3 +37,28 @@ fn test_calculate_tx_hash_2() {
         "e8b7aefcee2953cf55a01c97565cfe9d414a21e17064d8fcef1f632f7311f933"
     )
 }
+
+pub fn sign_transaction(tx_hex: String, signing_keys: Vec<String>) -> String {
+    let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
+    let unsigned_transaction: csl::Transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
+    let tx_body = unsigned_transaction.body();
+    for key in signing_keys {
+        let clean_hex = if &key[0..4] == "5820" {
+            key[4..].to_string()
+        } else {
+            key
+        };
+        let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
+        let vkey_witness =
+            csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
+        vkey_witnesses.add(&vkey_witness);
+    }
+    let mut witness_set = unsigned_transaction.witness_set();
+    witness_set.set_vkeys(&vkey_witnesses);
+    let signed_transaction = csl::Transaction::new(
+        &tx_body,
+        &witness_set,
+        unsigned_transaction.auxiliary_data(),
+    );
+    signed_transaction.to_hex()
+}

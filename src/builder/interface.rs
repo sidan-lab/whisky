@@ -12,6 +12,15 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Transaction building method
     ///
+    /// Obtain the transaction hex
+    ///
+    /// ### Returns
+    ///
+    /// * tx_hex - The current transaction hex from build
+    fn tx_hex(&mut self) -> String;
+
+    /// ## Transaction building method
+    ///
     /// Complete the transaction building process synchronously
     ///
     /// ### Arguments

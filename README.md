@@ -45,6 +45,7 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | Util Function      | `serialize_bech32_address` | To obtain pub key hash, script hash and stake cred from bech32 address                 |
 | Util Function      | `get_v2_script_hash`       | To obtain script hash from script cbor                                                 |
 | Util Function      | `calculate_tx_hash`        | To calculate the transaction hash from signed or unsigned hex                          |
+| Util Function      | `sign_transaction`         | To add private key signature to current tx_hex                                         |
 | Util Function      | `meshToPlutusData`         | To be added -To serialize plutus data from mesh data type                              |
 | Util Function      | `jsonToPlutusData`         | To be added -To serialize plutus data from json                                        |
 | Util Function      | `cborToPlutusData`         | To be added -To serialize plutus data from cbor                                        |
@@ -84,6 +85,7 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | `MeshTxBuilderCore` User-facing Method | `invalid_hereafter`                             | Sets the transaction valid interval to be valid only before the slot.                   |
 | `MeshTxBuilderCore` User-facing Method | `metadata_value`                                | Adds metadata to the transaction.                                                       |
 | `MeshTxBuilderCore` User-facing Method | `signing_key`                                   | Signs the transaction with the private key.                                             |
+| `MeshTxBuilderCore` User-facing Method | `tx_hex`                                        | Obtain the current transaction hex from build                                           |
 | `MeshTxBuilderCore` User-facing Method | `reset`                                         | [To be implemented] Resetting the whole MeshTxBuilderCore                               |
 | `MeshTxBuilderCore` User-facing Method | `emptyTxBuilderBody`                            | [To be implemented] Resetting the body object                                           |
 | `MeshTxBuilderCore` User-facing Method | `complete_sync`                                 | Determine whether using customizedTx, if not queue all last items then serialize the tx |

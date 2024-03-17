@@ -35,6 +35,10 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
+    fn tx_hex(&mut self) -> String {
+        self.mesh_csl.tx_hex.to_string()
+    }
+
     fn complete_sync(
         &mut self,
         customized_tx: Option<MeshTxBuilderBody>,
