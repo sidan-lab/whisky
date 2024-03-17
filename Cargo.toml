@@ -1,6 +1,6 @@
 [package]
 name = "sidan-csl-rs"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
@@ -14,6 +14,7 @@ getrandom = { version = "0.2", features = ["js"] }
 cardano-serialization-lib = "11.5.0"
 hex = "0.4"
 serde_json = "1.0"
+cryptoxide = "0.4.4"
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]

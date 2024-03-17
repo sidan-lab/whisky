@@ -1,4 +1,4 @@
-use cardano_serialization_lib as csl;
+pub use cardano_serialization_lib as csl;
 
 use crate::model::builder::{
     Datum, DatumSource, LanguageVersion, Metadata, MintItem, Output, PubKeyTxIn, RefTxIn,
