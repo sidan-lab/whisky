@@ -1,7 +1,7 @@
 mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
-        builder::core::MeshTxBuilderCore,
+        builder::interface::{IMeshTxBuilderCore, MeshTxBuilderCore},
         model::builder::{Asset, Budget, LanguageVersion, Redeemer},
     };
 
