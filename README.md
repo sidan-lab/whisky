@@ -44,6 +44,7 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | Util Function      | `meshToPlutusData`       | To serialize plutus data from mesh data type                                           |
 | Util Function      | `jsonToPlutusData`       | To serialize plutus data from json                                                     |
 | Util Function      | `cborToPlutusData`       | To serialize plutus data from cbor                                                     |
+| Util Function      | `calculate_tx_hash`      | To calculate the transaction hash from signed or unsigned hex                          |
 | Util Function      | To be added              | To be added - A bunch of other methods that need CSL to serialized / deserialized      |
 
 ### 2. `MeshTxBuilderCore`
