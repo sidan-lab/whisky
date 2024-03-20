@@ -1,14 +1,9 @@
+use crate::*;
 use cardano_serialization_lib::{
     error::JsError,
     plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
 };
 use std::error::Error;
-
-#[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]
-use noop_proc_macro::wasm_bindgen;
-
-#[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-use wasm_bindgen::prelude::{wasm_bindgen, JsValue};
 
 use crate::core::common::{bytes_to_hex, hex_to_bytes};
 
