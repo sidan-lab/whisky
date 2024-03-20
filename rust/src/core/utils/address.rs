@@ -1,7 +1,6 @@
-use crate::{model::*, *};
+use crate::model::*;
 use cardano_serialization_lib as csl;
 
-#[wasm_bindgen]
 pub fn script_to_address(
     script_hash: String,
     stake_hash: Option<String>,

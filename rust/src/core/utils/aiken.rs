@@ -1,13 +1,13 @@
-use crate::*;
+use crate::{
+    core::common::{bytes_to_hex, hex_to_bytes},
+    *,
+};
 use cardano_serialization_lib::{
     error::JsError,
     plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
 };
-use std::error::Error;
 
-use crate::core::common::{bytes_to_hex, hex_to_bytes};
-
-pub fn apply_double_cbor_encoding(script: &str) -> Result<String, Box<dyn Error>> {
+pub fn apply_double_cbor_encoding(script: &str) -> Result<String, JsError> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
 
     match PlutusScript::from_bytes(bytes.clone()) {
@@ -21,7 +21,7 @@ pub fn apply_double_cbor_encoding(script: &str) -> Result<String, Box<dyn Error>
                 }
             }
         }
-        Err(err) => Err(Box::new(err)),
+        Err(err) => Err(JsError::from_str(&err.to_string())),
     }
 }
 
@@ -39,7 +39,7 @@ fn test_apply_double_cbor_encoding() {
 pub fn apply_params_to_script(
     params_to_apply: Vec<String>,
     plutus_script: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<String, JsError> {
     let double_encoded_script = apply_double_cbor_encoding(&plutus_script).unwrap();
     let plutus_script =
         PlutusScript::from_bytes(hex_to_bytes(&double_encoded_script).unwrap()).unwrap();
@@ -64,7 +64,6 @@ fn test_apply_params_to_script() {
   );
 }
 
-#[wasm_bindgen]
 pub fn apply_params_to_plutus_script(
     params: &PlutusList,
     plutus_script: PlutusScript,

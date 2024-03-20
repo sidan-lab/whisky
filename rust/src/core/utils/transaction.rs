@@ -1,4 +1,3 @@
-use crate::*;
 use cardano_serialization_lib as csl;
 use cryptoxide::blake2b::Blake2b;
 
@@ -8,7 +7,6 @@ pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
     out
 }
 
-#[wasm_bindgen]
 pub fn calculate_tx_hash(tx_hex: &str) -> String {
     let csl_tx = csl::protocol_types::fixed_tx::FixedTransaction::from_hex(tx_hex).unwrap();
     csl::crypto::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex()
@@ -40,7 +38,6 @@ fn test_calculate_tx_hash_2() {
     )
 }
 
-#[wasm_bindgen]
 pub fn sign_transaction(tx_hex: String, signing_keys: Vec<String>) -> String {
     let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
     let unsigned_transaction: csl::Transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
