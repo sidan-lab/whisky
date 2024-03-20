@@ -7,6 +7,10 @@ use cardano_serialization_lib::{
     plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
 };
 
+#[wasm_bindgen]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct AikenScriptParams(Vec<String>);
+
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, JsError> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
 
@@ -21,7 +25,7 @@ pub fn apply_double_cbor_encoding(script: &str) -> Result<String, JsError> {
                 }
             }
         }
-        Err(err) => Err(JsError::from_str(&err.to_string())),
+        Err(err) => Err(JsError::from(err)),
     }
 }
 
@@ -37,9 +41,11 @@ fn test_apply_double_cbor_encoding() {
 
 #[wasm_bindgen]
 pub fn apply_params_to_script(
-    params_to_apply: Vec<String>,
+    // params_to_apply: Vec<String>,
+    params_to_apply: AikenScriptParams,
     plutus_script: String,
 ) -> Result<String, JsError> {
+    let params_to_apply = params_to_apply.0;
     let double_encoded_script = apply_double_cbor_encoding(&plutus_script).unwrap();
     let plutus_script =
         PlutusScript::from_bytes(hex_to_bytes(&double_encoded_script).unwrap()).unwrap();
@@ -58,10 +64,11 @@ fn test_apply_params_to_script() {
     let script =
       "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
     let params = vec![to_string(&json!({ "bytes": "1234"})).unwrap()];
+
     assert_eq!(
-      apply_params_to_script(params, script.to_string()).unwrap(),
-      "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
-  );
+        apply_params_to_script(AikenScriptParams(params), script.to_string()).unwrap(),
+        "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
+    );
 }
 
 pub fn apply_params_to_plutus_script(

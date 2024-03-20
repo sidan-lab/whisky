@@ -15,9 +15,11 @@ cardano-serialization-lib = "11.5.0"
 hex = "0.4"
 serde_json = "1.0"
 cryptoxide = "0.4.4"
+serde-wasm-bindgen = "0.6.5"
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
+wasm-bindgen = { version = "=0.2.87", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
 
