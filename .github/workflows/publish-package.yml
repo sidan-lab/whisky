@@ -28,6 +28,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - name: Build
         run: >
+          cd rust &&
           cargo build
           --locked
           --verbose
@@ -35,12 +36,14 @@ jobs:
       - name: Run tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
+          cd rust &&
           cargo test
           --verbose
 
       - name: Run tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
+          cd rust &&
           cargo install cargo-tarpaulin
           && cargo tarpaulin
           --verbose
