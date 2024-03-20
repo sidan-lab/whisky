@@ -70,7 +70,7 @@ jobs:
           override: true
 
       - run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:) ]]; then
+          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|js:) ]]; then
             echo "Skipping npm publish due to commit message."
           else
             cd rust && cargo publish --token ${PUBLISH_KEY}
