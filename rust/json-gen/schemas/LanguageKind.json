@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LanguageKind",
+  "type": "string",
+  "enum": [
+    "PlutusV1",
+    "PlutusV2"
+  ]
+}

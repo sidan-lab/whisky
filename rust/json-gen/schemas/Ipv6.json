@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ipv6",
+  "type": "array",
+  "items": {
+    "type": "integer",
+    "format": "uint8",
+    "minimum": 0.0
+  },
+  "maxItems": 16,
+  "minItems": 16
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransactionInputs",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/TransactionInput"
+  },
+  "definitions": {
+    "TransactionInput": {
+      "type": "object",
+      "required": [
+        "index",
+        "transaction_id"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "transaction_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

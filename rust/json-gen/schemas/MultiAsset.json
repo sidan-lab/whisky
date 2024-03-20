@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MultiAsset",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/definitions/Assets"
+  },
+  "definitions": {
+    "Assets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

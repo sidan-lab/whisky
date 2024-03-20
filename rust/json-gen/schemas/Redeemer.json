@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Redeemer",
+  "type": "object",
+  "required": [
+    "data",
+    "ex_units",
+    "index",
+    "tag"
+  ],
+  "properties": {
+    "data": {
+      "type": "string"
+    },
+    "ex_units": {
+      "$ref": "#/definitions/ExUnits"
+    },
+    "index": {
+      "type": "string"
+    },
+    "tag": {
+      "$ref": "#/definitions/RedeemerTag"
+    }
+  },
+  "definitions": {
+    "ExUnits": {
+      "type": "object",
+      "required": [
+        "mem",
+        "steps"
+      ],
+      "properties": {
+        "mem": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "string"
+        }
+      }
+    },
+    "RedeemerTag": {
+      "$ref": "#/definitions/RedeemerTagKind"
+    },
+    "RedeemerTagKind": {
+      "type": "string",
+      "enum": [
+        "Spend",
+        "Mint",
+        "Cert",
+        "Reward"
+      ]
+    }
+  }
+}

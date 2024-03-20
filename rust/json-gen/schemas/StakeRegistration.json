@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StakeRegistration",
+  "type": "object",
+  "required": [
+    "stake_credential"
+  ],
+  "properties": {
+    "stake_credential": {
+      "$ref": "#/definitions/StakeCredential"
+    }
+  },
+  "definitions": {
+    "StakeCredType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Key"
+          ],
+          "properties": {
+            "Key": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Script"
+          ],
+          "properties": {
+            "Script": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "StakeCredential": {
+      "$ref": "#/definitions/StakeCredType"
+    }
+  }
+}

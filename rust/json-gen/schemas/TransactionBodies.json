@@ -1,0 +1,1299 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransactionBodies",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/TransactionBody"
+  },
+  "definitions": {
+    "Assets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "Certificate": {
+      "$ref": "#/definitions/CertificateEnum"
+    },
+    "CertificateEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "StakeRegistration"
+          ],
+          "properties": {
+            "StakeRegistration": {
+              "$ref": "#/definitions/StakeRegistration"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "StakeDeregistration"
+          ],
+          "properties": {
+            "StakeDeregistration": {
+              "$ref": "#/definitions/StakeDeregistration"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "StakeDelegation"
+          ],
+          "properties": {
+            "StakeDelegation": {
+              "$ref": "#/definitions/StakeDelegation"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "PoolRegistration"
+          ],
+          "properties": {
+            "PoolRegistration": {
+              "$ref": "#/definitions/PoolRegistration"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "PoolRetirement"
+          ],
+          "properties": {
+            "PoolRetirement": {
+              "$ref": "#/definitions/PoolRetirement"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "GenesisKeyDelegation"
+          ],
+          "properties": {
+            "GenesisKeyDelegation": {
+              "$ref": "#/definitions/GenesisKeyDelegation"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "MoveInstantaneousRewardsCert"
+          ],
+          "properties": {
+            "MoveInstantaneousRewardsCert": {
+              "$ref": "#/definitions/MoveInstantaneousRewardsCert"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Certificates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Certificate"
+      }
+    },
+    "CostModel": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Costmdls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/CostModel"
+      }
+    },
+    "DNSRecordAorAAAA": {
+      "type": "string"
+    },
+    "DNSRecordSRV": {
+      "type": "string"
+    },
+    "DataOption": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "DataHash"
+          ],
+          "properties": {
+            "DataHash": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Data"
+          ],
+          "properties": {
+            "Data": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Ed25519KeyHashes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ExUnitPrices": {
+      "type": "object",
+      "required": [
+        "mem_price",
+        "step_price"
+      ],
+      "properties": {
+        "mem_price": {
+          "$ref": "#/definitions/UnitInterval"
+        },
+        "step_price": {
+          "$ref": "#/definitions/UnitInterval"
+        }
+      }
+    },
+    "ExUnits": {
+      "type": "object",
+      "required": [
+        "mem",
+        "steps"
+      ],
+      "properties": {
+        "mem": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "string"
+        }
+      }
+    },
+    "GenesisKeyDelegation": {
+      "type": "object",
+      "required": [
+        "genesis_delegate_hash",
+        "genesishash",
+        "vrf_keyhash"
+      ],
+      "properties": {
+        "genesis_delegate_hash": {
+          "type": "string"
+        },
+        "genesishash": {
+          "type": "string"
+        },
+        "vrf_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "Ipv4": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "minimum": 0.0
+      },
+      "maxItems": 4,
+      "minItems": 4
+    },
+    "Ipv6": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "minimum": 0.0
+      },
+      "maxItems": 16,
+      "minItems": 16
+    },
+    "MIREnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ToOtherPot"
+          ],
+          "properties": {
+            "ToOtherPot": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ToStakeCredentials"
+          ],
+          "properties": {
+            "ToStakeCredentials": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/ProtocolParamUpdate"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MIRPot": {
+      "type": "string",
+      "enum": [
+        "Reserves",
+        "Treasury"
+      ]
+    },
+    "Mint": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/definitions/MintAssets"
+          }
+        ],
+        "maxItems": 2,
+        "minItems": 2
+      }
+    },
+    "MintAssets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "MoveInstantaneousReward": {
+      "type": "object",
+      "required": [
+        "pot",
+        "variant"
+      ],
+      "properties": {
+        "pot": {
+          "$ref": "#/definitions/MIRPot"
+        },
+        "variant": {
+          "$ref": "#/definitions/MIREnum"
+        }
+      }
+    },
+    "MoveInstantaneousRewardsCert": {
+      "type": "object",
+      "required": [
+        "move_instantaneous_reward"
+      ],
+      "properties": {
+        "move_instantaneous_reward": {
+          "$ref": "#/definitions/MoveInstantaneousReward"
+        }
+      }
+    },
+    "MultiAsset": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Assets"
+      }
+    },
+    "MultiHostName": {
+      "type": "object",
+      "required": [
+        "dns_name"
+      ],
+      "properties": {
+        "dns_name": {
+          "$ref": "#/definitions/DNSRecordSRV"
+        }
+      }
+    },
+    "NativeScript": {
+      "$ref": "#/definitions/NativeScriptEnum"
+    },
+    "NativeScriptEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ScriptPubkey"
+          ],
+          "properties": {
+            "ScriptPubkey": {
+              "$ref": "#/definitions/ScriptPubkey"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptAll"
+          ],
+          "properties": {
+            "ScriptAll": {
+              "$ref": "#/definitions/ScriptAll"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptAny"
+          ],
+          "properties": {
+            "ScriptAny": {
+              "$ref": "#/definitions/ScriptAny"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptNOfK"
+          ],
+          "properties": {
+            "ScriptNOfK": {
+              "$ref": "#/definitions/ScriptNOfK"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "TimelockStart"
+          ],
+          "properties": {
+            "TimelockStart": {
+              "$ref": "#/definitions/TimelockStart"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "TimelockExpiry"
+          ],
+          "properties": {
+            "TimelockExpiry": {
+              "$ref": "#/definitions/TimelockExpiry"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NativeScripts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/NativeScript"
+      }
+    },
+    "NetworkId": {
+      "$ref": "#/definitions/NetworkIdKind"
+    },
+    "NetworkIdKind": {
+      "type": "string",
+      "enum": [
+        "Testnet",
+        "Mainnet"
+      ]
+    },
+    "Nonce": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          },
+          "maxItems": 32,
+          "minItems": 32
+        }
+      }
+    },
+    "PoolMetadata": {
+      "type": "object",
+      "required": [
+        "pool_metadata_hash",
+        "url"
+      ],
+      "properties": {
+        "pool_metadata_hash": {
+          "type": "string"
+        },
+        "url": {
+          "$ref": "#/definitions/URL"
+        }
+      }
+    },
+    "PoolParams": {
+      "type": "object",
+      "required": [
+        "cost",
+        "margin",
+        "operator",
+        "pledge",
+        "pool_owners",
+        "relays",
+        "reward_account",
+        "vrf_keyhash"
+      ],
+      "properties": {
+        "cost": {
+          "type": "string"
+        },
+        "margin": {
+          "$ref": "#/definitions/UnitInterval"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "pledge": {
+          "type": "string"
+        },
+        "pool_metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PoolMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pool_owners": {
+          "$ref": "#/definitions/Ed25519KeyHashes"
+        },
+        "relays": {
+          "$ref": "#/definitions/Relays"
+        },
+        "reward_account": {
+          "type": "string"
+        },
+        "vrf_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "PoolRegistration": {
+      "type": "object",
+      "required": [
+        "pool_params"
+      ],
+      "properties": {
+        "pool_params": {
+          "$ref": "#/definitions/PoolParams"
+        }
+      }
+    },
+    "PoolRetirement": {
+      "type": "object",
+      "required": [
+        "epoch",
+        "pool_keyhash"
+      ],
+      "properties": {
+        "epoch": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "pool_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "ProtocolParamUpdate": {
+      "type": "object",
+      "properties": {
+        "ada_per_utxo_byte": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "collateral_percentage": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "cost_models": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Costmdls"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "d": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_costs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnitPrices"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expansion_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra_entropy": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Nonce"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key_deposit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_block_body_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_block_ex_units": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_block_header_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_collateral_inputs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_epoch": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_tx_ex_units": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_tx_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_value_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "min_pool_cost": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minfee_a": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minfee_b": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "n_opt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "pool_deposit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pool_pledge_influence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocol_version": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProtocolVersion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "treasury_growth_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProtocolVersion": {
+      "type": "object",
+      "required": [
+        "major",
+        "minor"
+      ],
+      "properties": {
+        "major": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "minor": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Relay": {
+      "$ref": "#/definitions/RelayEnum"
+    },
+    "RelayEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "SingleHostAddr"
+          ],
+          "properties": {
+            "SingleHostAddr": {
+              "$ref": "#/definitions/SingleHostAddr"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "SingleHostName"
+          ],
+          "properties": {
+            "SingleHostName": {
+              "$ref": "#/definitions/SingleHostName"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "MultiHostName"
+          ],
+          "properties": {
+            "MultiHostName": {
+              "$ref": "#/definitions/MultiHostName"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Relays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Relay"
+      }
+    },
+    "ScriptAll": {
+      "type": "object",
+      "required": [
+        "native_scripts"
+      ],
+      "properties": {
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptAny": {
+      "type": "object",
+      "required": [
+        "native_scripts"
+      ],
+      "properties": {
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptNOfK": {
+      "type": "object",
+      "required": [
+        "n",
+        "native_scripts"
+      ],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptPubkey": {
+      "type": "object",
+      "required": [
+        "addr_keyhash"
+      ],
+      "properties": {
+        "addr_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "ScriptRef": {
+      "$ref": "#/definitions/ScriptRefEnum"
+    },
+    "ScriptRefEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "NativeScript"
+          ],
+          "properties": {
+            "NativeScript": {
+              "$ref": "#/definitions/NativeScript"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "PlutusScript"
+          ],
+          "properties": {
+            "PlutusScript": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SingleHostAddr": {
+      "type": "object",
+      "properties": {
+        "ipv4": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ipv4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ipv6": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ipv6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "SingleHostName": {
+      "type": "object",
+      "required": [
+        "dns_name"
+      ],
+      "properties": {
+        "dns_name": {
+          "$ref": "#/definitions/DNSRecordAorAAAA"
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "StakeCredType": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "Key"
+          ],
+          "properties": {
+            "Key": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Script"
+          ],
+          "properties": {
+            "Script": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "StakeCredential": {
+      "$ref": "#/definitions/StakeCredType"
+    },
+    "StakeDelegation": {
+      "type": "object",
+      "required": [
+        "pool_keyhash",
+        "stake_credential"
+      ],
+      "properties": {
+        "pool_keyhash": {
+          "type": "string"
+        },
+        "stake_credential": {
+          "$ref": "#/definitions/StakeCredential"
+        }
+      }
+    },
+    "StakeDeregistration": {
+      "type": "object",
+      "required": [
+        "stake_credential"
+      ],
+      "properties": {
+        "stake_credential": {
+          "$ref": "#/definitions/StakeCredential"
+        }
+      }
+    },
+    "StakeRegistration": {
+      "type": "object",
+      "required": [
+        "stake_credential"
+      ],
+      "properties": {
+        "stake_credential": {
+          "$ref": "#/definitions/StakeCredential"
+        }
+      }
+    },
+    "TimelockExpiry": {
+      "type": "object",
+      "required": [
+        "slot"
+      ],
+      "properties": {
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "TimelockStart": {
+      "type": "object",
+      "required": [
+        "slot"
+      ],
+      "properties": {
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "TransactionBody": {
+      "type": "object",
+      "required": [
+        "fee",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "auxiliary_data_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "certs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Certificates"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "collateral": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TransactionInputs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "collateral_return": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TransactionOutput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fee": {
+          "type": "string"
+        },
+        "inputs": {
+          "$ref": "#/definitions/TransactionInputs"
+        },
+        "mint": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Mint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "network_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NetworkId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputs": {
+          "$ref": "#/definitions/TransactionOutputs"
+        },
+        "reference_inputs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TransactionInputs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "required_signers": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ed25519KeyHashes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "script_data_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total_collateral": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ttl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "update": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Update"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validity_start_interval": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "withdrawals": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/definitions/ProtocolParamUpdate"
+          }
+        }
+      }
+    },
+    "TransactionInput": {
+      "type": "object",
+      "required": [
+        "index",
+        "transaction_id"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "transaction_id": {
+          "type": "string"
+        }
+      }
+    },
+    "TransactionInputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TransactionInput"
+      }
+    },
+    "TransactionOutput": {
+      "type": "object",
+      "required": [
+        "address",
+        "amount"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/Value"
+        },
+        "plutus_data": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DataOption"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "script_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ScriptRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TransactionOutputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TransactionOutput"
+      }
+    },
+    "URL": {
+      "type": "string"
+    },
+    "UnitInterval": {
+      "type": "object",
+      "required": [
+        "denominator",
+        "numerator"
+      ],
+      "properties": {
+        "denominator": {
+          "type": "string"
+        },
+        "numerator": {
+          "type": "string"
+        }
+      }
+    },
+    "Update": {
+      "type": "object",
+      "required": [
+        "epoch",
+        "proposed_protocol_parameter_updates"
+      ],
+      "properties": {
+        "epoch": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "proposed_protocol_parameter_updates": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProtocolParamUpdate"
+          }
+        }
+      }
+    },
+    "Value": {
+      "type": "object",
+      "required": [
+        "coin"
+      ],
+      "properties": {
+        "coin": {
+          "type": "string"
+        },
+        "multiasset": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MultiAsset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

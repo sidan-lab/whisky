@@ -3,19 +3,19 @@
   "version": "0.2.4",
   "description": "(De)serialization functions for the Cardano blockchain along with related utility functions",
   "scripts": {
-    "rust:build-nodejs": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=nodejs; cd ..; npm run js:ts-json-gen; cd rust; wasm-pack pack) && npm run js:flowgen",
-    "rust:build-browser": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=browser; cd ..; npm run js:ts-json-gen; cd rust; wasm-pack pack) && npm run js:flowgen",
-    "rust:build-web": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=web; cd ..; npm run js:ts-json-gen; cd rust; wasm-pack pack) && npm run js:flowgen",
-    "rust:build-asm": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=browser; cd ..; npm run js:ts-json-gen; cd rust; wasm-pack pack) && npm run asm:build && npm run js:flowgen",
+    "rust:build-nodejs": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=nodejs; cd ..; yarn js:ts-json-gen; cd rust; wasm-pack pack) && yarn js:flowgen",
+    "rust:build-browser": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=browser; cd ..; yarn js:ts-json-gen; cd rust; wasm-pack pack) && yarn js:flowgen",
+    "rust:build-web": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=web; cd ..; yarn js:ts-json-gen; cd rust; wasm-pack pack) && yarn js:flowgen",
+    "rust:build-asm": "(rimraf ./rust/pkg && cd rust; wasm-pack build --target=browser; cd ..; yarn js:ts-json-gen; cd rust; wasm-pack pack) && yarn asm:build && yarn js:flowgen",
     "rust:publish": "cd rust && cargo publish && cd ../",
     "asm:build": "./binaryen/bin/wasm2js ./rust/pkg/sidan_csl_rs_bg.wasm --output ./rust/pkg/sidan_csl_rs.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
     "rust:check-warnings": "(cd rust; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
     "rust:test": "(cd rust; cargo test)",
     "js:flowgen": "flowgen ./rust/pkg/sidan_csl_rs.d.ts -o ./rust/pkg/sidan_csl_rs.js.flow --add-flow-header",
-    "js:prepublish": "npm run rust:test && rimraf ./publish && cp -r ./rust/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
-    "js:publish-nodejs:prod": "npm run rust:build-nodejs && npm run js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",
-    "js:publish-browser:prod": "npm run rust:build-browser && npm run js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
-    "js:publish-asm:prod": "npm run rust:build-asm && npm run js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
+    "js:prepublish": "yarn rust:test && rimraf ./publish && cp -r ./rust/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
+    "js:publish-nodejs": "yarn rust:build-nodejs && yarn js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",
+    "js:publish-browser": "yarn rust:build-browser && yarn js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
+    "js:publish-asm": "yarn rust:build-asm && yarn js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
     "js:ts-json-gen": "cd rust/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
     "postinstall": "git submodule update --init --recursive && cd binaryen; cmake . && make"
   },
@@ -25,7 +25,7 @@
     }
   },
   "author": "SIDAN Lab",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sidan-lab/sidan-csl-rs.git"

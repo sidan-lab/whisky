@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PoolRegistration",
+  "type": "object",
+  "required": [
+    "pool_params"
+  ],
+  "properties": {
+    "pool_params": {
+      "$ref": "#/definitions/PoolParams"
+    }
+  },
+  "definitions": {
+    "DNSRecordAorAAAA": {
+      "type": "string"
+    },
+    "DNSRecordSRV": {
+      "type": "string"
+    },
+    "Ed25519KeyHashes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Ipv4": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "minimum": 0.0
+      },
+      "maxItems": 4,
+      "minItems": 4
+    },
+    "Ipv6": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8",
+        "minimum": 0.0
+      },
+      "maxItems": 16,
+      "minItems": 16
+    },
+    "MultiHostName": {
+      "type": "object",
+      "required": [
+        "dns_name"
+      ],
+      "properties": {
+        "dns_name": {
+          "$ref": "#/definitions/DNSRecordSRV"
+        }
+      }
+    },
+    "PoolMetadata": {
+      "type": "object",
+      "required": [
+        "pool_metadata_hash",
+        "url"
+      ],
+      "properties": {
+        "pool_metadata_hash": {
+          "type": "string"
+        },
+        "url": {
+          "$ref": "#/definitions/URL"
+        }
+      }
+    },
+    "PoolParams": {
+      "type": "object",
+      "required": [
+        "cost",
+        "margin",
+        "operator",
+        "pledge",
+        "pool_owners",
+        "relays",
+        "reward_account",
+        "vrf_keyhash"
+      ],
+      "properties": {
+        "cost": {
+          "type": "string"
+        },
+        "margin": {
+          "$ref": "#/definitions/UnitInterval"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "pledge": {
+          "type": "string"
+        },
+        "pool_metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PoolMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pool_owners": {
+          "$ref": "#/definitions/Ed25519KeyHashes"
+        },
+        "relays": {
+          "$ref": "#/definitions/Relays"
+        },
+        "reward_account": {
+          "type": "string"
+        },
+        "vrf_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "Relay": {
+      "$ref": "#/definitions/RelayEnum"
+    },
+    "RelayEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "SingleHostAddr"
+          ],
+          "properties": {
+            "SingleHostAddr": {
+              "$ref": "#/definitions/SingleHostAddr"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "SingleHostName"
+          ],
+          "properties": {
+            "SingleHostName": {
+              "$ref": "#/definitions/SingleHostName"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "MultiHostName"
+          ],
+          "properties": {
+            "MultiHostName": {
+              "$ref": "#/definitions/MultiHostName"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Relays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Relay"
+      }
+    },
+    "SingleHostAddr": {
+      "type": "object",
+      "properties": {
+        "ipv4": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ipv4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ipv6": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ipv6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "SingleHostName": {
+      "type": "object",
+      "required": [
+        "dns_name"
+      ],
+      "properties": {
+        "dns_name": {
+          "$ref": "#/definitions/DNSRecordAorAAAA"
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "URL": {
+      "type": "string"
+    },
+    "UnitInterval": {
+      "type": "object",
+      "required": [
+        "denominator",
+        "numerator"
+      ],
+      "properties": {
+        "denominator": {
+          "type": "string"
+        },
+        "numerator": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

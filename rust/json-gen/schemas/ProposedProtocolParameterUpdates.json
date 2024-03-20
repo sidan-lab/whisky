@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProposedProtocolParameterUpdates",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/definitions/ProtocolParamUpdate"
+  },
+  "definitions": {
+    "CostModel": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Costmdls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/CostModel"
+      }
+    },
+    "ExUnitPrices": {
+      "type": "object",
+      "required": [
+        "mem_price",
+        "step_price"
+      ],
+      "properties": {
+        "mem_price": {
+          "$ref": "#/definitions/UnitInterval"
+        },
+        "step_price": {
+          "$ref": "#/definitions/UnitInterval"
+        }
+      }
+    },
+    "ExUnits": {
+      "type": "object",
+      "required": [
+        "mem",
+        "steps"
+      ],
+      "properties": {
+        "mem": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "string"
+        }
+      }
+    },
+    "Nonce": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          },
+          "maxItems": 32,
+          "minItems": 32
+        }
+      }
+    },
+    "ProtocolParamUpdate": {
+      "type": "object",
+      "properties": {
+        "ada_per_utxo_byte": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "collateral_percentage": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "cost_models": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Costmdls"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "d": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_costs": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnitPrices"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expansion_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra_entropy": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Nonce"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key_deposit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_block_body_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_block_ex_units": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_block_header_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_collateral_inputs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_epoch": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_tx_ex_units": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExUnits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_tx_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "max_value_size": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "min_pool_cost": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minfee_a": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minfee_b": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "n_opt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "pool_deposit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pool_pledge_influence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protocol_version": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProtocolVersion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "treasury_growth_rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UnitInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProtocolVersion": {
+      "type": "object",
+      "required": [
+        "major",
+        "minor"
+      ],
+      "properties": {
+        "major": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "minor": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "UnitInterval": {
+      "type": "object",
+      "required": [
+        "denominator",
+        "numerator"
+      ],
+      "properties": {
+        "denominator": {
+          "type": "string"
+        },
+        "numerator": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

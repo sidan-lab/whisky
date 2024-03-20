@@ -1,0 +1,320 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransactionUnspentOutput",
+  "type": "object",
+  "required": [
+    "input",
+    "output"
+  ],
+  "properties": {
+    "input": {
+      "$ref": "#/definitions/TransactionInput"
+    },
+    "output": {
+      "$ref": "#/definitions/TransactionOutput"
+    }
+  },
+  "definitions": {
+    "Assets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "DataOption": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "DataHash"
+          ],
+          "properties": {
+            "DataHash": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "Data"
+          ],
+          "properties": {
+            "Data": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MultiAsset": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Assets"
+      }
+    },
+    "NativeScript": {
+      "$ref": "#/definitions/NativeScriptEnum"
+    },
+    "NativeScriptEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "ScriptPubkey"
+          ],
+          "properties": {
+            "ScriptPubkey": {
+              "$ref": "#/definitions/ScriptPubkey"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptAll"
+          ],
+          "properties": {
+            "ScriptAll": {
+              "$ref": "#/definitions/ScriptAll"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptAny"
+          ],
+          "properties": {
+            "ScriptAny": {
+              "$ref": "#/definitions/ScriptAny"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "ScriptNOfK"
+          ],
+          "properties": {
+            "ScriptNOfK": {
+              "$ref": "#/definitions/ScriptNOfK"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "TimelockStart"
+          ],
+          "properties": {
+            "TimelockStart": {
+              "$ref": "#/definitions/TimelockStart"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "TimelockExpiry"
+          ],
+          "properties": {
+            "TimelockExpiry": {
+              "$ref": "#/definitions/TimelockExpiry"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NativeScripts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/NativeScript"
+      }
+    },
+    "ScriptAll": {
+      "type": "object",
+      "required": [
+        "native_scripts"
+      ],
+      "properties": {
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptAny": {
+      "type": "object",
+      "required": [
+        "native_scripts"
+      ],
+      "properties": {
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptNOfK": {
+      "type": "object",
+      "required": [
+        "n",
+        "native_scripts"
+      ],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "native_scripts": {
+          "$ref": "#/definitions/NativeScripts"
+        }
+      }
+    },
+    "ScriptPubkey": {
+      "type": "object",
+      "required": [
+        "addr_keyhash"
+      ],
+      "properties": {
+        "addr_keyhash": {
+          "type": "string"
+        }
+      }
+    },
+    "ScriptRef": {
+      "$ref": "#/definitions/ScriptRefEnum"
+    },
+    "ScriptRefEnum": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "NativeScript"
+          ],
+          "properties": {
+            "NativeScript": {
+              "$ref": "#/definitions/NativeScript"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "PlutusScript"
+          ],
+          "properties": {
+            "PlutusScript": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "TimelockExpiry": {
+      "type": "object",
+      "required": [
+        "slot"
+      ],
+      "properties": {
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "TimelockStart": {
+      "type": "object",
+      "required": [
+        "slot"
+      ],
+      "properties": {
+        "slot": {
+          "type": "string"
+        }
+      }
+    },
+    "TransactionInput": {
+      "type": "object",
+      "required": [
+        "index",
+        "transaction_id"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "transaction_id": {
+          "type": "string"
+        }
+      }
+    },
+    "TransactionOutput": {
+      "type": "object",
+      "required": [
+        "address",
+        "amount"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "amount": {
+          "$ref": "#/definitions/Value"
+        },
+        "plutus_data": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DataOption"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "script_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ScriptRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Value": {
+      "type": "object",
+      "required": [
+        "coin"
+      ],
+      "properties": {
+        "coin": {
+          "type": "string"
+        },
+        "multiasset": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MultiAsset"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

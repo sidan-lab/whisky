@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProtocolVersion",
+  "type": "object",
+  "required": [
+    "major",
+    "minor"
+  ],
+  "properties": {
+    "major": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
+    "minor": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    }
+  }
+}

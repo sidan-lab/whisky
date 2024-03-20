@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UnitInterval",
+  "type": "object",
+  "required": [
+    "denominator",
+    "numerator"
+  ],
+  "properties": {
+    "denominator": {
+      "type": "string"
+    },
+    "numerator": {
+      "type": "string"
+    }
+  }
+}
