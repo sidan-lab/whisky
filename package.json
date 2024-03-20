@@ -16,8 +16,7 @@
     "js:publish-nodejs": "yarn rust:build-nodejs && yarn js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",
     "js:publish-browser": "yarn rust:build-browser && yarn js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
     "js:publish-asm": "yarn rust:build-asm && yarn js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
-    "js:ts-json-gen": "cd rust/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
-    "postinstall": "git submodule update --init --recursive && cd binaryen; cmake . && make"
+    "js:ts-json-gen": "cd rust/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js"
   },
   "husky": {
     "hooks": {
