@@ -23,12 +23,12 @@ jobs:
           node-version: 18
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
-        run: yarn && cargo install wasm-pack
+        run: npm install && cargo install wasm-pack
       - run: |
           if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|rust:) ]]; then
               echo "Skipping npm publish due to commit message."
           else
-              yarn && yarn js:publish-nodejs && yarn js:publish-browser
+              npm run js:publish-nodejs && npm run js:publish-browser
           fi
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}

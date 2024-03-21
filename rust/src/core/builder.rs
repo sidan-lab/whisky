@@ -1,6 +1,4 @@
-pub use cardano_serialization_lib as csl;
-
-use crate::model::*;
+use crate::{csl, model::*};
 
 use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_value};
 

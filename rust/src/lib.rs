@@ -1,6 +1,7 @@
 pub mod builder;
 pub mod core;
 pub mod model;
+pub use cardano_serialization_lib as csl;
 mod serialization_macros;
 
 #[cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))]

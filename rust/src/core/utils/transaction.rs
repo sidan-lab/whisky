@@ -1,4 +1,4 @@
-use cardano_serialization_lib as csl;
+use crate::csl;
 use cryptoxide::blake2b::Blake2b;
 
 pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {

@@ -1,15 +1,38 @@
 use crate::{
     core::common::{bytes_to_hex, hex_to_bytes},
+    csl::{
+        error::JsError,
+        plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
+    },
     *,
-};
-use cardano_serialization_lib::{
-    error::JsError,
-    plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
 };
 
 #[wasm_bindgen]
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Default)]
 pub struct AikenScriptParams(Vec<String>);
+
+#[wasm_bindgen]
+impl AikenScriptParams {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, index: usize) -> String {
+        self.0[index].clone()
+    }
+
+    pub fn add(&mut self, elem: String) {
+        self.0.push(elem.clone());
+    }
+}
 
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, JsError> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
