@@ -708,7 +708,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.2.5"
+version = "0.2.6-beta1"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -717,6 +717,7 @@ dependencies = [
  "js-sys",
  "noop_proc_macro",
  "rand_os",
+ "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
  "uplc",

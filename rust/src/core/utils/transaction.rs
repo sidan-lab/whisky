@@ -1,4 +1,4 @@
-use crate::csl;
+use crate::{csl, model::*, *};
 use cryptoxide::blake2b::Blake2b;
 
 pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
@@ -7,6 +7,7 @@ pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
     out
 }
 
+#[wasm_bindgen]
 pub fn calculate_tx_hash(tx_hex: &str) -> String {
     let csl_tx = csl::protocol_types::fixed_tx::FixedTransaction::from_hex(tx_hex).unwrap();
     csl::crypto::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex()
@@ -38,22 +39,23 @@ fn test_calculate_tx_hash_2() {
     )
 }
 
-pub fn sign_transaction(tx_hex: String, signing_keys: Vec<String>) -> String {
-    let mut vkey_witnesses = csl::crypto::Vkeywitnesses::new();
+#[wasm_bindgen]
+pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
     let unsigned_transaction: csl::Transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
     let tx_body = unsigned_transaction.body();
+    let mut witness_set = unsigned_transaction.witness_set();
+    let mut vkey_witnesses = witness_set.vkeys().unwrap().clone();
     for key in signing_keys {
         let clean_hex = if &key[0..4] == "5820" {
             key[4..].to_string()
         } else {
-            key
+            key.to_string()
         };
         let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
         let vkey_witness =
             csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
         vkey_witnesses.add(&vkey_witness);
     }
-    let mut witness_set = unsigned_transaction.witness_set();
     witness_set.set_vkeys(&vkey_witnesses);
     let signed_transaction = csl::Transaction::new(
         &tx_body,

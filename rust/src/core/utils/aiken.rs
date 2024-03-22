@@ -4,35 +4,9 @@ use crate::{
         error::JsError,
         plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
     },
+    model::JsVecString,
     *,
 };
-
-#[wasm_bindgen]
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Default)]
-pub struct AikenScriptParams(Vec<String>);
-
-#[wasm_bindgen]
-impl AikenScriptParams {
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn get(&self, index: usize) -> String {
-        self.0[index].clone()
-    }
-
-    pub fn add(&mut self, elem: String) {
-        self.0.push(elem.clone());
-    }
-}
 
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, JsError> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
@@ -64,17 +38,15 @@ fn test_apply_double_cbor_encoding() {
 
 #[wasm_bindgen]
 pub fn apply_params_to_script(
-    // params_to_apply: Vec<String>,
-    params_to_apply: AikenScriptParams,
+    params_to_apply: JsVecString,
     plutus_script: String,
 ) -> Result<String, JsError> {
-    let params_to_apply = params_to_apply.0;
     let double_encoded_script = apply_double_cbor_encoding(&plutus_script).unwrap();
     let plutus_script =
         PlutusScript::from_bytes(hex_to_bytes(&double_encoded_script).unwrap()).unwrap();
     let mut plutus_list = PlutusList::new();
-    for param in &params_to_apply {
-        let plutus_data = PlutusData::from_json(param, PlutusDatumSchema::DetailedSchema).unwrap();
+    for param in params_to_apply {
+        let plutus_data = PlutusData::from_json(&param, PlutusDatumSchema::DetailedSchema).unwrap();
         plutus_list.add(&plutus_data);
     }
     let bytes = apply_params_to_plutus_script(&plutus_list, plutus_script)?.to_bytes();
@@ -88,8 +60,11 @@ fn test_apply_params_to_script() {
       "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
     let params = vec![to_string(&json!({ "bytes": "1234"})).unwrap()];
 
+    let mut aiken_params = JsVecString::new();
+    aiken_params.add(params[0].clone());
+
     assert_eq!(
-        apply_params_to_script(AikenScriptParams(params), script.to_string()).unwrap(),
+        apply_params_to_script(aiken_params, script.to_string()).unwrap(),
         "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
     );
 }

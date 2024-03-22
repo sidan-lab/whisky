@@ -27,7 +27,7 @@ pub trait IMeshCSL {
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
     fn add_change(&mut self, change_address: String, change_datum: Option<Datum>);
-    fn add_signing_keys(&mut self, signing_keys: Vec<String>);
+    fn add_signing_keys(&mut self, signing_keys: JsVecString);
     fn add_required_signature(&mut self, pub_key_hash: String);
     fn add_metadata(&mut self, metadata: Metadata);
     fn add_script_hash(&mut self);
@@ -342,7 +342,7 @@ impl IMeshCSL for MeshCSL {
         }
     }
 
-    fn add_signing_keys(&mut self, signing_keys: Vec<String>) {
+    fn add_signing_keys(&mut self, signing_keys: JsVecString) {
         self.tx_hex = sign_transaction(self.tx_hex.to_string(), signing_keys);
     }
 

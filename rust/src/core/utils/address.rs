@@ -1,9 +1,10 @@
-use crate::{csl, model::*};
+use crate::{csl, model::*, *};
 
+#[wasm_bindgen]
 pub fn script_to_address(
+    network_id: u8,
     script_hash: String,
     stake_hash: Option<String>,
-    network_id: u8,
 ) -> String {
     match stake_hash {
         Some(stake) => csl::address::BaseAddress::new(
@@ -31,6 +32,7 @@ pub fn script_to_address(
     }
 }
 
+#[wasm_bindgen]
 pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
     let csl_address = csl::address::BaseAddress::from_address(
         &csl::address::Address::from_bech32(&bech32_addr).unwrap(),
@@ -52,11 +54,11 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
                 .to_keyhash()
                 .map(|stake_key_hash| stake_key_hash.to_hex());
 
-            SerializedAddress {
-                pub_key_hash: csl_key_hash.unwrap_or("".to_string()),
-                script_hash: csl_script_hash.unwrap_or("".to_string()),
-                stake_key_hash: csl_stake_key_hash.unwrap_or("".to_string()),
-            }
+            SerializedAddress::new(
+                csl_key_hash.unwrap_or("".to_string()),
+                csl_script_hash.unwrap_or("".to_string()),
+                csl_stake_key_hash.unwrap_or("".to_string()),
+            )
         }
         None => {
             let csl_enterprize_address = csl::address::EnterpriseAddress::from_address(
@@ -74,11 +76,11 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
                 .to_scripthash()
                 .map(|script_hash| script_hash.to_hex());
 
-            SerializedAddress {
-                pub_key_hash: csl_key_hash.unwrap_or("".to_string()),
-                script_hash: csl_script_hash.unwrap_or("".to_string()),
-                stake_key_hash: "".to_string(),
-            }
+            SerializedAddress::new(
+                csl_key_hash.unwrap_or("".to_string()),
+                csl_script_hash.unwrap_or("".to_string()),
+                "".to_string(),
+            )
         }
     }
 }
