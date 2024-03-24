@@ -708,7 +708,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.2.6-beta2"
+version = "0.2.6-beta3"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",

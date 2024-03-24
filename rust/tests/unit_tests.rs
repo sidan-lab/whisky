@@ -287,6 +287,17 @@ mod tests {
                     "".to_string(),
                     "".to_string()
                 )
+        );
+
+        let addr4 = "addr_test1qqmrzjhtanauj20wg37uk58adyrqfm82a9qr52vdnv0e54r42v0mu8ngky0f5yxmh3wl3z0da2fryk59kavth0u8xhvsufgmc8";
+        let addr4_result = serialize_bech32_address(addr4.to_string());
+        assert!(
+            addr4_result
+                == SerializedAddress::new(
+                    "36314aebecfbc929ee447dcb50fd690604eceae9403a298d9b1f9a54".to_string(),
+                    "".to_string(),
+                    "75531fbe1e68b11e9a10dbbc5df889edea92325a85b758bbbf8735d9".to_string()
+                )
         )
     }
 
