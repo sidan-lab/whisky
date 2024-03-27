@@ -73,15 +73,12 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
     }
 
     // TODO: Handle datum hash case
-    let datum: Option<Datum> = match output.plutus_data() {
-        Some(csl_datum) => Some(Datum {
-            type_: "Inline".to_string(),
-            data: csl_datum
-                .to_json(csl::plutus::PlutusDatumSchema::DetailedSchema)
-                .unwrap(),
-        }),
-        None => None,
-    };
+    let datum: Option<Datum> = output.plutus_data().map(|csl_datum| Datum {
+        type_: "Inline".to_string(),
+        data: csl_datum
+            .to_json(csl::plutus::PlutusDatumSchema::DetailedSchema)
+            .unwrap(),
+    });
 
     let reference_script: Option<ProvidedScriptSource> = match output.script_ref() {
         Some(csl_script_ref) => {
