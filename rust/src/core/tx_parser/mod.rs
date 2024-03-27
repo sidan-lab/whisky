@@ -1,4 +1,5 @@
 use crate::model::{JsVecString, MeshTxBuilderBody, ValidityRange};
+use crate::csl;
 
 pub struct MeshTxParser {
     pub tx_hex: String,
@@ -31,9 +32,10 @@ impl MeshTxParserTrait for MeshTxParser {
             },
             signing_key: JsVecString::new(),
         };
+        let csl_tx = csl::Transaction::from_hex(s).expect("Invalid transaction");
         MeshTxParser {
             tx_hex: s.to_string(),
-            tx_fee_lovelace: 0,
+            tx_fee_lovelace: csl::utils::from_bignum(&csl_tx.body().fee()),
             tx_body,
         }
     }
