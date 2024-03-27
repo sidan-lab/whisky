@@ -1,1 +1,7 @@
-/target
+target
+*/target
+*/**/target
+/node_modules
+*/**/schemas
+*/**/output
+rust/pkg

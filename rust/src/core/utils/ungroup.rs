@@ -1,4 +1,4 @@
-use cardano_serialization_lib as csl;
+use crate::csl;
 use hex::FromHex;
 
 use crate::model::*;

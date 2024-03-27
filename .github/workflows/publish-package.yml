@@ -28,6 +28,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - name: Build
         run: >
+          cd rust &&
           cargo build
           --locked
           --verbose
@@ -35,12 +36,14 @@ jobs:
       - name: Run tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
+          cd rust &&
           cargo test
           --verbose
 
       - name: Run tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
+          cd rust &&
           cargo install cargo-tarpaulin
           && cargo tarpaulin
           --verbose
@@ -67,10 +70,10 @@ jobs:
           override: true
 
       - run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:) ]]; then
+          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|js:) ]]; then
             echo "Skipping npm publish due to commit message."
           else
-          cargo publish --token ${PUBLISH_KEY}
+            cd rust && cargo publish --token ${PUBLISH_KEY}
           fi
 
         env:

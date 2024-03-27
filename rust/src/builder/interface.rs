@@ -453,7 +453,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Arguments
     ///
     /// * `signing_keys` - A vector of signing keys in hexadecimal
-    fn add_all_signing_keys(&mut self, signing_keys: Vec<String>);
+    fn add_all_signing_keys(&mut self, signing_keys: JsVecString);
 
     /// ## Internal method
     ///
@@ -516,7 +516,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Arguments
     ///
     /// * `required_signatures` - A vector of required signatures
-    fn add_all_required_signature(&mut self, required_signatures: Vec<String>);
+    fn add_all_required_signature(&mut self, required_signatures: JsVecString);
 
     /// ## Internal method
     ///

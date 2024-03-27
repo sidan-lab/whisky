@@ -1,16 +1,21 @@
+mod js_vec;
+mod serialized_address;
+pub use js_vec::*;
+pub use serialized_address::*;
+
 #[derive(Clone, Debug)]
 pub struct MeshTxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
     pub collaterals: Vec<PubKeyTxIn>,
-    pub required_signatures: Vec<String>,
+    pub required_signatures: JsVecString,
     pub reference_inputs: Vec<RefTxIn>,
     pub mints: Vec<MintItem>,
     pub change_address: String,
     pub change_datum: Option<Datum>,
     pub metadata: Vec<Metadata>,
     pub validity_range: ValidityRange,
-    pub signing_key: Vec<String>,
+    pub signing_key: JsVecString,
 }
 
 #[derive(Clone, Debug)]
@@ -99,7 +104,7 @@ pub enum DatumSource {
     InlineDatumSource(InlineDatumSource),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ProvidedDatumSource {
     pub data: String,
 }
@@ -155,13 +160,6 @@ pub struct Metadata {
 pub struct Datum {
     pub type_: String,
     pub data: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct SerializedAddress {
-    pub pub_key_hash: String,
-    pub script_hash: String,
-    pub stake_key_hash: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]

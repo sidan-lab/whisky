@@ -1,8 +1,8 @@
 use crate::{
     core::builder::{IMeshCSL, MeshCSL},
+    csl,
     model::*,
 };
-use cardano_serialization_lib as csl;
 
 use super::interface::{IMeshTxBuilderCore, MeshTxBuilderCore};
 
@@ -14,7 +14,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 inputs: vec![],
                 outputs: vec![],
                 collaterals: vec![],
-                required_signatures: vec![],
+                required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
                 mints: vec![],
                 change_address: "".to_string(),
@@ -24,7 +24,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                     invalid_before: None,
                     invalid_hereafter: None,
                 },
-                signing_key: vec![],
+                signing_key: JsVecString::new(),
             },
             tx_in_item: None,
             mint_item: None,
@@ -486,7 +486,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
     fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut MeshTxBuilderCore {
         self.mesh_tx_builder_body
             .required_signatures
-            .push(pub_key_hash);
+            .add(pub_key_hash);
         self
     }
 
@@ -544,11 +544,11 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
     }
 
     fn signing_key(&mut self, skey_hex: String) -> &mut MeshTxBuilderCore {
-        self.mesh_tx_builder_body.signing_key.push(skey_hex);
+        self.mesh_tx_builder_body.signing_key.add(skey_hex);
         self
     }
-    fn add_all_signing_keys(&mut self, signing_keys: Vec<String>) {
-        if !signing_keys.is_empty() {
+    fn add_all_signing_keys(&mut self, signing_keys: JsVecString) {
+        if !signing_keys.len() == 0 {
             self.mesh_csl.add_signing_keys(signing_keys);
         }
     }
@@ -611,7 +611,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
-    fn add_all_required_signature(&mut self, required_signatures: Vec<String>) {
+    fn add_all_required_signature(&mut self, required_signatures: JsVecString) {
         for pub_key_hash in required_signatures {
             self.mesh_csl.add_required_signature(pub_key_hash);
         }
