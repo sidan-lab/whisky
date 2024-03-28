@@ -1,7 +1,11 @@
+mod asset;
 mod js_vec;
 mod serialized_address;
+mod value;
+pub use asset::*;
 pub use js_vec::*;
 pub use serialized_address::*;
+pub use value::*;
 
 #[derive(Clone, Debug)]
 pub struct MeshTxBuilderBody {
@@ -136,12 +140,6 @@ pub struct MintItem {
 pub struct Redeemer {
     pub data: String,
     pub ex_units: Budget,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Asset {
-    pub unit: String,
-    pub quantity: String,
 }
 
 #[derive(Clone, Debug)]
