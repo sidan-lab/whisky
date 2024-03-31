@@ -1,20 +1,9 @@
 use crate::model::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-pub fn select_utxos(
-    inputs: Vec<UTxO>,
-    required_assets: HashMap<String, String>,
-    threshold: String,
-) -> Vec<UTxO> {
+pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String) -> Vec<UTxO> {
     let mut total_required_assets = required_assets.clone();
-    let lovelace_value = total_required_assets
-        .get("lovelace")
-        .unwrap()
-        .parse::<i64>()
-        .unwrap();
-    let threshold_parsed = threshold.parse::<i64>().unwrap();
-    let sum = lovelace_value + threshold_parsed;
-    total_required_assets.insert("lovelace".to_string(), sum.to_string());
+    total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold));
 
     // Classify the utxos
     let mut only_lovelace: Vec<usize> = vec![];
@@ -31,53 +20,35 @@ pub fn select_utxos(
     }
 
     let mut used_utxos: HashSet<usize> = HashSet::new();
-    let mut use_utxo = |index: usize, total_required_assets: &mut HashMap<String, String>| {
+
+    let mut use_utxo = |index: usize, total_required_assets: &mut Value| {
         let utxo = inputs[index].clone();
         for asset in utxo.output.amount {
-            let required_asset_value = total_required_assets
-                .get(&asset.unit)
-                .unwrap_or(&"0".to_string())
-                .parse::<i64>()
-                .unwrap();
-            let utxo_asset_value = asset.quantity.parse::<i64>().unwrap();
-            let final_required_asset_value = required_asset_value - utxo_asset_value;
-            total_required_assets.insert(asset.unit, final_required_asset_value.to_string());
+            total_required_assets.negate_asset(Asset::new(asset.unit, asset.quantity));
             used_utxos.insert(index);
         }
     };
 
-    let mut process_list =
-        |list: Vec<usize>, unit: String, total_required_assets: &mut HashMap<String, String>| {
-            for index in list {
-                let required_asset_value = total_required_assets
-                    .get(&unit)
-                    .unwrap_or(&"0".to_string())
-                    .parse::<i64>()
-                    .unwrap();
-                if required_asset_value <= 0 {
-                    return;
-                }
-                let utxo = inputs[index].clone();
-                for asset in utxo.output.amount {
-                    if asset.unit == unit {
-                        use_utxo(index, total_required_assets);
-                        break;
-                    }
+    let mut process_list = |list: Vec<usize>, unit: String, total_required_assets: &mut Value| {
+        for index in list {
+            let required_asset_value = total_required_assets.get(&unit);
+            if required_asset_value == 0 {
+                return;
+            }
+            let utxo = inputs[index].clone();
+            for asset in utxo.output.amount {
+                if asset.unit == unit {
+                    use_utxo(index, total_required_assets);
+                    break;
                 }
             }
-        };
+        }
+    };
 
-    let required_units: Vec<String> = total_required_assets.keys().cloned().collect();
+    let required_units: Vec<String> = total_required_assets.keys();
 
     for unit in required_units.clone() {
-        if unit != *"lovelace"
-            && total_required_assets
-                .get(&unit)
-                .unwrap()
-                .parse::<i64>()
-                .unwrap()
-                > 0
-        {
+        if unit != *"lovelace" && total_required_assets.get(&unit) > 0 {
             process_list(singleton.clone(), unit.clone(), &mut total_required_assets);
             process_list(pair.clone(), unit.clone(), &mut total_required_assets);
             process_list(rest.clone(), unit.clone(), &mut total_required_assets);
@@ -107,13 +78,8 @@ pub fn select_utxos(
     );
 
     for unit in required_units.clone() {
-        if total_required_assets
-            .get(&unit)
-            .unwrap()
-            .parse::<i64>()
-            .unwrap()
-            > 0
-        {
+        if total_required_assets.get(&unit) > 0 {
+            println!("Total required assets: {:?}", total_required_assets);
             panic!("Selection failed");
         }
     }
@@ -146,8 +112,8 @@ fn test_basic_selection() {
         },
     }];
 
-    let mut required_assets: HashMap<String, String> = HashMap::new();
-    required_assets.insert("lovelace".to_string(), "5000000".to_string());
+    let mut required_assets: Value = Value::new();
+    required_assets.add_asset(Asset::new_from_str("lovelace", "5000000"));
     let selected_list = select_utxos(utxo_list.clone(), required_assets, "5000000".to_string());
     assert_eq!(utxo_list, selected_list);
 }

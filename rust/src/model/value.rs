@@ -68,6 +68,18 @@ impl Value {
         assets
     }
 
+    // Accessor
+    pub fn get(&self, key: &str) -> u64 {
+        match self.0.get(key) {
+            Some(value) => *value,
+            None => 0,
+        }
+    }
+
+    pub fn keys(&self) -> Vec<String> {
+        self.0.keys().cloned().collect()
+    }
+
     // Comparison function
     pub fn geq(&self, other: &Value) -> bool {
         for (key, value) in &other.0 {
