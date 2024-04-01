@@ -11,6 +11,15 @@ impl Value {
         Value(HashMap::new())
     }
 
+    pub fn from_asset(asset: Asset) -> Self {
+        let mut asset_map = HashMap::new();
+        asset_map.insert(
+            asset.unit.to_string(),
+            asset.quantity.parse::<u64>().unwrap(),
+        );
+        Value(asset_map)
+    }
+
     pub fn from_asset_vec(assets: Vec<Asset>) -> Self {
         let mut asset_map = HashMap::new();
         for asset in assets {

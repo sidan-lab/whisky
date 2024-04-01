@@ -448,6 +448,20 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Internal method
     ///
+    /// Selects utxos to fill output value and puts them into inputs
+    ///
+    /// ### Arguments
+    ///
+    /// * `inputs` - The inputs already placed into the object will remain, these extra inputs will be used to fill the remaining  value needed
+    /// * `threshold` - Extra value needed to be selected for, usually for paying fees and min UTxO value of change output
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn select_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> &mut Self;
+
+    /// ## Internal method
+    ///
     /// Add multiple signing keys to the MeshTxBuilder instance
     ///
     /// ### Arguments
@@ -463,6 +477,16 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `inputs` - A vector of inputs
     fn add_all_inputs(&mut self, inputs: Vec<TxIn>);
+
+    /// ## Internal method
+    ///
+    /// Perform the utxo selection process
+    ///
+    /// ### Arguments
+    ///
+    /// * `extra_inputs` - A vector of extra inputs provided
+    /// * `threshold` - The threshold as configured
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64);
 
     /// ## Internal method
     ///
@@ -547,6 +571,8 @@ pub struct MeshTxBuilderCore {
     pub mesh_csl: MeshCSL,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
     pub tx_in_item: Option<TxIn>,
+    pub extra_inputs: Vec<UTxO>,
+    pub selection_threshold: u64,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,

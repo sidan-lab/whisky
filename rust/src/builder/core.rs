@@ -1,5 +1,8 @@
 use crate::{
-    core::builder::{IMeshCSL, MeshCSL},
+    core::{
+        algo::select_utxos,
+        builder::{IMeshCSL, MeshCSL},
+    },
     csl,
     model::*,
 };
@@ -27,6 +30,8 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 signing_key: JsVecString::new(),
             },
             tx_in_item: None,
+            extra_inputs: vec![],
+            selection_threshold: 0,
             mint_item: None,
             collateral_item: None,
             tx_output: None,
@@ -78,6 +83,10 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 .cmp(&tx_in_data_b.tx_hash)
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
+
+        if !self.extra_inputs.is_empty() {
+            self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
+        }
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
@@ -550,6 +559,62 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
     fn add_all_signing_keys(&mut self, signing_keys: JsVecString) {
         if !signing_keys.len() == 0 {
             self.mesh_csl.add_signing_keys(signing_keys);
+        }
+    }
+
+    fn select_utxos_from(
+        &mut self,
+        extra_inputs: Vec<UTxO>,
+        threshold: u64,
+    ) -> &mut MeshTxBuilderCore {
+        self.selection_threshold = threshold;
+        self.extra_inputs = extra_inputs;
+        self
+    }
+
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) {
+        let mut required_assets = Value::new();
+
+        for output in &self.mesh_tx_builder_body.outputs {
+            let output_value = Value::from_asset_vec(output.amount.clone());
+            required_assets.merge(output_value);
+        }
+
+        for input in &self.mesh_tx_builder_body.inputs {
+            match input {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => {
+                    let input_value =
+                        Value::from_asset_vec(pub_key_tx_in.tx_in.amount.clone().unwrap());
+                    required_assets.negate_assets(input_value);
+                }
+                TxIn::ScriptTxIn(script_tx_in) => {
+                    let input_value =
+                        Value::from_asset_vec(script_tx_in.tx_in.amount.clone().unwrap());
+                    required_assets.negate_assets(input_value);
+                }
+            }
+        }
+
+        for mint in &self.mesh_tx_builder_body.mints {
+            let mint_amount = Asset {
+                unit: mint.policy_id.clone() + &mint.asset_name,
+                quantity: mint.amount.to_string(),
+            };
+            required_assets.negate_asset(mint_amount);
+        }
+
+        let selected_inputs = select_utxos(extra_inputs, required_assets, threshold.to_string());
+
+        for input in selected_inputs {
+            self.mesh_csl.add_tx_in(PubKeyTxIn {
+                type_: "PubKey".to_string(),
+                tx_in: TxInParameter {
+                    tx_hash: input.input.tx_hash,
+                    tx_index: input.input.output_index,
+                    amount: Some(input.output.amount),
+                    address: Some(input.output.address),
+                },
+            });
         }
     }
 
