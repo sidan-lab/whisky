@@ -56,19 +56,25 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
         unit: "lovelace".to_string(),
         quantity: output.amount().coin().to_str(),
     });
-    let multi_asset = output.amount().multiasset().unwrap();
-    for policy_id_index in 0..multi_asset.keys().len() {
-        let policy_id = multi_asset.keys().get(policy_id_index);
-        let assets = multi_asset.get(&policy_id).unwrap();
-        for asset_index in 0..assets.keys().len() {
-            let asset_name = assets.keys().get(asset_index);
-            let asset_quantity = assets.get(&asset_name).unwrap();
-            let concated_name = policy_id.to_hex() + &asset_name.to_hex();
+    let multi_asset = output.amount().multiasset();
 
-            value.push(Asset {
-                unit: concated_name,
-                quantity: asset_quantity.to_str(),
-            })
+    match multi_asset {
+        None => {}
+        Some(multi_asset) => {
+            for policy_id_index in 0..multi_asset.keys().len() {
+                let policy_id = multi_asset.keys().get(policy_id_index);
+                let assets = multi_asset.get(&policy_id).unwrap();
+                for asset_index in 0..assets.keys().len() {
+                    let asset_name = assets.keys().get(asset_index);
+                    let asset_quantity = assets.get(&asset_name).unwrap();
+                    let concated_name = policy_id.to_hex() + &asset_name.to_hex();
+
+                    value.push(Asset {
+                        unit: concated_name,
+                        quantity: asset_quantity.to_str(),
+                    })
+                }
+            }
         }
     }
 
