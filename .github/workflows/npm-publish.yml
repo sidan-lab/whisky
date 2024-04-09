@@ -8,10 +8,7 @@ on:
     types: [created]
   push:
     branches:
-      - feature/wasm
-  pull_request:
-    branches:
-      - feature/wasm
+      - master
 
 jobs:
   publish-npm:
