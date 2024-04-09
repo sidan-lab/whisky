@@ -67,7 +67,7 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
                 for asset_index in 0..assets.keys().len() {
                     let asset_name = assets.keys().get(asset_index);
                     let asset_quantity = assets.get(&asset_name).unwrap();
-                    let concated_name = policy_id.to_hex() + &asset_name.to_hex();
+                    let concated_name = policy_id.to_hex() + &asset_name.to_string();
 
                     value.push(Asset {
                         unit: concated_name,
