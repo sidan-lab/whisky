@@ -9,7 +9,8 @@ description = "Wrapper around the cardano-serialization-lib for easier transacti
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-uplc = "0.0.29"
+uplc = "=1.0.26-alpha"
+pallas = "0.22.0"
 getrandom = { version = "0.2", features = ["js"] }
 cardano-serialization-lib = "11.5.0"
 hex = "0.4"
