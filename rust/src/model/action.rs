@@ -4,7 +4,7 @@ use super::Budget;
 pub struct Action {
     pub index: u16,
     pub budget: Budget,
-    tag: RedeemerTag,
+    pub tag: RedeemerTag,
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -1,4 +1,34 @@
-use crate::{core::builder::MeshCSL, model::*};
+use crate::{core::builder::MeshCSL, model::*, service::IEvaluator};
+
+pub struct MeshTxBuilder {
+    pub mesh_csl: MeshCSL,
+    pub mesh_tx_builder_body: MeshTxBuilderBody,
+    pub tx_in_item: Option<TxIn>,
+    pub extra_inputs: Vec<UTxO>,
+    pub selection_threshold: u64,
+    pub mint_item: Option<MintItem>,
+    pub collateral_item: Option<PubKeyTxIn>,
+    pub tx_output: Option<Output>,
+    pub adding_script_input: bool,
+    pub adding_plutus_mint: bool,
+    pub tx_evaluation_multiplier_percentage: u64,
+    pub evaluator: Option<Box<dyn IEvaluator>>,
+}
+
+pub trait IMeshTxBuilder {
+    /// ## Transaction building method
+    ///  
+    /// Complete the transaction building process with fetching missing information & tx evaluation
+    ///
+    /// ### Arguments
+    ///
+    /// * `customized_tx` - An optional customized transaction body
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+}
 
 pub trait IMeshTxBuilderCore {
     /// ## Transaction building method
@@ -565,17 +595,4 @@ pub trait IMeshTxBuilderCore {
     ///
     /// Queue all last items in the MeshTxBuilder instance
     fn queue_all_last_item(&mut self);
-}
-
-pub struct MeshTxBuilderCore {
-    pub mesh_csl: MeshCSL,
-    pub mesh_tx_builder_body: MeshTxBuilderBody,
-    pub tx_in_item: Option<TxIn>,
-    pub extra_inputs: Vec<UTxO>,
-    pub selection_threshold: u64,
-    pub mint_item: Option<MintItem>,
-    pub collateral_item: Option<PubKeyTxIn>,
-    pub tx_output: Option<Output>,
-    pub adding_script_input: bool,
-    pub adding_plutus_mint: bool,
 }

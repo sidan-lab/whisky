@@ -7,9 +7,29 @@ use crate::{
     model::*,
 };
 
-use super::interface::{IMeshTxBuilderCore, MeshTxBuilderCore};
+use super::{
+    interface::{IMeshTxBuilderCore, MeshTxBuilder},
+    IMeshTxBuilder, ITxEvaluation,
+};
 
-impl IMeshTxBuilderCore for MeshTxBuilderCore {
+impl IMeshTxBuilder for MeshTxBuilder {
+    fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
+        self.complete_sync(customized_tx);
+        match self.evaluator {
+            Some(evaluator) => {
+                let tx_evaluation_result = evaluator.evaluate_tx(self.mesh_csl.tx_hex.to_string());
+                match tx_evaluation_result {
+                    Ok(actions) => self.update_redeemer(actions),
+                    Err(_) => panic!("Error evaluating transaction"),
+                }
+            }
+            None => self,
+        };
+        self.complete_sync(None)
+    }
+}
+
+impl IMeshTxBuilderCore for MeshTxBuilder {
     fn new() -> Self {
         Self {
             mesh_csl: MeshCSL::new(),
@@ -37,6 +57,8 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
             tx_output: None,
             adding_script_input: false,
             adding_plutus_mint: false,
+            tx_evaluation_multiplier_percentage: 110,
+            evaluator: None,
         }
     }
 
@@ -44,10 +66,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self.mesh_csl.tx_hex.to_string()
     }
 
-    fn complete_sync(
-        &mut self,
-        customized_tx: Option<MeshTxBuilderBody>,
-    ) -> &mut MeshTxBuilderCore {
+    fn complete_sync(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
@@ -62,7 +81,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self.mesh_csl.tx_hex.to_string()
     }
 
-    fn serialize_tx_body(&mut self) -> &mut MeshTxBuilderCore {
+    fn serialize_tx_body(&mut self) -> &mut Self {
         self.mesh_tx_builder_body
             .mints
             .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
@@ -176,7 +195,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         tx_index: u32,
         amount: Vec<Asset>,
         address: String,
-    ) -> &mut MeshTxBuilderCore {
+    ) -> &mut Self {
         if self.tx_in_item.is_some() {
             self.queue_input();
         }
@@ -211,11 +230,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_in_script(
-        &mut self,
-        script_cbor: String,
-        version: LanguageVersion,
-    ) -> &mut MeshTxBuilderCore {
+    fn tx_in_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -235,7 +250,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_in_datum_value(&mut self, data: String) -> &mut MeshTxBuilderCore {
+    fn tx_in_datum_value(&mut self, data: String) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -254,7 +269,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
+    fn tx_in_inline_datum_present(&mut self) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -274,7 +289,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+    fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -290,7 +305,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_out(&mut self, address: String, amount: Vec<Asset>) -> &mut MeshTxBuilderCore {
+    fn tx_out(&mut self, address: String, amount: Vec<Asset>) -> &mut Self {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
             self.mesh_tx_builder_body.outputs.push(tx_output.unwrap());
@@ -304,7 +319,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_out_datum_hash_value(&mut self, data: String) -> &mut MeshTxBuilderCore {
+    fn tx_out_datum_hash_value(&mut self, data: String) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -318,7 +333,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn tx_out_inline_datum_value(&mut self, data: String) -> &mut MeshTxBuilderCore {
+    fn tx_out_inline_datum_value(&mut self, data: String) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -336,7 +351,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         &mut self,
         script_cbor: String,
         version: LanguageVersion,
-    ) -> &mut MeshTxBuilderCore {
+    ) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -350,7 +365,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn spending_plutus_script_v2(&mut self) -> &mut MeshTxBuilderCore {
+    fn spending_plutus_script_v2(&mut self) -> &mut Self {
         self.adding_script_input = true;
         self
     }
@@ -361,7 +376,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         tx_index: u32,
         spending_script_hash: String,
         version: LanguageVersion,
-    ) -> &mut MeshTxBuilderCore {
+    ) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined output")
@@ -383,34 +398,27 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn spending_reference_tx_in_inline_datum_present(&mut self) -> &mut MeshTxBuilderCore {
+    fn spending_reference_tx_in_inline_datum_present(&mut self) -> &mut Self {
         self.tx_in_inline_datum_present()
     }
 
-    fn spending_reference_tx_in_redeemer_value(
-        &mut self,
-        redeemer: Redeemer,
-    ) -> &mut MeshTxBuilderCore {
+    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
         self.tx_in_redeemer_value(redeemer)
     }
 
-    fn read_only_tx_in_reference(
-        &mut self,
-        tx_hash: String,
-        tx_index: u32,
-    ) -> &mut MeshTxBuilderCore {
+    fn read_only_tx_in_reference(&mut self, tx_hash: String, tx_index: u32) -> &mut Self {
         self.mesh_tx_builder_body
             .reference_inputs
             .push(RefTxIn { tx_hash, tx_index });
         self
     }
 
-    fn mint_plutus_script_v2(&mut self) -> &mut MeshTxBuilderCore {
+    fn mint_plutus_script_v2(&mut self) -> &mut Self {
         self.adding_plutus_mint = true;
         self
     }
 
-    fn mint(&mut self, quantity: u64, policy: String, name: String) -> &mut MeshTxBuilderCore {
+    fn mint(&mut self, quantity: u64, policy: String, name: String) -> &mut Self {
         if self.mint_item.is_some() {
             self.queue_mint();
         }
@@ -431,11 +439,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn minting_script(
-        &mut self,
-        script_cbor: String,
-        version: LanguageVersion,
-    ) -> &mut MeshTxBuilderCore {
+    fn minting_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -455,7 +459,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         tx_index: u32,
         spending_script_hash: String,
         version: LanguageVersion,
-    ) -> &mut MeshTxBuilderCore {
+    ) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -471,7 +475,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut MeshTxBuilderCore {
+    fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -485,14 +489,11 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn mint_reference_tx_in_redeemer_value(
-        &mut self,
-        redeemer: Redeemer,
-    ) -> &mut MeshTxBuilderCore {
+    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
         self.mint_redeemer_value(redeemer)
     }
 
-    fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut MeshTxBuilderCore {
+    fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut Self {
         self.mesh_tx_builder_body
             .required_signatures
             .add(pub_key_hash);
@@ -505,7 +506,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         tx_index: u32,
         amount: Vec<Asset>,
         address: String,
-    ) -> &mut MeshTxBuilderCore {
+    ) -> &mut Self {
         let collateral_item = self.collateral_item.take();
         if let Some(collateral_item) = collateral_item {
             self.mesh_tx_builder_body.collaterals.push(collateral_item);
@@ -522,12 +523,12 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn change_address(&mut self, address: String) -> &mut MeshTxBuilderCore {
+    fn change_address(&mut self, address: String) -> &mut Self {
         self.mesh_tx_builder_body.change_address = address;
         self
     }
 
-    fn change_output_datum(&mut self, data: String) -> &mut MeshTxBuilderCore {
+    fn change_output_datum(&mut self, data: String) -> &mut Self {
         self.mesh_tx_builder_body.change_datum = Some(Datum {
             type_: "Inline".to_string(),
             data,
@@ -535,24 +536,24 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         self
     }
 
-    fn invalid_before(&mut self, slot: u64) -> &mut MeshTxBuilderCore {
+    fn invalid_before(&mut self, slot: u64) -> &mut Self {
         self.mesh_tx_builder_body.validity_range.invalid_before = Some(slot);
         self
     }
 
-    fn invalid_hereafter(&mut self, slot: u64) -> &mut MeshTxBuilderCore {
+    fn invalid_hereafter(&mut self, slot: u64) -> &mut Self {
         self.mesh_tx_builder_body.validity_range.invalid_hereafter = Some(slot);
         self
     }
 
-    fn metadata_value(&mut self, tag: String, metadata: String) -> &mut MeshTxBuilderCore {
+    fn metadata_value(&mut self, tag: String, metadata: String) -> &mut Self {
         self.mesh_tx_builder_body
             .metadata
             .push(Metadata { tag, metadata });
         self
     }
 
-    fn signing_key(&mut self, skey_hex: String) -> &mut MeshTxBuilderCore {
+    fn signing_key(&mut self, skey_hex: String) -> &mut Self {
         self.mesh_tx_builder_body.signing_key.add(skey_hex);
         self
     }
@@ -562,11 +563,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
-    fn select_utxos_from(
-        &mut self,
-        extra_inputs: Vec<UTxO>,
-        threshold: u64,
-    ) -> &mut MeshTxBuilderCore {
+    fn select_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> &mut Self {
         self.selection_threshold = threshold;
         self.extra_inputs = extra_inputs;
         self
@@ -761,7 +758,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
     }
 }
 
-impl Default for MeshTxBuilderCore {
+impl Default for MeshTxBuilder {
     fn default() -> Self {
         Self::new()
     }
