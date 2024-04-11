@@ -2,7 +2,7 @@ mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
         builder::{IMeshTxBuilderCore, MeshTxBuilder},
-        core::common::{con_str0, ToStr},
+        core::common::con_str0,
         model::{Asset, Budget, LanguageVersion, Redeemer},
     };
 
@@ -169,7 +169,7 @@ mod int_tests {
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .change_address(wallet_address)
-        .change_output_datum(con_str0(json!([])).str())
+        .change_output_datum(&con_str0(json!([])).to_string())
         .complete_sync(None);
         println!("{}", mesh.mesh_csl.tx_hex);
         assert!(mesh.mesh_csl.tx_hex != *"");
