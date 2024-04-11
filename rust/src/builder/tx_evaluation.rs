@@ -14,15 +14,11 @@ impl ITxEvaluation for MeshTxBuilder {
                 RedeemerTag::Spend => {
                     let input =
                         &mut self.mesh_tx_builder_body.inputs[redeemer_evaluation.index as usize];
-                    match input {
-                        TxIn::ScriptTxIn(ScriptTxIn { script_tx_in, .. }) => {
-                            let redeemer: &mut Redeemer = script_tx_in.redeemer.as_mut().unwrap();
-                            redeemer.ex_units.mem =
-                                redeemer_evaluation.budget.mem * multiplier / 100;
-                            redeemer.ex_units.steps =
-                                redeemer_evaluation.budget.steps * multiplier / 100;
-                        }
-                        _ => {}
+                    if let TxIn::ScriptTxIn(ScriptTxIn { script_tx_in, .. }) = input {
+                        let redeemer: &mut Redeemer = script_tx_in.redeemer.as_mut().unwrap();
+                        redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
+                        redeemer.ex_units.steps =
+                            redeemer_evaluation.budget.steps * multiplier / 100;
                     }
                 }
                 RedeemerTag::Mint => {
@@ -38,7 +34,6 @@ impl ITxEvaluation for MeshTxBuilder {
                 RedeemerTag::Reward => {
                     // TODO
                 }
-                _ => {}
             }
         }
         self

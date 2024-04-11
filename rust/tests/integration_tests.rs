@@ -1,7 +1,7 @@
 mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
-        builder::{IMeshTxBuilderCore, MeshTxBuilderCore},
+        builder::{IMeshTxBuilderCore, MeshTxBuilder},
         model::{Asset, Budget, LanguageVersion, Redeemer},
     };
 
@@ -44,7 +44,7 @@ mod int_tests {
         let record_tx_hash = "aae2b8a5bf420c0d2fc785d54fe3eacc107145dee01b8c61beedcd13e6be9a71";
         let record_tx_id = 0;
 
-        let mut mesh = MeshTxBuilderCore::new();
+        let mut mesh = MeshTxBuilder::new();
 
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c".to_string(),
