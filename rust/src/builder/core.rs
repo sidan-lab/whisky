@@ -15,7 +15,7 @@ use super::{
 impl IMeshTxBuilder for MeshTxBuilder {
     fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
         self.complete_sync(customized_tx);
-        match self.evaluator {
+        match &self.evaluator {
             Some(evaluator) => {
                 let tx_evaluation_result = evaluator.evaluate_tx(self.mesh_csl.tx_hex.to_string());
                 match tx_evaluation_result {
