@@ -4,6 +4,7 @@ use crate::{
     core::{
         algo::select_utxos,
         builder::{IMeshCSL, MeshCSL},
+        utils::build_tx_builder,
     },
     csl,
     model::*,
@@ -87,7 +88,11 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         } else {
             self.queue_all_last_item();
         }
-        self.serialize_tx_body()
+        self.serialize_tx_body();
+        self.mesh_csl.tx_builder = build_tx_builder();
+        self.mesh_csl.tx_inputs_builder =
+            csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new();
+        self
     }
 
     fn complete_signing(&mut self) -> String {
