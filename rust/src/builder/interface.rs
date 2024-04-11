@@ -1,4 +1,57 @@
-use crate::{core::builder::MeshCSL, model::*};
+use async_trait::async_trait;
+
+use crate::{
+    core::builder::MeshCSL,
+    model::*,
+    service::{IEvaluator, IFetcher, ISubmitter},
+};
+
+pub struct MeshTxBuilder {
+    pub mesh_csl: MeshCSL,
+    pub mesh_tx_builder_body: MeshTxBuilderBody,
+    pub tx_in_item: Option<TxIn>,
+    pub extra_inputs: Vec<UTxO>,
+    pub selection_threshold: u64,
+    pub mint_item: Option<MintItem>,
+    pub collateral_item: Option<PubKeyTxIn>,
+    pub tx_output: Option<Output>,
+    pub adding_script_input: bool,
+    pub adding_plutus_mint: bool,
+    pub tx_evaluation_multiplier_percentage: u64,
+    pub fetcher: Option<Box<dyn IFetcher>>,
+    pub evaluator: Option<Box<dyn IEvaluator>>,
+    pub submitter: Option<Box<dyn ISubmitter>>,
+}
+
+pub struct MeshTxBuilderParam {
+    pub evaluator: Option<Box<dyn IEvaluator>>,
+    pub fetcher: Option<Box<dyn IFetcher>>,
+    pub submitter: Option<Box<dyn ISubmitter>>,
+}
+
+#[async_trait]
+pub trait IMeshTxBuilder {
+    /// ## Transaction building method
+    ///
+    /// Create a new MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - A new MeshTxBuilder instance
+    fn new(param: MeshTxBuilderParam) -> Self;
+    /// ## Transaction building method
+    ///  
+    /// Complete the transaction building process with fetching missing information & tx evaluation
+    ///
+    /// ### Arguments
+    ///
+    /// * `customized_tx` - An optional customized transaction body
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+}
 
 pub trait IMeshTxBuilderCore {
     /// ## Transaction building method
@@ -8,7 +61,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - A new MeshTxBuilder instance
-    fn new() -> Self;
+    fn new_core() -> Self;
 
     /// ## Transaction building method
     ///
@@ -565,17 +618,4 @@ pub trait IMeshTxBuilderCore {
     ///
     /// Queue all last items in the MeshTxBuilder instance
     fn queue_all_last_item(&mut self);
-}
-
-pub struct MeshTxBuilderCore {
-    pub mesh_csl: MeshCSL,
-    pub mesh_tx_builder_body: MeshTxBuilderBody,
-    pub tx_in_item: Option<TxIn>,
-    pub extra_inputs: Vec<UTxO>,
-    pub selection_threshold: u64,
-    pub mint_item: Option<MintItem>,
-    pub collateral_item: Option<PubKeyTxIn>,
-    pub tx_output: Option<Output>,
-    pub adding_script_input: bool,
-    pub adding_plutus_mint: bool,
 }
