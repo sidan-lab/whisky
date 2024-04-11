@@ -20,7 +20,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run rust:test"
+      "pre-push": "npm run rust:test && npm run rust:build-nodejs && npm run rust:build-browser"
     }
   },
   "author": "SIDAN Lab",
