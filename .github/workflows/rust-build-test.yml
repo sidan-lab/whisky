@@ -6,7 +6,7 @@ name: Rust Package
 on:
   release:
     types: [created]
-  push:
+  pull_request:
     branches:
       - master
 
@@ -50,28 +50,3 @@ jobs:
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
-
-  publish:
-    needs: build-test
-    name: Publish
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|js:) ]]; then
-            echo "Skipping npm publish due to commit message."
-          else
-            cd rust && cargo publish --token ${PUBLISH_KEY}
-          fi
-
-        env:
-          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
