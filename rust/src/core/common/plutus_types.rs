@@ -1,5 +1,16 @@
 use serde_json::{json, Value};
 
+// implement a method to convert Value to &str
+pub trait ToStr {
+    fn str(&self) -> &str;
+}
+
+impl ToStr for Value {
+    fn str(&self) -> &str {
+        self.as_str().unwrap()
+    }
+}
+
 pub fn con_str<N: Into<Value>, T: Into<Value>>(constructor: N, fields: T) -> Value {
     json!({ "constructor": constructor.into(), "fields": fields.into() })
 }

@@ -30,7 +30,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         match &self.evaluator {
             Some(evaluator) => {
                 let tx_evaluation_result = evaluator
-                    .evaluate_tx(self.mesh_csl.tx_hex.to_string())
+                    .evaluate_tx(&self.mesh_csl.tx_hex, self.chained_txs.clone())
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
@@ -75,6 +75,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             fetcher: None,
             evaluator: None,
             submitter: None,
+            chained_txs: vec![],
         }
     }
 
@@ -211,10 +212,10 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
     fn tx_in(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
         amount: Vec<Asset>,
-        address: String,
+        address: &str,
     ) -> &mut Self {
         if self.tx_in_item.is_some() {
             self.queue_input();
@@ -223,10 +224,10 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             let item = TxIn::PubKeyTxIn(PubKeyTxIn {
                 type_: "PubKey".to_string(),
                 tx_in: TxInParameter {
-                    tx_hash,
+                    tx_hash: tx_hash.to_string(),
                     tx_index,
                     amount: Some(amount),
-                    address: Some(address),
+                    address: Some(address.to_string()),
                 },
             });
             self.tx_in_item = Some(item);
@@ -234,10 +235,10 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             let item = TxIn::ScriptTxIn(ScriptTxIn {
                 type_: "Script".to_string(),
                 tx_in: TxInParameter {
-                    tx_hash,
+                    tx_hash: tx_hash.to_string(),
                     tx_index,
                     amount: Some(amount),
-                    address: Some(address),
+                    address: Some(address.to_string()),
                 },
                 script_tx_in: ScriptTxInParameter {
                     script_source: None,
@@ -250,7 +251,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn tx_in_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self {
+    fn tx_in_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -261,7 +262,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
-                        script_cbor,
+                        script_cbor: script_cbor.to_string(),
                         language_version: version,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
@@ -270,7 +271,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn tx_in_datum_value(&mut self, data: String) -> &mut Self {
+    fn tx_in_datum_value(&mut self, data: &str) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -281,7 +282,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
-                        data,
+                        data: data.to_string(),
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
@@ -325,13 +326,13 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn tx_out(&mut self, address: String, amount: Vec<Asset>) -> &mut Self {
+    fn tx_out(&mut self, address: &str, amount: Vec<Asset>) -> &mut Self {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
             self.mesh_tx_builder_body.outputs.push(tx_output.unwrap());
         }
         self.tx_output = Some(Output {
-            address,
+            address: address.to_string(),
             amount,
             datum: None,
             reference_script: None,
@@ -339,7 +340,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn tx_out_datum_hash_value(&mut self, data: String) -> &mut Self {
+    fn tx_out_datum_hash_value(&mut self, data: &str) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -347,13 +348,13 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         let mut tx_output = tx_output.unwrap();
         tx_output.datum = Some(Datum {
             type_: "Hash".to_string(),
-            data,
+            data: data.to_string(),
         });
         self.tx_output = Some(tx_output);
         self
     }
 
-    fn tx_out_inline_datum_value(&mut self, data: String) -> &mut Self {
+    fn tx_out_inline_datum_value(&mut self, data: &str) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -361,7 +362,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         let mut tx_output = tx_output.unwrap();
         tx_output.datum = Some(Datum {
             type_: "Inline".to_string(),
-            data,
+            data: data.to_string(),
         });
         self.tx_output = Some(tx_output);
         self
@@ -369,7 +370,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
     fn tx_out_reference_script(
         &mut self,
-        script_cbor: String,
+        script_cbor: &str,
         version: LanguageVersion,
     ) -> &mut Self {
         let tx_output = self.tx_output.take();
@@ -378,7 +379,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         }
         let mut tx_output = tx_output.unwrap();
         tx_output.reference_script = Some(ProvidedScriptSource {
-            script_cbor,
+            script_cbor: script_cbor.to_string(),
             language_version: version,
         });
         self.tx_output = Some(tx_output);
@@ -392,9 +393,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
     fn spending_tx_in_reference(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: String,
+        spending_script_hash: &str,
         version: LanguageVersion,
     ) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
@@ -407,9 +408,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-                        tx_hash,
+                        tx_hash: tx_hash.to_string(),
                         tx_index,
-                        spending_script_hash,
+                        spending_script_hash: spending_script_hash.to_string(),
                         language_version: version,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
@@ -426,10 +427,11 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self.tx_in_redeemer_value(redeemer)
     }
 
-    fn read_only_tx_in_reference(&mut self, tx_hash: String, tx_index: u32) -> &mut Self {
-        self.mesh_tx_builder_body
-            .reference_inputs
-            .push(RefTxIn { tx_hash, tx_index });
+    fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self {
+        self.mesh_tx_builder_body.reference_inputs.push(RefTxIn {
+            tx_hash: tx_hash.to_string(),
+            tx_index,
+        });
         self
     }
 
@@ -438,7 +440,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn mint(&mut self, quantity: u64, policy: String, name: String) -> &mut Self {
+    fn mint(&mut self, quantity: u64, policy: &str, name: &str) -> &mut Self {
         if self.mint_item.is_some() {
             self.queue_mint();
         }
@@ -449,8 +451,8 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         };
         self.mint_item = Some(MintItem {
             type_: mint_type.to_string(),
-            policy_id: policy,
-            asset_name: name,
+            policy_id: policy.to_string(),
+            asset_name: name.to_string(),
             amount: quantity,
             redeemer: None,
             script_source: None,
@@ -459,14 +461,14 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn minting_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self {
+    fn minting_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
         }
         let mut mint_item = mint_item.unwrap();
         mint_item.script_source = Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
-            script_cbor,
+            script_cbor: script_cbor.to_string(),
             language_version: version,
         }));
         self.mint_item = Some(mint_item);
@@ -475,9 +477,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
     fn mint_tx_in_reference(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: String,
+        spending_script_hash: &str,
         version: LanguageVersion,
     ) -> &mut Self {
         let mint_item = self.mint_item.take();
@@ -486,9 +488,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         }
         let mut mint_item = mint_item.unwrap();
         mint_item.script_source = Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-            tx_hash,
+            tx_hash: tx_hash.to_string(),
             tx_index,
-            spending_script_hash,
+            spending_script_hash: spending_script_hash.to_string(),
             language_version: version,
         }));
         self.mint_item = Some(mint_item);
@@ -513,19 +515,19 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self.mint_redeemer_value(redeemer)
     }
 
-    fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut Self {
+    fn required_signer_hash(&mut self, pub_key_hash: &str) -> &mut Self {
         self.mesh_tx_builder_body
             .required_signatures
-            .add(pub_key_hash);
+            .add(pub_key_hash.to_string());
         self
     }
 
     fn tx_in_collateral(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
         amount: Vec<Asset>,
-        address: String,
+        address: &str,
     ) -> &mut Self {
         let collateral_item = self.collateral_item.take();
         if let Some(collateral_item) = collateral_item {
@@ -534,24 +536,24 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self.collateral_item = Some(PubKeyTxIn {
             type_: "PubKey".to_string(),
             tx_in: TxInParameter {
-                tx_hash,
+                tx_hash: tx_hash.to_string(),
                 tx_index,
                 amount: Some(amount),
-                address: Some(address),
+                address: Some(address.to_string()),
             },
         });
         self
     }
 
-    fn change_address(&mut self, address: String) -> &mut Self {
-        self.mesh_tx_builder_body.change_address = address;
+    fn change_address(&mut self, address: &str) -> &mut Self {
+        self.mesh_tx_builder_body.change_address = address.to_string();
         self
     }
 
-    fn change_output_datum(&mut self, data: String) -> &mut Self {
+    fn change_output_datum(&mut self, data: &str) -> &mut Self {
         self.mesh_tx_builder_body.change_datum = Some(Datum {
             type_: "Inline".to_string(),
-            data,
+            data: data.to_string(),
         });
         self
     }
@@ -566,17 +568,26 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self
     }
 
-    fn metadata_value(&mut self, tag: String, metadata: String) -> &mut Self {
-        self.mesh_tx_builder_body
-            .metadata
-            .push(Metadata { tag, metadata });
+    fn metadata_value(&mut self, tag: &str, metadata: &str) -> &mut Self {
+        self.mesh_tx_builder_body.metadata.push(Metadata {
+            tag: tag.to_string(),
+            metadata: metadata.to_string(),
+        });
         self
     }
 
-    fn signing_key(&mut self, skey_hex: String) -> &mut Self {
-        self.mesh_tx_builder_body.signing_key.add(skey_hex);
+    fn signing_key(&mut self, skey_hex: &str) -> &mut Self {
+        self.mesh_tx_builder_body
+            .signing_key
+            .add(skey_hex.to_string());
         self
     }
+
+    fn chain_tx(&mut self, tx_hex: &str) -> &mut Self {
+        self.chained_txs.push(tx_hex.to_string());
+        self
+    }
+
     fn add_all_signing_keys(&mut self, signing_keys: JsVecString) {
         if !signing_keys.len() == 0 {
             self.mesh_csl.add_signing_keys(signing_keys);
