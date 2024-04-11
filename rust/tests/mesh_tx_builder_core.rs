@@ -8,12 +8,12 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_mesh_tx_builder_core() {
-        let _mesh = MeshTxBuilder::new();
+        let _mesh = MeshTxBuilder::new_core();
     }
 
     #[test]
     fn test_tx_in() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -28,7 +28,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -59,7 +59,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_datum_value() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -90,7 +90,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_ref_script() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -127,7 +127,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_script_value() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -160,7 +160,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_read_only_tx_in_reference() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         let asset = Asset {
             unit: "lovelace".to_string(),
             quantity: "30000000".to_string(),
@@ -201,7 +201,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_mint() {
-        let mut mesh = MeshTxBuilder::new();
+        let mut mesh = MeshTxBuilder::new_core();
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c".to_string(),
             3,

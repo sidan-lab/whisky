@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::{
     core::{
         algo::select_utxos,
@@ -12,12 +14,23 @@ use super::{
     IMeshTxBuilder, ITxEvaluation,
 };
 
+#[async_trait]
 impl IMeshTxBuilder for MeshTxBuilder {
-    fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
+    fn new(param: super::MeshTxBuilderParam) -> Self {
+        let mut mesh_tx_builder = MeshTxBuilder::new_core();
+        mesh_tx_builder.fetcher = param.fetcher;
+        mesh_tx_builder.evaluator = param.evaluator;
+        mesh_tx_builder.submitter = param.submitter;
+        mesh_tx_builder
+    }
+
+    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
         self.complete_sync(customized_tx);
         match &self.evaluator {
             Some(evaluator) => {
-                let tx_evaluation_result = evaluator.evaluate_tx(self.mesh_csl.tx_hex.to_string());
+                let tx_evaluation_result = evaluator
+                    .evaluate_tx(self.mesh_csl.tx_hex.to_string())
+                    .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
                     Err(_) => panic!("Error evaluating transaction"),
@@ -30,7 +43,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 }
 
 impl IMeshTxBuilderCore for MeshTxBuilder {
-    fn new() -> Self {
+    fn new_core() -> Self {
         Self {
             mesh_csl: MeshCSL::new(),
             mesh_tx_builder_body: MeshTxBuilderBody {
@@ -58,7 +71,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             adding_script_input: false,
             adding_plutus_mint: false,
             tx_evaluation_multiplier_percentage: 110,
+            fetcher: None,
             evaluator: None,
+            submitter: None,
         }
     }
 
@@ -760,6 +775,6 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
 impl Default for MeshTxBuilder {
     fn default() -> Self {
-        Self::new()
+        Self::new_core()
     }
 }

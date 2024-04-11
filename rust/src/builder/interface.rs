@@ -1,4 +1,10 @@
-use crate::{core::builder::MeshCSL, model::*, service::IEvaluator};
+use async_trait::async_trait;
+
+use crate::{
+    core::builder::MeshCSL,
+    model::*,
+    service::{IEvaluator, IFetcher, ISubmitter},
+};
 
 pub struct MeshTxBuilder {
     pub mesh_csl: MeshCSL,
@@ -12,10 +18,27 @@ pub struct MeshTxBuilder {
     pub adding_script_input: bool,
     pub adding_plutus_mint: bool,
     pub tx_evaluation_multiplier_percentage: u64,
+    pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
+    pub submitter: Option<Box<dyn ISubmitter>>,
 }
 
+pub struct MeshTxBuilderParam {
+    pub evaluator: Option<Box<dyn IEvaluator>>,
+    pub fetcher: Option<Box<dyn IFetcher>>,
+    pub submitter: Option<Box<dyn ISubmitter>>,
+}
+
+#[async_trait]
 pub trait IMeshTxBuilder {
+    /// ## Transaction building method
+    ///
+    /// Create a new MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - A new MeshTxBuilder instance
+    fn new(param: MeshTxBuilderParam) -> Self;
     /// ## Transaction building method
     ///  
     /// Complete the transaction building process with fetching missing information & tx evaluation
@@ -27,7 +50,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
 }
 
 pub trait IMeshTxBuilderCore {
@@ -38,7 +61,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - A new MeshTxBuilder instance
-    fn new() -> Self;
+    fn new_core() -> Self;
 
     /// ## Transaction building method
     ///
