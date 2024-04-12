@@ -21,6 +21,7 @@ pub struct MeshTxBuilder {
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
+    pub chained_txs: Vec<String>,
 }
 
 pub struct MeshTxBuilderParam {
@@ -119,10 +120,10 @@ pub trait IMeshTxBuilderCore {
     /// * `Self` - The MeshTxBuilder instance
     fn tx_in(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
         amount: Vec<Asset>,
-        address: String,
+        address: &str,
     ) -> &mut Self;
 
     /// ## Transaction building method
@@ -137,7 +138,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self;
+    fn tx_in_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -150,7 +151,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_datum_value(&mut self, data: String) -> &mut Self;
+    fn tx_in_datum_value(&mut self, data: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -186,7 +187,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out(&mut self, address: String, amount: Vec<Asset>) -> &mut Self;
+    fn tx_out(&mut self, address: &str, amount: Vec<Asset>) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -199,7 +200,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_datum_hash_value(&mut self, data: String) -> &mut Self;
+    fn tx_out_datum_hash_value(&mut self, data: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -212,7 +213,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_inline_datum_value(&mut self, data: String) -> &mut Self;
+    fn tx_out_inline_datum_value(&mut self, data: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -226,11 +227,8 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_reference_script(
-        &mut self,
-        script_cbor: String,
-        version: LanguageVersion,
-    ) -> &mut Self;
+    fn tx_out_reference_script(&mut self, script_cbor: &str, version: LanguageVersion)
+        -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -257,9 +255,9 @@ pub trait IMeshTxBuilderCore {
     /// * `Self` - The MeshTxBuilder instance
     fn spending_tx_in_reference(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: String,
+        spending_script_hash: &str,
         version: LanguageVersion,
     ) -> &mut Self;
 
@@ -297,7 +295,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn read_only_tx_in_reference(&mut self, tx_hash: String, tx_index: u32) -> &mut Self;
+    fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -321,7 +319,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint(&mut self, quantity: u64, policy: String, name: String) -> &mut Self;
+    fn mint(&mut self, quantity: u64, policy: &str, name: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -335,7 +333,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn minting_script(&mut self, script_cbor: String, version: LanguageVersion) -> &mut Self;
+    fn minting_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -353,9 +351,9 @@ pub trait IMeshTxBuilderCore {
     /// * `Self` - The MeshTxBuilder instance
     fn mint_tx_in_reference(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: String,
+        spending_script_hash: &str,
         version: LanguageVersion,
     ) -> &mut Self;
 
@@ -396,7 +394,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn required_signer_hash(&mut self, pub_key_hash: String) -> &mut Self;
+    fn required_signer_hash(&mut self, pub_key_hash: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -414,10 +412,10 @@ pub trait IMeshTxBuilderCore {
     /// * `Self` - The MeshTxBuilder instance
     fn tx_in_collateral(
         &mut self,
-        tx_hash: String,
+        tx_hash: &str,
         tx_index: u32,
         amount: Vec<Asset>,
-        address: String,
+        address: &str,
     ) -> &mut Self;
 
     /// ## Transaction building method
@@ -431,7 +429,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn change_address(&mut self, address: String) -> &mut Self;
+    fn change_address(&mut self, address: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -444,7 +442,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn change_output_datum(&mut self, data: String) -> &mut Self;
+    fn change_output_datum(&mut self, data: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -484,7 +482,7 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn metadata_value(&mut self, tag: String, metadata: String) -> &mut Self;
+    fn metadata_value(&mut self, tag: &str, metadata: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -497,7 +495,20 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn signing_key(&mut self, skey_hex: String) -> &mut Self;
+    fn signing_key(&mut self, skey_hex: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a transaction that used as input, but not yet reflected on global blockchain
+    ///
+    /// ### Arguments
+    ///
+    /// * `tx_hex` - The transaction hex of chained transaction
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn chain_tx(&mut self, tx_hex: &str) -> &mut Self;
 
     /// ## Internal method
     ///

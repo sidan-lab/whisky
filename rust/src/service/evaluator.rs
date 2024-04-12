@@ -5,5 +5,9 @@ use crate::model::Action;
 
 #[async_trait]
 pub trait IEvaluator: Send {
-    async fn evaluate_tx(&self, tx: String) -> Result<Vec<Action>, JsError>;
+    async fn evaluate_tx(
+        &self,
+        tx: &str,
+        additional_txs: Vec<String>,
+    ) -> Result<Vec<Action>, JsError>;
 }

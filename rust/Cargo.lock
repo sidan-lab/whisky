@@ -1757,7 +1757,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.3.0"
+version = "0.3.2"
 dependencies = [
  "async-trait",
  "cardano-serialization-lib",
