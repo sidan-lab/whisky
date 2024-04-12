@@ -1,4 +1,5 @@
 use cardano_serialization_lib as csl;
+use pallas::ledger::primitives::conway::PlutusV2Script;
 use std::collections::HashMap;
 use uplc::Fragment;
 
@@ -7,7 +8,7 @@ use cardano_serialization_lib::address::Address;
 use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
 use pallas::ledger::primitives::babbage::{
     AssetName, Coin, DatumOption, Multiasset, PlutusData, PolicyId, PostAlonzoTransactionOutput,
-    TransactionOutput, Value,
+    PseudoScript, ScriptRef, TransactionOutput, Value,
 };
 use pallas::ledger::traverse::{Era, MultiEraTx};
 use uplc::{
@@ -35,31 +36,44 @@ use uplc::{
 //     Ok("")
 // }
 
-// fn to_pallas_utxo(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, String> {
-//     let mut resolved_inputs = Vec::new();
-//     for utxo in utxos {
-//         let mut resolved_input: ResolvedInput;
-//         let resolved_input = ResolvedInput {
-//             input: TransactionInput {
-//                 transaction_id: Hash::from(
-//                     hex::decode(utxo.input.tx_hash).unwrap().try_into().unwrap(),
-//                 ),
-//                 index: utxo.input.output_index.try_into().unwrap(),
-//             },
-//             output: TransactionOutput::PostAlonzo(PostAlonzoTransactionOutput {
-//                 address: Bytes::from(
-//                     Address::from_bech32(&utxo.output.address)
-//                         .unwrap()
-//                         .to_bytes(),
-//                 ),
-//                 value: to_pallas_value(&utxo.output.amount)?,
-//                 datum_option: to_pallas_datum(&utxo.output)?
+fn to_pallas_utxo(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, String> {
+    let mut resolved_inputs = Vec::new();
+    for utxo in utxos {
+        let mut resolved_input: ResolvedInput;
+        let resolved_input = ResolvedInput {
+            input: TransactionInput {
+                transaction_id: Hash::from(
+                    hex::decode(utxo.input.tx_hash).unwrap().try_into().unwrap(),
+                ),
+                index: utxo.input.output_index.try_into().unwrap(),
+            },
+            output: TransactionOutput::PostAlonzo(PostAlonzoTransactionOutput {
+                address: Bytes::from(
+                    Address::from_bech32(&utxo.output.address)
+                        .unwrap()
+                        .to_bytes(),
+                ),
+                value: to_pallas_value(&utxo.output.amount)?,
+                datum_option: to_pallas_datum(&utxo.output)?,
+                script_ref: to_pallas_script_ref(&utxo.output)?,
+            }),
+        };
+    }
+    Ok(resolved_inputs)
+}
 
-//             }),
-//         };
-//     }
-//     Ok(resolved_inputs)
-// }
+// TODO: handle native and plutusV1 scripts
+fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<ScriptRef>>, String> {
+    if let Some(script) = &utxo_output.script_ref {
+        let script_bytes =
+            hex::decode(script).map_err(|err| format!("Invalid script hex found: {}", err))?;
+        Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
+            PlutusV2Script(script_bytes.into()),
+        ))))
+    } else {
+        Ok(None)
+    }
+}
 
 fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, String> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
