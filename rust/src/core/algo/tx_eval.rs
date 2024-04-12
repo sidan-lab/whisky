@@ -1,14 +1,15 @@
+use cardano_serialization_lib as csl;
 use std::collections::HashMap;
+use uplc::Fragment;
 
-use crate::model::{Asset, UTxO};
+use crate::model::{Asset, UTxO, UtxoOutput};
 use cardano_serialization_lib::address::Address;
-use pallas::codec::utils::Bytes;
+use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
 use pallas::ledger::primitives::babbage::{
-    Coin, Multiasset, PostAlonzoTransactionOutput, TransactionOutput, Value,
+    AssetName, Coin, DatumOption, Multiasset, PlutusData, PolicyId, PostAlonzoTransactionOutput,
+    TransactionOutput, Value,
 };
-use pallas::ledger::primitives::conway::{AssetName, PolicyId};
 use pallas::ledger::traverse::{Era, MultiEraTx};
-use uplc::KeyValuePairs;
 use uplc::{
     tx::{eval_phase_two, ResolvedInput},
     Hash, TransactionInput,
@@ -52,12 +53,38 @@ use uplc::{
 //                         .to_bytes(),
 //                 ),
 //                 value: to_pallas_value(&utxo.output.amount)?,
+//                 datum_option: to_pallas_datum(&utxo.output)?
 
 //             }),
 //         };
 //     }
 //     Ok(resolved_inputs)
 // }
+
+fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, String> {
+    if let Some(inline_datum) = &utxo_output.plutus_data {
+        let csl_plutus_data = csl::plutus::PlutusData::from_json(
+            &inline_datum,
+            csl::plutus::PlutusDatumSchema::DetailedSchema,
+        )
+        .map_err(|err| format!("Invalid plutus data found: {}", err))?;
+
+        let plutus_data_bytes = csl_plutus_data.to_bytes();
+        let datum = CborWrap(
+            PlutusData::decode_fragment(&plutus_data_bytes)
+                .map_err(|err| format!("Invalid plutus data found"))?,
+        );
+        Ok(Some(DatumOption::Data(datum)))
+    } else if let Some(datum_hash) = &utxo_output.data_hash {
+        let datum_hash_bytes: [u8; 32] = hex::decode(datum_hash)
+            .map_err(|err| format!("Invalid datum hash found: {}", err))?
+            .try_into()
+            .map_err(|err| format!("Invalid byte length of datum hash found"))?;
+        Ok(Some(DatumOption::Hash(Hash::from((datum_hash_bytes)))))
+    } else {
+        Ok(None)
+    }
+}
 
 fn to_pallas_value(assets: &Vec<Asset>) -> Result<Value, String> {
     if assets.len() == 1 {
