@@ -87,6 +87,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
+            if !self.extra_inputs.is_empty() {
+                self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
+            }
             self.queue_all_last_item();
         }
         self.serialize_tx_body();
@@ -106,10 +109,6 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self.mesh_tx_builder_body
             .mints
             .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
-
-        if !self.extra_inputs.is_empty() {
-            self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
-        }
 
         self.mesh_tx_builder_body.inputs.sort_by(|a, b| {
             let tx_in_data_a: &TxInParameter = match a {
