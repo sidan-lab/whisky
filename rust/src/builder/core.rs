@@ -87,6 +87,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
+            if self.tx_in_item.is_some() {
+                self.queue_input();
+            }
             if !self.extra_inputs.is_empty() {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
