@@ -87,13 +87,10 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         if customized_tx.is_some() {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
-            if self.tx_in_item.is_some() {
-                self.queue_input();
-            }
+            self.queue_all_last_item();
             if !self.extra_inputs.is_empty() {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
-            self.queue_all_last_item();
         }
         self.serialize_tx_body();
         self.mesh_csl.tx_builder = build_tx_builder();
@@ -637,12 +634,26 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         let selected_inputs = select_utxos(extra_inputs, required_assets, threshold.to_string());
 
         for input in selected_inputs {
-            self.tx_in(
-                &input.input.tx_hash,
-                input.input.output_index,
-                input.output.amount,
-                &input.output.address,
-            );
+            self.mesh_csl.add_tx_in(PubKeyTxIn {
+                type_: "PubKey".to_string(),
+                tx_in: TxInParameter {
+                    tx_hash: input.input.tx_hash.clone(),
+                    tx_index: input.input.output_index,
+                    amount: Some(input.output.amount.clone()),
+                    address: Some(input.output.address.clone()),
+                },
+            });
+            self.mesh_tx_builder_body
+                .inputs
+                .push(TxIn::PubKeyTxIn(PubKeyTxIn {
+                    type_: "PubKey".to_string(),
+                    tx_in: TxInParameter {
+                        tx_hash: input.input.tx_hash,
+                        tx_index: input.input.output_index,
+                        amount: Some(input.output.amount),
+                        address: Some(input.output.address),
+                    },
+                }));
         }
     }
 
