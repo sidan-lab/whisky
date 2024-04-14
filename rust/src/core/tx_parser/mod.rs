@@ -4,20 +4,23 @@ use crate::model::{
     ValidityRange,
 };
 
+use super::utils::calculate_tx_hash;
+
 pub struct MeshTxParser {
+    pub tx_hash: String,
     pub tx_hex: String,
     pub tx_fee_lovelace: u64,
     pub tx_body: MeshTxBuilderBody,
     pub csl_tx_body: csl::TransactionBody,
 }
 
-pub trait MeshTxParserTrait {
+pub trait IMeshTxParser {
     fn new(s: &str) -> Self;
     // TODO: add testing method lists here
     fn get_tx_outs_cbor(&self) -> Vec<String>;
 }
 
-impl MeshTxParserTrait for MeshTxParser {
+impl IMeshTxParser for MeshTxParser {
     // Constructor method
     fn new(s: &str) -> MeshTxParser {
         // TODO: Deserialized into the tx_body
@@ -45,6 +48,7 @@ impl MeshTxParserTrait for MeshTxParser {
                 .push(csl_output_to_mesh_output(csl_tx_body.outputs().get(i)))
         }
         MeshTxParser {
+            tx_hash: calculate_tx_hash(s),
             tx_hex: s.to_string(),
             tx_fee_lovelace: csl::utils::from_bignum(&csl_tx.body().fee()),
             tx_body,

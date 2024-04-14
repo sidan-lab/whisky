@@ -107,6 +107,10 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             .mints
             .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
 
+        if !self.extra_inputs.is_empty() {
+            self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
+        }
+
         self.mesh_tx_builder_body.inputs.sort_by(|a, b| {
             let tx_in_data_a: &TxInParameter = match a {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
@@ -124,9 +128,6 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
 
-        if !self.extra_inputs.is_empty() {
-            self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
-        }
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
@@ -634,15 +635,12 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         let selected_inputs = select_utxos(extra_inputs, required_assets, threshold.to_string());
 
         for input in selected_inputs {
-            self.mesh_csl.add_tx_in(PubKeyTxIn {
-                type_: "PubKey".to_string(),
-                tx_in: TxInParameter {
-                    tx_hash: input.input.tx_hash,
-                    tx_index: input.input.output_index,
-                    amount: Some(input.output.amount),
-                    address: Some(input.output.address),
-                },
-            });
+            self.tx_in(
+                &input.input.tx_hash,
+                input.input.output_index,
+                input.output.amount,
+                &input.output.address,
+            );
         }
     }
 
