@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+use csl::crypto::Vkeywitnesses;
+use crate::core::utils::blake2b256;
+
 use crate::csl;
 use crate::model::{
     Asset, Datum, JsVecString, LanguageVersion, MeshTxBuilderBody, Output, ProvidedScriptSource,
@@ -12,6 +16,7 @@ pub struct MeshTxParser {
     pub tx_fee_lovelace: u64,
     pub tx_body: MeshTxBuilderBody,
     pub csl_tx_body: csl::TransactionBody,
+    pub csl_witness_set: csl::TransactionWitnessSet,
 }
 
 pub trait IMeshTxParser {
@@ -19,6 +24,7 @@ pub trait IMeshTxParser {
     // TODO: add testing method lists here
     fn get_tx_outs_utxo(&self) -> Vec<UTxO>;
     fn get_tx_outs_cbor(&self) -> Vec<String>;
+    fn check_all_required_signers(&self) -> bool;
 }
 
 impl IMeshTxParser for MeshTxParser {
@@ -43,10 +49,19 @@ impl IMeshTxParser for MeshTxParser {
         };
         let csl_tx = csl::Transaction::from_hex(s).expect("Invalid transaction");
         let csl_tx_body = csl_tx.body();
+        let csl_witness_set = csl_tx.witness_set();
         for i in 0..csl_tx_body.outputs().len() {
+            let tx_output = csl_tx_body.outputs().get(i);
             tx_body
                 .outputs
-                .push(csl_output_to_mesh_output(csl_tx_body.outputs().get(i)))
+                .push(csl_output_to_mesh_output(tx_output))
+        }
+        let required_signers_key_hashes = csl_tx_body.required_signers().unwrap_or(csl::Ed25519KeyHashes::new());
+        for i in 0..required_signers_key_hashes.len() {
+            let signer = required_signers_key_hashes.get(i);
+            tx_body
+                .required_signatures
+                .add(signer.to_hex())
         }
         MeshTxParser {
             tx_hash: calculate_tx_hash(s),
@@ -54,6 +69,7 @@ impl IMeshTxParser for MeshTxParser {
             tx_fee_lovelace: csl::utils::from_bignum(&csl_tx.body().fee()),
             tx_body,
             csl_tx_body,
+            csl_witness_set,
         }
     }
 
@@ -99,6 +115,26 @@ impl IMeshTxParser for MeshTxParser {
             result.push(tx_out_cbor);
         }
         result
+    }
+
+    fn check_all_required_signers(&self) -> bool {
+        let signers = &self.tx_body.required_signatures;
+        let mut signer_set: HashSet<String> = HashSet::new();
+        let fixed_tx = csl::protocol_types::fixed_tx::FixedTransaction::from_hex(&self.tx_hex).unwrap();
+        for i in 0..signers.len() {
+            signer_set.insert(signers.get(i));
+        }
+        let csl_vkeys = self.csl_witness_set.vkeys().unwrap_or(Vkeywitnesses::new());
+        for i in 0..csl_vkeys.len() {
+            let vkey_witness = csl_vkeys.get(i);
+            let pub_key = vkey_witness.vkey().public_key();
+            if !pub_key.verify(&blake2b256(&fixed_tx.raw_body()), &vkey_witness.signature()) {
+                return false;
+            } else {
+                signer_set.remove(&pub_key.hash().to_hex());
+            };
+        };
+        signer_set.is_empty()
     }
 }
 
@@ -167,4 +203,10 @@ fn test_getting_output_cbor() {
     let tx_parser = MeshTxParser::new(tx_hex);
     let tx_outs_cbor = tx_parser.get_tx_outs_cbor();
     println!("{:?}", tx_outs_cbor);
+}
+
+#[test]
+fn test_check_required_signers() {
+    let parser = MeshTxParser::new("84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6");
+    assert!(parser.check_all_required_signers());
 }
