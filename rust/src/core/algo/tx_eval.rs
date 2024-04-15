@@ -1,12 +1,16 @@
+use async_trait::async_trait;
 use cardano_serialization_lib as csl;
-use pallas::ledger::primitives::alonzo::Redeemer;
+use csl::error::JsError;
+use pallas::ledger::primitives::alonzo::RedeemerTag as PRedeemerTag;
 use pallas::ledger::primitives::conway::PlutusV2Script;
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 use uplc::Fragment;
 
 use crate::core::constants::{get_v1_cost_models, get_v2_cost_models};
-use crate::model::{Asset, UTxO, UtxoOutput};
+use crate::core::tx_parser::{IMeshTxParser, MeshTxParser};
+use crate::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
+use crate::service::IEvaluator;
 use cardano_serialization_lib::address::Address;
 use pallas::codec::minicbor::Decoder;
 use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
@@ -20,24 +24,82 @@ use uplc::{
     Hash, TransactionInput,
 };
 
-pub fn tx_eval(tx_hex: &str, inputs: &Vec<UTxO>) -> Result<Vec<Redeemer>, String> {
-    let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
-    let mtx = MultiEraTx::decode_for_era(Era::Babbage, &tx_bytes);
-    let tx = match mtx {
-        Ok(MultiEraTx::Babbage(tx)) => tx.into_owned(),
-        _ => return Err("Invalid Tx Era".to_string()),
-    };
+pub struct MeshTxEvaluator {}
 
-    eval_phase_two(
-        &tx,
-        &to_pallas_utxos(inputs)?,
-        Some(&get_cost_mdls()),
-        None,
-        &SlotConfig::default(),
-        false,
-        |_r| (),
-    )
-    .map_err(|err| format!("Error occurred during evaluation: {}", err))
+impl MeshTxEvaluator {
+    pub fn new() -> Self {
+        MeshTxEvaluator {}
+    }
+}
+
+impl Default for MeshTxEvaluator {
+    fn default() -> Self {
+        MeshTxEvaluator::new()
+    }
+}
+
+#[async_trait]
+impl IEvaluator for MeshTxEvaluator {
+    fn evaluate_tx_sync(
+        &self,
+        tx_hex: &str,
+        inputs: &[UTxO],
+        additional_txs: &[String],
+    ) -> Result<Vec<Action>, JsError> {
+        let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
+        let mtx = MultiEraTx::decode_for_era(Era::Babbage, &tx_bytes);
+        let tx = match mtx {
+            Ok(MultiEraTx::Babbage(tx)) => tx.into_owned(),
+            _ => return Err(JsError::from_str("Invalid Tx Era")),
+        };
+
+        let tx_outs: Vec<UTxO> = additional_txs
+            .iter()
+            .flat_map(|tx| {
+                let parsed_tx = MeshTxParser::new(tx);
+                parsed_tx.get_tx_outs_utxo()
+            })
+            .collect();
+
+        // combine inputs and tx_outs
+        let all_inputs: Vec<UTxO> = inputs.iter().chain(tx_outs.iter()).cloned().collect();
+
+        eval_phase_two(
+            &tx,
+            &to_pallas_utxos(&all_inputs)?,
+            Some(&get_cost_mdls()),
+            None,
+            &SlotConfig::default(),
+            false,
+            |_r| (),
+        )
+        .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
+        .map(|reds| {
+            reds.into_iter()
+                .map(|red| Action {
+                    index: red.index,
+                    budget: Budget {
+                        mem: red.ex_units.mem.into(),
+                        steps: red.ex_units.steps,
+                    },
+                    tag: match red.tag {
+                        PRedeemerTag::Spend => RedeemerTag::Spend,
+                        PRedeemerTag::Mint => RedeemerTag::Mint,
+                        PRedeemerTag::Cert => RedeemerTag::Cert,
+                        PRedeemerTag::Reward => RedeemerTag::Reward,
+                    },
+                })
+                .collect()
+        })
+    }
+    async fn evaluate_tx(
+        &self,
+        tx_hex: &str,
+        inputs: &[UTxO],
+        additional_txs: &[String],
+    ) -> Result<Vec<Action>, JsError> {
+        self.evaluate_tx_sync(tx_hex, inputs, additional_txs)
+    }
 }
 
 fn get_cost_mdls() -> CostMdls {
@@ -47,13 +109,13 @@ fn get_cost_mdls() -> CostMdls {
     }
 }
 
-fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, String> {
+fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
     let mut resolved_inputs = Vec::new();
     for utxo in utxos {
         let tx_hash: [u8; 32] = hex::decode(&utxo.input.tx_hash)
-            .map_err(|err| format!("Invalid tx hash found: {}", err))?
+            .map_err(|err| JsError::from_str(&format!("Invalid tx hash found: {}", err)))?
             .try_into()
-            .map_err(|_e| format!("Invalid tx hash length found"))?;
+            .map_err(|_e| JsError::from_str("Invalid tx hash length found"))?;
 
         let resolved_input = ResolvedInput {
             input: TransactionInput {
@@ -77,14 +139,14 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, String> {
 }
 
 // TODO: handle native and plutusV1 scripts
-fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<ScriptRef>>, String> {
+fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
     if let Some(script) = &utxo_output.script_ref {
-        let script_bytes =
-            hex::decode(script).map_err(|err| format!("Invalid script hex found: {}", err))?;
+        let script_bytes = hex::decode(script)
+            .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
         let unwrapped_bytes = Decoder::new(&script_bytes)
             .bytes()
-            .map_err(|err| format!("Invalid script hex found: {}", err))?;
+            .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
         Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
             PlutusV2Script(unwrapped_bytes.to_vec().into()),
@@ -94,53 +156,53 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
     }
 }
 
-fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, String> {
+fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsError> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
         let csl_plutus_data = csl::plutus::PlutusData::from_json(
             inline_datum,
             csl::plutus::PlutusDatumSchema::DetailedSchema,
         )
-        .map_err(|err| format!("Invalid plutus data found: {}", err))?;
+        .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
 
         let plutus_data_bytes = csl_plutus_data.to_bytes();
         let datum = CborWrap(
             PlutusData::decode_fragment(&plutus_data_bytes)
-                .map_err(|_e| format!("Invalid plutus data found"))?,
+                .map_err(|_e| JsError::from_str("Invalid plutus data found"))?,
         );
         Ok(Some(DatumOption::Data(datum)))
     } else if let Some(datum_hash) = &utxo_output.data_hash {
         let datum_hash_bytes: [u8; 32] = hex::decode(datum_hash)
-            .map_err(|err| format!("Invalid datum hash found: {}", err))?
+            .map_err(|err| JsError::from_str(&format!("Invalid datum hash found: {}", err)))?
             .try_into()
-            .map_err(|_e| format!("Invalid byte length of datum hash found"))?;
+            .map_err(|_e| JsError::from_str("Invalid byte length of datum hash found"))?;
         Ok(Some(DatumOption::Hash(Hash::from(datum_hash_bytes))))
     } else {
         Ok(None)
     }
 }
 
-fn to_pallas_value(assets: &Vec<Asset>) -> Result<Value, String> {
+fn to_pallas_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
     if assets.len() == 1 {
         match assets[0].unit.as_str() {
             "lovelace" => Ok(Value::Coin(assets[0].quantity.parse::<u64>().unwrap())),
-            _ => Err("Invalid value".to_string()),
+            _ => Err(JsError::from_str("Invalid value")),
         }
     } else {
         to_pallas_multi_asset_value(assets)
     }
 }
 
-fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, String> {
+fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
     let mut coins: Coin = 0;
     let mut asset_mapping: HashMap<String, Vec<(String, String)>> = HashMap::new();
     for asset in assets {
-        if asset.unit == "lovelace" || asset.unit == "" {
+        if asset.unit == "lovelace" || asset.unit.is_empty() {
             coins = asset.quantity.parse::<u64>().unwrap();
         } else {
             let (policy_id, asset_name) = asset.unit.split_at(56);
             asset_mapping
                 .entry(policy_id.to_string())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((asset_name.to_string(), asset.quantity.clone()))
         }
     }
@@ -148,18 +210,18 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, String> {
     let mut multi_asset = Vec::new();
     for (policy_id, asset_list) in &asset_mapping {
         let policy_id_bytes: [u8; 28] = hex::decode(policy_id)
-            .map_err(|err| format!("Invalid policy id found: {}", err))?
+            .map_err(|err| JsError::from_str(&format!("Invalid policy id found: {}", err)))?
             .try_into()
-            .map_err(|_e| format!("Invalid length policy id found"))?;
+            .map_err(|_e| JsError::from_str("Invalid length policy id found"))?;
 
         let policy_id = PolicyId::from(policy_id_bytes);
         let mut mapped_assets = Vec::new();
         for asset in asset_list {
             let (asset_name, asset_quantity) = asset;
-            let asset_name_bytes = AssetName::from(
-                hex::decode(asset_name)
-                    .map_err(|err| format!("Invalid asset name found: {}", err))?,
-            );
+            let asset_name_bytes =
+                AssetName::from(hex::decode(asset_name).map_err(|err| {
+                    JsError::from_str(&format!("Invalid asset name found: {}", err))
+                })?);
             mapped_assets.push((asset_name_bytes, asset_quantity.parse::<u64>().unwrap()));
         }
         multi_asset.push((policy_id, KeyValuePairs::Def(mapped_assets)));
@@ -325,7 +387,9 @@ mod test {
 
     #[test]
     fn test_eval() {
-        let result = tx_eval("84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
+        let evaluator = MeshTxEvaluator::new();
+        let result = evaluator.evaluate_tx_sync(
+            "84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
           &vec![UTxO {
               input: UtxoInput {
                   tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
@@ -379,7 +443,8 @@ mod test {
                   script_hash: None,
                   script_ref: Some("5655010000322223253330054a229309b2b1bad0025735".to_string())
               }
-          }]
+          }],
+          &[]
       );
 
         let redeemers = result.unwrap();
@@ -387,8 +452,8 @@ mod test {
         for redeemer in redeemers {
             redeemer_json.insert("index".to_string(), redeemer.index.to_string().into());
             let mut ex_unit_json = serde_json::Map::new();
-            ex_unit_json.insert("mem".to_string(), redeemer.ex_units.mem.into());
-            ex_unit_json.insert("steps".to_string(), redeemer.ex_units.steps.into());
+            ex_unit_json.insert("mem".to_string(), redeemer.budget.mem.into());
+            ex_unit_json.insert("steps".to_string(), redeemer.budget.steps.into());
             redeemer_json.insert(
                 "ex_units".to_string(),
                 serde_json::Value::Object(ex_unit_json),

@@ -1,7 +1,7 @@
 use crate::csl;
 use crate::model::{
     Asset, Datum, JsVecString, LanguageVersion, MeshTxBuilderBody, Output, ProvidedScriptSource,
-    ValidityRange,
+    UTxO, UtxoInput, UtxoOutput, ValidityRange,
 };
 
 use super::utils::calculate_tx_hash;
@@ -17,6 +17,7 @@ pub struct MeshTxParser {
 pub trait IMeshTxParser {
     fn new(s: &str) -> Self;
     // TODO: add testing method lists here
+    fn get_tx_outs_utxo(&self) -> Vec<UTxO>;
     fn get_tx_outs_cbor(&self) -> Vec<String>;
 }
 
@@ -54,6 +55,39 @@ impl IMeshTxParser for MeshTxParser {
             tx_body,
             csl_tx_body,
         }
+    }
+
+    fn get_tx_outs_utxo(&self) -> Vec<UTxO> {
+        let tx_outs = self.tx_body.outputs.clone();
+        let mut result = vec![];
+        tx_outs.iter().enumerate().for_each(|(i, current_tx_out)| {
+            let data_hash = if current_tx_out.clone().datum.unwrap().type_ == "Hash" {
+                Some(current_tx_out.clone().datum.unwrap().data.clone())
+            } else {
+                None
+            };
+            let plutus_data = if current_tx_out.clone().datum.unwrap().type_ == "Inline" {
+                Some(current_tx_out.clone().datum.unwrap().data.clone())
+            } else {
+                None
+            };
+            let tx_out_utxo: UTxO = UTxO {
+                input: UtxoInput {
+                    output_index: i as u32,
+                    tx_hash: self.tx_hash.clone(),
+                },
+                output: UtxoOutput {
+                    address: current_tx_out.address.clone(),
+                    amount: current_tx_out.amount.clone(),
+                    data_hash,
+                    plutus_data,
+                    script_ref: None,
+                    script_hash: None,
+                },
+            };
+            result.push(tx_out_utxo);
+        });
+        result
     }
 
     fn get_tx_outs_cbor(&self) -> Vec<String> {

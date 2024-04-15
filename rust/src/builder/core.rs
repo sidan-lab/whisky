@@ -30,7 +30,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
         match &self.evaluator {
             Some(evaluator) => {
                 let tx_evaluation_result = evaluator
-                    .evaluate_tx(&self.mesh_csl.tx_hex, self.chained_txs.clone())
+                    .evaluate_tx(
+                        &self.mesh_csl.tx_hex,
+                        &self.inputs_for_evaluation.clone(),
+                        &self.chained_txs.clone(),
+                    )
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
@@ -76,6 +80,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             evaluator: None,
             submitter: None,
             chained_txs: vec![],
+            inputs_for_evaluation: vec![],
         }
     }
 
@@ -585,6 +590,11 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
 
     fn chain_tx(&mut self, tx_hex: &str) -> &mut Self {
         self.chained_txs.push(tx_hex.to_string());
+        self
+    }
+
+    fn input_for_evaluation(&mut self, input: UTxO) -> &mut Self {
+        self.inputs_for_evaluation.push(input);
         self
     }
 

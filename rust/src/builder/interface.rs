@@ -22,6 +22,7 @@ pub struct MeshTxBuilder {
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
     pub chained_txs: Vec<String>,
+    pub inputs_for_evaluation: Vec<UTxO>,
 }
 
 pub struct MeshTxBuilderParam {
@@ -509,6 +510,19 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `Self` - The MeshTxBuilder instance
     fn chain_tx(&mut self, tx_hex: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a transaction input to provide information for offline evaluation
+    ///
+    /// ### Arguments
+    ///
+    /// * `input` - The input to be added
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn input_for_evaluation(&mut self, input: UTxO) -> &mut Self;
 
     /// ## Internal method
     ///
