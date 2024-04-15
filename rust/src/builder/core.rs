@@ -88,6 +88,9 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             self.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
             self.queue_all_last_item();
+            if !self.extra_inputs.is_empty() {
+                self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
+            }
         }
         self.serialize_tx_body();
         self.mesh_csl.tx_builder = build_tx_builder();
@@ -124,9 +127,6 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
 
-        if !self.extra_inputs.is_empty() {
-            self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
-        }
         self.add_all_inputs(self.mesh_tx_builder_body.inputs.clone());
         self.add_all_outputs(self.mesh_tx_builder_body.outputs.clone());
         self.add_all_collaterals(self.mesh_tx_builder_body.collaterals.clone());
@@ -637,12 +637,23 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             self.mesh_csl.add_tx_in(PubKeyTxIn {
                 type_: "PubKey".to_string(),
                 tx_in: TxInParameter {
-                    tx_hash: input.input.tx_hash,
+                    tx_hash: input.input.tx_hash.clone(),
                     tx_index: input.input.output_index,
-                    amount: Some(input.output.amount),
-                    address: Some(input.output.address),
+                    amount: Some(input.output.amount.clone()),
+                    address: Some(input.output.address.clone()),
                 },
             });
+            self.mesh_tx_builder_body
+                .inputs
+                .push(TxIn::PubKeyTxIn(PubKeyTxIn {
+                    type_: "PubKey".to_string(),
+                    tx_in: TxInParameter {
+                        tx_hash: input.input.tx_hash,
+                        tx_index: input.input.output_index,
+                        amount: Some(input.output.amount),
+                        address: Some(input.output.address),
+                    },
+                }));
         }
     }
 
