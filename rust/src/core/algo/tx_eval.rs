@@ -8,6 +8,7 @@ use uplc::Fragment;
 use crate::core::constants::{get_v1_cost_models, get_v2_cost_models};
 use crate::model::{Asset, UTxO, UtxoOutput};
 use cardano_serialization_lib::address::Address;
+use pallas::codec::minicbor::Decoder;
 use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
 use pallas::ledger::primitives::babbage::{
     AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
@@ -80,8 +81,13 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
     if let Some(script) = &utxo_output.script_ref {
         let script_bytes =
             hex::decode(script).map_err(|err| format!("Invalid script hex found: {}", err))?;
+
+        let unwrapped_bytes = Decoder::new(&script_bytes)
+            .bytes()
+            .map_err(|err| format!("Invalid script hex found: {}", err))?;
+
         Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
-            PlutusV2Script(script_bytes.into()),
+            PlutusV2Script(unwrapped_bytes.to_vec().into()),
         ))))
     } else {
         Ok(None)
@@ -164,6 +170,8 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, String> {
 
 #[cfg(test)]
 mod test {
+    use pallas::codec::minicbor::Decoder;
+
     use super::*;
     use crate::model::{Asset, UTxO, UtxoInput, UtxoOutput};
     // #[test]
@@ -369,7 +377,7 @@ mod test {
                   data_hash: None,
                   plutus_data: None,
                   script_hash: None,
-                  script_ref: Some("55010000322223253330054a229309b2b1bad0025735".to_string())
+                  script_ref: Some("5655010000322223253330054a229309b2b1bad0025735".to_string())
               }
           }]
       );
@@ -390,5 +398,15 @@ mod test {
             serde_json::json!({"ex_units":{"mem":2833,"steps":745013},"index":"0"}).to_string(),
             serde_json::json!(redeemer_json).to_string()
         )
+    }
+
+    #[test]
+    fn test_cbor() {
+        let script_bytes = hex::decode("5655010000322223253330054a229309b2b1bad0025735").unwrap();
+        let decoded_bytes = Decoder::new(&script_bytes).bytes().unwrap();
+        assert_eq!(
+            hex::decode("55010000322223253330054a229309b2b1bad0025735").unwrap(),
+            decoded_bytes
+        );
     }
 }
