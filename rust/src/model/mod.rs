@@ -158,7 +158,7 @@ pub struct Metadata {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Datum {
-    pub type_: String,
+    pub type_: String, // Currently it is either "Hash" or "Inline"
     pub data: String,
 }
 
