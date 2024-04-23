@@ -1,7 +1,7 @@
 use crate::model::*;
 use std::collections::HashSet;
 
-pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String) -> Vec<UTxO> {
+pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String) -> Result<Vec<UTxO>, String> {
     let mut total_required_assets = required_assets.clone();
     total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold));
 
@@ -80,7 +80,7 @@ pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String
     for unit in required_units.clone() {
         if total_required_assets.get(&unit) > 0 {
             println!("Total required assets: {:?}", total_required_assets);
-            panic!("Selection failed");
+            return Err("Selection failed".to_string());
         }
     }
 
@@ -89,7 +89,7 @@ pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String
         selected_utxos.push(inputs[*index].clone());
     }
 
-    selected_utxos
+    Ok(selected_utxos)
 }
 
 #[test]
@@ -114,6 +114,6 @@ fn test_basic_selection() {
 
     let mut required_assets: Value = Value::new();
     required_assets.add_asset(Asset::new_from_str("lovelace", "5000000"));
-    let selected_list = select_utxos(utxo_list.clone(), required_assets, "5000000".to_string());
+    let selected_list = select_utxos(utxo_list.clone(), required_assets, "5000000".to_string()).unwrap();
     assert_eq!(utxo_list, selected_list);
 }

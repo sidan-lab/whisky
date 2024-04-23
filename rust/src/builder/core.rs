@@ -641,7 +641,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             required_assets.negate_asset(mint_amount);
         }
 
-        let selected_inputs = select_utxos(extra_inputs, required_assets, threshold.to_string());
+        let selected_inputs = select_utxos(extra_inputs, required_assets, threshold.to_string()).unwrap();
 
         for input in selected_inputs {
             self.mesh_csl.add_tx_in(PubKeyTxIn {
