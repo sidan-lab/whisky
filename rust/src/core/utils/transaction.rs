@@ -38,3 +38,13 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
     );
     signed_transaction.to_hex()
 }
+
+pub fn remove_witness_set(tx_hex: String) -> String {
+    let signed_transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
+    csl::Transaction::new(
+        &signed_transaction.body(),
+        &csl::TransactionWitnessSet::new(),
+        signed_transaction.auxiliary_data().clone(),
+    )
+    .to_hex()
+}
