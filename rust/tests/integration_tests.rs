@@ -67,6 +67,7 @@ mod int_tests {
             cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
             cns_policy_id,
             LanguageVersion::V2,
+            100,
         )
         .mint_redeemer_value(Redeemer {
             data: to_string(&json!({
@@ -106,6 +107,7 @@ mod int_tests {
             record_validator_script_ref_txid.parse::<u32>().unwrap(),
             "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
             LanguageVersion::V2,
+            100,
         )
         .tx_out(
             wallet_address,

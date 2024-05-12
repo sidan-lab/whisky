@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cardano_serialization_lib::error::JsError;
+use cardano_serialization_lib::JsError;
 
 use crate::model::{Action, UTxO};
 

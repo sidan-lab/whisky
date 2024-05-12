@@ -1,6 +1,6 @@
-use std::collections::HashSet;
-use csl::crypto::Vkeywitnesses;
 use crate::core::utils::blake2b256;
+use csl::Vkeywitnesses;
+use std::collections::HashSet;
 
 use crate::csl;
 use crate::model::{
@@ -52,21 +52,19 @@ impl IMeshTxParser for MeshTxParser {
         let csl_witness_set = csl_tx.witness_set();
         for i in 0..csl_tx_body.outputs().len() {
             let tx_output = csl_tx_body.outputs().get(i);
-            tx_body
-                .outputs
-                .push(csl_output_to_mesh_output(tx_output))
+            tx_body.outputs.push(csl_output_to_mesh_output(tx_output))
         }
-        let required_signers_key_hashes = csl_tx_body.required_signers().unwrap_or(csl::Ed25519KeyHashes::new());
+        let required_signers_key_hashes = csl_tx_body
+            .required_signers()
+            .unwrap_or(csl::Ed25519KeyHashes::new());
         for i in 0..required_signers_key_hashes.len() {
             let signer = required_signers_key_hashes.get(i);
-            tx_body
-                .required_signatures
-                .add(signer.to_hex())
+            tx_body.required_signatures.add(signer.to_hex())
         }
         MeshTxParser {
             tx_hash: calculate_tx_hash(s),
             tx_hex: s.to_string(),
-            tx_fee_lovelace: csl::utils::from_bignum(&csl_tx.body().fee()),
+            tx_fee_lovelace: csl_tx.body().fee().to_str().parse::<u64>().unwrap(),
             tx_body,
             csl_tx_body,
             csl_witness_set,
@@ -120,7 +118,7 @@ impl IMeshTxParser for MeshTxParser {
     fn check_all_required_signers(&self) -> bool {
         let signers = &self.tx_body.required_signatures;
         let mut signer_set: HashSet<String> = HashSet::new();
-        let fixed_tx = csl::protocol_types::fixed_tx::FixedTransaction::from_hex(&self.tx_hex).unwrap();
+        let fixed_tx = csl::FixedTransaction::from_hex(&self.tx_hex).unwrap();
         for i in 0..signers.len() {
             signer_set.insert(signers.get(i));
         }
@@ -133,7 +131,7 @@ impl IMeshTxParser for MeshTxParser {
             } else {
                 signer_set.remove(&pub_key.hash().to_hex());
             };
-        };
+        }
         signer_set.is_empty()
     }
 }
@@ -170,7 +168,7 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
     let datum: Option<Datum> = output.plutus_data().map(|csl_datum| Datum {
         type_: "Inline".to_string(),
         data: csl_datum
-            .to_json(csl::plutus::PlutusDatumSchema::DetailedSchema)
+            .to_json(csl::PlutusDatumSchema::DetailedSchema)
             .unwrap(),
     });
 
@@ -178,8 +176,9 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
         Some(csl_script_ref) => {
             let plutus_script = csl_script_ref.plutus_script().unwrap();
             let language_version = match plutus_script.language_version().kind() {
-                csl::plutus::LanguageKind::PlutusV1 => LanguageVersion::V1,
-                csl::plutus::LanguageKind::PlutusV2 => LanguageVersion::V2,
+                csl::LanguageKind::PlutusV1 => LanguageVersion::V1,
+                csl::LanguageKind::PlutusV2 => LanguageVersion::V2,
+                csl::LanguageKind::PlutusV3 => LanguageVersion::V3,
             };
             Some(ProvidedScriptSource {
                 script_cbor: plutus_script.to_hex(),

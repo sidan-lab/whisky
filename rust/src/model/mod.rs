@@ -96,12 +96,14 @@ pub struct InlineScriptSource {
     pub tx_index: u32,
     pub spending_script_hash: String,
     pub language_version: LanguageVersion,
+    pub script_size: usize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum LanguageVersion {
     V1,
     V2,
+    V3,
 }
 
 #[derive(Clone, Debug, PartialEq)]

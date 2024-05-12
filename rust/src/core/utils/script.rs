@@ -2,9 +2,9 @@ use crate::*;
 
 #[wasm_bindgen]
 pub fn get_v2_script_hash(script: &str) -> String {
-    csl::plutus::PlutusScript::from_hex_with_version(
+    csl::PlutusScript::from_hex_with_version(
         script,
-        &csl::plutus::Language::new_plutus_v2(),
+        &csl::Language::new_plutus_v2(),
     )
     .unwrap()
     .hash()
