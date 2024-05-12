@@ -18,7 +18,7 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
     let unsigned_transaction: csl::Transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
     let tx_body = unsigned_transaction.body();
     let mut witness_set = unsigned_transaction.witness_set();
-    let mut vkey_witnesses = witness_set.vkeys().unwrap().clone();
+    let mut vkey_witnesses = witness_set.vkeys().unwrap_or_else(|| csl::Vkeywitnesses::new()).clone();
     for key in signing_keys {
         let clean_hex = if &key[0..4] == "5820" {
             key[4..].to_string()

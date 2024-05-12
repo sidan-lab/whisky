@@ -20,7 +20,7 @@ pub fn build_tx_builder() -> csl::TransactionBuilder {
             &csl::UnitInterval::new(&to_bignum(577), &to_bignum(10000)),
             &csl::UnitInterval::new(&to_bignum(721), &to_bignum(10000000)),
         ))
-        .ref_script_coins_per_byte(&csl::UnitInterval::new(&to_bignum(577), &to_bignum(10000)))
+        .ref_script_coins_per_byte(&csl::UnitInterval::new(&to_bignum(0), &to_bignum(10000)))
         .build()
         .unwrap();
     csl::TransactionBuilder::new(&cfg)

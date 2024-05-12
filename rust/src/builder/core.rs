@@ -603,7 +603,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
     }
 
     fn add_all_signing_keys(&mut self, signing_keys: JsVecString) {
-        if !signing_keys.len() == 0 {
+        if !(signing_keys.len() == 0) {
             self.mesh_csl.add_signing_keys(signing_keys);
         }
     }

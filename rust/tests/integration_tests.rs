@@ -176,4 +176,25 @@ mod int_tests {
         println!("{}", mesh.mesh_csl.tx_hex);
         assert!(mesh.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_simple_spend() {
+        let mut mesh = MeshTxBuilder::new_core();
+        let signed_tx = mesh.tx_in(
+            "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+            3,
+            vec![Asset {
+                unit: "lovelace".to_string(),
+                quantity: "9891607895".to_string(),
+            }],
+            "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+        )
+        .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
+        .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
+        .complete_sync(None)
+        .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.mesh_csl.tx_hex != *"");
+    }
 }

@@ -1,5 +1,6 @@
 mod transaction_tests {
-    use sidan_csl_rs::core::utils::calculate_tx_hash;
+    use cardano_serialization_lib as csl;
+    use sidan_csl_rs::core::utils::{build_tx_builder, calculate_tx_hash, to_bignum};
 
     #[test]
     fn test_calculate_tx_hash() {
@@ -35,5 +36,73 @@ mod transaction_tests {
             tx_hash_from_unsigned_hex,
             "b9469d90b1e2861b338f544820b696e9622c6a42526ae8c7a9cf16ff245eaba8"
         );
+    }
+
+    #[test]
+    fn test_add_change() {
+        let mut tx_builder = build_tx_builder();
+
+        let mut test_value = csl::Value::new(&to_bignum(100000000));
+        let mut test_multi_asset = csl::MultiAsset::new();
+        let mut test_assets = csl::Assets::new();
+        let test_assets_names = vec![
+            "31", "32", "33", "34", "35", "36", "37", "38", "39", "3130", "3131", "3132", "3133",
+            "3134", "3135", "3136", "3137", "3138", "3139", "3230", "3231", "3232", "3233", "3234",
+            "3235", "3236", "3237", "3238", "3239", "3330", "3331", "3332", "3333", "3334", "3335",
+            "3336", "3337", "3338", "3339", "3430", "3431", "3432", "3433", "3434", "3435", "3436",
+            "3437", "3438", "3439", "3530", "3531", "3532", "3533", "3534", "3535", "3536", "3537",
+            "3538", "3539", "3630", "3631", "3632", "3633", "3634", "3635", "3636", "3637", "3638",
+            "3639", "3730", "3731", "3732", "3733", "3734", "3735", "3736", "3737", "3738", "3739",
+            "3830", "3831", "3832", "3833", "3834", "3835", "3836", "3837", "3838", "3839", "3930",
+            "3931", "3932", "3933", "3934", "3935", "3936", "3937", "3938", "3939", "313030",
+            "313031",
+        ];
+
+        for asset_name in test_assets_names {
+            test_assets.insert(
+                &csl::AssetName::new(hex::decode(asset_name).unwrap()).unwrap(),
+                &csl::BigNum::one(),
+            );
+        }
+
+        for i in 0..20 {
+            let native_script =
+                csl::NativeScript::new_timelock_start(&csl::TimelockStart::new_timelockstart(
+                    &csl::BigNum::from_str(&i.to_string()).unwrap(),
+                ));
+
+            test_multi_asset.insert(&native_script.hash(), &test_assets);
+        }
+
+        test_value.set_multiasset(&test_multi_asset);
+
+        let mut tx_inputs_builder = csl::TxInputsBuilder::new();
+        let _ = tx_inputs_builder.add_regular_input(
+            &csl::Address::from_bech32(
+                "addr_test1vpvwjd8za9wj8kzse2pm9ch9xcd9zu6aex99jyd6rrgntdqq2vvut",
+            )
+            .unwrap(),
+            &csl::TransactionInput::new(
+                &csl::TransactionHash::from_hex(
+                    "a04996d5ef87fdece0c74625f02ee5c1497a06e0e476c5095a6b0626b295074a",
+                )
+                .unwrap(),
+                1,
+            ),
+            &test_value,
+        );
+
+        tx_builder.set_inputs(&tx_inputs_builder);
+
+        tx_builder
+            .add_change_if_needed(
+                &csl::Address::from_bech32(
+                    "addr_test1vpvwjd8za9wj8kzse2pm9ch9xcd9zu6aex99jyd6rrgntdqq2vvut",
+                )
+                .unwrap(),
+            )
+            .unwrap();
+
+        assert!(tx_builder.build().unwrap().outputs().len() == 2);
     }
 }
