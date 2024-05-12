@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use cardano_serialization_lib as csl;
-use csl::error::JsError;
+use csl::JsError;
 use pallas::ledger::primitives::alonzo::RedeemerTag as PRedeemerTag;
 use pallas::ledger::primitives::conway::PlutusV2Script;
 use std::collections::HashMap;
@@ -11,7 +11,7 @@ use crate::core::constants::{get_v1_cost_models, get_v2_cost_models};
 use crate::core::tx_parser::{IMeshTxParser, MeshTxParser};
 use crate::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
 use crate::service::IEvaluator;
-use cardano_serialization_lib::address::Address;
+use csl::Address;
 use pallas::codec::minicbor::Decoder;
 use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
 use pallas::ledger::primitives::babbage::{
@@ -158,11 +158,9 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
 
 fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsError> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
-        let csl_plutus_data = csl::plutus::PlutusData::from_json(
-            inline_datum,
-            csl::plutus::PlutusDatumSchema::DetailedSchema,
-        )
-        .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
+        let csl_plutus_data =
+            csl::PlutusData::from_json(inline_datum, csl::PlutusDatumSchema::DetailedSchema)
+                .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
 
         let plutus_data_bytes = csl_plutus_data.to_bytes();
         let datum = CborWrap(

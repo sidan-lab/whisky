@@ -100,7 +100,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         self.serialize_tx_body();
         self.mesh_csl.tx_builder = build_tx_builder();
         self.mesh_csl.tx_inputs_builder =
-            csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new();
+            csl::TxInputsBuilder::new();
         self
     }
 
@@ -402,6 +402,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         tx_index: u32,
         spending_script_hash: &str,
         version: LanguageVersion,
+        script_size: usize,
     ) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
@@ -417,6 +418,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
                         tx_index,
                         spending_script_hash: spending_script_hash.to_string(),
                         language_version: version,
+                        script_size,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
@@ -486,6 +488,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
         tx_index: u32,
         spending_script_hash: &str,
         version: LanguageVersion,
+        script_size: usize,
     ) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
@@ -497,6 +500,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
             tx_index,
             spending_script_hash: spending_script_hash.to_string(),
             language_version: version,
+            script_size,
         }));
         self.mint_item = Some(mint_item);
         self
@@ -686,7 +690,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
     }
 
     fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>) {
-        let mut collateral_builder = csl::tx_builder::tx_inputs_builder::TxInputsBuilder::new();
+        let mut collateral_builder = csl::TxInputsBuilder::new();
         for collateral in collaterals {
             self.mesh_csl
                 .add_collateral(&mut collateral_builder, collateral)
@@ -701,7 +705,7 @@ impl IMeshTxBuilderCore for MeshTxBuilder {
     }
 
     fn add_all_mints(&mut self, mints: Vec<MintItem>) {
-        let mut mint_builder = csl::tx_builder::mint_builder::MintBuilder::new();
+        let mut mint_builder = csl::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
             match mint.type_.as_str() {
                 "Plutus" => self

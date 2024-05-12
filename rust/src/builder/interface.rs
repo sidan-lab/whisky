@@ -250,6 +250,7 @@ pub trait IMeshTxBuilderCore {
     /// * `tx_index` - The transaction index
     /// * `spending_script_hash` - The spending script hash
     /// * `version` - The language version
+    /// * `scrip_size` - Size of the script
     ///
     /// ### Returns
     ///
@@ -260,6 +261,7 @@ pub trait IMeshTxBuilderCore {
         tx_index: u32,
         spending_script_hash: &str,
         version: LanguageVersion,
+        script_size: usize,
     ) -> &mut Self;
 
     /// ## Transaction building method
@@ -346,6 +348,7 @@ pub trait IMeshTxBuilderCore {
     /// * `tx_index` - The transaction index
     /// * `spending_script_hash` - The spending script hash
     /// * `version` - The language version
+    /// * `script_size` - Size of the script
     ///
     /// ### Returns
     ///
@@ -356,6 +359,7 @@ pub trait IMeshTxBuilderCore {
         tx_index: u32,
         spending_script_hash: &str,
         version: LanguageVersion,
+        script_size: usize,
     ) -> &mut Self;
 
     /// ## Transaction building method

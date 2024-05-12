@@ -9,8 +9,8 @@ pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
 
 #[wasm_bindgen]
 pub fn calculate_tx_hash(tx_hex: &str) -> String {
-    let csl_tx = csl::protocol_types::fixed_tx::FixedTransaction::from_hex(tx_hex).unwrap();
-    csl::crypto::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex()
+    let csl_tx = csl::FixedTransaction::from_hex(tx_hex).unwrap();
+    csl::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex()
 }
 
 #[wasm_bindgen]
@@ -25,9 +25,9 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         } else {
             key.to_string()
         };
-        let skey = csl::crypto::PrivateKey::from_hex(&clean_hex).unwrap();
+        let skey = csl::PrivateKey::from_hex(&clean_hex).unwrap();
         let vkey_witness =
-            csl::utils::make_vkey_witness(&csl::utils::hash_transaction(&tx_body), &skey);
+            csl::make_vkey_witness(&csl::hash_transaction(&tx_body), &skey);
         vkey_witnesses.add(&vkey_witness);
     }
     witness_set.set_vkeys(&vkey_witnesses);

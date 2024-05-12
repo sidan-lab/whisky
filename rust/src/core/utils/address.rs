@@ -7,23 +7,23 @@ pub fn script_to_address(
     stake_hash: Option<String>,
 ) -> String {
     match stake_hash {
-        Some(stake) => csl::address::BaseAddress::new(
+        Some(stake) => csl::BaseAddress::new(
             network_id,
-            &csl::address::StakeCredential::from_scripthash(
-                &csl::crypto::ScriptHash::from_hex(&script_hash).unwrap(),
+            &csl::Credential::from_scripthash(
+                &csl::ScriptHash::from_hex(&script_hash).unwrap(),
             ),
-            &csl::address::StakeCredential::from_keyhash(
-                &csl::crypto::Ed25519KeyHash::from_hex(&stake).unwrap(),
+            &csl::Credential::from_keyhash(
+                &csl::Ed25519KeyHash::from_hex(&stake).unwrap(),
             ),
         )
         .to_address()
         .to_bech32(None)
         .unwrap(),
 
-        None => csl::address::EnterpriseAddress::new(
+        None => csl::EnterpriseAddress::new(
             network_id,
-            &csl::address::StakeCredential::from_scripthash(
-                &csl::crypto::ScriptHash::from_hex(&script_hash).unwrap(),
+            &csl::Credential::from_scripthash(
+                &csl::ScriptHash::from_hex(&script_hash).unwrap(),
             ),
         )
         .to_address()
@@ -34,8 +34,8 @@ pub fn script_to_address(
 
 #[wasm_bindgen]
 pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
-    let csl_address = csl::address::BaseAddress::from_address(
-        &csl::address::Address::from_bech32(&bech32_addr).unwrap(),
+    let csl_address = csl::BaseAddress::from_address(
+        &csl::Address::from_bech32(&bech32_addr).unwrap(),
     );
     match csl_address {
         Some(address) => {
@@ -61,8 +61,8 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
             )
         }
         None => {
-            let csl_enterprize_address = csl::address::EnterpriseAddress::from_address(
-                &csl::address::Address::from_bech32(&bech32_addr).unwrap(),
+            let csl_enterprize_address = csl::EnterpriseAddress::from_address(
+                &csl::Address::from_bech32(&bech32_addr).unwrap(),
             )
             .unwrap();
 

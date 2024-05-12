@@ -1,8 +1,7 @@
 use crate::{
     core::common::{bytes_to_hex, hex_to_bytes},
     csl::{
-        error::JsError,
-        plutus::{PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
+        JsError, {PlutusData, PlutusDatumSchema, PlutusList, PlutusScript},
     },
     model::JsVecString,
     *,

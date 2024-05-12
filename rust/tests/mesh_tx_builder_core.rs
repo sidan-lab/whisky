@@ -114,6 +114,7 @@ mod mesh_tx_builder_core_tests {
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 LanguageVersion::V2,
+                100,
             )
             .tx_in_datum_value(&data)
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -184,6 +185,7 @@ mod mesh_tx_builder_core_tests {
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 LanguageVersion::V2,
+                100,
             )
             .tx_in_datum_value(&data)
             .spending_reference_tx_in_redeemer_value(Redeemer {
@@ -222,6 +224,7 @@ mod mesh_tx_builder_core_tests {
             0,
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700",
             LanguageVersion::V2,
+            100,
         )
         .mint_redeemer_value(Redeemer {
             data: to_string(&json!({
