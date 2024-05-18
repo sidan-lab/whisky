@@ -1,0 +1,42 @@
+[package]
+name = "sidan-csl-rs-1"
+version = "0.4.0"
+edition = "2021"
+license = "MIT"
+description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+cardano-serialization-lib = "12.0.0-alpha.30"
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+cryptoxide = "0.4.4"
+serde-wasm-bindgen = "0.6.5"
+async-trait = "0.1.79"
+
+# non-wasm
+[target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
+uplc = "=1.0.26-alpha"
+wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
+rand_os = "0.1"
+noop_proc_macro = "0.3.0"
+pallas = "0.22.0"
+
+# wasm
+[target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
+uplc = "0.0.29"
+wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
+rand_os = { version = "0.1", features = ["wasm-bindgen"] }
+js-sys = "=0.3.61"
+wasm-bindgen-futures = "=0.4.34"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+codegen-units = 1
+opt-level = "s"
+incremental = true
+lto = true
