@@ -27,7 +27,7 @@ jobs:
         run: |
           cd core
           CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Checkout master branch at commit after merge
         uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
         run: |
           cd core
           CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Compare versions
         id: compare-versions
