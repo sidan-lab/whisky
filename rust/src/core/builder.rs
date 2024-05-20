@@ -281,7 +281,7 @@ impl IMeshCSL for MeshCSL {
                 &csl::Int::new_i32(mint.amount.try_into().unwrap()),
             ),
             ScriptSource::InlineScriptSource(_) => {
-                panic!("Native scripts cannot be referenced")
+                Err(csl::JsError::from_str("Native scripts cannot be referenced"))
             }
         };
     }
