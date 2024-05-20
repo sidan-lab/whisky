@@ -102,5 +102,3 @@ The APIs of `whisky` consists of 3 parts:
 | `MeshTxBuilderCore` Internal Method    | `add_all_collaterals`                           | Internal method before building tx                                                      |
 | `MeshTxBuilderCore` Internal Method    | `add_all_reference_inputs`                      | Internal method before building tx                                                      |
 | `MeshTxBuilderCore` Internal Method    | `add_all_mints`                                 | Internal method before building tx                                                      |
-| `MeshTxBuilderCore` Internal Method    | `castRawDataToJsonString`                       | [To be implemented] Turn object to string, keep string as string                        |
-| `MeshTxBuilderCore` Internal Method    | `castDataToPlutusData`                          | [To be implemented]                                                                     |
