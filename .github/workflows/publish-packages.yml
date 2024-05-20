@@ -130,6 +130,23 @@ jobs:
               echo "rust-version-updated=false" >> "$GITHUB_OUTPUT"
           fi
 
+  publish-npm:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish NPM wasm package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: npm install && cargo install wasm-pack
+      - run: npm run js:publish-nodejs && npm run js:publish-browser
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
   publish-core-crate:
     needs: [check-version, build-test]
     if: needs.check-version.outputs.core-version-updated == 'true'
@@ -153,7 +170,7 @@ jobs:
   only-publish-whisky-crate:
     needs: [check-version, build-test]
     if: needs.check-version.outputs.rust-version-updated == 'true' && needs.check-version.outputs.core-version-updated == 'false'
-    name: Publish Whisky crate
+    name: Only publish Whisky crate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
