@@ -23,21 +23,48 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build
+      - name: Build core
+        run: >
+          cd core &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build rust
         run: >
           cd rust &&
           cargo build
           --locked
           --verbose
 
-      - name: Run tests (without coverage)
+      - name: Run core tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cd core &&
+          cargo test
+          --verbose
+
+      - name: Run rust tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
           cd rust &&
           cargo test
           --verbose
 
-      - name: Run tests (with coverage)
+      - name: Run core tests (with coverage)
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cd core &&
+          cargo install cargo-tarpaulin
+          && cargo tarpaulin
+          --verbose
+          --out Xml
+          --engine llvm
+          --skip-clean
+
+      - name: Run rust tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
           cd rust &&
@@ -47,6 +74,7 @@ jobs:
           --out Xml
           --engine llvm
           --skip-clean
+
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3

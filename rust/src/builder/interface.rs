@@ -1,14 +1,16 @@
 use async_trait::async_trait;
-
-use crate::{
-    core::builder::MeshCSL,
-    model::*,
-    service::{IEvaluator, IFetcher, ISubmitter},
+use sidan_csl_rs::{
+    builder::MeshTxBuilderCore,
+    model::{
+        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PubKeyTxIn, Redeemer, TxIn,
+        UTxO,
+    },
 };
 
+use crate::service::{IEvaluator, IFetcher, ISubmitter};
+
 pub struct MeshTxBuilder {
-    pub mesh_csl: MeshCSL,
-    pub mesh_tx_builder_body: MeshTxBuilderBody,
+    pub core: MeshTxBuilderCore,
     pub tx_in_item: Option<TxIn>,
     pub extra_inputs: Vec<UTxO>,
     pub selection_threshold: u64,
@@ -17,7 +19,6 @@ pub struct MeshTxBuilder {
     pub tx_output: Option<Output>,
     pub adding_script_input: bool,
     pub adding_plutus_mint: bool,
-    pub tx_evaluation_multiplier_percentage: u64,
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
@@ -41,6 +42,7 @@ pub trait IMeshTxBuilder {
     ///
     /// * `Self` - A new MeshTxBuilder instance
     fn new(param: MeshTxBuilderParam) -> Self;
+
     /// ## Transaction building method
     ///  
     /// Complete the transaction building process with fetching missing information & tx evaluation
@@ -53,26 +55,6 @@ pub trait IMeshTxBuilder {
     ///
     /// * `Self` - The MeshTxBuilder instance
     async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
-}
-
-pub trait IMeshTxBuilderCore {
-    /// ## Transaction building method
-    ///
-    /// Create a new MeshTxBuilder instance
-    ///
-    /// ### Returns
-    ///
-    /// * `Self` - A new MeshTxBuilder instance
-    fn new_core() -> Self;
-
-    /// ## Transaction building method
-    ///
-    /// Obtain the transaction hex
-    ///
-    /// ### Returns
-    ///
-    /// * tx_hex - The current transaction hex from build
-    fn tx_hex(&mut self) -> String;
 
     /// ## Transaction building method
     ///
@@ -98,12 +80,12 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Transaction building method
     ///
-    /// Serialize the transaction body
+    /// Obtain the transaction hex
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
-    fn serialize_tx_body(&mut self) -> &mut Self;
+    /// * tx_hex - The current transaction hex from build
+    fn tx_hex(&mut self) -> String;
 
     /// ## Transaction building method
     ///
@@ -528,7 +510,7 @@ pub trait IMeshTxBuilderCore {
     /// * `Self` - The MeshTxBuilder instance
     fn input_for_evaluation(&mut self, input: UTxO) -> &mut Self;
 
-    /// ## Internal method
+    /// ## Transaction building method
     ///
     /// Selects utxos to fill output value and puts them into inputs
     ///
@@ -544,97 +526,6 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple signing keys to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `signing_keys` - A vector of signing keys in hexadecimal
-    fn add_all_signing_keys(&mut self, signing_keys: JsVecString);
-
-    /// ## Internal method
-    ///
-    /// Add multiple inputs to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `inputs` - A vector of inputs
-    fn add_all_inputs(&mut self, inputs: Vec<TxIn>);
-
-    /// ## Internal method
-    ///
-    /// Perform the utxo selection process
-    ///
-    /// ### Arguments
-    ///
-    /// * `extra_inputs` - A vector of extra inputs provided
-    /// * `threshold` - The threshold as configured
-    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64);
-
-    /// ## Internal method
-    ///
-    /// Add multiple outputs to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `outputs` - A vector of outputs
-    fn add_all_outputs(&mut self, outputs: Vec<Output>);
-
-    /// ## Internal method
-    ///
-    /// Add multiple collaterals to the MeshTxBuilder instance
-    ///
-    /// ## Arguments
-    ///
-    /// * `collaterals` - A vector of collaterals
-    fn add_all_collaterals(&mut self, collaterals: Vec<PubKeyTxIn>);
-
-    /// ## Internal method
-    ///
-    /// Add multiple reference inputs to the MeshTxBuilder instance
-    ///
-    /// ## Arguments
-    ///
-    /// * `ref_inputs` - A vector of reference inputs
-    fn add_all_reference_inputs(&mut self, ref_inputs: Vec<RefTxIn>);
-
-    /// ## Internal method
-    ///
-    /// Add multiple mints to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `mints` - A vector of mints
-    fn add_all_mints(&mut self, mints: Vec<MintItem>);
-
-    /// ## Internal method
-    ///
-    /// Add a validity range to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `validity_range` - The validity range
-    fn add_validity_range(&mut self, validity_range: ValidityRange);
-
-    /// ## Internal method
-    ///
-    /// Add multiple required signatures to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `required_signatures` - A vector of required signatures
-    fn add_all_required_signature(&mut self, required_signatures: JsVecString);
-
-    /// ## Internal method
-    ///
-    /// Add multiple metadata to the MeshTxBuilder instance
-    ///
-    /// ### Arguments
-    ///
-    /// * `all_metadata` - A vector of metadata
-    fn add_all_metadata(&mut self, all_metadata: Vec<Metadata>);
-
-    /// ## Internal method
-    ///
     /// Queue an input in the MeshTxBuilder instance
     fn queue_input(&mut self);
 
@@ -647,4 +538,14 @@ pub trait IMeshTxBuilderCore {
     ///
     /// Queue all last items in the MeshTxBuilder instance
     fn queue_all_last_item(&mut self);
+
+    /// ## Internal method
+    ///
+    /// Perform the utxo selection process
+    ///
+    /// ### Arguments
+    ///
+    /// * `extra_inputs` - A vector of extra inputs provided
+    /// * `threshold` - The threshold as configured
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64);
 }

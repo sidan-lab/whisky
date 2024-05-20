@@ -1,9 +1,9 @@
 [package]
-name = "sidan-csl-rs"
-version = "0.4.1"
+name = "whiskey"
+version = "0.1.0-alpha"
 edition = "2021"
-license = "MIT"
-description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
+license = "Apache-2.0"
+description = "The Cardano Rust SDK, inspired by MeshJS"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -17,22 +17,14 @@ serde_json = "1.0"
 cryptoxide = "0.4.4"
 serde-wasm-bindgen = "0.6.5"
 async-trait = "0.1.79"
-
-# non-wasm
-[target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
+sidan-csl-rs = { path = "../core"}
 uplc = "=1.0.26-alpha"
 wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
-pallas = "0.22.0"
-
-# wasm
-[target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
-uplc = "0.0.29"
-wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
-rand_os = { version = "0.1", features = ["wasm-bindgen"] }
-js-sys = "=0.3.61"
-wasm-bindgen-futures = "=0.4.34"
+pallas-codec = "0.22.0"
+pallas-primitives = "0.22.0"
+pallas-traverse = "0.22.0"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

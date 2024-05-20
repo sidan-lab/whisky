@@ -4,11 +4,11 @@
 name: Rust Package
 
 on:
-  release:
-    types: [created]
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - master
+      - main
 
 jobs:
   build-test:
@@ -21,23 +21,50 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build
+      - name: Build core
+        run: >
+          cd core &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build rust
         run: >
           cd rust &&
           cargo build
           --locked
           --verbose
 
-      - name: Run tests (without coverage)
+      - name: Run core tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cd core &&
+          cargo test
+          --verbose
+
+      - name: Run rust tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
           cd rust &&
           cargo test
           --verbose
 
-      - name: Run tests (with coverage)
+      - name: Run core tests (with coverage)
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cd core &&
+          cargo install cargo-tarpaulin
+          && cargo tarpaulin
+          --verbose
+          --out Xml
+          --engine llvm
+          --skip-clean
+
+      - name: Run rust tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
           cd rust &&
@@ -47,11 +74,49 @@ jobs:
           --out Xml
           --engine llvm
           --skip-clean
+
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
 
-  publish:
+  check-version:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      rust-version-updated: ${{ steps.compare-versions.outputs.version-updated }}
+    steps:
+      - name: Checkout master branch at commit before merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Get package version from master branch before merge
+        id: pre-merge-version
+        run: |
+          RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
+
+      - name: Checkout master branch at commit after merge
+        uses: actions/checkout@v4
+        with:
+          ref: "master"
+
+      - name: Get package version from master branch after merge
+        id: post-merge-version
+        run: |
+          RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_ENV"
+
+      - name: Compare versions
+        id: compare-versions
+        run: |
+          if [[ "${{ steps.pre-merge-version.outputs.rust_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.rust_post_merge_version }}" ]]; then
+              echo "rust-version-updated=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "rust-version-updated=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-crate:
     needs: build-test
     name: Publish
     runs-on: ubuntu-latest
@@ -66,12 +131,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|js:) ]]; then
-            echo "Skipping npm publish due to commit message."
-          else
-            cd rust && cargo publish --token ${PUBLISH_KEY}
-          fi
-
+      - run: cd rust && cargo publish --token ${PUBLISH_KEY}
         env:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}

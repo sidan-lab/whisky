@@ -1,7 +1,11 @@
 use crate::model::*;
 use std::collections::HashSet;
 
-pub fn select_utxos(inputs: Vec<UTxO>, required_assets: Value, threshold: String) -> Result<Vec<UTxO>, String> {
+pub fn select_utxos(
+    inputs: Vec<UTxO>,
+    required_assets: Value,
+    threshold: String,
+) -> Result<Vec<UTxO>, String> {
     let mut total_required_assets = required_assets.clone();
     total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold));
 
@@ -114,6 +118,7 @@ fn test_basic_selection() {
 
     let mut required_assets: Value = Value::new();
     required_assets.add_asset(Asset::new_from_str("lovelace", "5000000"));
-    let selected_list = select_utxos(utxo_list.clone(), required_assets, "5000000".to_string()).unwrap();
+    let selected_list =
+        select_utxos(utxo_list.clone(), required_assets, "5000000".to_string()).unwrap();
     assert_eq!(utxo_list, selected_list);
 }
