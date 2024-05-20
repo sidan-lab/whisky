@@ -1,4 +1,4 @@
-# sidan-csl-rs
+# whisky
 
 This is a library for building off-chain code on Cardano. It is a cardano-cli like wrapper on cardano-serialization-lib (equivalent on MeshJS’s lower level APIs), supporting serious DApps’ backend on rust codebase. It has an active [F11 proposal](https://cardano.ideascale.com/c/idea/112172) for supporting the development.
 
@@ -7,22 +7,26 @@ This is a library for building off-chain code on Cardano. It is a cardano-cli li
 ### Rust Library
 
 ```sh
-cargo add sidan-csl-rs
+cargo add whisky
 ```
 
 ### JS / TS WASM Lib
 
-- To be added
+```sh
+# For nodejs package
+yarn add @sidan-lab/sidan-csl-rs-nodejs
+# For browser package
+yarn add @sidan-lab/sidan-csl-rs-browser
+```
 
 ## APIs
 
-The APIs of `sidan-csl-rs` consists of 3 parts:
+The APIs of `whisky` consists of 3 parts:
 
 ### 1. APIs on core CSL logics
 
 | Type               | Name                       | Description                                                                            |
 | ------------------ | -------------------------- | -------------------------------------------------------------------------------------- |
-| `MeshCSL` Property | `tx_hex`                   | This is the transaction hex, used for storing the transaction in hexadecimal format.   |
 | `MeshCSL` Property | `tx_builder`               | This is the transaction builder, used for building transactions.                       |
 | `MeshCSL` Property | `tx_inputs_builder`        | This is the transaction inputs builder, used for building the inputs of a transaction. |
 | `MeshCSL` Method   | `add_tx_in`                | This method is used to add a transaction input.                                        |
@@ -46,10 +50,6 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | Util Function      | `get_v2_script_hash`       | To obtain script hash from script cbor                                                 |
 | Util Function      | `calculate_tx_hash`        | To calculate the transaction hash from signed or unsigned hex                          |
 | Util Function      | `sign_transaction`         | To add private key signature to current tx_hex                                         |
-| Util Function      | `meshToPlutusData`         | To be added -To serialize plutus data from mesh data type                              |
-| Util Function      | `jsonToPlutusData`         | To be added -To serialize plutus data from json                                        |
-| Util Function      | `cborToPlutusData`         | To be added -To serialize plutus data from cbor                                        |
-| Util Function      | To be added                | To be added - A bunch of other methods that need CSL to serialized / deserialized      |
 
 ### 2. `MeshTxBuilderCore`
 
@@ -80,7 +80,7 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | `MeshTxBuilderCore` User-facing Method | `required_signer_hash`                          | Sets the required signer of the transaction.                                            |
 | `MeshTxBuilderCore` User-facing Method | `tx_in_collateral`                              | Sets the collateral UTxO for the transaction.                                           |
 | `MeshTxBuilderCore` User-facing Method | `change_address`                                | Configures the address to accept change UTxO.                                           |
-| `MeshTxBuilderCore` User-facing Method | `change_output_datum`                           | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` User-facing Method | `change_output_datum`                           | Add datum to change output                                                              |
 | `MeshTxBuilderCore` User-facing Method | `invalid_before`                                | Sets the transaction valid interval to be valid only after the slot.                    |
 | `MeshTxBuilderCore` User-facing Method | `invalid_hereafter`                             | Sets the transaction valid interval to be valid only before the slot.                   |
 | `MeshTxBuilderCore` User-facing Method | `metadata_value`                                | Adds metadata to the transaction.                                                       |
@@ -88,18 +88,19 @@ The APIs of `sidan-csl-rs` consists of 3 parts:
 | `MeshTxBuilderCore` User-facing Method | `tx_hex`                                        | Obtain the current transaction hex from build                                           |
 | `MeshTxBuilderCore` User-facing Method | `reset`                                         | [To be implemented] Resetting the whole MeshTxBuilderCore                               |
 | `MeshTxBuilderCore` User-facing Method | `emptyTxBuilderBody`                            | [To be implemented] Resetting the body object                                           |
+| `MeshTxBuilderCore` User-facing Method | `complete`                                      | Conduct async operation, e.g. updating redeemers, before `complete_sync`                |
 | `MeshTxBuilderCore` User-facing Method | `complete_sync`                                 | Determine whether using customizedTx, if not queue all last items then serialize the tx |
 | `MeshTxBuilderCore` User-facing Method | `complete_signing`                              | Adding signing keys and return txHex                                                    |
 | `MeshTxBuilderCore` Internal Method    | `serialize_tx_body`                             | Take the tx object and serialized it to txHex                                           |
-| `MeshTxBuilderCore` Internal Method    | `updateRedeemer`                                | [To be implemented] Update SPEND and MINT exUnits                                       |
-| `MeshTxBuilderCore` Internal Method    | `queue_input`                                   | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `queue_mint`                                    | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `queue_all_last_item`                           | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_signing_keys`                          | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_inputs`                                | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_outputs`                               | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_collaterals`                           | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_reference_inputs`                      | [To be implemented]                                                                     |
-| `MeshTxBuilderCore` Internal Method    | `add_all_mints`                                 | [To be implemented]                                                                     |
+| `MeshTxBuilderCore` Internal Method    | `updateRedeemer`                                | Update SPEND and MINT exUnits                                                           |
+| `MeshTxBuilderCore` Internal Method    | `queue_input`                                   | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `queue_mint`                                    | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `queue_all_last_item`                           | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_required_signature`                    | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_inputs`                                | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_outputs`                               | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_collaterals`                           | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_reference_inputs`                      | Internal method before building tx                                                      |
+| `MeshTxBuilderCore` Internal Method    | `add_all_mints`                                 | Internal method before building tx                                                      |
 | `MeshTxBuilderCore` Internal Method    | `castRawDataToJsonString`                       | [To be implemented] Turn object to string, keep string as string                        |
 | `MeshTxBuilderCore` Internal Method    | `castDataToPlutusData`                          | [To be implemented]                                                                     |
