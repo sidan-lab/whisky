@@ -25,7 +25,7 @@ jobs:
       - name: Get package version from master branch before merge
         id: pre-merge-version
         run: |
-          cd core
+          cd packages/sidan-csl-rs
           CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -37,7 +37,7 @@ jobs:
       - name: Get package version from master branch after merge
         id: post-merge-version
         run: |
-          cd core
+          cd packages/sidan-csl-rs
           CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 

@@ -23,18 +23,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build core
+      - name: Build sidan-csl-rs
         run: >
-          cd core &&
+          cd packages/sidan-csl-rs &&
           cargo build
           --locked
           --verbose
 
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build rust
+      - name: Build whisky
         run: >
-          cd rust &&
+          cd packages/whisky &&
           cargo build
           --locked
           --verbose
@@ -42,21 +42,21 @@ jobs:
       - name: Run core tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
-          cd core &&
+          cd packages/sidan-csl-rs &&
           cargo test
           --verbose
 
       - name: Run rust tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
-          cd rust &&
+          cd packages/whisky &&
           cargo test
           --verbose
 
       - name: Run core tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
-          cd core &&
+          cd packages/sidan-csl-rs &&
           cargo install cargo-tarpaulin
           && cargo tarpaulin
           --verbose
@@ -67,7 +67,7 @@ jobs:
       - name: Run rust tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
-          cd rust &&
+          cd packages/whisky &&
           cargo install cargo-tarpaulin
           && cargo tarpaulin
           --verbose

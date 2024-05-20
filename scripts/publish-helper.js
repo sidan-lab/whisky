@@ -26,7 +26,7 @@ if (process.argv.slice(2)[0] === '-asmjs') {
 
 oldPkg.repository = {
   type: "git",
-  url: "git+https://github.com/sidan-lab/sidan-csl-rs.git"
+  url: "git+https://github.com/sidan-lab/whisky.git"
 };
 oldPkg.author = "sidan-lab";
 oldPkg.license = "Apache-2.0";
