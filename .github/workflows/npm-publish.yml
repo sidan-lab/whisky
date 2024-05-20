@@ -4,14 +4,57 @@
 name: Node.js Package
 
 on:
-  release:
-    types: [created]
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - master
+      - main
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      core-version-updated: ${{ steps.compare-versions.outputs.version-updated }}
+    steps:
+      - name: Checkout master branch at commit before merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Get package version from master branch before merge
+        id: pre-merge-version
+        run: |
+          CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
+
+      - name: Checkout master branch at commit after merge
+        uses: actions/checkout@v4
+        with:
+          ref: "master"
+
+      - name: Get package version from master branch after merge
+        id: post-merge-version
+        run: |
+          CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_ENV"
+
+      - name: Compare versions
+        id: compare-versions
+        run: |
+          if [[ "${{ steps.pre-merge-version.outputs.core_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.core_post_merge_version }}" ]]; then
+              echo "core-version-updated=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "core-version-updated=false" >> "$GITHUB_OUTPUT"
+          fi
+
   publish-npm:
+    needs: [check-version]
+    if: needs.check-version.outputs.core-version-updated == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,11 +64,20 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Install dependencies
         run: npm install && cargo install wasm-pack
-      - run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ ^(docs:|chore:|rust:) ]]; then
-              echo "Skipping npm publish due to commit message."
-          else
-              npm run js:publish-nodejs && npm run js:publish-browser
-          fi
+      - run: npm run js:publish-nodejs && npm run js:publish-browser
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
+  publish-rust:
+    needs: [check-version]
+    if: needs.check-version.outputs.core-version-updated == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - run: npm run js:publish-nodejs && npm run js:publish-browser
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}

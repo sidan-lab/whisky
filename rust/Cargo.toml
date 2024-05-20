@@ -1,8 +1,8 @@
 [package]
 name = "whiskey"
-version = "0.1.0"
+version = "0.1.0-alpha"
 edition = "2021"
-license = "MIT"
+license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
 
 [lib]

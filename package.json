@@ -7,7 +7,7 @@
     "core:build-browser": "(rimraf ./core/pkg && cd core; wasm-pack build --target=browser; cd ..; npm run js:ts-json-gen; cd core; wasm-pack pack) && npm run js:flowgen",
     "core:build-web": "(rimraf ./core/pkg && cd core; wasm-pack build --target=web; cd ..; npm run js:ts-json-gen; cd core; wasm-pack pack) && npm run js:flowgen",
     "core:build-asm": "(rimraf ./core/pkg && cd core; wasm-pack build --target=browser; cd ..; npm run js:ts-json-gen; cd core; wasm-pack pack) && npm run asm:build && npm run js:flowgen",
-    "core:publish": "cd core && cargo publish && cd ../",
+    "rust:publish": "cd rust && cargo publish && cd ../",
     "asm:build": "./binaryen/bin/wasm2js ./core/pkg/sidan_csl_rs_bg.wasm --output ./core/pkg/sidan_csl_rs.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
     "core:check-warnings": "(cd core; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
     "core:test": "(cd core; cargo test)",
