@@ -1,10 +1,10 @@
 mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
-        builder::{IMeshTxBuilderCore, MeshTxBuilder},
         core::common::con_str0,
         model::{Asset, Budget, LanguageVersion, Redeemer},
     };
+    use whiskey::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
 
     #[test]
     fn test_complex_plutus_mint_spend_with_ref_tx() {
@@ -45,7 +45,11 @@ mod int_tests {
         let record_tx_hash = "aae2b8a5bf420c0d2fc785d54fe3eacc107145dee01b8c61beedcd13e6be9a71";
         let record_tx_id = 0;
 
-        let mut mesh = MeshTxBuilder::new_core();
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+        });
 
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
@@ -173,28 +177,33 @@ mod int_tests {
         .change_address(wallet_address)
         .change_output_datum(&con_str0(json!([])).to_string())
         .complete_sync(None);
-        println!("{}", mesh.mesh_csl.tx_hex);
-        assert!(mesh.mesh_csl.tx_hex != *"");
+        println!("{}", mesh.core.mesh_csl.tx_hex);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 
     #[test]
     fn test_simple_spend() {
-        let mut mesh = MeshTxBuilder::new_core();
-        let signed_tx = mesh.tx_in(
-            "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
-            3,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "9891607895".to_string(),
-            }],
-            "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
-        )
-        .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
-        .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
-        .complete_sync(None)
-        .complete_signing();
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+        });
+        let signed_tx = mesh
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                vec![Asset {
+                    unit: "lovelace".to_string(),
+                    quantity: "9891607895".to_string(),
+                }],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
+            .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
+            .complete_sync(None)
+            .complete_signing();
 
         println!("{}", signed_tx);
-        assert!(mesh.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 }

@@ -1,28 +1,29 @@
 use async_trait::async_trait;
 use cardano_serialization_lib as csl;
 use csl::JsError;
-use pallas::ledger::primitives::alonzo::RedeemerTag as PRedeemerTag;
-use pallas::ledger::primitives::conway::PlutusV2Script;
+use pallas_primitives::alonzo::RedeemerTag as PRedeemerTag;
+use pallas_primitives::conway::PlutusV2Script;
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 use uplc::Fragment;
 
-use crate::core::constants::{get_v1_cost_models, get_v2_cost_models};
-use crate::core::tx_parser::{IMeshTxParser, MeshTxParser};
-use crate::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
-use crate::service::IEvaluator;
 use csl::Address;
-use pallas::codec::minicbor::Decoder;
-use pallas::codec::utils::{Bytes, CborWrap, KeyValuePairs};
-use pallas::ledger::primitives::babbage::{
+use pallas_codec::minicbor::Decoder;
+use pallas_codec::utils::{Bytes, CborWrap, KeyValuePairs};
+use pallas_primitives::babbage::{
     AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
     PseudoScript, ScriptRef, TransactionOutput, Value,
 };
-use pallas::ledger::traverse::{Era, MultiEraTx};
+use pallas_traverse::{Era, MultiEraTx};
+use sidan_csl_rs::core::constants::{get_v1_cost_models, get_v2_cost_models};
+use sidan_csl_rs::core::tx_parser::{IMeshTxParser, MeshTxParser};
+use sidan_csl_rs::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
 use uplc::{
     tx::{eval_phase_two, ResolvedInput},
     Hash, TransactionInput,
 };
+
+use crate::service::IEvaluator;
 
 pub struct MeshTxEvaluator {}
 
@@ -230,10 +231,10 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
 
 #[cfg(test)]
 mod test {
-    use pallas::codec::minicbor::Decoder;
+    use pallas_codec::minicbor::Decoder;
 
     use super::*;
-    use crate::model::{Asset, UTxO, UtxoInput, UtxoOutput};
+    use sidan_csl_rs::model::{Asset, UTxO, UtxoInput, UtxoOutput};
     // #[test]
     // fn test_eval() {
     // let result = tx_eval("84a80083825820879f68fef00fa676abcfba0396916299eddbf29e1103442aee031b383ee0f3ad01825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80c825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80d0181a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a1e6233b3028201d81858b1d8799fd8799fd87a9f581c103207deb2d24502f8438b5fcc556291877d5d365dafea4fcbd6d1d2ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581cfc259a2fc1a9fa6a6a902675aeba5415d0c33fc72049f5dc80e2b76effd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd879801a000874101a1dcd6500ff021a0003c7cd09a00b5820b3d4c887f173ac071aff2e5ef18943311e9cad5cb7c4b578bebc82e1ff7628a50d818258203fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814070e82581c36314aebecfbc929ee447dcb50fd690604eceae9403a298d9b1f9a54581c5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa1285825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80d825820efe6fbbdd6b993d96883b96c572bfcaa0a4a138c83bd948dec1751d1bfda09b300825820879f68fef00fa676abcfba0396916299eddbf29e1103442aee031b383ee0f3ad01825820c4678d163c493e363f9e7fd9a310855ca6b4bdf508c73a463e1532d168dfb9a800825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80ca3008282582062f8f9ce8a5ed02fd67d6f2885b927874241a94b41e08fa5a99fc1e3bbca6453584051c0fe402fa75da2959e85eec47c45cf26149d8607be131ebaee4e86c92fe9e6ce9fa581192d7d644a216f4fbfd9fe94d6a827aba2ed0d81db6ff30095e8eb0d8258207f4747ca0c20a1e5c28716c4a10fffbcbe8fe6253cb427ae2f0e24d231a980845840e50b051bdad6c6c04d72bd5ed42f5bd981fa60c6709bacd24b5757f60418dabaa5455674e5135ab04d569f4db519ae1905ebbd47dca08df810a15c063ce0550503800583840000d87980821a000315621a04398879840001d87980821a000315621a04398879840002d87980821a000315621a04398879f5f6",

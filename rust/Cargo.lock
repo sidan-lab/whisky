@@ -1836,20 +1836,20 @@ dependencies = [
 name = "sidan-csl-rs"
 version = "0.4.0"
 dependencies = [
- "async-trait",
  "cardano-serialization-lib",
  "cryptoxide",
  "getrandom",
  "hex",
  "js-sys",
  "noop_proc_macro",
- "pallas",
+ "pallas-codec 0.22.0",
+ "pallas-primitives 0.22.0",
+ "pallas-traverse 0.22.0",
  "rand_os",
  "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
  "uplc 0.0.29",
- "uplc 1.0.26-alpha",
  "wasm-bindgen",
  "wasm-bindgen-futures",
 ]
@@ -2383,6 +2383,28 @@ dependencies = [
  "home",
  "once_cell",
  "rustix",
+]
+
+[[package]]
+name = "whiskey"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "cardano-serialization-lib",
+ "cryptoxide",
+ "getrandom",
+ "hex",
+ "noop_proc_macro",
+ "pallas-codec 0.22.0",
+ "pallas-primitives 0.22.0",
+ "pallas-traverse 0.22.0",
+ "rand_os",
+ "serde",
+ "serde-wasm-bindgen 0.6.5",
+ "serde_json",
+ "sidan-csl-rs",
+ "uplc 1.0.26-alpha",
+ "wasm-bindgen",
 ]
 
 [[package]]
