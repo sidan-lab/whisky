@@ -1,10 +1,12 @@
 mod action;
 mod asset;
+mod data;
 mod js_vec;
 mod serialized_address;
 mod value;
 pub use action::*;
 pub use asset::*;
+pub use data::*;
 pub use js_vec::*;
 pub use serialized_address::*;
 pub use value::*;

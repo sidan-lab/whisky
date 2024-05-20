@@ -1834,7 +1834,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.5.0-alpha"
+version = "0.5.0-alpha.1"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -2387,7 +2387,7 @@ dependencies = [
 
 [[package]]
 name = "whiskey"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha.1"
 dependencies = [
  "async-trait",
  "cardano-serialization-lib",

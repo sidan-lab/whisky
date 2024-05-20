@@ -8,7 +8,7 @@ on:
     types:
       - closed
     branches:
-      - main
+      - master
 
 jobs:
   build-test:

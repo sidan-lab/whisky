@@ -1,5 +1,8 @@
 mod aiken_tests {
-    use sidan_csl_rs::{core::utils::apply_params_to_script, model::JsVecString};
+    use sidan_csl_rs::{
+        core::utils::apply_params_to_script,
+        model::{BuilderDataType, JsVecString},
+    };
 
     #[test]
     fn test_apply_params_to_script() {
@@ -12,7 +15,7 @@ mod aiken_tests {
         aiken_params.add(params[0].clone());
 
         assert_eq!(
-            apply_params_to_script(aiken_params, script.to_string()).unwrap(),
+            apply_params_to_script(script.to_string(),aiken_params, BuilderDataType::JSON).unwrap(),
             "584f584d010000332323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157449801034212340001"
         );
     }
