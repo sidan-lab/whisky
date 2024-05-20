@@ -2,7 +2,7 @@
 mod mesh_tx_builder_core_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::model::{Asset, Budget, LanguageVersion, Redeemer};
-    use whiskey::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
+    use whisky::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
 
     #[test]
     fn test_mesh_tx_builder_core() {

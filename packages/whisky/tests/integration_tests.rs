@@ -4,7 +4,7 @@ mod int_tests {
         core::common::con_str0,
         model::{Asset, Budget, LanguageVersion, Redeemer},
     };
-    use whiskey::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
+    use whisky::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
 
     #[test]
     fn test_complex_plutus_mint_spend_with_ref_tx() {
