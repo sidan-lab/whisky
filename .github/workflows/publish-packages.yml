@@ -83,7 +83,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
     outputs:
-      rust-version-updated: ${{ steps.compare-versions.outputs.version-updated }}
+      core-version-updated: ${{ steps.compare-versions.outputs.core-version-updated }}
+      rust-version-updated: ${{ steps.compare-versions.outputs.rust-version-updated }}
     steps:
       - name: Checkout master branch at commit before merge
         uses: actions/checkout@v4
@@ -93,7 +94,10 @@ jobs:
       - name: Get package version from master branch before merge
         id: pre-merge-version
         run: |
-          cd packages/whisky
+          cd packages/sidan-csl-rs
+          CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+          cd ../whisky
           RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -105,22 +109,71 @@ jobs:
       - name: Get package version from master branch after merge
         id: post-merge-version
         run: |
-          cd packages/whisky
+          cd packages/sidan-csl-rs
+          CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+          cd ../whisky
           RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Compare versions
         id: compare-versions
         run: |
+          if [[ "${{ steps.pre-merge-version.outputs.core_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.core_post_merge_version }}" ]]; then
+              echo "core-version-updated=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "core-version-updated=false" >> "$GITHUB_OUTPUT"
+          fi
           if [[ "${{ steps.pre-merge-version.outputs.rust_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.rust_post_merge_version }}" ]]; then
               echo "rust-version-updated=true" >> "$GITHUB_OUTPUT"
           else
               echo "rust-version-updated=false" >> "$GITHUB_OUTPUT"
           fi
 
-  publish-crate:
-    needs: build-test
-    name: Publish
+  publish-core-crate:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish core crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/sidan-csl-rs && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  only-publish-whisky-crate:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.rust-version-updated == 'true' && needs.check-version.outputs.core-version-updated == 'false'
+    name: Publish Whisky crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  publish-whisky-crate:
+    needs: [check-version, build-test, publish-core-crate]
+    if: needs.check-version.outputs.rust-version-updated == 'true' && needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish Whisky crate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
