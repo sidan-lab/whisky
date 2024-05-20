@@ -95,7 +95,7 @@ jobs:
         run: |
           cd rust
           RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Checkout master branch at commit after merge
         uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
         run: |
           cd rust
           RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_ENV"
+          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Compare versions
         id: compare-versions
