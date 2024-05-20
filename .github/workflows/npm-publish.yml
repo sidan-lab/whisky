@@ -25,10 +25,9 @@ jobs:
       - name: Get package version from master branch before merge
         id: pre-merge-version
         run: |
+          cd core
           CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
-          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_ENV"
 
       - name: Checkout master branch at commit after merge
         uses: actions/checkout@v4
@@ -38,10 +37,9 @@ jobs:
       - name: Get package version from master branch after merge
         id: post-merge-version
         run: |
+          cd core
           CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
-          RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_ENV"
-          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_ENV"
 
       - name: Compare versions
         id: compare-versions
