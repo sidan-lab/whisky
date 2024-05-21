@@ -138,10 +138,10 @@ impl IMeshTxParser for MeshTxParser {
 
 fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
     let mut value: Vec<Asset> = vec![];
-    value.push(Asset {
-        unit: "lovelace".to_string(),
-        quantity: output.amount().coin().to_str(),
-    });
+    value.push(Asset::new_from_str(
+        "lovelace",
+        &output.amount().coin().to_str(),
+    ));
     let multi_asset = output.amount().multiasset();
 
     match multi_asset {
@@ -155,10 +155,10 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
                     let asset_quantity = assets.get(&asset_name).unwrap();
                     let concated_name = policy_id.to_hex() + &asset_name.to_string();
 
-                    value.push(Asset {
-                        unit: concated_name,
-                        quantity: asset_quantity.to_str(),
-                    })
+                    value.push(Asset::new_from_str(
+                        &concated_name,
+                        &asset_quantity.to_str(),
+                    ))
                 }
             }
         }

@@ -68,7 +68,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
-        self.core.serialize_tx_body();
+        // self.core.serialize_tx_body();
         self.core.mesh_csl.tx_builder = build_tx_builder();
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
         self
@@ -569,10 +569,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
 
         for mint in &self.core.mesh_tx_builder_body.mints {
-            let mint_amount = Asset {
-                unit: mint.policy_id.clone() + &mint.asset_name,
-                quantity: mint.amount.to_string(),
-            };
+            let mint_amount = Asset::new(
+                mint.policy_id.clone() + &mint.asset_name,
+                mint.amount.to_string(),
+            );
             required_assets.negate_asset(mint_amount);
         }
 

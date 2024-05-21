@@ -20,10 +20,7 @@ mod mesh_tx_builder_core_tests {
             fetcher: None,
             submitter: None,
         });
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
         mesh.tx_in(
             "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
             1,
@@ -39,10 +36,7 @@ mod mesh_tx_builder_core_tests {
             fetcher: None,
             submitter: None,
         });
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
 
         let data = to_string(&json!({
             "constructor": 0,
@@ -74,10 +68,7 @@ mod mesh_tx_builder_core_tests {
             fetcher: None,
             submitter: None,
         });
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
 
         let data = to_string(&json!({
             "constructor": 0,
@@ -109,10 +100,7 @@ mod mesh_tx_builder_core_tests {
             fetcher: None,
             submitter: None,
         });
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
 
         let data = to_string(&json!({
             "constructor": 0,
@@ -151,10 +139,7 @@ mod mesh_tx_builder_core_tests {
             fetcher: None,
             submitter: None,
         });
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
 
         let data = to_string(&json!({
             "constructor": 0,
@@ -189,10 +174,7 @@ mod mesh_tx_builder_core_tests {
             submitter: None,
         });
 
-        let asset = Asset {
-            unit: "lovelace".to_string(),
-            quantity: "30000000".to_string(),
-        };
+        let asset = Asset::new_from_str("lovelace", "30000000");
 
         let data = to_string(&json!({
             "constructor": 0,
@@ -239,10 +221,7 @@ mod mesh_tx_builder_core_tests {
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
             3,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "9692479606".to_string(),
-            }],
+            vec![Asset::new_from_str("lovelace", "9692479606")],
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .mint_plutus_script_v2()

@@ -14,8 +14,8 @@ impl Value {
     pub fn from_asset(asset: Asset) -> Self {
         let mut asset_map = HashMap::new();
         asset_map.insert(
-            asset.unit.to_string(),
-            asset.quantity.parse::<u64>().unwrap(),
+            asset.unit().to_string(),
+            asset.quantity().parse::<u64>().unwrap(),
         );
         Value(asset_map)
     }
@@ -23,15 +23,15 @@ impl Value {
     pub fn from_asset_vec(assets: Vec<Asset>) -> Self {
         let mut asset_map = HashMap::new();
         for asset in assets {
-            let current_value = asset_map.entry(asset.unit.to_string()).or_insert(0);
-            *current_value += asset.quantity.parse::<u64>().unwrap();
+            let current_value = asset_map.entry(asset.unit().to_string()).or_insert(0);
+            *current_value += asset.quantity().parse::<u64>().unwrap();
         }
         Value(asset_map)
     }
 
     pub fn add_asset(&mut self, asset: Asset) -> &mut Self {
-        let current_value = self.0.entry(asset.unit.to_string()).or_insert(0);
-        *current_value += asset.quantity.parse::<u64>().unwrap();
+        let current_value = self.0.entry(asset.unit().to_string()).or_insert(0);
+        *current_value += asset.quantity().parse::<u64>().unwrap();
         self
     }
 
@@ -44,10 +44,10 @@ impl Value {
     }
 
     pub fn negate_asset(&mut self, other: Asset) -> &mut Self {
-        let current_value = self.0.entry(other.unit.to_string()).or_insert(0);
-        let negate_quantity = other.quantity.parse::<u64>().unwrap();
+        let current_value = self.0.entry(other.unit().to_string()).or_insert(0);
+        let negate_quantity = other.quantity().parse::<u64>().unwrap();
         if *current_value <= negate_quantity {
-            self.0.remove(&other.unit);
+            self.0.remove(&other.unit());
         } else {
             *current_value -= negate_quantity;
         };
@@ -69,10 +69,7 @@ impl Value {
     pub fn to_asset_vec(&self) -> Vec<Asset> {
         let mut assets = vec![];
         for (unit, quantity) in &self.0 {
-            assets.push(Asset {
-                unit: unit.to_string(),
-                quantity: quantity.to_string(),
-            });
+            assets.push(Asset::new(unit.to_string(), quantity.to_string()));
         }
         assets
     }
@@ -151,10 +148,7 @@ mod tests {
     fn test_negate_asset() {
         let mut assets = Value::new();
         assets.0.insert("lovelace".to_string(), 100);
-        assets.negate_asset(Asset {
-            unit: "lovelace".to_string(),
-            quantity: "65".to_string(),
-        });
+        assets.negate_asset(Asset::new_from_str("lovelace", "65"));
         assert_eq!(assets.0.get("lovelace").unwrap(), &35);
     }
 
@@ -162,10 +156,7 @@ mod tests {
     fn test_negate_asset_to_zero() {
         let mut assets = Value::new();
         assets.0.insert("lovelace".to_string(), 100);
-        assets.negate_asset(Asset {
-            unit: "lovelace".to_string(),
-            quantity: "101".to_string(),
-        });
+        assets.negate_asset(Asset::new_from_str("lovelace", "101"));
         assert_eq!(assets.0.get("lovelace"), None);
     }
 

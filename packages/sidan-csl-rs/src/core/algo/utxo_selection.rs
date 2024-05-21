@@ -28,7 +28,7 @@ pub fn select_utxos(
     let mut use_utxo = |index: usize, total_required_assets: &mut Value| {
         let utxo = inputs[index].clone();
         for asset in utxo.output.amount {
-            total_required_assets.negate_asset(Asset::new(asset.unit, asset.quantity));
+            total_required_assets.negate_asset(Asset::new(asset.unit(), asset.quantity()));
             used_utxos.insert(index);
         }
     };
@@ -41,7 +41,7 @@ pub fn select_utxos(
             }
             let utxo = inputs[index].clone();
             for asset in utxo.output.amount {
-                if asset.unit == unit {
+                if asset.unit() == unit {
                     use_utxo(index, total_required_assets);
                     break;
                 }
@@ -105,10 +105,7 @@ fn test_basic_selection() {
         },
         output: UtxoOutput {
             address: "test".to_string(),
-            amount: vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "10000000".to_string(),
-            }],
+            amount: vec![Asset::new_from_str("lovelace", "10000000")],
             data_hash: None,
             plutus_data: None,
             script_ref: None,

@@ -1833,7 +1833,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.5.0-alpha.3"
+version = "0.5.0-alpha.4"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -1845,7 +1845,9 @@ dependencies = [
  "pallas-primitives 0.22.0",
  "pallas-traverse 0.22.0",
  "rand_os",
+ "schemars",
  "serde",
+ "serde-wasm-bindgen 0.4.5",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
  "uplc 0.0.29",
@@ -2385,7 +2387,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.5.0-alpha.3"
+version = "0.5.0-alpha.4"
 dependencies = [
  "async-trait",
  "cardano-serialization-lib",

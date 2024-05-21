@@ -27,29 +27,29 @@ pub fn build_tx_builder() -> csl::TransactionBuilder {
 }
 
 pub fn to_value(assets: &Vec<Asset>) -> csl::Value {
-    let lovelace = assets.iter().find(|asset| asset.unit == "lovelace");
+    let lovelace = assets.iter().find(|asset| asset.unit() == "lovelace");
     let mut multi_asset = csl::MultiAsset::new();
 
     for asset in assets {
-        if asset.unit == "lovelace" {
+        if asset.unit() == "lovelace" {
             continue;
         }
         let mut policy_assets = csl::Assets::new();
         let name_bytes =
-            Vec::<u8>::from_hex(&asset.unit[56..]).expect("Failed to parse hex asset name");
+            Vec::<u8>::from_hex(&asset.unit()[56..]).expect("Failed to parse hex asset name");
         policy_assets.insert(
             &csl::AssetName::new(name_bytes).unwrap(),
-            &csl::BigNum::from_str(&asset.quantity.to_string()).unwrap(),
+            &csl::BigNum::from_str(&asset.quantity().to_string()).unwrap(),
         );
 
         multi_asset.insert(
-            &csl::ScriptHash::from_hex(&asset.unit[0..56]).unwrap(),
+            &csl::ScriptHash::from_hex(&asset.unit()[0..56]).unwrap(),
             &policy_assets,
         );
     }
 
     let lovelace_asset = match lovelace {
-        Some(asset) => csl::BigNum::from_str(&asset.quantity).unwrap(),
+        Some(asset) => csl::BigNum::from_str(&asset.quantity()).unwrap(),
         None => csl::BigNum::from_str("0").unwrap(),
     };
 

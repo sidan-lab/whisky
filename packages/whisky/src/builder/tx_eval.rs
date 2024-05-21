@@ -182,8 +182,8 @@ fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsEr
 
 fn to_pallas_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
     if assets.len() == 1 {
-        match assets[0].unit.as_str() {
-            "lovelace" => Ok(Value::Coin(assets[0].quantity.parse::<u64>().unwrap())),
+        match assets[0].unit().as_str() {
+            "lovelace" => Ok(Value::Coin(assets[0].quantity().parse::<u64>().unwrap())),
             _ => Err(JsError::from_str("Invalid value")),
         }
     } else {
@@ -195,14 +195,15 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
     let mut coins: Coin = 0;
     let mut asset_mapping: HashMap<String, Vec<(String, String)>> = HashMap::new();
     for asset in assets {
-        if asset.unit == "lovelace" || asset.unit.is_empty() {
-            coins = asset.quantity.parse::<u64>().unwrap();
+        if asset.unit() == "lovelace" || asset.unit().is_empty() {
+            coins = asset.quantity().parse::<u64>().unwrap();
         } else {
-            let (policy_id, asset_name) = asset.unit.split_at(56);
+            let asset_unit = asset.unit();
+            let (policy_id, asset_name) = asset_unit.split_at(56);
             asset_mapping
                 .entry(policy_id.to_string())
                 .or_default()
-                .push((asset_name.to_string(), asset.quantity.clone()))
+                .push((asset_name.to_string(), asset.quantity().clone()))
         }
     }
 
@@ -396,10 +397,7 @@ mod test {
               },
               output: UtxoOutput {
                   address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset {
-                      unit: "lovelace".to_string(),
-                      quantity: "986990".to_string(),
-                  }],
+                  amount: vec![Asset::new_from_str("lovelace", "986990")],
                   data_hash: None,
                   plutus_data: Some(serde_json::json!({
                       "constructor": 0,
@@ -416,10 +414,7 @@ mod test {
               },
               output: UtxoOutput {
                   address: "addr_test1vq0atw43vuecjuwe9dxc7z7l2lvgnyp7d6f5ul4r3376mug8v67h5".to_string(),
-                  amount: vec![Asset {
-                      unit: "lovelace".to_string(),
-                      quantity: "9974857893".to_string(),
-                  }],
+                  amount: vec![Asset::new_from_str("lovelace", "9974857893")],
                   data_hash: None,
                   plutus_data: None,
                   script_hash: None,
@@ -433,10 +428,7 @@ mod test {
               },
               output: UtxoOutput {
                   address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset {
-                      unit: "lovelace".to_string(),
-                      quantity: "986990".to_string(),
-                  }],
+                  amount: vec![Asset::new_from_str("lovelace", "986990")],
                   data_hash: None,
                   plutus_data: None,
                   script_hash: None,
