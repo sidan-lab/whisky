@@ -21,7 +21,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run core:test"
+      "pre-push": "npm run core:test && npm run rust:test"
     }
   },
   "author": "SIDAN Lab",

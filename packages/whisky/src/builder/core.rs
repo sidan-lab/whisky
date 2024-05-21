@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use sidan_csl_rs::{
-    builder::{IMeshTxBuilderCore, MeshTxBuilderCore},
+    builder::{serialize_tx_body, IMeshTxBuilderCore, MeshTxBuilderCore},
     core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
     csl,
     model::{
@@ -68,7 +68,8 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
-        // self.core.serialize_tx_body();
+        let tx_hex = serialize_tx_body(self.core.mesh_tx_builder_body.clone());
+        self.core.mesh_csl.tx_hex = tx_hex;
         self.core.mesh_csl.tx_builder = build_tx_builder();
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
         self
