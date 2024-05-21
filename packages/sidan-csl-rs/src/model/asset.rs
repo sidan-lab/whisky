@@ -1,7 +1,12 @@
-#[derive(Clone, Debug, PartialEq)]
+use crate::*;
+use schemars::JsonSchema;
+use serde;
+
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct Asset {
-    pub unit: String,
-    pub quantity: String,
+    unit: String,
+    quantity: String,
 }
 
 impl Asset {
@@ -13,5 +18,11 @@ impl Asset {
             unit: unit.to_string(),
             quantity: quantity.to_string(),
         }
+    }
+    pub fn unit(&self) -> String {
+        self.unit.clone()
+    }
+    pub fn quantity(&self) -> String {
+        self.quantity.clone()
     }
 }

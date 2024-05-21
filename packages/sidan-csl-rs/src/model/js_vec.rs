@@ -1,7 +1,8 @@
 use crate::*;
+use serde::{Deserialize, Serialize};
 
 #[wasm_bindgen]
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Default)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Default, Serialize, Deserialize)]
 pub struct JsVecString(Vec<String>);
 
 #[wasm_bindgen]

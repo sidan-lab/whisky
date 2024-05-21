@@ -22,7 +22,7 @@ pub trait IMeshCSL {
     fn add_required_signature(&mut self, pub_key_hash: String);
     fn add_metadata(&mut self, metadata: Metadata);
     fn add_script_hash(&mut self);
-    fn build_tx(&mut self);
+    fn build_tx(&mut self) -> String;
 }
 
 pub struct MeshCSL {
@@ -280,9 +280,9 @@ impl IMeshCSL for MeshCSL {
                 &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
                 &csl::Int::new_i32(mint.amount.try_into().unwrap()),
             ),
-            ScriptSource::InlineScriptSource(_) => {
-                Err(csl::JsError::from_str("Native scripts cannot be referenced"))
-            }
+            ScriptSource::InlineScriptSource(_) => Err(csl::JsError::from_str(
+                "Native scripts cannot be referenced",
+            )),
         };
     }
 
@@ -340,9 +340,10 @@ impl IMeshCSL for MeshCSL {
             .unwrap();
     }
 
-    fn build_tx(&mut self) {
+    fn build_tx(&mut self) -> String {
         let tx = self.tx_builder.build_tx().unwrap();
         self.tx_hex = tx.to_hex();
+        self.tx_hex.to_string()
     }
 }
 

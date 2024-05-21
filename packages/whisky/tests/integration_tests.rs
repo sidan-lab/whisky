@@ -54,10 +54,7 @@ mod int_tests {
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
             3,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "9692479606".to_string(),
-            }],
+            vec![Asset::new_from_str("lovelace", "9692479606")],
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .read_only_tx_in_reference(
@@ -88,10 +85,10 @@ mod int_tests {
         .tx_in(
             record_tx_hash,
             record_tx_id,
-            vec![Asset {
-                unit: record_token_policy_id.to_string() + record_token_name_hex,
-                quantity: "1".to_string(),
-            }],
+            vec![Asset::new(
+                record_token_policy_id.to_string() + record_token_name_hex,
+                "1".to_string(),
+            )],
             "addr_test1wz97vqzhce0m4ek4cpnnlzvlaf5gdzck46axlur094lnzcgj0pq2u",
         )
         .spending_reference_tx_in_inline_datum_present()
@@ -116,34 +113,22 @@ mod int_tests {
         .tx_out(
             wallet_address,
             vec![
-                Asset {
-                    unit: "lovelace".to_string(),
-                    quantity: "2000000".to_string(),
-                },
-                Asset {
-                    unit: cns_policy_id.to_string() + domain_with_ext,
-                    quantity: "1".to_string(),
-                },
+                Asset::new_from_str("lovelace", "2000000"),
+                Asset::new(cns_policy_id.to_string() + domain_with_ext, "1".to_string()),
             ],
         )
         .tx_out(
             cns_owner_addr,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "30000000".to_string(),
-            }],
+            vec![Asset::new_from_str("lovelace", "30000000")],
         )
         .tx_out(
             record_validator_addr,
             vec![
-                Asset {
-                    unit: "lovelace".to_string(),
-                    quantity: "20000000".to_string(),
-                },
-                Asset {
-                    unit: record_token_policy_id.to_string() + record_token_name_hex,
-                    quantity: "1".to_string(),
-                },
+                Asset::new_from_str("lovelace", "20000000"),
+                Asset::new(
+                    record_token_policy_id.to_string() + record_token_name_hex,
+                    "1".to_string(),
+                ),
             ],
         )
         .tx_out_inline_datum_value(
@@ -159,19 +144,13 @@ mod int_tests {
         .tx_in_collateral(
             "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
             6,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "10000000".to_string(),
-            }],
+            vec![Asset::new_from_str("lovelace", "10000000")],
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .tx_in_collateral(
             "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
             7,
-            vec![Asset {
-                unit: "lovelace".to_string(),
-                quantity: "10000000".to_string(),
-            }],
+            vec![Asset::new_from_str("lovelace", "10000000")],
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .change_address(wallet_address)
@@ -192,10 +171,7 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                vec![Asset {
-                    unit: "lovelace".to_string(),
-                    quantity: "9891607895".to_string(),
-                }],
+                vec![Asset::new_from_str("lovelace", "9891607895")],
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
             )
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
