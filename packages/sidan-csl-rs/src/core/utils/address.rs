@@ -80,6 +80,7 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
     }
 }
 
+#[wasm_bindgen]
 pub fn address_bech32_to_obj(bech32: &str) -> String {
     let csl_address = csl::Address::from_bech32(bech32).unwrap();
     csl::PlutusData::from_address(&csl_address)
@@ -88,6 +89,7 @@ pub fn address_bech32_to_obj(bech32: &str) -> String {
         .unwrap()
 }
 
+#[wasm_bindgen]
 pub fn parse_plutus_address_obj_to_bech32(plutus_data_address_obj: &str, network_id: u8) -> String {
     let plutus_data_address: Value =
         from_str(plutus_data_address_obj).expect("Invalid json string");
@@ -129,6 +131,7 @@ pub fn parse_plutus_address_obj_to_bech32(plutus_data_address_obj: &str, network
     }
 }
 
+#[wasm_bindgen]
 pub fn parse_plutus_address_to_bech32(plutus_hex: &str, network_id: u8) -> String {
     let csl_plutus_data_address = csl::PlutusData::from_hex(plutus_hex).unwrap();
     parse_plutus_address_obj_to_bech32(
