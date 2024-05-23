@@ -90,7 +90,7 @@ pub fn address_bech32_to_obj(bech32: &str) -> String {
 
 pub fn parse_plutus_address_obj_to_bech32(plutus_data_address_obj: &str, network_id: u8) -> String {
     let plutus_data_address: Value =
-        from_str(&plutus_data_address_obj).expect("Invalid json string");
+        from_str(plutus_data_address_obj).expect("Invalid json string");
     let plutus_data_key_obj = plutus_data_address.get("fields").unwrap();
     let plutus_data_key_list = plutus_data_key_obj.as_array().unwrap();
 
