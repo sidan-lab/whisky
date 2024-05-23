@@ -8,11 +8,16 @@ use crate::{
 use super::{interface::MeshTxBuilderCore, IMeshTxBuilderCore};
 
 #[wasm_bindgen]
-pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str) -> String {
+pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> String {
     let mesh_tx_builder_body: MeshTxBuilderBody = serde_json::from_str(mesh_tx_builder_body_json)
         .expect("Error deserializing transaction body");
 
-    serialize_tx_body(mesh_tx_builder_body)
+    let params: Option<Protocol> = match serde_json::from_str(params_json) {
+        Ok(params) => Some(params),
+        Err(_) => None,
+    };
+
+    serialize_tx_body(mesh_tx_builder_body, params)
 }
 
 /// ## Transaction building method
@@ -26,8 +31,11 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str) -> String {
 /// ### Returns
 ///
 /// * `String` - the built transaction hex
-pub fn serialize_tx_body(mut mesh_tx_builder_body: MeshTxBuilderBody) -> String {
-    let mut mesh_csl = MeshCSL::new();
+pub fn serialize_tx_body(
+    mut mesh_tx_builder_body: MeshTxBuilderBody,
+    params: Option<Protocol>,
+) -> String {
+    let mut mesh_csl = MeshCSL::new(params);
 
     mesh_tx_builder_body
         .mints
@@ -142,9 +150,9 @@ pub fn serialize_tx_body(mut mesh_tx_builder_body: MeshTxBuilderBody) -> String 
 }
 
 impl IMeshTxBuilderCore for MeshTxBuilderCore {
-    fn new_core() -> Self {
+    fn new_core(params: Option<Protocol>) -> Self {
         Self {
-            mesh_csl: MeshCSL::new(),
+            mesh_csl: MeshCSL::new(params),
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
@@ -262,6 +270,6 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
 
 impl Default for MeshTxBuilderCore {
     fn default() -> Self {
-        Self::new_core()
+        Self::new_core(None)
     }
 }

@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
-        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PubKeyTxIn, Redeemer, TxIn,
-        UTxO,
+        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, Protocol, PubKeyTxIn,
+        Redeemer, TxIn, UTxO,
     },
 };
 
@@ -11,6 +11,7 @@ use crate::service::{IEvaluator, IFetcher, ISubmitter};
 
 pub struct MeshTxBuilder {
     pub core: MeshTxBuilderCore,
+    pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
     pub extra_inputs: Vec<UTxO>,
     pub selection_threshold: u64,
@@ -30,6 +31,7 @@ pub struct MeshTxBuilderParam {
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
+    pub params: Option<Protocol>,
 }
 
 #[async_trait]

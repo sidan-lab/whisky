@@ -3,7 +3,7 @@ use crate::{csl, model::*};
 use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
 
 pub trait IMeshCSL {
-    fn new() -> Self;
+    fn new(params: Option<Protocol>) -> Self;
     fn add_tx_in(&mut self, input: PubKeyTxIn);
     fn add_script_tx_in(&mut self, input: ScriptTxIn);
     fn add_output(&mut self, output: Output);
@@ -32,10 +32,10 @@ pub struct MeshCSL {
 }
 
 impl IMeshCSL for MeshCSL {
-    fn new() -> MeshCSL {
+    fn new(params: Option<Protocol>) -> MeshCSL {
         MeshCSL {
             tx_hex: String::new(),
-            tx_builder: build_tx_builder(),
+            tx_builder: build_tx_builder(params),
             tx_inputs_builder: csl::TxInputsBuilder::new(),
         }
     }
@@ -349,6 +349,6 @@ impl IMeshCSL for MeshCSL {
 
 impl Default for MeshCSL {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }

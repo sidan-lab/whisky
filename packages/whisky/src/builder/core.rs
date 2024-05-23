@@ -18,7 +18,8 @@ use crate::service::ITxEvaluation;
 impl IMeshTxBuilder for MeshTxBuilder {
     fn new(param: super::MeshTxBuilderParam) -> Self {
         MeshTxBuilder {
-            core: MeshTxBuilderCore::new_core(),
+            core: MeshTxBuilderCore::new_core(None),
+            protocol_params: param.params,
             tx_in_item: None,
             extra_inputs: vec![],
             selection_threshold: 5_000_000,
@@ -68,9 +69,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
-        let tx_hex = serialize_tx_body(self.core.mesh_tx_builder_body.clone());
+        let tx_hex =
+            serialize_tx_body(self.core.mesh_tx_builder_body.clone(), self.protocol_params.clone());
         self.core.mesh_csl.tx_hex = tx_hex;
-        self.core.mesh_csl.tx_builder = build_tx_builder();
+        self.core.mesh_csl.tx_builder = build_tx_builder(None);
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
         self
     }
