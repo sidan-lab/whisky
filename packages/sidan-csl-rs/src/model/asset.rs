@@ -4,6 +4,7 @@ use serde;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct Asset {
     unit: String,
     quantity: String,

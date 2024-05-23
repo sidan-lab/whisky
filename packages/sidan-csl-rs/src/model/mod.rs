@@ -15,6 +15,7 @@ pub use serialized_address::*;
 pub use value::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MeshTxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
@@ -30,6 +31,7 @@ pub struct MeshTxBuilderBody {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Output {
     pub address: String,
     pub amount: Vec<Asset>,
@@ -37,30 +39,35 @@ pub struct Output {
     pub reference_script: Option<ProvidedScriptSource>,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ValidityRange {
     pub invalid_before: Option<u64>,
     pub invalid_hereafter: Option<u64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum TxIn {
     PubKeyTxIn(PubKeyTxIn),
     ScriptTxIn(ScriptTxIn),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RefTxIn {
     pub tx_hash: String,
     pub tx_index: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PubKeyTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScriptTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
@@ -68,6 +75,7 @@ pub struct ScriptTxIn {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TxInParameter {
     pub tx_hash: String,
     pub tx_index: u32,
@@ -76,6 +84,7 @@ pub struct TxInParameter {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScriptTxInParameter {
     pub script_source: Option<ScriptSource>,
     pub datum_source: Option<DatumSource>,
@@ -83,18 +92,21 @@ pub struct ScriptTxInParameter {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ScriptSource {
     ProvidedScriptSource(ProvidedScriptSource),
     InlineScriptSource(InlineScriptSource),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProvidedScriptSource {
     pub script_cbor: String,
     pub language_version: LanguageVersion,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InlineScriptSource {
     pub tx_hash: String,
     pub tx_index: u32,
@@ -104,6 +116,7 @@ pub struct InlineScriptSource {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum LanguageVersion {
     V1,
     V2,
@@ -111,23 +124,27 @@ pub enum LanguageVersion {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum DatumSource {
     ProvidedDatumSource(ProvidedDatumSource),
     InlineDatumSource(InlineDatumSource),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProvidedDatumSource {
     pub data: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InlineDatumSource {
     pub tx_hash: String,
     pub tx_index: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScriptSourceInfo {
     pub tx_hash: String,
     pub tx_index: u32,
@@ -135,6 +152,7 @@ pub struct ScriptSourceInfo {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MintItem {
     pub type_: String,
     pub policy_id: String,
@@ -145,36 +163,42 @@ pub struct MintItem {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Redeemer {
     pub data: String,
     pub ex_units: Budget,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Budget {
     pub mem: u64,
     pub steps: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Metadata {
     pub tag: String,
     pub metadata: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Datum {
     pub type_: String, // Currently it is either "Hash" or "Inline"
     pub data: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UtxoInput {
     pub output_index: u32,
     pub tx_hash: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UtxoOutput {
     pub address: String,
     pub amount: Vec<Asset>,
@@ -185,6 +209,7 @@ pub struct UtxoOutput {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UTxO {
     pub input: UtxoInput,
     pub output: UtxoOutput,
