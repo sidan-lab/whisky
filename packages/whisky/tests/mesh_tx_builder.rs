@@ -10,6 +10,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
     }
 
@@ -19,6 +20,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let asset = Asset::new_from_str("lovelace", "30000000");
         mesh.tx_in(
@@ -35,6 +37,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let asset = Asset::new_from_str("lovelace", "30000000");
 
@@ -67,6 +70,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let asset = Asset::new_from_str("lovelace", "30000000");
 
@@ -99,6 +103,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let asset = Asset::new_from_str("lovelace", "30000000");
 
@@ -138,6 +143,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let asset = Asset::new_from_str("lovelace", "30000000");
 
@@ -172,6 +178,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
 
         let asset = Asset::new_from_str("lovelace", "30000000");
@@ -216,6 +223,7 @@ mod mesh_tx_builder_core_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
 
         mesh.tx_in(

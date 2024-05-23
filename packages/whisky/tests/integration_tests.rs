@@ -49,6 +49,7 @@ mod int_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
 
         mesh.tx_in(
@@ -166,6 +167,7 @@ mod int_tests {
             evaluator: None,
             fetcher: None,
             submitter: None,
+            params: None,
         });
         let signed_tx = mesh
             .tx_in(

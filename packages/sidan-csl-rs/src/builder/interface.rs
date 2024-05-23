@@ -15,7 +15,7 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `Self` - A new MeshTxBuilder instance
     ///
-    fn new_core() -> Self;
+    fn new_core(params: Option<Protocol>) -> Self;
 
     /// ## Transaction building method
     ///

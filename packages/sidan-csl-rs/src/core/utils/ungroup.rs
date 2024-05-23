@@ -7,18 +7,31 @@ pub fn to_bignum(val: u64) -> csl::BigNum {
     csl::BigNum::from_str(&val.to_string()).unwrap()
 }
 
-// TODO: update ref script coins per byte when value is confirmed
-pub fn build_tx_builder() -> csl::TransactionBuilder {
+pub fn build_tx_builder(params: Option<Protocol>) -> csl::TransactionBuilder {
+    let protocol_params = match params {
+        Some(params) => params,
+        None => Protocol::default(),
+    };
+
     let cfg = csl::TransactionBuilderConfigBuilder::new()
-        .fee_algo(&csl::LinearFee::new(&to_bignum(44), &to_bignum(155381)))
-        .pool_deposit(&to_bignum(500000000))
-        .key_deposit(&to_bignum(2000000))
-        .max_value_size(5000)
-        .max_tx_size(16384)
-        .coins_per_utxo_byte(&to_bignum(4310))
+        .fee_algo(&csl::LinearFee::new(
+            &to_bignum(protocol_params.min_fee_a),
+            &to_bignum(protocol_params.min_fee_b),
+        ))
+        .pool_deposit(&to_bignum(protocol_params.pool_deposit))
+        .key_deposit(&to_bignum(protocol_params.key_deposit))
+        .max_value_size(protocol_params.max_val_size)
+        .max_tx_size(protocol_params.max_tx_size)
+        .coins_per_utxo_byte(&to_bignum(protocol_params.coins_per_utxo_size))
         .ex_unit_prices(&csl::ExUnitPrices::new(
-            &csl::UnitInterval::new(&to_bignum(577), &to_bignum(10000)),
-            &csl::UnitInterval::new(&to_bignum(721), &to_bignum(10000000)),
+            &csl::UnitInterval::new(
+                &to_bignum((protocol_params.price_mem * 10000.0) as u64),
+                &to_bignum(10000),
+            ),
+            &csl::UnitInterval::new(
+                &to_bignum((protocol_params.price_step * 10000000.0) as u64),
+                &to_bignum(10000000),
+            ),
         ))
         .ref_script_coins_per_byte(&csl::UnitInterval::new(&to_bignum(0), &to_bignum(10000)))
         .build()

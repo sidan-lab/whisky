@@ -40,7 +40,7 @@ mod transaction_tests {
 
     #[test]
     fn test_add_change() {
-        let mut tx_builder = build_tx_builder();
+        let mut tx_builder = build_tx_builder(None);
 
         let mut test_value = csl::Value::new(&to_bignum(100000000));
         let mut test_multi_asset = csl::MultiAsset::new();
