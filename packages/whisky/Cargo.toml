@@ -1,0 +1,34 @@
+[package]
+name = "whisky"
+version = "0.5.0-alpha.7"
+edition = "2021"
+license = "Apache-2.0"
+description = "The Cardano Rust SDK, inspired by MeshJS"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+cardano-serialization-lib = "12.0.0-alpha.30"
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+cryptoxide = "0.4.4"
+serde-wasm-bindgen = "0.6.5"
+async-trait = "0.1.79"
+uplc = "=1.0.26-alpha"
+wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
+rand_os = "0.1"
+noop_proc_macro = "0.3.0"
+pallas-codec = "0.22.0"
+pallas-primitives = "0.22.0"
+pallas-traverse = "0.22.0"
+sidan-csl-rs = { version = "=0.5.0-alpha.7", path = "../sidan-csl-rs" }
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+codegen-units = 1
+opt-level = "s"
+incremental = true
+lto = true

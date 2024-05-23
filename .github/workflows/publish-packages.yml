@@ -1,0 +1,208 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Rust Package
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - master
+
+jobs:
+  build-test:
+    name: Build and test (${{ matrix.os }})
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build sidan-csl-rs
+        run: >
+          cd packages/sidan-csl-rs &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky
+        run: >
+          cd packages/whisky &&
+          cargo build
+          --locked
+          --verbose
+
+      - name: Run core tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cd packages/sidan-csl-rs &&
+          cargo test
+          --verbose
+
+      - name: Run rust tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cd packages/whisky &&
+          cargo test
+          --verbose
+
+      - name: Run core tests (with coverage)
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cd packages/sidan-csl-rs &&
+          cargo install cargo-tarpaulin
+          && cargo tarpaulin
+          --verbose
+          --out Xml
+          --engine llvm
+          --skip-clean
+
+      - name: Run rust tests (with coverage)
+        if: matrix.os == 'ubuntu-latest'
+        run: >
+          cd packages/whisky &&
+          cargo install cargo-tarpaulin
+          && cargo tarpaulin
+          --verbose
+          --out Xml
+          --engine llvm
+          --skip-clean
+
+      - name: Upload coverage reports to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v3
+
+  check-version:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      core-version-updated: ${{ steps.compare-versions.outputs.core-version-updated }}
+      rust-version-updated: ${{ steps.compare-versions.outputs.rust-version-updated }}
+    steps:
+      - name: Checkout master branch at commit before merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Get package version from master branch before merge
+        id: pre-merge-version
+        run: |
+          cd packages/sidan-csl-rs
+          CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+          cd ../whisky
+          RUST_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "rust_pre_merge_version=$RUST_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout master branch at commit after merge
+        uses: actions/checkout@v4
+        with:
+          ref: "master"
+
+      - name: Get package version from master branch after merge
+        id: post-merge-version
+        run: |
+          cd packages/sidan-csl-rs
+          CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+          cd ../whisky
+          RUST_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
+          echo "rust_post_merge_version=$RUST_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Compare versions
+        id: compare-versions
+        run: |
+          if [[ "${{ steps.pre-merge-version.outputs.core_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.core_post_merge_version }}" ]]; then
+              echo "core-version-updated=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "core-version-updated=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "${{ steps.pre-merge-version.outputs.rust_pre_merge_version }}" != "${{ steps.post-merge-version.outputs.rust_post_merge_version }}" ]]; then
+              echo "rust-version-updated=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "rust-version-updated=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-npm:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish NPM wasm package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - name: Install dependencies
+        run: npm install && cargo install wasm-pack
+      - run: npm run js:publish-nodejs && npm run js:publish-browser
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
+  publish-core-crate:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish core crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/sidan-csl-rs && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  only-publish-whisky-crate:
+    needs: [check-version, build-test]
+    if: needs.check-version.outputs.rust-version-updated == 'true' && needs.check-version.outputs.core-version-updated == 'false'
+    name: Only publish Whisky crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  publish-whisky-crate:
+    needs: [check-version, build-test, publish-core-crate]
+    if: needs.check-version.outputs.rust-version-updated == 'true' && needs.check-version.outputs.core-version-updated == 'true'
+    name: Publish Whisky crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}

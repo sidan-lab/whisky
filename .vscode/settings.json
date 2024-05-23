@@ -1,6 +1,7 @@
 {
   "rust-analyzer.linkedProjects": [
-    "./rust/Cargo.toml"
+    "./packages/whisky/Cargo.toml",
+    "./packages/sidan-csl-rs/Cargo.toml",
   ],
   "rust-analyzer.showUnlinkedFileNotification": false
 }
