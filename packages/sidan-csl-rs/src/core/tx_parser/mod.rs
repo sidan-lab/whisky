@@ -37,6 +37,7 @@ impl IMeshTxParser for MeshTxParser {
             collaterals: vec![],
             required_signatures: JsVecString::new(),
             reference_inputs: vec![],
+            withdrawals: vec![],
             mints: vec![],
             change_address: "".to_string(),
             change_datum: None,

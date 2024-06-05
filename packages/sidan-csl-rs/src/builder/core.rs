@@ -159,6 +159,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 collaterals: vec![],
                 required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
+                withdrawals: vec![],
                 mints: vec![],
                 change_address: "".to_string(),
                 change_datum: None,
@@ -213,6 +214,22 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         for ref_input in ref_inputs {
             mesh_csl.add_reference_input(ref_input);
         }
+    }
+
+    fn add_all_withdrawals(mesh_csl: &mut MeshCSL, withdrawals: Vec<Withdrawal>) {
+        for withdrawal in withdrawals {
+            match withdrawal {
+                Withdrawal::PubKeyWithdrawal(pub_key_withdrawal) => {
+                    mesh_csl.add_pub_key_withdrawal(pub_key_withdrawal)
+                }
+                Withdrawal::PlutusScriptWithdrawal(plutus_script_withdrawal) => {
+                    mesh_csl.add_plutus_withdrawal(plutus_script_withdrawal)
+                }
+            }
+        }
+        mesh_csl
+            .tx_builder
+            .set_withdrawals_builder(&mesh_csl.tx_withdrawals_builder);
     }
 
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) {

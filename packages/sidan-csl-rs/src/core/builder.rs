@@ -13,6 +13,8 @@ pub trait IMeshCSL {
         collateral: PubKeyTxIn,
     );
     fn add_reference_input(&mut self, ref_input: RefTxIn);
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal);
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal);
     fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64);
     fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem);
     fn add_invalid_before(&mut self, invalid_before: u64);
@@ -29,6 +31,7 @@ pub struct MeshCSL {
     pub tx_hex: String,
     pub tx_builder: csl::TransactionBuilder,
     pub tx_inputs_builder: csl::TxInputsBuilder,
+    pub tx_withdrawals_builder: csl::WithdrawalsBuilder,
 }
 
 impl IMeshCSL for MeshCSL {
@@ -37,6 +40,7 @@ impl IMeshCSL for MeshCSL {
             tx_hex: String::new(),
             tx_builder: build_tx_builder(params),
             tx_inputs_builder: csl::TxInputsBuilder::new(),
+            tx_withdrawals_builder: csl::WithdrawalsBuilder::new(),
         }
     }
 
@@ -212,6 +216,94 @@ impl IMeshCSL for MeshCSL {
             ref_input.tx_index,
         );
         self.tx_builder.add_reference_input(&csl_ref_input);
+    }
+
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) {
+        let _ = self
+            .tx_withdrawals_builder
+            .add(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
+                )
+                .unwrap(),
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
+            )
+            .unwrap();
+    }
+
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) {
+        let datum_source = withdrawal.script_param.datum_source.unwrap();
+        let script_source = withdrawal.script_param.script_source.unwrap();
+        let redeemer = withdrawal.script_param.redeemer.unwrap();
+        let csl_datum: csl::DatumSource = match datum_source {
+            DatumSource::ProvidedDatumSource(datum) => csl::DatumSource::new(
+                &csl::PlutusData::from_json(&datum.data, csl::PlutusDatumSchema::DetailedSchema)
+                    .unwrap(),
+            ),
+            DatumSource::InlineDatumSource(datum) => {
+                let ref_input = csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&datum.tx_hash).unwrap(),
+                    datum.tx_index,
+                );
+                csl::DatumSource::new_ref_input(&ref_input)
+            }
+        };
+
+        let csl_script: csl::PlutusScriptSource = match script_source {
+            ScriptSource::ProvidedScriptSource(script) => {
+                let language_version: csl::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                };
+                csl::PlutusScriptSource::new(
+                    &csl::PlutusScript::from_hex_with_version(
+                        &script.script_cbor,
+                        &language_version,
+                    )
+                    .unwrap(),
+                )
+            }
+            ScriptSource::InlineScriptSource(script) => {
+                let language_version: csl::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                };
+                csl::PlutusScriptSource::new_ref_input(
+                    &csl::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        script.tx_index,
+                    ),
+                    &language_version,
+                    script.script_size,
+                )
+            }
+        };
+
+        let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
+            &csl::RedeemerTag::new_spend(),
+            &to_bignum(0),
+            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)
+                .unwrap(),
+            &csl::ExUnits::new(
+                &to_bignum(redeemer.ex_units.mem),
+                &to_bignum(redeemer.ex_units.steps),
+            ),
+        );
+
+        let _ = self
+            .tx_withdrawals_builder
+            .add_with_plutus_witness(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
+                )
+                .unwrap(),
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
+                &csl::PlutusWitness::new_with_ref(&csl_script, &csl_datum, &csl_redeemer),
+            )
+            .unwrap();
     }
 
     fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64) {

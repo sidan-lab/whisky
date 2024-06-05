@@ -22,6 +22,7 @@ pub struct MeshTxBuilderBody {
     pub collaterals: Vec<PubKeyTxIn>,
     pub required_signatures: JsVecString,
     pub reference_inputs: Vec<RefTxIn>,
+    pub withdrawals: Vec<Withdrawal>,
     pub mints: Vec<MintItem>,
     pub change_address: String,
     pub change_datum: Option<Datum>,
@@ -149,6 +150,28 @@ pub struct ScriptSourceInfo {
     pub tx_hash: String,
     pub tx_index: u32,
     pub spending_script_hash: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Withdrawal {
+    PubKeyWithdrawal(PubKeyWithdrawal),
+    PlutusScriptWithdrawal(PlutusScriptWithdrawal),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PubKeyWithdrawal {
+    pub address: String,
+    pub coin: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlutusScriptWithdrawal {
+    pub address: String,
+    pub coin: u64,
+    pub script_param: ScriptTxInParameter,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

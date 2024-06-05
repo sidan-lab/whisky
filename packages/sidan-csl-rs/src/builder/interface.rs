@@ -78,6 +78,16 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Internal method
     ///
+    /// Add multiple withdrawals to the MeshTxBuilder instance
+    ///
+    /// ## Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `withdrawals` - A vector of withdrawals
+    fn add_all_withdrawals(mesh_csl: &mut MeshCSL, withdrawals: Vec<Withdrawal>);
+
+    /// ## Internal method
+    ///
     /// Add multiple mints to the MeshTxBuilder instance
     ///
     /// ### Arguments
