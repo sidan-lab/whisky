@@ -213,4 +213,50 @@ mod int_tests {
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_plutus_withdraw() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let signed_tx = mesh
+            .tx_in(
+                "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
+                0,
+                vec![Asset::new_from_str("lovelace", "9999639476")],
+                "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+            )
+            .tx_in_collateral(
+            "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
+            0,
+            vec![Asset::new_from_str("lovelace", "9999639476")],
+            "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+            )
+            .change_address("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw")
+            .withdrawal_plutus_script_v2()
+            .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
+            .withdrawal_script("5251010000322253330034a229309b2b2b9a01", LanguageVersion::V2)
+            .withdrawal_redeemer_value(Redeemer {
+                data: to_string(&json!({
+                    "constructor": 0,
+                    "fields": []
+                }))
+                .unwrap(),
+                ex_units: Budget {
+                    mem: 2501,
+                    steps: 617656,
+                },
+            })
+            .required_signer_hash("4f91183f5fc7c81cbc11d1ecbfde2d1cfc1a71ef9de999bdc1e15ecb")
+            .signing_key("5820c835cd2413c6330537c85e3d510b313dfdeee5708206e76ce8bd387cdd4b6bb2")
+            .complete_sync(None)
+            .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
 }
