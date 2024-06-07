@@ -3,7 +3,7 @@ use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
         Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, Protocol, PubKeyTxIn,
-        Redeemer, TxIn, UTxO,
+        Redeemer, TxIn, UTxO, Withdrawal,
     },
 };
 
@@ -15,11 +15,13 @@ pub struct MeshTxBuilder {
     pub tx_in_item: Option<TxIn>,
     pub extra_inputs: Vec<UTxO>,
     pub selection_threshold: u64,
+    pub withdrawal_item: Option<Withdrawal>,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,
     pub adding_script_input: bool,
     pub adding_plutus_mint: bool,
+    pub adding_plutus_withdrawal: bool,
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
@@ -284,6 +286,97 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self;
 
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_plutus_script_v2(&mut self) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a withdrawal reference to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `tx_hash` - The transaction hash
+    /// * `tx_index` - The transaction index
+    /// * `withdrawal_script_hash` - The withdrawal script hash
+    /// * `version` - The language version
+    /// * `scrip_size` - Size of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        withdrawal_script_hash: &str,
+        version: LanguageVersion,
+        script_size: usize,
+    ) -> &mut Self;
+
+
+    /// ## Transaction building method
+    ///
+    /// Withdraw stake rewards in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_address` - The address corresponding to the stake key
+    /// * `coin` - The amount of lovelaces in the withdrawal
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal(&mut self, stake_address: &str, coin: u64) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a withdrawal script to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `script_cbor` - The script in CBOR format
+    /// * `version` - The language version
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+
+    
+    /// ## Transaction building method
+    ///
+    /// Set the transaction withdrawal redeemer value in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `redeemer` - The redeemer value
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+
+
+    /// ## Transaction building method
+    ///
+    /// Set the withdrawal reference redeemer value in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `redeemer` - The redeemer value
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+
     /// ## Transaction building method
     ///
     /// Indicate that the transaction is minting a Plutus script v2 in the MeshTxBuilder instance
@@ -530,6 +623,11 @@ pub trait IMeshTxBuilder {
     ///
     /// Queue an input in the MeshTxBuilder instance
     fn queue_input(&mut self);
+
+    /// ## Internal method
+    ///
+    /// Queue a withdrawal in the MeshTxBuilder instance
+    fn queue_withdrawal(&mut self);
 
     /// ## Internal method
     ///

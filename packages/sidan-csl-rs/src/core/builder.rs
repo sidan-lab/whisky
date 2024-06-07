@@ -232,22 +232,8 @@ impl IMeshCSL for MeshCSL {
     }
 
     fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) {
-        let datum_source = withdrawal.script_param.datum_source.unwrap();
-        let script_source = withdrawal.script_param.script_source.unwrap();
-        let redeemer = withdrawal.script_param.redeemer.unwrap();
-        let csl_datum: csl::DatumSource = match datum_source {
-            DatumSource::ProvidedDatumSource(datum) => csl::DatumSource::new(
-                &csl::PlutusData::from_json(&datum.data, csl::PlutusDatumSchema::DetailedSchema)
-                    .unwrap(),
-            ),
-            DatumSource::InlineDatumSource(datum) => {
-                let ref_input = csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&datum.tx_hash).unwrap(),
-                    datum.tx_index,
-                );
-                csl::DatumSource::new_ref_input(&ref_input)
-            }
-        };
+        let script_source = withdrawal.script_source.unwrap();
+        let redeemer = withdrawal.redeemer.unwrap();
 
         let csl_script: csl::PlutusScriptSource = match script_source {
             ScriptSource::ProvidedScriptSource(script) => {
@@ -301,7 +287,7 @@ impl IMeshCSL for MeshCSL {
                 )
                 .unwrap(),
                 &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
-                &csl::PlutusWitness::new_with_ref(&csl_script, &csl_datum, &csl_redeemer),
+                &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
             )
             .unwrap();
     }

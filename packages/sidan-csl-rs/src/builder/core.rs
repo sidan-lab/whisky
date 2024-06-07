@@ -65,6 +65,7 @@ pub fn serialize_tx_body(
         &mut mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
     );
+    MeshTxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone());
     MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone());
     MeshTxBuilderCore::add_validity_range(
         &mut mesh_csl,

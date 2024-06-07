@@ -5,9 +5,9 @@ use sidan_csl_rs::{
     csl,
     model::{
         Asset, Datum, DatumSource, InlineDatumSource, InlineScriptSource, LanguageVersion,
-        MeshTxBuilderBody, Metadata, MintItem, Output, ProvidedDatumSource, ProvidedScriptSource,
-        PubKeyTxIn, Redeemer, RefTxIn, ScriptSource, ScriptTxIn, ScriptTxInParameter, TxIn,
-        TxInParameter, UTxO, Value,
+        MeshTxBuilderBody, Metadata, MintItem, Output, PlutusScriptWithdrawal, ProvidedDatumSource,
+        ProvidedScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer, RefTxIn, ScriptSource,
+        ScriptTxIn, ScriptTxInParameter, TxIn, TxInParameter, UTxO, Value, Withdrawal,
     },
 };
 
@@ -23,11 +23,13 @@ impl IMeshTxBuilder for MeshTxBuilder {
             tx_in_item: None,
             extra_inputs: vec![],
             selection_threshold: 5_000_000,
+            withdrawal_item: None,
             mint_item: None,
             collateral_item: None,
             tx_output: None,
             adding_script_input: false,
             adding_plutus_mint: false,
+            adding_plutus_withdrawal: false,
             fetcher: param.fetcher,
             evaluator: match param.evaluator {
                 Some(evaluator) => Some(evaluator),
@@ -69,8 +71,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
-        let tx_hex =
-            serialize_tx_body(self.core.mesh_tx_builder_body.clone(), self.protocol_params.clone());
+        let tx_hex = serialize_tx_body(
+            self.core.mesh_tx_builder_body.clone(),
+            self.protocol_params.clone(),
+        );
         self.core.mesh_csl.tx_hex = tx_hex;
         self.core.mesh_csl.tx_builder = build_tx_builder(None);
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
@@ -318,6 +322,108 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
+    fn withdrawal_plutus_script_v2(&mut self) -> &mut Self {
+        self.adding_plutus_withdrawal = true;
+        self
+    }
+
+    fn withdrawal_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        withdrawal_script_hash: &str,
+        version: LanguageVersion,
+        script_size: usize,
+    ) -> &mut Self {
+        let withdrawal_item = self.withdrawal_item.take();
+        if withdrawal_item.is_none() {
+            panic!("Undefined output")
+        }
+        let withdrawal_item = withdrawal_item.unwrap();
+        match withdrawal_item {
+            Withdrawal::PubKeyWithdrawal(_) => panic!("Script reference cannot be defined for a pubkey withdrawal"),
+            Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
+                withdrawal.script_source =
+                    Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+                        tx_hash: tx_hash.to_string(),
+                        tx_index,
+                        spending_script_hash: withdrawal_script_hash.to_string(),
+                        language_version: version,
+                        script_size,
+                    }));
+                self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdrawal));
+            }
+        }
+        self
+    }
+
+    fn withdrawal(&mut self, stake_address: &str, coin: u64) -> &mut Self {
+        if self.withdrawal_item.is_some() {
+            self.queue_withdrawal();
+        }
+        if !self.adding_plutus_withdrawal {
+            let withdrawal_item = Withdrawal::PubKeyWithdrawal(PubKeyWithdrawal {
+                address: stake_address.to_string(),
+                coin,
+            });
+            self.withdrawal_item = Some(withdrawal_item);
+        } else {
+            let withdrawal_item = Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
+                address: stake_address.to_string(),
+                coin,
+                script_source: None,
+                redeemer: None,
+            });
+            self.withdrawal_item = Some(withdrawal_item);
+        }
+        self.adding_plutus_withdrawal = false;
+        self
+    }
+
+    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
+        let withdrawal_item = self.withdrawal_item.take();
+        if withdrawal_item.is_none() {
+            panic!("Undefined withdrawal")
+        }
+        let withdrawal_item = withdrawal_item.unwrap();
+        match withdrawal_item {
+            Withdrawal::PubKeyWithdrawal(_) => {
+                panic!("Script cannot be defined for a pubkey withdrawal")
+            }
+            Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
+                withdraw.script_source =
+                    Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                        language_version: version,
+                    }));
+                self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
+            }
+        }
+        self
+    }
+
+    fn withdrawal_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+        let withdrawal_item = self.withdrawal_item.take();
+        if withdrawal_item.is_none() {
+            panic!("Undefined input")
+        }
+        let withdrawal_item = withdrawal_item.unwrap();
+        match withdrawal_item {
+            Withdrawal::PubKeyWithdrawal(_) => {
+                panic!("Script cannot be defined for a pubkey withdrawal")
+            }
+            Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
+                withdraw.redeemer = Some(redeemer);
+                self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
+            }
+        }
+        self
+    }
+
+    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+        self.withdrawal_redeemer_value(redeemer)
+    }
+
     fn mint_plutus_script_v2(&mut self) -> &mut Self {
         self.adding_plutus_mint = true;
         self
@@ -516,6 +622,25 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.tx_in_item = None
     }
 
+    fn queue_withdrawal(&mut self) {
+        let withdrawal_item = self.withdrawal_item.clone().unwrap();
+        match withdrawal_item {
+            Withdrawal::PlutusScriptWithdrawal(withdrawal) => {
+                match (withdrawal.redeemer, withdrawal.script_source) {
+                    (None, _) => panic!("Redeemer in script input cannot be None"),
+                    (_, None) => panic!("Script source in script input cannot be None"),
+                    _ => {}
+                }
+            }
+            Withdrawal::PubKeyWithdrawal(_) => {}
+        }
+        self.core
+            .mesh_tx_builder_body
+            .withdrawals
+            .push(self.withdrawal_item.clone().unwrap());
+        self.withdrawal_item = None;
+    }
+
     fn queue_mint(&mut self) {
         let mint_item = self.mint_item.clone().unwrap();
         if mint_item.script_source.is_none() {
@@ -542,6 +667,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 .collaterals
                 .push(self.collateral_item.clone().unwrap());
             self.collateral_item = None;
+        }
+        if self.withdrawal_item.is_some() {
+            self.queue_withdrawal();
         }
         if self.mint_item.is_some() {
             self.queue_mint();

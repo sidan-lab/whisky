@@ -171,7 +171,8 @@ pub struct PubKeyWithdrawal {
 pub struct PlutusScriptWithdrawal {
     pub address: String,
     pub coin: u64,
-    pub script_param: ScriptTxInParameter,
+    pub script_source: Option<ScriptSource>,
+    pub redeemer: Option<Redeemer>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
