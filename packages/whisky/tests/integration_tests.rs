@@ -184,4 +184,33 @@ mod int_tests {
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_simple_withdraw() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let signed_tx = mesh
+            .tx_in(
+                "fbd3e8091c9f0c5fb446be9e58d9235f548546a5a7d5f60ee56e389344db9c5e",
+                0,
+                vec![Asset::new_from_str("lovelace", "9496607660")],
+                "addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459",
+            )
+            .change_address("addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459")
+            .withdrawal("stake_test1uraj0xqlekpdwlxeugg2s2qwq896n4kzkuhwxxnqggwpjeqe9s9k2", 0)
+            .required_signer_hash("fb27981fcd82d77cd9e210a8280e01cba9d6c2b72ee31a60421c1964")
+            .required_signer_hash("64980e4d19ed6a2532aca6e7aaeb8922b6bc8f15b1ba2878d3bc2f27")
+            .signing_key("58208d4cfa90e8bd0c48c52d2fb62c77ba3f6f5eb46f640d5f997390012928d670f7")
+            .signing_key("5820ba73019f1239fa47f8d9c0c42c5d05bf34f2b2f6ebd1c556f8f86e5bee1aac66")
+            .complete_sync(None)
+            .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
 }
