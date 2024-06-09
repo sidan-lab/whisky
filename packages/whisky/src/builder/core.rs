@@ -39,6 +39,15 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
     }
 
+    fn new_core() -> Self {
+        Self::new(super::MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        })
+    }
+
     async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
         self.complete_sync(customized_tx);
         match &self.evaluator {
@@ -69,8 +78,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
-        let tx_hex =
-            serialize_tx_body(self.core.mesh_tx_builder_body.clone(), self.protocol_params.clone());
+        let tx_hex = serialize_tx_body(
+            self.core.mesh_tx_builder_body.clone(),
+            self.protocol_params.clone(),
+        );
         self.core.mesh_csl.tx_hex = tx_hex;
         self.core.mesh_csl.tx_builder = build_tx_builder(None);
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();

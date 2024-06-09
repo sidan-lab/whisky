@@ -40,10 +40,23 @@ pub trait IMeshTxBuilder {
     ///
     /// Create a new MeshTxBuilder instance
     ///
+    /// ### Arguments
+    ///
+    /// * `param` - Parameters for setting up the MeshTxBuilder instance, including evaluator, fetcher, submitter, and protocol parameters
+    ///
     /// ### Returns
     ///
     /// * `Self` - A new MeshTxBuilder instance
     fn new(param: MeshTxBuilderParam) -> Self;
+
+    /// ## Transaction building method
+    ///
+    /// Create a new MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - A new MeshTxBuilder instance
+    fn new_core() -> Self;
 
     /// ## Transaction building method
     ///  
