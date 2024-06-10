@@ -2,8 +2,7 @@ use async_trait::async_trait;
 use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
-        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, Protocol, PubKeyTxIn,
-        Redeemer, TxIn, UTxO, Withdrawal,
+        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams, Protocol, PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal
     },
 };
 
@@ -286,7 +285,6 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self;
 
-
     /// ## Transaction building method
     ///
     /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
@@ -320,7 +318,6 @@ pub trait IMeshTxBuilder {
         script_size: usize,
     ) -> &mut Self;
 
-
     /// ## Transaction building method
     ///
     /// Withdraw stake rewards in the MeshTxBuilder instance
@@ -349,7 +346,6 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
 
-    
     /// ## Transaction building method
     ///
     /// Set the transaction withdrawal redeemer value in the MeshTxBuilder instance
@@ -362,7 +358,6 @@ pub trait IMeshTxBuilder {
     ///
     /// * `Self` - The MeshTxBuilder instance
     fn withdrawal_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
-
 
     /// ## Transaction building method
     ///
@@ -499,6 +494,73 @@ pub trait IMeshTxBuilder {
         amount: Vec<Asset>,
         address: &str,
     ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a pool registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `pool_params` - Parameters of pool to be registered
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn register_pool_certificate(&mut self, pool_params: PoolParams) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_id` - id of the pool that will be delegated to
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake deregistration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a pool retire certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `pool_id` - id of the pool that will be retired
+    /// * `epoch` - The epoch that the pool will be retired from
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self;
 
     /// ## Transaction building method
     ///

@@ -4,9 +4,10 @@ use sidan_csl_rs::{
     core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
     csl,
     model::{
-        Asset, Datum, DatumSource, InlineDatumSource, InlineScriptSource, LanguageVersion,
-        MeshTxBuilderBody, Metadata, MintItem, Output, PlutusScriptWithdrawal, ProvidedDatumSource,
-        ProvidedScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer, RefTxIn, ScriptSource,
+        Asset, Certificate, Datum, DatumSource, DelegateStake, DeregisterStake, InlineDatumSource,
+        InlineScriptSource, LanguageVersion, MeshTxBuilderBody, Metadata, MintItem, Output,
+        PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource, ProvidedScriptSource, PubKeyTxIn,
+        PubKeyWithdrawal, Redeemer, RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptSource,
         ScriptTxIn, ScriptTxInParameter, TxIn, TxInParameter, UTxO, Value, Withdrawal,
     },
 };
@@ -341,7 +342,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
         let withdrawal_item = withdrawal_item.unwrap();
         match withdrawal_item {
-            Withdrawal::PubKeyWithdrawal(_) => panic!("Script reference cannot be defined for a pubkey withdrawal"),
+            Withdrawal::PubKeyWithdrawal(_) => {
+                panic!("Script reference cannot be defined for a pubkey withdrawal")
+            }
             Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
                 withdrawal.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
@@ -537,6 +540,56 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 address: Some(address.to_string()),
             },
         });
+        self
+    }
+
+    fn register_pool_certificate(&mut self, pool_params: PoolParams) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::RegisterPool(RegisterPool { pool_params }));
+        self
+    }
+
+    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::RegisterStake(RegisterStake {
+                stake_key_hash: stake_key_hash.to_string(),
+            }));
+        self
+    }
+
+    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::DelegateStake(DelegateStake {
+                stake_key_hash: stake_key_hash.to_string(),
+                pool_id: pool_id.to_string(),
+            }));
+        self
+    }
+
+    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::DeregisterStake(DeregisterStake {
+                stake_key_hash: stake_key_hash.to_string(),
+            }));
+        self
+    }
+
+    fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::RetirePool(RetirePool {
+                pool_id: pool_id.to_string(),
+                epoch,
+            }));
         self
     }
 
