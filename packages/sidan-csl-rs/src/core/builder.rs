@@ -1,3 +1,7 @@
+use std::net::{Ipv4Addr, Ipv6Addr};
+
+use pallas_traverse::cert;
+
 use crate::{csl, model::*};
 
 use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
@@ -17,6 +21,31 @@ pub trait IMeshCSL {
     fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal);
     fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64);
     fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem);
+    fn add_register_pool_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_pool: RegisterPool,
+    );
+    fn add_register_stake_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_stake: RegisterStake,
+    );
+    fn add_delegate_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        delegate_stake: DelegateStake,
+    );
+    fn add_deregister_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        deregister_stake: DeregisterStake,
+    );
+    fn add_retire_pool_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        retire_pool: RetirePool,
+    );
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
     fn add_change(&mut self, change_address: String, change_datum: Option<Datum>);
@@ -362,6 +391,148 @@ impl IMeshCSL for MeshCSL {
                 "Native scripts cannot be referenced",
             )),
         };
+    }
+
+    fn add_register_pool_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_pool: RegisterPool,
+    ) {
+        let mut relays = csl::Relays::new();
+        for relay in register_pool.pool_params.relays {
+            match relay {
+                Relay::SingleHostAddr(single_host_address_relay) => {
+                    let ipv4_bytes: Option<csl::Ipv4> =
+                        single_host_address_relay.ipv4.map_or(None, |ipv4_str| {
+                            let addr: Ipv4Addr =
+                                ipv4_str.parse().expect("ipv4 address parse failed");
+
+                            Some(csl::Ipv4::new(addr.octets().to_vec()).unwrap())
+                        });
+
+                    let ipv6_bytes: Option<csl::Ipv6> =
+                        single_host_address_relay.ipv6.map_or(None, |ipv6_str| {
+                            let addr: Ipv6Addr =
+                                ipv6_str.parse().expect("ipv6 address parse failed");
+
+                            Some(csl::Ipv6::new(addr.octets().to_vec()).unwrap())
+                        });
+                    relays.add(&csl::Relay::new_single_host_addr(
+                        &csl::SingleHostAddr::new(
+                            single_host_address_relay.port,
+                            ipv4_bytes,
+                            ipv6_bytes,
+                        ),
+                    ));
+                }
+                Relay::SingleHostName(single_host_name_relay) => relays.add(
+                    &csl::Relay::new_single_host_name(&csl::SingleHostName::new(
+                        single_host_name_relay.port,
+                        &csl::DNSRecordAorAAAA::new(single_host_name_relay.domain_name).unwrap(),
+                    )),
+                ),
+                Relay::MultiHostName(multi_host_name_relay) => {
+                    relays.add(&csl::Relay::new_multi_host_name(&csl::MultiHostName::new(
+                        &csl::DNSRecordSRV::new(multi_host_name_relay.domain_name).unwrap(),
+                    )))
+                }
+            }
+        }
+
+        let mut pool_owners = csl::Ed25519KeyHashes::new();
+        for owner in register_pool.pool_params.owners {
+            pool_owners.add(&csl::Ed25519KeyHash::from_hex(&owner).unwrap());
+        }
+
+        certificate_builder
+            .add(&csl::Certificate::new_pool_registration(
+                &csl::PoolRegistration::new(&csl::PoolParams::new(
+                    &csl::Ed25519KeyHash::from_hex(&register_pool.pool_params.operator).unwrap(),
+                    &csl::VRFKeyHash::from_hex(&register_pool.pool_params.vrf_key_hash).unwrap(),
+                    &csl::BigNum::from_str(&register_pool.pool_params.pledge).unwrap(),
+                    &csl::BigNum::from_str(&register_pool.pool_params.cost).unwrap(),
+                    &csl::UnitInterval::new(
+                        &csl::BigNum::from_str(&register_pool.pool_params.margin.0.to_string())
+                            .unwrap(),
+                        &csl::BigNum::from_str(&register_pool.pool_params.margin.1.to_string())
+                            .unwrap(),
+                    ),
+                    &csl::RewardAddress::from_address(
+                        &csl::Address::from_bech32(&register_pool.pool_params.reward_address)
+                            .unwrap(),
+                    )
+                    .unwrap(),
+                    &pool_owners,
+                    &relays,
+                    register_pool.pool_params.metadata.map_or(None, |data| {
+                        Some(csl::PoolMetadata::new(
+                            &csl::URL::new(data.url).unwrap(),
+                            &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
+                        ))
+                    }),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_register_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        register_stake: RegisterStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_registration(
+                &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash).unwrap(),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_delegate_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        delegate_stake: DelegateStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_delegation(
+                &csl::StakeDelegation::new(
+                    &csl::Credential::from_keyhash(
+                        &csl::Ed25519KeyHash::from_hex(&delegate_stake.stake_key_hash).unwrap(),
+                    ),
+                    &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id).unwrap(),
+                ),
+            ))
+            .unwrap();
+    }
+
+    fn add_deregister_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        deregister_stake: DeregisterStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_deregistration(
+                &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash).unwrap(),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_retire_pool_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        retire_pool: RetirePool,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_pool_retirement(
+                &csl::PoolRetirement::new(
+                    &csl::Ed25519KeyHash::from_hex(&retire_pool.pool_id).unwrap(),
+                    retire_pool.epoch,
+                ),
+            ))
+            .unwrap();
     }
 
     fn add_invalid_before(&mut self, invalid_before: u64) {

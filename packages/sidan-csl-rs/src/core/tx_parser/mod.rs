@@ -41,6 +41,7 @@ impl IMeshTxParser for MeshTxParser {
             mints: vec![],
             change_address: "".to_string(),
             change_datum: None,
+            certificates: vec![],
             metadata: vec![],
             validity_range: ValidityRange {
                 invalid_before: None,

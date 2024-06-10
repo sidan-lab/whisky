@@ -1,3 +1,5 @@
+use pallas_traverse::cert;
+
 use crate::{
     core::builder::{IMeshCSL, MeshCSL},
     csl,
@@ -67,6 +69,10 @@ pub fn serialize_tx_body(
     );
     MeshTxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone());
     MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone());
+    MeshTxBuilderCore::add_all_certificates(
+        &mut mesh_csl,
+        mesh_tx_builder_body.certificates.clone(),
+    );
     MeshTxBuilderCore::add_validity_range(
         &mut mesh_csl,
         mesh_tx_builder_body.validity_range.clone(),
@@ -164,6 +170,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 mints: vec![],
                 change_address: "".to_string(),
                 change_datum: None,
+                certificates: vec![],
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -243,6 +250,30 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
             };
         }
         mesh_csl.tx_builder.set_mint_builder(&mint_builder)
+    }
+
+    fn add_all_certificates(mesh_csl: &mut MeshCSL, certificates: Vec<Certificate>) {
+        let mut certificates_builder = csl::CertificatesBuilder::new();
+        for cert in certificates {
+            match cert {
+                Certificate::RegisterPool(register_pool) => {
+                    mesh_csl.add_register_pool_cert(&mut certificates_builder, register_pool)
+                }
+                Certificate::RegisterStake(register_stake) => {
+                    mesh_csl.add_register_stake_cert(&mut certificates_builder, register_stake)
+                }
+                Certificate::DelegateStake(delegate_stake) => {
+                    mesh_csl.add_delegate_stake_cert(&mut certificates_builder, delegate_stake)
+                }
+                Certificate::DeregisterStake(deregister_stake) => {
+                    mesh_csl.add_deregister_stake_cert(&mut certificates_builder, deregister_stake)
+                }
+                Certificate::RetirePool(retire_pool) => {
+                    mesh_csl.add_retire_pool_cert(&mut certificates_builder, retire_pool)
+                }
+            }
+        }
+        mesh_csl.tx_builder.set_certs_builder(&certificates_builder)
     }
 
     fn add_validity_range(mesh_csl: &mut MeshCSL, validity_range: ValidityRange) {

@@ -28,6 +28,7 @@ pub struct MeshTxBuilderBody {
     pub change_datum: Option<Datum>,
     pub metadata: Vec<Metadata>,
     pub validity_range: ValidityRange,
+    pub certificates: Vec<Certificate>,
     pub signing_key: JsVecString,
 }
 
@@ -205,6 +206,98 @@ pub struct Budget {
 pub struct Metadata {
     pub tag: String,
     pub metadata: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Certificate {
+    RegisterPool(RegisterPool),
+    RegisterStake(RegisterStake),
+    DelegateStake(DelegateStake),
+    DeregisterStake(DeregisterStake),
+    RetirePool(RetirePool),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterPool {
+    pub pool_params: PoolParams,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PoolParams {
+    pub vrf_key_hash: String,
+    pub operator: String,
+    pub pledge: String,
+    pub cost: String,
+    pub margin: (u64, u64),
+    pub relays: Vec<Relay>,
+    pub owners: Vec<String>,
+    pub reward_address: String,
+    pub metadata: Option<PoolMetadata>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Relay {
+    SingleHostAddr(SingleHostAddr),
+    SingleHostName(SingleHostName),
+    MultiHostName(MultiHostName),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SingleHostAddr {
+    pub ipv4: Option<String>,
+    pub ipv6: Option<String>,
+    pub port: Option<u16>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SingleHostName {
+    pub domain_name: String,
+    pub port: Option<u16>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultiHostName {
+    pub domain_name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PoolMetadata {
+    pub url: String,
+    pub hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterStake {
+    pub stake_key_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DelegateStake {
+    pub stake_key_hash: String,
+    pub pool_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeregisterStake {
+    pub stake_key_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RetirePool {
+    pub pool_id: String,
+    pub epoch: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

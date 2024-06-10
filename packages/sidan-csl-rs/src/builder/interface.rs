@@ -98,6 +98,16 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Internal method
     ///
+    /// Add multiple certificates to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `certificates` - A vector of certificates
+    fn add_all_certificates(mesh_csl: &mut MeshCSL, certificates: Vec<Certificate>);
+
+    /// ## Internal method
+    ///
     /// Add a validity range to the MeshTxBuilder instance
     ///
     /// ### Arguments
