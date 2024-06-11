@@ -169,7 +169,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 },
                 signing_key: JsVecString::new(),
             },
-            tx_evaluation_multiplier_percentage: 10,
+            tx_evaluation_multiplier_percentage: 110,
         }
     }
 
