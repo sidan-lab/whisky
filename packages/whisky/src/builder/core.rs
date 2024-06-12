@@ -78,6 +78,29 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
             }
         }
+
+        self.core
+            .mesh_tx_builder_body
+            .mints
+            .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
+
+        self.core.mesh_tx_builder_body.inputs.sort_by(|a, b| {
+            let tx_in_data_a: &TxInParameter = match a {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
+            };
+
+            let tx_in_data_b: &TxInParameter = match b {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
+            };
+
+            tx_in_data_a
+                .tx_hash
+                .cmp(&tx_in_data_b.tx_hash)
+                .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
+        });
+
         let tx_hex = serialize_tx_body(
             self.core.mesh_tx_builder_body.clone(),
             self.protocol_params.clone(),
