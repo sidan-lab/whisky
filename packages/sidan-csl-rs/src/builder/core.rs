@@ -1,5 +1,3 @@
-use pallas_traverse::cert;
-
 use crate::{
     core::builder::{IMeshCSL, MeshCSL},
     csl,

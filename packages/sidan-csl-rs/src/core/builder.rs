@@ -1,7 +1,5 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use pallas_traverse::cert;
-
 use crate::{csl, model::*};
 
 use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
@@ -409,19 +407,17 @@ impl IMeshCSL for MeshCSL {
             match relay {
                 Relay::SingleHostAddr(single_host_address_relay) => {
                     let ipv4_bytes: Option<csl::Ipv4> =
-                        single_host_address_relay.ipv4.map_or(None, |ipv4_str| {
+                        single_host_address_relay.ipv4.map(|ipv4_str| {
                             let addr: Ipv4Addr =
                                 ipv4_str.parse().expect("ipv4 address parse failed");
-
-                            Some(csl::Ipv4::new(addr.octets().to_vec()).unwrap())
+                            csl::Ipv4::new(addr.octets().to_vec()).unwrap()
                         });
 
                     let ipv6_bytes: Option<csl::Ipv6> =
-                        single_host_address_relay.ipv6.map_or(None, |ipv6_str| {
+                        single_host_address_relay.ipv6.map(|ipv6_str| {
                             let addr: Ipv6Addr =
                                 ipv6_str.parse().expect("ipv6 address parse failed");
-
-                            Some(csl::Ipv6::new(addr.octets().to_vec()).unwrap())
+                            csl::Ipv6::new(addr.octets().to_vec()).unwrap()
                         });
                     relays.add(&csl::Relay::new_single_host_addr(
                         &csl::SingleHostAddr::new(
@@ -470,11 +466,11 @@ impl IMeshCSL for MeshCSL {
                     .unwrap(),
                     &pool_owners,
                     &relays,
-                    register_pool.pool_params.metadata.map_or(None, |data| {
-                        Some(csl::PoolMetadata::new(
+                    register_pool.pool_params.metadata.map(|data| {
+                        csl::PoolMetadata::new(
                             &csl::URL::new(data.url).unwrap(),
                             &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
-                        ))
+                        )
                     }),
                 )),
             ))
