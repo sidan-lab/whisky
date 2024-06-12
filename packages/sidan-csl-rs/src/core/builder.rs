@@ -1,3 +1,5 @@
+use std::net::{Ipv4Addr, Ipv6Addr};
+
 use crate::{csl, model::*};
 
 use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
@@ -13,8 +15,35 @@ pub trait IMeshCSL {
         collateral: PubKeyTxIn,
     );
     fn add_reference_input(&mut self, ref_input: RefTxIn);
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal);
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal);
     fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64);
     fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem);
+    fn add_register_pool_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_pool: RegisterPool,
+    );
+    fn add_register_stake_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_stake: RegisterStake,
+    );
+    fn add_delegate_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        delegate_stake: DelegateStake,
+    );
+    fn add_deregister_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        deregister_stake: DeregisterStake,
+    );
+    fn add_retire_pool_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        retire_pool: RetirePool,
+    );
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
     fn add_change(&mut self, change_address: String, change_datum: Option<Datum>);
@@ -29,6 +58,7 @@ pub struct MeshCSL {
     pub tx_hex: String,
     pub tx_builder: csl::TransactionBuilder,
     pub tx_inputs_builder: csl::TxInputsBuilder,
+    pub tx_withdrawals_builder: csl::WithdrawalsBuilder,
 }
 
 impl IMeshCSL for MeshCSL {
@@ -37,18 +67,21 @@ impl IMeshCSL for MeshCSL {
             tx_hex: String::new(),
             tx_builder: build_tx_builder(params),
             tx_inputs_builder: csl::TxInputsBuilder::new(),
+            tx_withdrawals_builder: csl::WithdrawalsBuilder::new(),
         }
     }
 
     fn add_tx_in(&mut self, input: PubKeyTxIn) {
-        let _ = self.tx_inputs_builder.add_regular_input(
-            &csl::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
-                input.tx_in.tx_index,
-            ),
-            &to_value(&input.tx_in.amount.unwrap()),
-        );
+        self.tx_inputs_builder
+            .add_regular_input(
+                &csl::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
+                    input.tx_in.tx_index,
+                ),
+                &to_value(&input.tx_in.amount.unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_script_tx_in(&mut self, input: ScriptTxIn) {
@@ -196,14 +229,16 @@ impl IMeshCSL for MeshCSL {
         collateral_builder: &mut csl::TxInputsBuilder,
         collateral: PubKeyTxIn,
     ) {
-        let _ = collateral_builder.add_regular_input(
-            &csl::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
-                collateral.tx_in.tx_index,
-            ),
-            &to_value(&collateral.tx_in.amount.unwrap()),
-        );
+        collateral_builder
+            .add_regular_input(
+                &csl::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
+                    collateral.tx_in.tx_index,
+                ),
+                &to_value(&collateral.tx_in.amount.unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_reference_input(&mut self, ref_input: RefTxIn) {
@@ -212,6 +247,78 @@ impl IMeshCSL for MeshCSL {
             ref_input.tx_index,
         );
         self.tx_builder.add_reference_input(&csl_ref_input);
+    }
+
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) {
+        self.tx_withdrawals_builder
+            .add(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
+                )
+                .unwrap(),
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
+            )
+            .unwrap();
+    }
+
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) {
+        let script_source = withdrawal.script_source.unwrap();
+        let redeemer = withdrawal.redeemer.unwrap();
+
+        let csl_script: csl::PlutusScriptSource = match script_source {
+            ScriptSource::ProvidedScriptSource(script) => {
+                let language_version: csl::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                };
+                csl::PlutusScriptSource::new(
+                    &csl::PlutusScript::from_hex_with_version(
+                        &script.script_cbor,
+                        &language_version,
+                    )
+                    .unwrap(),
+                )
+            }
+            ScriptSource::InlineScriptSource(script) => {
+                let language_version: csl::Language = match script.language_version {
+                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                };
+                csl::PlutusScriptSource::new_ref_input(
+                    &csl::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        script.tx_index,
+                    ),
+                    &language_version,
+                    script.script_size,
+                )
+            }
+        };
+
+        let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
+            &csl::RedeemerTag::new_spend(),
+            &to_bignum(0),
+            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)
+                .unwrap(),
+            &csl::ExUnits::new(
+                &to_bignum(redeemer.ex_units.mem),
+                &to_bignum(redeemer.ex_units.steps),
+            ),
+        );
+
+        self.tx_withdrawals_builder
+            .add_with_plutus_witness(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
+                )
+                .unwrap(),
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
+                &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
+            )
+            .unwrap();
     }
 
     fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64) {
@@ -263,27 +370,171 @@ impl IMeshCSL for MeshCSL {
             }
         };
 
-        let _ = mint_builder.add_asset(
-            &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-            &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-        );
+        mint_builder
+            .add_asset(
+                &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
+                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem) {
         let script_info = mint.script_source.unwrap();
-        let _ = match script_info {
-            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
-                &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
-                    &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
-                )),
-                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-            ),
-            ScriptSource::InlineScriptSource(_) => Err(csl::JsError::from_str(
-                "Native scripts cannot be referenced",
-            )),
+        match script_info {
+            ScriptSource::ProvidedScriptSource(script) => mint_builder
+                .add_asset(
+                    &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
+                        &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
+                    )),
+                    &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+                    &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+                )
+                .unwrap(),
+            ScriptSource::InlineScriptSource(_) => {} // Err(csl::JsError::from_str(
+                                                      //     "Native scripts cannot be referenced",
+                                                      // )),
         };
+    }
+
+    fn add_register_pool_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        register_pool: RegisterPool,
+    ) {
+        let mut relays = csl::Relays::new();
+        for relay in register_pool.pool_params.relays {
+            match relay {
+                Relay::SingleHostAddr(single_host_address_relay) => {
+                    let ipv4_bytes: Option<csl::Ipv4> =
+                        single_host_address_relay.ipv4.map(|ipv4_str| {
+                            let addr: Ipv4Addr =
+                                ipv4_str.parse().expect("ipv4 address parse failed");
+                            csl::Ipv4::new(addr.octets().to_vec()).unwrap()
+                        });
+
+                    let ipv6_bytes: Option<csl::Ipv6> =
+                        single_host_address_relay.ipv6.map(|ipv6_str| {
+                            let addr: Ipv6Addr =
+                                ipv6_str.parse().expect("ipv6 address parse failed");
+                            csl::Ipv6::new(addr.octets().to_vec()).unwrap()
+                        });
+                    relays.add(&csl::Relay::new_single_host_addr(
+                        &csl::SingleHostAddr::new(
+                            single_host_address_relay.port,
+                            ipv4_bytes,
+                            ipv6_bytes,
+                        ),
+                    ));
+                }
+                Relay::SingleHostName(single_host_name_relay) => relays.add(
+                    &csl::Relay::new_single_host_name(&csl::SingleHostName::new(
+                        single_host_name_relay.port,
+                        &csl::DNSRecordAorAAAA::new(single_host_name_relay.domain_name).unwrap(),
+                    )),
+                ),
+                Relay::MultiHostName(multi_host_name_relay) => {
+                    relays.add(&csl::Relay::new_multi_host_name(&csl::MultiHostName::new(
+                        &csl::DNSRecordSRV::new(multi_host_name_relay.domain_name).unwrap(),
+                    )))
+                }
+            }
+        }
+
+        let mut pool_owners = csl::Ed25519KeyHashes::new();
+        for owner in register_pool.pool_params.owners {
+            pool_owners.add(&csl::Ed25519KeyHash::from_hex(&owner).unwrap());
+        }
+
+        certificate_builder
+            .add(&csl::Certificate::new_pool_registration(
+                &csl::PoolRegistration::new(&csl::PoolParams::new(
+                    &csl::Ed25519KeyHash::from_hex(&register_pool.pool_params.operator).unwrap(),
+                    &csl::VRFKeyHash::from_hex(&register_pool.pool_params.vrf_key_hash).unwrap(),
+                    &csl::BigNum::from_str(&register_pool.pool_params.pledge).unwrap(),
+                    &csl::BigNum::from_str(&register_pool.pool_params.cost).unwrap(),
+                    &csl::UnitInterval::new(
+                        &csl::BigNum::from_str(&register_pool.pool_params.margin.0.to_string())
+                            .unwrap(),
+                        &csl::BigNum::from_str(&register_pool.pool_params.margin.1.to_string())
+                            .unwrap(),
+                    ),
+                    &csl::RewardAddress::from_address(
+                        &csl::Address::from_bech32(&register_pool.pool_params.reward_address)
+                            .unwrap(),
+                    )
+                    .unwrap(),
+                    &pool_owners,
+                    &relays,
+                    register_pool.pool_params.metadata.map(|data| {
+                        csl::PoolMetadata::new(
+                            &csl::URL::new(data.url).unwrap(),
+                            &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
+                        )
+                    }),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_register_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        register_stake: RegisterStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_registration(
+                &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash).unwrap(),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_delegate_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        delegate_stake: DelegateStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_delegation(
+                &csl::StakeDelegation::new(
+                    &csl::Credential::from_keyhash(
+                        &csl::Ed25519KeyHash::from_hex(&delegate_stake.stake_key_hash).unwrap(),
+                    ),
+                    &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id).unwrap(),
+                ),
+            ))
+            .unwrap();
+    }
+
+    fn add_deregister_stake_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        deregister_stake: DeregisterStake,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_stake_deregistration(
+                &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash).unwrap(),
+                )),
+            ))
+            .unwrap();
+    }
+
+    fn add_retire_pool_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        retire_pool: RetirePool,
+    ) {
+        certificates_builder
+            .add(&csl::Certificate::new_pool_retirement(
+                &csl::PoolRetirement::new(
+                    &csl::Ed25519KeyHash::from_hex(&retire_pool.pool_id).unwrap(),
+                    retire_pool.epoch,
+                ),
+            ))
+            .unwrap();
     }
 
     fn add_invalid_before(&mut self, invalid_before: u64) {

@@ -44,7 +44,12 @@ pub fn serialize_tx_body(
         &mut mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
     );
+    MeshTxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone());
     MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone());
+    MeshTxBuilderCore::add_all_certificates(
+        &mut mesh_csl,
+        mesh_tx_builder_body.certificates.clone(),
+    );
     MeshTxBuilderCore::add_validity_range(
         &mut mesh_csl,
         mesh_tx_builder_body.validity_range.clone(),
@@ -138,9 +143,11 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 collaterals: vec![],
                 required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
+                withdrawals: vec![],
                 mints: vec![],
                 change_address: "".to_string(),
                 change_datum: None,
+                certificates: vec![],
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -194,6 +201,22 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
+    fn add_all_withdrawals(mesh_csl: &mut MeshCSL, withdrawals: Vec<Withdrawal>) {
+        for withdrawal in withdrawals {
+            match withdrawal {
+                Withdrawal::PubKeyWithdrawal(pub_key_withdrawal) => {
+                    mesh_csl.add_pub_key_withdrawal(pub_key_withdrawal)
+                }
+                Withdrawal::PlutusScriptWithdrawal(plutus_script_withdrawal) => {
+                    mesh_csl.add_plutus_withdrawal(plutus_script_withdrawal)
+                }
+            }
+        }
+        mesh_csl
+            .tx_builder
+            .set_withdrawals_builder(&mesh_csl.tx_withdrawals_builder);
+    }
+
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) {
         let mut mint_builder = csl::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
@@ -204,6 +227,30 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
             };
         }
         mesh_csl.tx_builder.set_mint_builder(&mint_builder)
+    }
+
+    fn add_all_certificates(mesh_csl: &mut MeshCSL, certificates: Vec<Certificate>) {
+        let mut certificates_builder = csl::CertificatesBuilder::new();
+        for cert in certificates {
+            match cert {
+                Certificate::RegisterPool(register_pool) => {
+                    mesh_csl.add_register_pool_cert(&mut certificates_builder, register_pool)
+                }
+                Certificate::RegisterStake(register_stake) => {
+                    mesh_csl.add_register_stake_cert(&mut certificates_builder, register_stake)
+                }
+                Certificate::DelegateStake(delegate_stake) => {
+                    mesh_csl.add_delegate_stake_cert(&mut certificates_builder, delegate_stake)
+                }
+                Certificate::DeregisterStake(deregister_stake) => {
+                    mesh_csl.add_deregister_stake_cert(&mut certificates_builder, deregister_stake)
+                }
+                Certificate::RetirePool(retire_pool) => {
+                    mesh_csl.add_retire_pool_cert(&mut certificates_builder, retire_pool)
+                }
+            }
+        }
+        mesh_csl.tx_builder.set_certs_builder(&certificates_builder)
     }
 
     fn add_validity_range(mesh_csl: &mut MeshCSL, validity_range: ValidityRange) {

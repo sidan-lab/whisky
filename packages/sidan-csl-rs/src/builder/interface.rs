@@ -78,6 +78,16 @@ pub trait IMeshTxBuilderCore {
 
     /// ## Internal method
     ///
+    /// Add multiple withdrawals to the MeshTxBuilder instance
+    ///
+    /// ## Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `withdrawals` - A vector of withdrawals
+    fn add_all_withdrawals(mesh_csl: &mut MeshCSL, withdrawals: Vec<Withdrawal>);
+
+    /// ## Internal method
+    ///
     /// Add multiple mints to the MeshTxBuilder instance
     ///
     /// ### Arguments
@@ -85,6 +95,16 @@ pub trait IMeshTxBuilderCore {
     /// * `mesh_csl` - The MeshCSL instance
     /// * `mints` - A vector of mints
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>);
+
+    /// ## Internal method
+    ///
+    /// Add multiple certificates to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `certificates` - A vector of certificates
+    fn add_all_certificates(mesh_csl: &mut MeshCSL, certificates: Vec<Certificate>);
 
     /// ## Internal method
     ///
