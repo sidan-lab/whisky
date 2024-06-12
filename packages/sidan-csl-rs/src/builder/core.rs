@@ -34,31 +34,10 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
 ///
 /// * `String` - the built transaction hex
 pub fn serialize_tx_body(
-    mut mesh_tx_builder_body: MeshTxBuilderBody,
+    mesh_tx_builder_body: MeshTxBuilderBody,
     params: Option<Protocol>,
 ) -> String {
     let mut mesh_csl = MeshCSL::new(params);
-
-    mesh_tx_builder_body
-        .mints
-        .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
-
-    mesh_tx_builder_body.inputs.sort_by(|a, b| {
-        let tx_in_data_a: &TxInParameter = match a {
-            TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
-            TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
-        };
-
-        let tx_in_data_b: &TxInParameter = match b {
-            TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
-            TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
-        };
-
-        tx_in_data_a
-            .tx_hash
-            .cmp(&tx_in_data_b.tx_hash)
-            .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
-    });
 
     MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone());
     MeshTxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone());
@@ -178,7 +157,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 },
                 signing_key: JsVecString::new(),
             },
-            tx_evaluation_multiplier_percentage: 10,
+            tx_evaluation_multiplier_percentage: 110,
         }
     }
 
