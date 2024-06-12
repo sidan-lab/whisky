@@ -74,14 +74,16 @@ impl IMeshCSL for MeshCSL {
     }
 
     fn add_tx_in(&mut self, input: PubKeyTxIn) {
-        let _ = self.tx_inputs_builder.add_regular_input(
-            &csl::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
-                input.tx_in.tx_index,
-            ),
-            &to_value(&input.tx_in.amount.unwrap()),
-        );
+        self.tx_inputs_builder
+            .add_regular_input(
+                &csl::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
+                    input.tx_in.tx_index,
+                ),
+                &to_value(&input.tx_in.amount.unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_script_tx_in(&mut self, input: ScriptTxIn) {
@@ -229,14 +231,16 @@ impl IMeshCSL for MeshCSL {
         collateral_builder: &mut csl::TxInputsBuilder,
         collateral: PubKeyTxIn,
     ) {
-        let _ = collateral_builder.add_regular_input(
-            &csl::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
-            &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
-                collateral.tx_in.tx_index,
-            ),
-            &to_value(&collateral.tx_in.amount.unwrap()),
-        );
+        collateral_builder
+            .add_regular_input(
+                &csl::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
+                    collateral.tx_in.tx_index,
+                ),
+                &to_value(&collateral.tx_in.amount.unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_reference_input(&mut self, ref_input: RefTxIn) {
@@ -248,8 +252,7 @@ impl IMeshCSL for MeshCSL {
     }
 
     fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) {
-        let _ = self
-            .tx_withdrawals_builder
+        self.tx_withdrawals_builder
             .add(
                 &csl::RewardAddress::from_address(
                     &csl::Address::from_bech32(&withdrawal.address).unwrap(),
@@ -308,8 +311,7 @@ impl IMeshCSL for MeshCSL {
             ),
         );
 
-        let _ = self
-            .tx_withdrawals_builder
+        self.tx_withdrawals_builder
             .add_with_plutus_witness(
                 &csl::RewardAddress::from_address(
                     &csl::Address::from_bech32(&withdrawal.address).unwrap(),
@@ -370,26 +372,30 @@ impl IMeshCSL for MeshCSL {
             }
         };
 
-        let _ = mint_builder.add_asset(
-            &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-            &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-        );
+        mint_builder
+            .add_asset(
+                &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
+                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+            )
+            .unwrap();
     }
 
     fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem) {
         let script_info = mint.script_source.unwrap();
-        let _ = match script_info {
-            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
-                &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
-                    &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
-                )),
-                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-            ),
-            ScriptSource::InlineScriptSource(_) => Err(csl::JsError::from_str(
-                "Native scripts cannot be referenced",
-            )),
+        match script_info {
+            ScriptSource::ProvidedScriptSource(script) => mint_builder
+                .add_asset(
+                    &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
+                        &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
+                    )),
+                    &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
+                    &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+                )
+                .unwrap(),
+            ScriptSource::InlineScriptSource(_) => {} // Err(csl::JsError::from_str(
+                                                      //     "Native scripts cannot be referenced",
+                                                      // )),
         };
     }
 
