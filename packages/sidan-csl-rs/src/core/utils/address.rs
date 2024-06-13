@@ -49,10 +49,16 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
                 .to_keyhash()
                 .map(|stake_key_hash| stake_key_hash.to_hex());
 
+            let csl_stake_key_script_hash = address
+                .stake_cred()
+                .to_scripthash()
+                .map(|stake_key_script_hash| stake_key_script_hash.to_hex());
+
             SerializedAddress::new(
                 csl_key_hash.unwrap_or("".to_string()),
                 csl_script_hash.unwrap_or("".to_string()),
                 csl_stake_key_hash.unwrap_or("".to_string()),
+                csl_stake_key_script_hash.unwrap_or("".to_string()),
             )
         }
         None => {
@@ -74,6 +80,7 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
             SerializedAddress::new(
                 csl_key_hash.unwrap_or("".to_string()),
                 csl_script_hash.unwrap_or("".to_string()),
+                "".to_string(),
                 "".to_string(),
             )
         }
@@ -115,14 +122,33 @@ pub fn parse_plutus_address_obj_to_bech32(plutus_data_address_obj: &str, network
             ["bytes"]
             .as_str()
             .unwrap();
-        csl::BaseAddress::new(
-            network_id,
-            &csl_payment_credential,
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(stake_key_hash).unwrap()),
-        )
-        .to_address()
-        .to_bech32(None)
-        .unwrap()
+        if plutus_data_stake_key_obj["fields"][0]["fields"][0]["constructor"]
+            .as_u64()
+            .unwrap()
+            == 0
+        {
+            csl::BaseAddress::new(
+                network_id,
+                &csl_payment_credential,
+                &csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(stake_key_hash).unwrap(),
+                ),
+            )
+            .to_address()
+            .to_bech32(None)
+            .unwrap()
+        } else {
+            csl::BaseAddress::new(
+                network_id,
+                &csl_payment_credential,
+                &csl::Credential::from_scripthash(
+                    &csl::ScriptHash::from_hex(stake_key_hash).unwrap(),
+                ),
+            )
+            .to_address()
+            .to_bech32(None)
+            .unwrap()
+        }
     } else {
         csl::EnterpriseAddress::new(network_id, &csl_payment_credential)
             .to_address()
