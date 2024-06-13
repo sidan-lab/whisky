@@ -3,20 +3,44 @@ use serde_json::{from_str, Value};
 use crate::{csl, model::*, *};
 
 #[wasm_bindgen]
-pub fn script_to_address(
+pub fn wasm_script_to_address(
     network_id: u8,
     script_hash: String,
     stake_hash: Option<String>,
+    is_script_stake_key: bool,
 ) -> String {
     match stake_hash {
-        Some(stake) => csl::BaseAddress::new(
-            network_id,
-            &csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(&script_hash).unwrap()),
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(&stake).unwrap()),
-        )
-        .to_address()
-        .to_bech32(None)
-        .unwrap(),
+        Some(stake) => {
+            script_to_address(network_id, script_hash, Some((stake, is_script_stake_key)))
+        }
+        None => script_to_address(network_id, script_hash, None),
+    }
+}
+
+pub fn script_to_address(
+    network_id: u8,
+    script_hash: String,
+    stake_hash: Option<(String, bool)>,
+) -> String {
+    match stake_hash {
+        Some((stake, is_script)) => {
+            let stake_cred = if is_script {
+                csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(&stake).unwrap())
+            } else {
+                csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(&stake).unwrap())
+            };
+
+            csl::BaseAddress::new(
+                network_id,
+                &csl::Credential::from_scripthash(
+                    &csl::ScriptHash::from_hex(&script_hash).unwrap(),
+                ),
+                &stake_cred,
+            )
+            .to_address()
+            .to_bech32(None)
+            .unwrap()
+        }
 
         None => csl::EnterpriseAddress::new(
             network_id,
