@@ -16,10 +16,27 @@ mod address_tests {
         let base_addr = script_to_address(
             0,
             "e55a6e7c9f4e96692a3c23a56f126911cc70a29d2e2ac967dc644432".to_string(),
-            Some("6d913965402b012050e09f12012c533e6c33678d1c5ed2154b328d25".to_string()),
+            Some((
+                "6d913965402b012050e09f12012c533e6c33678d1c5ed2154b328d25".to_string(),
+                false,
+            )),
         );
 
         assert!(base_addr == "addr_test1zrj45mnuna8fv6f28s362mcjdygucu9zn5hz4jt8m3jygvndjyuk2sptqys9pcylzgqjc5e7dsek0rgutmfp2jej35jseqau4y");
+    }
+
+    #[test]
+    fn test_script_to_address_script_stake_key() {
+        let base_addr = script_to_address(
+            0,
+            "c12e891c8e995cfa5d1547ace30413cad298827a19fbb8ea49b46469".to_string(),
+            Some((
+                "867c8b572e5ac8f0c14aa7417cb9caec9d1ff50e994f772eab2d69f4".to_string(),
+                true,
+            )),
+        );
+
+        assert!(base_addr == "addr_test1xrqjazgu36v4e7jaz4r6eccyz09d9xyz0gvlhw82fx6xg6vx0j94wtj6ercvzj48g97tnjhvn50l2r5efamja2edd86ql04h5v");
     }
 
     #[test]
