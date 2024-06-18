@@ -1,8 +1,10 @@
 use async_trait::async_trait;
+use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
-        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams, Protocol, PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal
+        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams, Protocol,
+        PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal,
     },
 };
 
@@ -70,7 +72,10 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+    async fn complete(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError>;
 
     /// ## Transaction building method
     ///
@@ -83,7 +88,10 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn complete_sync(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+    fn complete_sync(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError>;
 
     /// ## Transaction building method
     ///
@@ -722,5 +730,5 @@ pub trait IMeshTxBuilder {
     ///
     /// * `extra_inputs` - A vector of extra inputs provided
     /// * `threshold` - The threshold as configured
-    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64);
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> Result<(), JsError>;
 }
