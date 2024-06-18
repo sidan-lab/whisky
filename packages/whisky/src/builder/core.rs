@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
     builder::{serialize_tx_body, IMeshTxBuilderCore, MeshTxBuilderCore},
     core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
@@ -51,8 +52,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
         })
     }
 
-    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
-        self.complete_sync(customized_tx);
+    async fn complete(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError> {
+        self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
                 let tx_evaluation_result = evaluator
@@ -72,13 +76,16 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.complete_sync(None)
     }
 
-    fn complete_sync(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self {
+    fn complete_sync(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError> {
         if customized_tx.is_some() {
             self.core.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
             self.queue_all_last_item();
             if !self.extra_inputs.is_empty() {
-                self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold);
+                self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold)?;
             }
         }
 
@@ -107,11 +114,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let tx_hex = serialize_tx_body(
             self.core.mesh_tx_builder_body.clone(),
             self.protocol_params.clone(),
-        );
+        )?;
         self.core.mesh_csl.tx_hex = tx_hex;
         self.core.mesh_csl.tx_builder = build_tx_builder(None);
         self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
-        self
+        Ok(self)
     }
 
     fn complete_signing(&mut self) -> String {
@@ -761,7 +768,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
     }
 
-    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) {
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> Result<(), JsError> {
         let mut required_assets = Value::new();
 
         for output in &self.core.mesh_tx_builder_body.outputs {
@@ -804,7 +811,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     amount: Some(input.output.amount.clone()),
                     address: Some(input.output.address.clone()),
                 },
-            });
+            })?;
             self.core
                 .mesh_tx_builder_body
                 .inputs
@@ -818,5 +825,6 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     },
                 }));
         }
+        Ok(())
     }
 }
