@@ -1,57 +1,72 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
+use cardano_serialization_lib::JsError;
+
 use crate::{csl, model::*};
 
 use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
 
 pub trait IMeshCSL {
     fn new(params: Option<Protocol>) -> Self;
-    fn add_tx_in(&mut self, input: PubKeyTxIn);
-    fn add_script_tx_in(&mut self, input: ScriptTxIn);
-    fn add_output(&mut self, output: Output);
+    fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError>;
+    fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError>;
+    fn add_output(&mut self, output: Output) -> Result<(), JsError>;
     fn add_collateral(
         &mut self,
         collateral_builder: &mut csl::TxInputsBuilder,
         collateral: PubKeyTxIn,
-    );
-    fn add_reference_input(&mut self, ref_input: RefTxIn);
-    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal);
-    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal);
-    fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64);
-    fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem);
+    ) -> Result<(), JsError>;
+    fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError>;
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError>;
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError>;
+    fn add_plutus_mint(
+        &mut self,
+        mint_builder: &mut csl::MintBuilder,
+        mint: MintItem,
+        index: u64,
+    ) -> Result<(), JsError>;
+    fn add_native_mint(
+        &mut self,
+        mint_builder: &mut csl::MintBuilder,
+        mint: MintItem,
+    ) -> Result<(), JsError>;
     fn add_register_pool_cert(
         &mut self,
         certificate_builder: &mut csl::CertificatesBuilder,
         register_pool: RegisterPool,
-    );
+    ) -> Result<(), JsError>;
     fn add_register_stake_cert(
         &mut self,
         certificate_builder: &mut csl::CertificatesBuilder,
         register_stake: RegisterStake,
-    );
+    ) -> Result<(), JsError>;
     fn add_delegate_stake_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         delegate_stake: DelegateStake,
-    );
+    ) -> Result<(), JsError>;
     fn add_deregister_stake_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         deregister_stake: DeregisterStake,
-    );
+    ) -> Result<(), JsError>;
     fn add_retire_pool_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         retire_pool: RetirePool,
-    );
+    ) -> Result<(), JsError>;
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
-    fn add_change(&mut self, change_address: String, change_datum: Option<Datum>);
+    fn add_change(
+        &mut self,
+        change_address: String,
+        change_datum: Option<Datum>,
+    ) -> Result<(), JsError>;
     fn add_signing_keys(&mut self, signing_keys: JsVecString);
-    fn add_required_signature(&mut self, pub_key_hash: String);
-    fn add_metadata(&mut self, metadata: Metadata);
-    fn add_script_hash(&mut self);
-    fn build_tx(&mut self) -> String;
+    fn add_required_signature(&mut self, pub_key_hash: String) -> Result<(), JsError>;
+    fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError>;
+    fn add_script_hash(&mut self) -> Result<(), JsError>;
+    fn build_tx(&mut self) -> Result<String, JsError>;
 }
 
 pub struct MeshCSL {
@@ -71,31 +86,29 @@ impl IMeshCSL for MeshCSL {
         }
     }
 
-    fn add_tx_in(&mut self, input: PubKeyTxIn) {
-        self.tx_inputs_builder
-            .add_regular_input(
-                &csl::Address::from_bech32(&input.tx_in.address.unwrap()).unwrap(),
-                &csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
-                    input.tx_in.tx_index,
-                ),
-                &to_value(&input.tx_in.amount.unwrap()),
-            )
-            .unwrap();
+    fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError> {
+        self.tx_inputs_builder.add_regular_input(
+            &csl::Address::from_bech32(&input.tx_in.address.unwrap())?,
+            &csl::TransactionInput::new(
+                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                input.tx_in.tx_index,
+            ),
+            &to_value(&input.tx_in.amount.unwrap()),
+        )?;
+        Ok(())
     }
 
-    fn add_script_tx_in(&mut self, input: ScriptTxIn) {
+    fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError> {
         let datum_source = input.script_tx_in.datum_source.unwrap();
         let script_source = input.script_tx_in.script_source.unwrap();
         let redeemer = input.script_tx_in.redeemer.unwrap();
         let csl_datum: csl::DatumSource = match datum_source {
             DatumSource::ProvidedDatumSource(datum) => csl::DatumSource::new(
-                &csl::PlutusData::from_json(&datum.data, csl::PlutusDatumSchema::DetailedSchema)
-                    .unwrap(),
+                &csl::PlutusData::from_json(&datum.data, csl::PlutusDatumSchema::DetailedSchema)?,
             ),
             DatumSource::InlineDatumSource(datum) => {
                 let ref_input = csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&datum.tx_hash).unwrap(),
+                    &csl::TransactionHash::from_hex(&datum.tx_hash)?,
                     datum.tx_index,
                 );
                 csl::DatumSource::new_ref_input(&ref_input)
@@ -109,13 +122,10 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
-                csl::PlutusScriptSource::new(
-                    &csl::PlutusScript::from_hex_with_version(
-                        &script.script_cbor,
-                        &language_version,
-                    )
-                    .unwrap(),
-                )
+                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
+                    &script.script_cbor,
+                    &language_version,
+                )?)
             }
             ScriptSource::InlineScriptSource(script) => {
                 let language_version: csl::Language = match script.language_version {
@@ -124,9 +134,9 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
+                    &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
                         script.tx_index,
                     ),
                     &language_version,
@@ -138,8 +148,7 @@ impl IMeshCSL for MeshCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)
-                .unwrap(),
+            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
@@ -148,16 +157,17 @@ impl IMeshCSL for MeshCSL {
         self.tx_inputs_builder.add_plutus_script_input(
             &csl::PlutusWitness::new_with_ref(&csl_script, &csl_datum, &csl_redeemer),
             &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).unwrap(),
+                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                 input.tx_in.tx_index,
             ),
             &to_value(&input.tx_in.amount.unwrap()),
-        )
+        );
+        Ok(())
     }
 
-    fn add_output(&mut self, output: Output) {
+    fn add_output(&mut self, output: Output) -> Result<(), JsError> {
         let mut output_builder = csl::TransactionOutputBuilder::new()
-            .with_address(&csl::Address::from_bech32(&output.address).unwrap());
+            .with_address(&csl::Address::from_bech32(&output.address)?);
         if output.datum.is_some() {
             let datum = output.datum.unwrap();
 
@@ -167,18 +177,14 @@ impl IMeshCSL for MeshCSL {
                         &csl::PlutusData::from_json(
                             &datum.data,
                             csl::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
+                        )?,
                     ));
                 }
                 "Inline" => {
-                    output_builder = output_builder.with_plutus_data(
-                        &csl::PlutusData::from_json(
-                            &datum.data,
-                            csl::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
-                    );
+                    output_builder = output_builder.with_plutus_data(&csl::PlutusData::from_json(
+                        &datum.data,
+                        csl::PlutusDatumSchema::DetailedSchema,
+                    )?);
                 }
                 _ => {}
             };
@@ -195,73 +201,67 @@ impl IMeshCSL for MeshCSL {
                 &csl::PlutusScript::from_hex_with_version(
                     &output_script.script_cbor,
                     &language_version,
-                )
-                .unwrap(),
+                )?,
             ))
         }
 
         let tx_value = to_value(&output.amount);
-        let amount_builder = output_builder.next().unwrap();
+        let amount_builder = output_builder.next()?;
         let built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
             if tx_value.coin().is_zero() {
                 amount_builder
                     .with_asset_and_min_required_coin_by_utxo_cost(
                         &tx_value.multiasset().unwrap(),
                         &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
-                    )
-                    .unwrap()
-                    .build()
-                    .unwrap()
+                    )?
+                    .build()?
             } else {
                 amount_builder
                     .with_coin_and_asset(&tx_value.coin(), &tx_value.multiasset().unwrap())
-                    .build()
-                    .unwrap()
+                    .build()?
             }
         } else {
-            amount_builder.with_coin(&tx_value.coin()).build().unwrap()
+            amount_builder.with_coin(&tx_value.coin()).build()?
         };
-        self.tx_builder.add_output(&built_output).unwrap();
+        self.tx_builder.add_output(&built_output)?;
+        Ok(())
     }
 
     fn add_collateral(
         &mut self,
         collateral_builder: &mut csl::TxInputsBuilder,
         collateral: PubKeyTxIn,
-    ) {
-        collateral_builder
-            .add_regular_input(
-                &csl::Address::from_bech32(&collateral.tx_in.address.unwrap()).unwrap(),
-                &csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash).unwrap(),
-                    collateral.tx_in.tx_index,
-                ),
-                &to_value(&collateral.tx_in.amount.unwrap()),
-            )
-            .unwrap();
+    ) -> Result<(), JsError> {
+        collateral_builder.add_regular_input(
+            &csl::Address::from_bech32(&collateral.tx_in.address.unwrap())?,
+            &csl::TransactionInput::new(
+                &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash)?,
+                collateral.tx_in.tx_index,
+            ),
+            &to_value(&collateral.tx_in.amount.unwrap()),
+        )?;
+        Ok(())
     }
 
-    fn add_reference_input(&mut self, ref_input: RefTxIn) {
+    fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError> {
         let csl_ref_input = csl::TransactionInput::new(
-            &csl::TransactionHash::from_hex(&ref_input.tx_hash).unwrap(),
+            &csl::TransactionHash::from_hex(&ref_input.tx_hash)?,
             ref_input.tx_index,
         );
         self.tx_builder.add_reference_input(&csl_ref_input);
+        Ok(())
     }
 
-    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) {
-        self.tx_withdrawals_builder
-            .add(
-                &csl::RewardAddress::from_address(
-                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
-                )
+    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError> {
+        self.tx_withdrawals_builder.add(
+            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
                 .unwrap(),
-                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
-            )
-            .unwrap();
+            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
+        )?;
+        Ok(())
     }
 
-    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) {
+    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError> {
         let script_source = withdrawal.script_source.unwrap();
         let redeemer = withdrawal.redeemer.unwrap();
 
@@ -272,13 +272,10 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
-                csl::PlutusScriptSource::new(
-                    &csl::PlutusScript::from_hex_with_version(
-                        &script.script_cbor,
-                        &language_version,
-                    )
-                    .unwrap(),
-                )
+                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
+                    &script.script_cbor,
+                    &language_version,
+                )?)
             }
             ScriptSource::InlineScriptSource(script) => {
                 let language_version: csl::Language = match script.language_version {
@@ -287,9 +284,9 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.spending_script_hash).unwrap(),
+                    &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
                         script.tx_index,
                     ),
                     &language_version,
@@ -301,27 +298,28 @@ impl IMeshCSL for MeshCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)
-                .unwrap(),
+            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
             ),
         );
 
-        self.tx_withdrawals_builder
-            .add_with_plutus_witness(
-                &csl::RewardAddress::from_address(
-                    &csl::Address::from_bech32(&withdrawal.address).unwrap(),
-                )
+        self.tx_withdrawals_builder.add_with_plutus_witness(
+            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
                 .unwrap(),
-                &csl::BigNum::from_str(&withdrawal.coin.to_string()).unwrap(),
-                &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
-            )
-            .unwrap();
+            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
+            &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
+        )?;
+        Ok(())
     }
 
-    fn add_plutus_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem, index: u64) {
+    fn add_plutus_mint(
+        &mut self,
+        mint_builder: &mut csl::MintBuilder,
+        mint: MintItem,
+        index: u64,
+    ) -> Result<(), JsError> {
         let redeemer_info = mint.redeemer.unwrap();
         let mint_redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_mint(),
@@ -329,8 +327,7 @@ impl IMeshCSL for MeshCSL {
             &csl::PlutusData::from_json(
                 &redeemer_info.data,
                 csl::PlutusDatumSchema::DetailedSchema,
-            )
-            .unwrap(),
+            )?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer_info.ex_units.mem),
                 &to_bignum(redeemer_info.ex_units.steps),
@@ -345,9 +342,9 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(mint.policy_id.as_str()).unwrap(),
+                    &csl::ScriptHash::from_hex(mint.policy_id.as_str())?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash).unwrap(),
+                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
                         script.tx_index,
                     ),
                     &language_version,
@@ -360,48 +357,47 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
-                csl::PlutusScriptSource::new(
-                    &csl::PlutusScript::from_hex_with_version(
-                        script.script_cbor.as_str(),
-                        &language_version,
-                    )
-                    .unwrap(),
-                )
+                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
+                    script.script_cbor.as_str(),
+                    &language_version,
+                )?)
             }
         };
 
-        mint_builder
-            .add_asset(
-                &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-            )
-            .unwrap();
+        mint_builder.add_asset(
+            &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
+            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap())?,
+            &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+        )?;
+        Ok(())
     }
 
-    fn add_native_mint(&mut self, mint_builder: &mut csl::MintBuilder, mint: MintItem) {
+    fn add_native_mint(
+        &mut self,
+        mint_builder: &mut csl::MintBuilder,
+        mint: MintItem,
+    ) -> Result<(), JsError> {
         let script_info = mint.script_source.unwrap();
         match script_info {
-            ScriptSource::ProvidedScriptSource(script) => mint_builder
-                .add_asset(
-                    &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
-                        &csl::NativeScript::from_hex(&script.script_cbor).unwrap(),
-                    )),
-                    &csl::AssetName::new(hex::decode(mint.asset_name).unwrap()).unwrap(),
-                    &csl::Int::new_i32(mint.amount.try_into().unwrap()),
-                )
-                .unwrap(),
+            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
+                &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
+                    &csl::NativeScript::from_hex(&script.script_cbor)?,
+                )),
+                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap())?,
+                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+            )?,
             ScriptSource::InlineScriptSource(_) => {} // Err(csl::JsError::from_str(
                                                       //     "Native scripts cannot be referenced",
                                                       // )),
         };
+        Ok(())
     }
 
     fn add_register_pool_cert(
         &mut self,
         certificate_builder: &mut csl::CertificatesBuilder,
         register_pool: RegisterPool,
-    ) {
+    ) -> Result<(), JsError> {
         let mut relays = csl::Relays::new();
         for relay in register_pool.pool_params.relays {
             match relay {
@@ -430,12 +426,12 @@ impl IMeshCSL for MeshCSL {
                 Relay::SingleHostName(single_host_name_relay) => relays.add(
                     &csl::Relay::new_single_host_name(&csl::SingleHostName::new(
                         single_host_name_relay.port,
-                        &csl::DNSRecordAorAAAA::new(single_host_name_relay.domain_name).unwrap(),
+                        &csl::DNSRecordAorAAAA::new(single_host_name_relay.domain_name)?,
                     )),
                 ),
                 Relay::MultiHostName(multi_host_name_relay) => {
                     relays.add(&csl::Relay::new_multi_host_name(&csl::MultiHostName::new(
-                        &csl::DNSRecordSRV::new(multi_host_name_relay.domain_name).unwrap(),
+                        &csl::DNSRecordSRV::new(multi_host_name_relay.domain_name)?,
                     )))
                 }
             }
@@ -443,98 +439,90 @@ impl IMeshCSL for MeshCSL {
 
         let mut pool_owners = csl::Ed25519KeyHashes::new();
         for owner in register_pool.pool_params.owners {
-            pool_owners.add(&csl::Ed25519KeyHash::from_hex(&owner).unwrap());
+            pool_owners.add(&csl::Ed25519KeyHash::from_hex(&owner)?);
         }
 
-        certificate_builder
-            .add(&csl::Certificate::new_pool_registration(
-                &csl::PoolRegistration::new(&csl::PoolParams::new(
-                    &csl::Ed25519KeyHash::from_hex(&register_pool.pool_params.operator).unwrap(),
-                    &csl::VRFKeyHash::from_hex(&register_pool.pool_params.vrf_key_hash).unwrap(),
-                    &csl::BigNum::from_str(&register_pool.pool_params.pledge).unwrap(),
-                    &csl::BigNum::from_str(&register_pool.pool_params.cost).unwrap(),
-                    &csl::UnitInterval::new(
-                        &csl::BigNum::from_str(&register_pool.pool_params.margin.0.to_string())
-                            .unwrap(),
-                        &csl::BigNum::from_str(&register_pool.pool_params.margin.1.to_string())
-                            .unwrap(),
-                    ),
-                    &csl::RewardAddress::from_address(
-                        &csl::Address::from_bech32(&register_pool.pool_params.reward_address)
-                            .unwrap(),
+        certificate_builder.add(&csl::Certificate::new_pool_registration(
+            &csl::PoolRegistration::new(&csl::PoolParams::new(
+                &csl::Ed25519KeyHash::from_hex(&register_pool.pool_params.operator)?,
+                &csl::VRFKeyHash::from_hex(&register_pool.pool_params.vrf_key_hash)?,
+                &csl::BigNum::from_str(&register_pool.pool_params.pledge)?,
+                &csl::BigNum::from_str(&register_pool.pool_params.cost)?,
+                &csl::UnitInterval::new(
+                    &csl::BigNum::from_str(&register_pool.pool_params.margin.0.to_string())?,
+                    &csl::BigNum::from_str(&register_pool.pool_params.margin.1.to_string())?,
+                ),
+                &csl::RewardAddress::from_address(&csl::Address::from_bech32(
+                    &register_pool.pool_params.reward_address,
+                )?)
+                .unwrap(),
+                &pool_owners,
+                &relays,
+                register_pool.pool_params.metadata.map(|data| {
+                    csl::PoolMetadata::new(
+                        &csl::URL::new(data.url).unwrap(),
+                        &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
                     )
-                    .unwrap(),
-                    &pool_owners,
-                    &relays,
-                    register_pool.pool_params.metadata.map(|data| {
-                        csl::PoolMetadata::new(
-                            &csl::URL::new(data.url).unwrap(),
-                            &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
-                        )
-                    }),
-                )),
-            ))
-            .unwrap();
+                }),
+            )),
+        ))?;
+        Ok(())
     }
 
     fn add_register_stake_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         register_stake: RegisterStake,
-    ) {
-        certificates_builder
-            .add(&csl::Certificate::new_stake_registration(
-                &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
-                    &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash).unwrap(),
-                )),
-            ))
-            .unwrap();
+    ) -> Result<(), JsError> {
+        certificates_builder.add(&csl::Certificate::new_stake_registration(
+            &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
+                &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash)?,
+            )),
+        ))?;
+        Ok(())
     }
 
     fn add_delegate_stake_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         delegate_stake: DelegateStake,
-    ) {
-        certificates_builder
-            .add(&csl::Certificate::new_stake_delegation(
-                &csl::StakeDelegation::new(
-                    &csl::Credential::from_keyhash(
-                        &csl::Ed25519KeyHash::from_hex(&delegate_stake.stake_key_hash).unwrap(),
-                    ),
-                    &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id).unwrap(),
-                ),
-            ))
-            .unwrap();
+    ) -> Result<(), JsError> {
+        certificates_builder.add(&csl::Certificate::new_stake_delegation(
+            &csl::StakeDelegation::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &delegate_stake.stake_key_hash,
+                )?),
+                &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id)?,
+            ),
+        ))?;
+        Ok(())
     }
 
     fn add_deregister_stake_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         deregister_stake: DeregisterStake,
-    ) {
-        certificates_builder
-            .add(&csl::Certificate::new_stake_deregistration(
-                &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
-                    &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash).unwrap(),
-                )),
-            ))
-            .unwrap();
+    ) -> Result<(), JsError> {
+        certificates_builder.add(&csl::Certificate::new_stake_deregistration(
+            &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
+                &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash)?,
+            )),
+        ))?;
+        Ok(())
     }
 
     fn add_retire_pool_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         retire_pool: RetirePool,
-    ) {
-        certificates_builder
-            .add(&csl::Certificate::new_pool_retirement(
-                &csl::PoolRetirement::new(
-                    &csl::Ed25519KeyHash::from_hex(&retire_pool.pool_id).unwrap(),
-                    retire_pool.epoch,
-                ),
-            ))
-            .unwrap();
+    ) -> Result<(), JsError> {
+        certificates_builder.add(&csl::Certificate::new_pool_retirement(
+            &csl::PoolRetirement::new(
+                &csl::Ed25519KeyHash::from_hex(&retire_pool.pool_id)?,
+                retire_pool.epoch,
+            ),
+        ))?;
+        Ok(())
     }
 
     fn add_invalid_before(&mut self, invalid_before: u64) {
@@ -546,55 +534,53 @@ impl IMeshCSL for MeshCSL {
         self.tx_builder
             .set_ttl_bignum(&to_bignum(invalid_hereafter));
     }
-    fn add_change(&mut self, change_address: String, change_datum: Option<Datum>) {
+
+    fn add_change(
+        &mut self,
+        change_address: String,
+        change_datum: Option<Datum>,
+    ) -> Result<(), JsError> {
         if let Some(change_datum) = change_datum {
-            self.tx_builder
-                .add_change_if_needed_with_datum(
-                    &csl::Address::from_bech32(&change_address).unwrap(),
-                    &csl::OutputDatum::new_data(
-                        &csl::PlutusData::from_json(
-                            &change_datum.data,
-                            csl::PlutusDatumSchema::DetailedSchema,
-                        )
-                        .unwrap(),
-                    ),
-                )
-                .unwrap();
+            self.tx_builder.add_change_if_needed_with_datum(
+                &csl::Address::from_bech32(&change_address)?,
+                &csl::OutputDatum::new_data(&csl::PlutusData::from_json(
+                    &change_datum.data,
+                    csl::PlutusDatumSchema::DetailedSchema,
+                )?),
+            )?;
         } else {
             self.tx_builder
-                .add_change_if_needed(&csl::Address::from_bech32(&change_address).unwrap())
-                .unwrap();
+                .add_change_if_needed(&csl::Address::from_bech32(&change_address)?)?;
         }
+        Ok(())
     }
 
     fn add_signing_keys(&mut self, signing_keys: JsVecString) {
         self.tx_hex = sign_transaction(self.tx_hex.to_string(), signing_keys);
     }
 
-    fn add_required_signature(&mut self, pub_key_hash: String) {
+    fn add_required_signature(&mut self, pub_key_hash: String) -> Result<(), JsError> {
         self.tx_builder
-            .add_required_signer(&csl::Ed25519KeyHash::from_hex(&pub_key_hash).unwrap())
+            .add_required_signer(&csl::Ed25519KeyHash::from_hex(&pub_key_hash)?);
+        Ok(())
     }
 
-    fn add_metadata(&mut self, metadata: Metadata) {
+    fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError> {
         self.tx_builder
-            .add_json_metadatum(
-                &csl::BigNum::from_str(&metadata.tag).unwrap(),
-                metadata.metadata,
-            )
-            .unwrap()
+            .add_json_metadatum(&csl::BigNum::from_str(&metadata.tag)?, metadata.metadata)?;
+        Ok(())
     }
 
-    fn add_script_hash(&mut self) {
+    fn add_script_hash(&mut self) -> Result<(), JsError> {
         self.tx_builder
-            .calc_script_data_hash(&csl::TxBuilderConstants::plutus_vasil_cost_models())
-            .unwrap();
+            .calc_script_data_hash(&csl::TxBuilderConstants::plutus_vasil_cost_models())?;
+        Ok(())
     }
 
-    fn build_tx(&mut self) -> String {
+    fn build_tx(&mut self) -> Result<String, JsError> {
         let tx = self.tx_builder.build_tx().unwrap();
         self.tx_hex = tx.to_hex();
-        self.tx_hex.to_string()
+        Ok(self.tx_hex.to_string())
     }
 }
 

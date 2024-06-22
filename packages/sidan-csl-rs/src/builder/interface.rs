@@ -1,3 +1,5 @@
+use cardano_serialization_lib::JsError;
+
 use crate::{core::builder::MeshCSL, model::*};
 
 pub struct MeshTxBuilderCore {
@@ -44,7 +46,7 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `inputs` - A vector of inputs
-    fn add_all_inputs(mesh_csl: &mut MeshCSL, inputs: Vec<TxIn>);
+    fn add_all_inputs(mesh_csl: &mut MeshCSL, inputs: Vec<TxIn>) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -54,7 +56,7 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `outputs` - A vector of outputs
-    fn add_all_outputs(mesh_csl: &mut MeshCSL, outputs: Vec<Output>);
+    fn add_all_outputs(mesh_csl: &mut MeshCSL, outputs: Vec<Output>) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -64,7 +66,10 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `collaterals` - A vector of collaterals
-    fn add_all_collaterals(mesh_csl: &mut MeshCSL, collaterals: Vec<PubKeyTxIn>);
+    fn add_all_collaterals(
+        mesh_csl: &mut MeshCSL,
+        collaterals: Vec<PubKeyTxIn>,
+    ) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -74,7 +79,10 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `ref_inputs` - A vector of reference inputs
-    fn add_all_reference_inputs(mesh_csl: &mut MeshCSL, ref_inputs: Vec<RefTxIn>);
+    fn add_all_reference_inputs(
+        mesh_csl: &mut MeshCSL,
+        ref_inputs: Vec<RefTxIn>,
+    ) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -84,7 +92,10 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `withdrawals` - A vector of withdrawals
-    fn add_all_withdrawals(mesh_csl: &mut MeshCSL, withdrawals: Vec<Withdrawal>);
+    fn add_all_withdrawals(
+        mesh_csl: &mut MeshCSL,
+        withdrawals: Vec<Withdrawal>,
+    ) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -94,7 +105,7 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `mints` - A vector of mints
-    fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>);
+    fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -104,7 +115,10 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `certificates` - A vector of certificates
-    fn add_all_certificates(mesh_csl: &mut MeshCSL, certificates: Vec<Certificate>);
+    fn add_all_certificates(
+        mesh_csl: &mut MeshCSL,
+        certificates: Vec<Certificate>,
+    ) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -124,7 +138,10 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `required_signatures` - A vector of required signatures
-    fn add_all_required_signature(mesh_csl: &mut MeshCSL, required_signatures: JsVecString);
+    fn add_all_required_signature(
+        mesh_csl: &mut MeshCSL,
+        required_signatures: JsVecString,
+    ) -> Result<(), JsError>;
 
     /// ## Internal method
     ///
@@ -134,5 +151,6 @@ pub trait IMeshTxBuilderCore {
     ///
     /// * `mesh_csl` - The MeshCSL instance
     /// * `all_metadata` - A vector of metadata
-    fn add_all_metadata(mesh_csl: &mut MeshCSL, all_metadata: Vec<Metadata>);
+    fn add_all_metadata(mesh_csl: &mut MeshCSL, all_metadata: Vec<Metadata>)
+        -> Result<(), JsError>;
 }

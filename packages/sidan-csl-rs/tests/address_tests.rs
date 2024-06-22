@@ -16,10 +16,27 @@ mod address_tests {
         let base_addr = script_to_address(
             0,
             "e55a6e7c9f4e96692a3c23a56f126911cc70a29d2e2ac967dc644432".to_string(),
-            Some("6d913965402b012050e09f12012c533e6c33678d1c5ed2154b328d25".to_string()),
+            Some((
+                "6d913965402b012050e09f12012c533e6c33678d1c5ed2154b328d25".to_string(),
+                false,
+            )),
         );
 
         assert!(base_addr == "addr_test1zrj45mnuna8fv6f28s362mcjdygucu9zn5hz4jt8m3jygvndjyuk2sptqys9pcylzgqjc5e7dsek0rgutmfp2jej35jseqau4y");
+    }
+
+    #[test]
+    fn test_script_to_address_script_stake_key() {
+        let base_addr = script_to_address(
+            0,
+            "c12e891c8e995cfa5d1547ace30413cad298827a19fbb8ea49b46469".to_string(),
+            Some((
+                "867c8b572e5ac8f0c14aa7417cb9caec9d1ff50e994f772eab2d69f4".to_string(),
+                true,
+            )),
+        );
+
+        assert!(base_addr == "addr_test1xrqjazgu36v4e7jaz4r6eccyz09d9xyz0gvlhw82fx6xg6vx0j94wtj6ercvzj48g97tnjhvn50l2r5efamja2edd86ql04h5v");
     }
 
     #[test]
@@ -31,7 +48,8 @@ mod address_tests {
                 == SerializedAddress::new(
                     "8f2ac4b2a57a90feb7717c7361c7043af6c3646e9db2b0e616482f73".to_string(),
                     "".to_string(),
-                    "039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f".to_string()
+                    "039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f".to_string(),
+                    "".to_string(),
                 )
         );
 
@@ -42,7 +60,8 @@ mod address_tests {
                 == SerializedAddress::new(
                     "".to_string(),
                     "25b86eea84a44a3cf98bf470e2dafa02a8d95b81028c51583610297e".to_string(),
-                    "5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb".to_string()
+                    "5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb".to_string(),
+                    "".to_string(),
                 )
         );
 
@@ -52,6 +71,7 @@ mod address_tests {
             addr3_result
                 == SerializedAddress::new(
                     "5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa".to_string(),
+                    "".to_string(),
                     "".to_string(),
                     "".to_string()
                 )
@@ -64,8 +84,21 @@ mod address_tests {
                 == SerializedAddress::new(
                     "36314aebecfbc929ee447dcb50fd690604eceae9403a298d9b1f9a54".to_string(),
                     "".to_string(),
-                    "75531fbe1e68b11e9a10dbbc5df889edea92325a85b758bbbf8735d9".to_string()
+                    "75531fbe1e68b11e9a10dbbc5df889edea92325a85b758bbbf8735d9".to_string(),
+                    "".to_string()
                 )
-        )
+        );
+
+        let addr5 = "addr_test1xrqjazgu36v4e7jaz4r6eccyz09d9xyz0gvlhw82fx6xg6vx0j94wtj6ercvzj48g97tnjhvn50l2r5efamja2edd86ql04h5v";
+        let addr5_result = serialize_bech32_address(addr5.to_string());
+        assert!(
+            addr5_result
+                == SerializedAddress::new(
+                    "".to_string(),
+                    "c12e891c8e995cfa5d1547ace30413cad298827a19fbb8ea49b46469".to_string(),
+                    "".to_string(),
+                    "867c8b572e5ac8f0c14aa7417cb9caec9d1ff50e994f772eab2d69f4".to_string()
+                )
+        );
     }
 }

@@ -156,7 +156,8 @@ mod int_tests {
         )
         .change_address(wallet_address)
         .change_output_datum(&con_str0(json!([])).to_string())
-        .complete_sync(None);
+        .complete_sync(None)
+        .unwrap();
         println!("{}", mesh.core.mesh_csl.tx_hex);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
@@ -179,6 +180,7 @@ mod int_tests {
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
+            .unwrap()
             .complete_signing();
 
         println!("{}", signed_tx);
@@ -208,6 +210,7 @@ mod int_tests {
             .signing_key("58208d4cfa90e8bd0c48c52d2fb62c77ba3f6f5eb46f640d5f997390012928d670f7")
             .signing_key("5820ba73019f1239fa47f8d9c0c42c5d05bf34f2b2f6ebd1c556f8f86e5bee1aac66")
             .complete_sync(None)
+            .unwrap()
             .complete_signing();
 
         println!("{}", signed_tx);
@@ -254,6 +257,7 @@ mod int_tests {
             .required_signer_hash("4f91183f5fc7c81cbc11d1ecbfde2d1cfc1a71ef9de999bdc1e15ecb")
             .signing_key("5820c835cd2413c6330537c85e3d510b313dfdeee5708206e76ce8bd387cdd4b6bb2")
             .complete_sync(None)
+            .unwrap()
             .complete_signing();
 
         println!("{}", signed_tx);
