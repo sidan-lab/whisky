@@ -247,6 +247,9 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 }
                 Certificate::RetirePool(retire_pool) => {
                     mesh_csl.add_retire_pool_cert(&mut certificates_builder, retire_pool)
+                },
+                _ => {
+                    // TODO: implement government actions
                 }
             }
         }
