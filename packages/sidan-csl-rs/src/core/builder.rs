@@ -1,10 +1,11 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use cardano_serialization_lib::JsError;
-
 use crate::{csl, model::*};
+use cardano_serialization_lib::{Credential, JsError};
 
-use super::{utils::build_tx_builder, utils::sign_transaction, utils::to_bignum, utils::to_value};
+use super::utils::{
+    build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_drep, to_value,
+};
 
 pub trait IMeshCSL {
     fn new(params: Option<Protocol>) -> Self;
@@ -54,6 +55,56 @@ pub trait IMeshCSL {
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         retire_pool: RetirePool,
+    ) -> Result<(), JsError>;
+    fn add_vote_delegation_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        vote_delegation: VoteDelegation,
+    ) -> Result<(), JsError>;
+    fn add_stake_and_vote_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_and_vote_delegation: StakeAndVoteDelegation,
+    ) -> Result<(), JsError>;
+    fn add_stake_registration_and_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_registration_and_delegation: StakeRegistrationAndDelegation,
+    ) -> Result<(), JsError>;
+    fn add_vote_registration_and_delgation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        vote_registration_and_delgation: VoteRegistrationAndDelegation,
+    ) -> Result<(), JsError>;
+    fn add_stake_vote_registration_and_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_vote_registration_and_delegation: StakeVoteRegistrationAndDelegation,
+    ) -> Result<(), JsError>;
+    fn add_committee_hot_auth_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        committee_hot_auth: CommitteeHotAuth,
+    ) -> Result<(), JsError>;
+    fn add_commitee_cold_resign_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        committee_cold_resign: CommitteeColdResign,
+    ) -> Result<(), JsError>;
+    fn add_drep_registration_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_registration: DRepRegistration,
+    ) -> Result<(), JsError>;
+    fn add_drep_deregistration_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_deregistration: DRepDeregistration,
+    ) -> Result<(), JsError>;
+    fn add_drep_update_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_update: DRepUpdate,
     ) -> Result<(), JsError>;
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
@@ -522,6 +573,193 @@ impl IMeshCSL for MeshCSL {
                 retire_pool.epoch,
             ),
         ))?;
+        Ok(())
+    }
+
+    fn add_vote_delegation_cert(
+        &mut self,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        vote_delegation: VoteDelegation,
+    ) -> Result<(), JsError> {
+        certificates_builder.add(&csl::Certificate::new_vote_delegation(
+            &csl::VoteDelegation::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &vote_delegation.stake_key_hash,
+                )?),
+                &to_csl_drep(&vote_delegation.drep)?,
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_stake_and_vote_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_and_vote_delegation: StakeAndVoteDelegation,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_stake_and_vote_delegation(
+            &csl::StakeAndVoteDelegation::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &stake_and_vote_delegation.stake_key_hash,
+                )?),
+                &csl::Ed25519KeyHash::from_hex(&stake_and_vote_delegation.pool_key_hash)?,
+                &to_csl_drep(&stake_and_vote_delegation.drep)?,
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_stake_registration_and_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_registration_and_delegation: StakeRegistrationAndDelegation,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_stake_registration_and_delegation(
+            &csl::StakeRegistrationAndDelegation::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &stake_registration_and_delegation.stake_key_hash,
+                )?),
+                &csl::Ed25519KeyHash::from_hex(&stake_registration_and_delegation.pool_key_hash)?,
+                &to_bignum(stake_registration_and_delegation.coin),
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_vote_registration_and_delgation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        vote_registration_and_delgation: VoteRegistrationAndDelegation,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_vote_registration_and_delegation(
+            &csl::VoteRegistrationAndDelegation::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &vote_registration_and_delgation.stake_key_hash,
+                )?),
+                &to_csl_drep(&vote_registration_and_delgation.drep)?,
+                &to_bignum(vote_registration_and_delgation.coin),
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_stake_vote_registration_and_delegation_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        stake_vote_registration_and_delegation: StakeVoteRegistrationAndDelegation,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(
+            &csl::Certificate::new_stake_vote_registration_and_delegation(
+                &csl::StakeVoteRegistrationAndDelegation::new(
+                    &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                        &stake_vote_registration_and_delegation.stake_key_hash,
+                    )?),
+                    &csl::Ed25519KeyHash::from_hex(
+                        &stake_vote_registration_and_delegation.pool_key_hash,
+                    )?,
+                    &to_csl_drep(&stake_vote_registration_and_delegation.drep)?,
+                    &to_bignum(stake_vote_registration_and_delegation.coin),
+                ),
+            ),
+        )
+    }
+
+    fn add_committee_hot_auth_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        committee_hot_auth: CommitteeHotAuth,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_committee_hot_auth(
+            &csl::CommitteeHotAuth::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &committee_hot_auth.committee_cold_key_hash,
+                )?),
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &committee_hot_auth.committee_hot_key_hash,
+                )?),
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_commitee_cold_resign_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        committee_cold_resign: CommitteeColdResign,
+    ) -> Result<(), JsError> {
+        let committee_cold_key = &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+            &committee_cold_resign.committee_cold_key_hash,
+        )?);
+        match committee_cold_resign.anchor {
+            Some(anchor) => {
+                certificate_builder.add(&csl::Certificate::new_committee_cold_resign(
+                    &csl::CommitteeColdResign::new_with_anchor(
+                        committee_cold_key,
+                        &to_csl_anchor(&anchor)?,
+                    ),
+                ))?;
+            }
+            None => {
+                certificate_builder.add(&csl::Certificate::new_committee_cold_resign(
+                    &csl::CommitteeColdResign::new(committee_cold_key),
+                ))?;
+            }
+        }
+        Ok(())
+    }
+
+    fn add_drep_registration_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_registration: DRepRegistration,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_drep_registration(
+            &csl::DrepRegistration::new(
+                &Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &drep_registration.voting_key_hash,
+                )?),
+                &to_bignum(drep_registration.coin),
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_drep_deregistration_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_deregistration: DRepDeregistration,
+    ) -> Result<(), JsError> {
+        certificate_builder.add(&csl::Certificate::new_drep_deregistration(
+            &csl::DrepDeregistration::new(
+                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                    &drep_deregistration.voting_key_hash,
+                )?),
+                &to_bignum(drep_deregistration.coin),
+            ),
+        ))?;
+        Ok(())
+    }
+
+    fn add_drep_update_cert(
+        &mut self,
+        certificate_builder: &mut csl::CertificatesBuilder,
+        drep_update: DRepUpdate,
+    ) -> Result<(), JsError> {
+        match drep_update.anchor {
+            Some(anchor) => certificate_builder.add(&csl::Certificate::new_drep_update(
+                &csl::DrepUpdate::new_with_anchor(
+                    &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
+                        &drep_update.voting_key_hash,
+                    )?),
+                    &to_csl_anchor(&anchor)?,
+                ),
+            )),
+            None => certificate_builder.add(&csl::Certificate::new_drep_update(
+                &csl::DrepUpdate::new(&csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_hex(&drep_update.voting_key_hash)?,
+                )),
+            )),
+        }?;
         Ok(())
     }
 

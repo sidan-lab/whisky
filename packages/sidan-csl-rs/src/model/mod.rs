@@ -376,30 +376,30 @@ pub struct CommitteeColdResign {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Anchor {
-    anchor_url: String,
-    anchor_data_hash: String,
+    pub anchor_url: String,
+    pub anchor_data_hash: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepRegistration {
-    voting_key_hash: String,
-    coin: u64,
-    anchor: Option<Anchor>,
+    pub voting_key_hash: String,
+    pub coin: u64,
+    pub anchor: Option<Anchor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepDeregistration {
-    voting_key_hash: String,
-    coin: u64,
+    pub voting_key_hash: String,
+    pub coin: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepUpdate {
-    voting_key_hash: String,
-    anchor: Option<Anchor>,
+    pub voting_key_hash: String,
+    pub anchor: Option<Anchor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
