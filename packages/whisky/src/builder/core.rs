@@ -5,11 +5,15 @@ use sidan_csl_rs::{
     core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
     csl,
     model::{
-        Asset, Certificate, Datum, DatumSource, DelegateStake, DeregisterStake, InlineDatumSource,
-        InlineScriptSource, LanguageVersion, MeshTxBuilderBody, Metadata, MintItem, Output,
-        PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource, ProvidedScriptSource, PubKeyTxIn,
-        PubKeyWithdrawal, Redeemer, RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptSource,
-        ScriptTxIn, ScriptTxInParameter, TxIn, TxInParameter, UTxO, Value, Withdrawal,
+        Anchor, Asset, Certificate, CommitteeColdResign, CommitteeHotAuth, DRep,
+        DRepDeregistration, DRepRegistration, DRepUpdate, Datum, DatumSource, DelegateStake,
+        DeregisterStake, InlineDatumSource, InlineScriptSource, LanguageVersion, MeshTxBuilderBody,
+        Metadata, MintItem, Output, PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource,
+        ProvidedScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer, RefTxIn, RegisterPool,
+        RegisterStake, RetirePool, ScriptSource, ScriptTxIn, ScriptTxInParameter,
+        StakeAndVoteDelegation, StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation,
+        TxIn, TxInParameter, UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation,
+        Withdrawal,
     },
 };
 
@@ -628,6 +632,155 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .push(Certificate::RetirePool(RetirePool {
                 pool_id: pool_id.to_string(),
                 epoch,
+            }));
+        self
+    }
+
+    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::VoteDelegation(VoteDelegation {
+                stake_key_hash: stake_key_hash.to_string(),
+                drep,
+            }));
+        self
+    }
+
+    fn stake_and_vote_delegation_certificate(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+    ) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::StakeAndVoteDelegation(
+                StakeAndVoteDelegation {
+                    stake_key_hash: stake_key_hash.to_string(),
+                    pool_key_hash: pool_key_hash.to_string(),
+                    drep,
+                },
+            ));
+        self
+    }
+
+    fn stake_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        coin: u64,
+    ) -> &mut Self {
+        self.core.mesh_tx_builder_body.certificates.push(
+            Certificate::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
+                stake_key_hash: stake_key_hash.to_string(),
+                pool_key_hash: pool_key_hash.to_string(),
+                coin,
+            }),
+        );
+        self
+    }
+
+    fn vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self {
+        self.core.mesh_tx_builder_body.certificates.push(
+            Certificate::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
+                stake_key_hash: stake_key_hash.to_string(),
+                drep,
+                coin,
+            }),
+        );
+        self
+    }
+
+    fn stake_vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self {
+        self.core.mesh_tx_builder_body.certificates.push(
+            Certificate::StakeVoteRegistrationAndDelegation(StakeVoteRegistrationAndDelegation {
+                stake_key_hash: stake_key_hash.to_string(),
+                pool_key_hash: pool_key_hash.to_string(),
+                drep,
+                coin,
+            }),
+        );
+        self
+    }
+
+    fn committee_hot_auth(
+        &mut self,
+        committee_cold_key_hash: &str,
+        committee_hot_key_hash: &str,
+    ) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::CommitteeHotAuth(CommitteeHotAuth {
+                committee_cold_key_hash: committee_cold_key_hash.to_string(),
+                committee_hot_key_hash: committee_hot_key_hash.to_string(),
+            }));
+        self
+    }
+
+    fn commitee_cold_resign(
+        &mut self,
+        committee_cold_key_hash: &str,
+        anchor: Option<Anchor>,
+    ) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::CommitteeColdResign(CommitteeColdResign {
+                committee_cold_key_hash: committee_cold_key_hash.to_string(),
+                anchor,
+            }));
+        self
+    }
+
+    fn drep_registration(
+        &mut self,
+        voting_key_hash: &str,
+        coin: u64,
+        anchor: Option<Anchor>,
+    ) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::DRepRegistration(DRepRegistration {
+                voting_key_hash: voting_key_hash.to_string(),
+                coin,
+                anchor,
+            }));
+        self
+    }
+
+    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::DRepDeregistration(DRepDeregistration {
+                voting_key_hash: voting_key_hash.to_string(),
+                coin,
+            }));
+        self
+    }
+
+    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self {
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::DRepUpdate(DRepUpdate {
+                voting_key_hash: voting_key_hash.to_string(),
+                anchor,
             }));
         self
     }

@@ -211,11 +211,21 @@ pub struct Metadata {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Certificate {
-    RegisterPool(RegisterPool),
     RegisterStake(RegisterStake),
-    DelegateStake(DelegateStake),
     DeregisterStake(DeregisterStake),
+    DelegateStake(DelegateStake),
+    RegisterPool(RegisterPool),
     RetirePool(RetirePool),
+    VoteDelegation(VoteDelegation),
+    StakeAndVoteDelegation(StakeAndVoteDelegation),
+    StakeRegistrationAndDelegation(StakeRegistrationAndDelegation),
+    VoteRegistrationAndDelegation(VoteRegistrationAndDelegation),
+    StakeVoteRegistrationAndDelegation(StakeVoteRegistrationAndDelegation),
+    CommitteeHotAuth(CommitteeHotAuth),
+    CommitteeColdResign(CommitteeColdResign),
+    DRepRegistration(DRepRegistration),
+    DRepDeregistration(DRepDeregistration),
+    DRepUpdate(DRepUpdate),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -298,6 +308,98 @@ pub struct DeregisterStake {
 pub struct RetirePool {
     pub pool_id: String,
     pub epoch: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoteDelegation {
+    pub stake_key_hash: String,
+    pub drep: DRep,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DRep {
+    KeyHash(String),
+    ScriptHash(String),
+    AlwaysAbstain,
+    AlwaysNoConfidence,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StakeAndVoteDelegation {
+    pub stake_key_hash: String,
+    pub pool_key_hash: String,
+    pub drep: DRep,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StakeRegistrationAndDelegation {
+    pub stake_key_hash: String,
+    pub pool_key_hash: String,
+    pub coin: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VoteRegistrationAndDelegation {
+    pub stake_key_hash: String,
+    pub drep: DRep,
+    pub coin: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StakeVoteRegistrationAndDelegation {
+    pub stake_key_hash: String,
+    pub pool_key_hash: String,
+    pub drep: DRep,
+    pub coin: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitteeHotAuth {
+    pub committee_cold_key_hash: String,
+    pub committee_hot_key_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitteeColdResign {
+    pub committee_cold_key_hash: String,
+    pub anchor: Option<Anchor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Anchor {
+    pub anchor_url: String,
+    pub anchor_data_hash: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DRepRegistration {
+    pub voting_key_hash: String,
+    pub coin: u64,
+    pub anchor: Option<Anchor>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DRepDeregistration {
+    pub voting_key_hash: String,
+    pub coin: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DRepUpdate {
+    pub voting_key_hash: String,
+    pub anchor: Option<Anchor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
