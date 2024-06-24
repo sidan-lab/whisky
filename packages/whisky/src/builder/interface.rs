@@ -3,8 +3,8 @@ use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
-        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams, Protocol,
-        PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal,
+        Anchor, Asset, DRep, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams,
+        Protocol, PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal,
     },
 };
 
@@ -582,6 +582,186 @@ pub trait IMeshTxBuilder {
     ///
     /// * `Self` - The MeshTxBuilder instance
     fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a vote delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake and vote delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_and_vote_delegation_certificate(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a vote registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake vote registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add commitee hot auth certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `committee_cold_key_hash` - Hash of the committee cold key
+    /// * `committee_hot_key_hash` - Hash of the commitee hot key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn committee_hot_auth(
+        &mut self,
+        committee_cold_key_hash: &str,
+        committee_hot_key_hash: &str,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add commitee cold resign certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `committee_cold_key_hash` - Hash of the committee cold key
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn commitee_cold_resign(
+        &mut self,
+        committee_cold_key_hash: &str,
+        anchor: Option<Anchor>,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `coin` - Deposit for certificate registration
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_registration(
+        &mut self,
+        voting_key_hash: &str,
+        coin: u64,
+        anchor: Option<Anchor>,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep deregistration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep update certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self;
 
     /// ## Transaction building method
     ///
