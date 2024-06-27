@@ -24,13 +24,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Install dependencies and build docs
         run: |
           yarn install
           yarn rust:doc
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      - name: Force correct file permissions
+        run: |
+          chmod -c +rX "packages/target/doc/.lock" &
+          chmod -c -R +rX "packages/target/doc" |
+          while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
