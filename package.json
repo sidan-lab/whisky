@@ -17,7 +17,8 @@
     "js:publish-nodejs": "npm run core:build-nodejs && npm run js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",
     "js:publish-browser": "npm run core:build-browser && npm run js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
     "js:publish-asm": "npm run core:build-asm && npm run js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
-    "js:ts-json-gen": "cd packages/sidan-csl-rs/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js"
+    "js:ts-json-gen": "cd packages/sidan-csl-rs/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
+    "rust:doc": "cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps"
   },
   "husky": {
     "hooks": {

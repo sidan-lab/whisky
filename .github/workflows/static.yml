@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies and build docs
+        run: |
+          yarn install
+          yarn rust:doc
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -31,7 +36,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Specify the path to the directory containing index.html
-          path: 'packages/target/doc/sidan_csl_rs'
+          path: "packages/target/doc/sidan_csl_rs"
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -41,7 +41,7 @@ pub struct MeshTxBuilderParam {
 pub trait IMeshTxBuilder {
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance
+    /// Create a new MeshTxBuilder instance with option params
     ///
     /// ### Arguments
     ///
@@ -54,7 +54,7 @@ pub trait IMeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance
+    /// Create a new MeshTxBuilder instance without option params
     ///
     /// ### Returns
     ///
