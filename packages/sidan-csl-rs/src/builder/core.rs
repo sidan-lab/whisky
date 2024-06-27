@@ -22,6 +22,14 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
     serialize_tx_body(mesh_tx_builder_body, params).unwrap()
 }
 
+// #[test]
+// fn test_js_serialize_tx_body() {
+//     let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"type":"PubKey","txIn":{"txHash":"1662c4b349907e4d92e0995fd9dcdc9a4489f7dff4f5cce6b4b3901de479308c","txIndex":14,"amount":[{"unit":"lovelace","quantity":"774643176"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}}],"outputs":[{"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","amount":[{"unit":"lovelace","quantity":"1231231"}],"datum":null,"referenceScript":null}],"collaterals":[],"requiredSignatures":[],"referenceInputs":[],"mints":[],"changeAddress":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
+//     let params_json = r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
+//     let tx_hex = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
+//     println!("tx_hex: {:?}", tx_hex);
+// }
+
 /// ## Transaction building method
 ///
 /// Serialize the transaction body
@@ -148,7 +156,6 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
-                extra_inputs: vec![],
                 collaterals: vec![],
                 required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
@@ -163,7 +170,6 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                     invalid_hereafter: None,
                 },
                 signing_key: JsVecString::new(),
-                selection_threshold: 5_000_000,
             },
             tx_evaluation_multiplier_percentage: 110,
         }

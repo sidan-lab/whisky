@@ -24,6 +24,8 @@ pub struct MeshTxBuilder {
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
+    pub extra_inputs: Vec<UTxO>,
+    pub selection_threshold: u64,
     pub chained_txs: Vec<String>,
     pub inputs_for_evaluation: Vec<UTxO>,
 }

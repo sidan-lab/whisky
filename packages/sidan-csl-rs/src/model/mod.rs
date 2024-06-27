@@ -19,7 +19,6 @@ pub use value::*;
 pub struct MeshTxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
-    pub extra_inputs: Vec<UTxO>,
     pub collaterals: Vec<PubKeyTxIn>,
     pub required_signatures: JsVecString,
     pub reference_inputs: Vec<RefTxIn>,
@@ -31,7 +30,6 @@ pub struct MeshTxBuilderBody {
     pub validity_range: ValidityRange,
     pub certificates: Vec<Certificate>,
     pub signing_key: JsVecString,
-    pub selection_threshold: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
