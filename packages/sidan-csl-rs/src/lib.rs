@@ -13,9 +13,6 @@
 //! Here's a quick example to get you started:
 //!
 //! ```
-//! use my_rust_package::some_function;
-//!
-//! some_function();
 //! ```
 //!
 //! For more information, see the [GitHub repository](https://github.com/example/my_rust_package).
