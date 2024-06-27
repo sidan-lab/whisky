@@ -18,11 +18,11 @@
     "js:publish-browser": "npm run core:build-browser && npm run js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
     "js:publish-asm": "npm run core:build-asm && npm run js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
     "js:ts-json-gen": "cd packages/sidan-csl-rs/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
-    "rust:doc": "RUSTDOCFLAGS=\"--cfg docsrs\" cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps"
+    "rust:doc": "RUSTDOCFLAGS=\"--cfg docsrs\" cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps && cp -r ./packages/target/doc ./docs"
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run core:test && npm run rust:test"
+      "pre-commit": "npm run core:test && npm run rust:test && npm run rust:doc"
     }
   },
   "author": "SIDAN Lab",
