@@ -50,4 +50,4 @@ async fn my_first_whisky_tx(
 
 ## APIs
 
-Please refer to the hosted documentation for the list of endpoints.
+Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.

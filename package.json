@@ -18,8 +18,9 @@
     "js:publish-browser": "npm run core:build-browser && npm run js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
     "js:publish-asm": "npm run core:build-asm && npm run js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
     "js:ts-json-gen": "cd packages/sidan-csl-rs/json-gen && cargo +stable run && cd ../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
-    "rust:doc-clear": "rm -rf ./docs && mkdir docs && echo '<meta http-equiv=\"refresh\" content=\"0; url=sidan_csl_rs\">' > docs/index.html",
-    "rust:doc": "npm run rust:doc-clear && RUSTDOCFLAGS=\"--cfg docsrs\" cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps && cp -r ./packages/target/doc/* ./docs"
+    "rust:doc-clear": "rm -rf ./docs && mkdir docs && echo '<meta http-equiv=\"refresh\" content=\"0; url=whisky\">' > docs/index.html",
+    "rust:doc": "npm run rust:doc-clear && RUSTDOCFLAGS=\"--cfg docsrs\" cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps && cp -r ./packages/target/doc/* ./docs",
+    "start-doc": "npm run rust:doc && npx http-server ./docs"
   },
   "husky": {
     "hooks": {

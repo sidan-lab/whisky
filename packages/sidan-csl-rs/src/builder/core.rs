@@ -9,6 +9,18 @@ use crate::{
 
 use super::{interface::MeshTxBuilderCore, IMeshTxBuilderCore};
 
+/// ## WASM Transaction building method
+///
+/// Serialize the transaction body
+///
+/// ### Arguments
+///
+/// * `mesh_tx_builder_body_json` - The transaction builder body information, serialized as JSON string
+/// * `params_json` - Optional protocol parameters, default as Cardano mainnet configuration, serialized as JSON string
+///
+/// ### Returns
+///
+/// * `String` - the built transaction hex
 #[wasm_bindgen]
 pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> String {
     let mesh_tx_builder_body: MeshTxBuilderBody = serde_json::from_str(mesh_tx_builder_body_json)
@@ -37,6 +49,7 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
 /// ### Arguments
 ///
 /// * `mesh_tx_builder_body` - The transaction builder body information
+/// * `params` - Optional protocol parameters, default as Cardano mainnet configuration
 ///
 /// ### Returns
 ///

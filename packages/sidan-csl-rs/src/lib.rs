@@ -1,23 +1,25 @@
 //! # sidan-csl-rs
 //!
-//! Welcome to my Rust package. This library is designed to provide an example of how to structure
-//! a foreword or introductory text in your Rust documentation.
+//! `sidan-csl-rs` composed of the core serialization logics with the pattern of json-to-transaction, compilable to wasm.
+//! This library is not expected to be imported by Rust developers directly, but rather through the higher level APIs like [`whisky`](../whisky).
+//! The wasm build and utility is mostly exposed in [MeshJS](https://meshjs.dev/).
 //!
-//! ## Features
+//! ## JS / TS wasm Install
 //!
-//! - Feature 1: Description of feature 1.
-//! - Feature 2: Description of feature 2.
+//! In case you want the directly out of the box wasm function for your JS / TS project, run the below
 //!
-//! ## Quick Start
-//!
-//! Here's a quick example to get you started:
-//!
+//! ```sh
+//! # For nodejs package
+//! yarn add @sidan-lab/sidan-csl-rs-nodejs
+//! # For browser package
+//! yarn add @sidan-lab/sidan-csl-rs-browser
 //! ```
-//! ```
 //!
-//! For more information, see the [GitHub repository](https://github.com/example/my_rust_package).
+//! ## APIs
 //!
-//!
+//! - The serialization logic documentation at the [builder interface](builder/trait.IMeshTxBuilderCore.html).
+//! - The inline documentation of core json to transaction serialization function is served at [here](builder/fn.js_serialize_tx_body.html).
+
 pub mod builder;
 pub mod core;
 pub mod model;
