@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["js_select_utxos","select_utxos"]};

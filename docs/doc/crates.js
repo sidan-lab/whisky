@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["sidan_csl_rs","whisky"];

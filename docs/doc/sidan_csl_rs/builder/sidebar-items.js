@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["js_serialize_tx_body","serialize_tx_body"],"struct":["MeshTxBuilderCore"],"trait":["IMeshTxBuilderCore"]};

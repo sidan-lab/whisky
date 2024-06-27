@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["builder","builder_core","core","model","service"]};
