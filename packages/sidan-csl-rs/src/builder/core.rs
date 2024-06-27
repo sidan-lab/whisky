@@ -148,6 +148,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
+                extra_inputs: vec![],
                 collaterals: vec![],
                 required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
@@ -162,6 +163,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                     invalid_hereafter: None,
                 },
                 signing_key: JsVecString::new(),
+                selection_threshold: 5_000_000,
             },
             tx_evaluation_multiplier_percentage: 110,
         }

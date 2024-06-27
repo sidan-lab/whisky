@@ -27,8 +27,6 @@ impl IMeshTxBuilder for MeshTxBuilder {
             core: MeshTxBuilderCore::new_core(None),
             protocol_params: param.params,
             tx_in_item: None,
-            extra_inputs: vec![],
-            selection_threshold: 5_000_000,
             withdrawal_item: None,
             mint_item: None,
             collateral_item: None,
@@ -88,8 +86,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
             self.core.mesh_tx_builder_body = customized_tx.unwrap();
         } else {
             self.queue_all_last_item();
-            if !self.extra_inputs.is_empty() {
-                self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold)?;
+            if !self.core.mesh_tx_builder_body.extra_inputs.is_empty() {
+                self.add_utxos_from(
+                    self.core.mesh_tx_builder_body.extra_inputs.clone(),
+                    self.core.mesh_tx_builder_body.selection_threshold,
+                )?;
             }
         }
 
@@ -838,8 +839,8 @@ impl IMeshTxBuilder for MeshTxBuilder {
     }
 
     fn select_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> &mut Self {
-        self.selection_threshold = threshold;
-        self.extra_inputs = extra_inputs;
+        self.core.mesh_tx_builder_body.selection_threshold = threshold;
+        self.core.mesh_tx_builder_body.extra_inputs = extra_inputs;
         self
     }
 

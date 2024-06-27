@@ -14,8 +14,6 @@ pub struct MeshTxBuilder {
     pub core: MeshTxBuilderCore,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
-    pub extra_inputs: Vec<UTxO>,
-    pub selection_threshold: u64,
     pub withdrawal_item: Option<Withdrawal>,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
