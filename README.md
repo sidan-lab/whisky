@@ -4,6 +4,12 @@ This is a library for building off-chain code on Cardano. It is a cardano-cli li
 
 `whisky` is composed of 2 layers - the root layer `sidan-csl-rs` and user-facing layer `whisky`. `sidan-csl-rs` composed of the core serialization logics with the pattern of json-to-transaction, compilable to wasm. `whisky` is the user-facing package where Rust Cardano developer can import directly for use.
 
+## Features
+
+- Same API patterns with [MeshJS](https://meshjs.dev/apis/transaction/builderExample) - lower learning curve for developers.
+- Integrated with TxPipe's `uplc` for off-node auto redeemer exUnits updates.
+- Full inline documentation hosted at [github](https://sidan-lab.github.io/whisky/whisky/index.html)
+
 ## Installation
 
 ### Rust Library
