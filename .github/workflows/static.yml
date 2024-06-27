@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Specify the path to the directory containing index.html
-          path: "/target/doc/sidan_csl_rs"
+          path: "target/doc/sidan_csl_rs"
 
       - name: Deploy to GitHub Pages
         id: deployment
