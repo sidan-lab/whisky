@@ -34,6 +34,7 @@ impl IMeshTxParser for MeshTxParser {
         let mut tx_body = MeshTxBuilderBody {
             inputs: vec![],
             outputs: vec![],
+            extra_inputs: vec![],
             collaterals: vec![],
             required_signatures: JsVecString::new(),
             reference_inputs: vec![],
@@ -48,6 +49,7 @@ impl IMeshTxParser for MeshTxParser {
                 invalid_hereafter: None,
             },
             signing_key: JsVecString::new(),
+            selection_threshold: 5_000_000,
         };
         let csl_tx = csl::Transaction::from_hex(s).expect("Invalid transaction");
         let csl_tx_body = csl_tx.body();
