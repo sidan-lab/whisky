@@ -161,7 +161,7 @@ mod mesh_tx_builder_core_tests {
                 vec![asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
-            .tx_in_script(script_cbor, LanguageVersion::V2)
+            .tx_in_script(script_cbor, Some(LanguageVersion::V2))
             .tx_in_datum_value(&data)
             .spending_reference_tx_in_redeemer_value(Redeemer {
                 data: data.clone(),

@@ -140,12 +140,12 @@ pub trait IMeshTxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, leave as None for Native scripts
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+    fn tx_in_script(&mut self, script_cbor: &str, version: Option<LanguageVersion>) -> &mut Self;
 
     /// ## Transaction building method
     ///
