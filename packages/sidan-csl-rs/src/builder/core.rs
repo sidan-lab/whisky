@@ -204,6 +204,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         for input in inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => mesh_csl.add_tx_in(pub_key_tx_in)?,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => mesh_csl.add_simple_script_tx_in(simple_script_tx_in)?,
                 TxIn::ScriptTxIn(script_tx_in) => mesh_csl.add_script_tx_in(script_tx_in)?,
             };
         }

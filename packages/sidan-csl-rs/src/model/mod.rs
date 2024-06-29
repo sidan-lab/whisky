@@ -51,6 +51,7 @@ pub struct ValidityRange {
 #[serde(rename_all = "camelCase")]
 pub enum TxIn {
     PubKeyTxIn(PubKeyTxIn),
+    SimpleScriptTxIn(SimpleScriptTxIn),
     ScriptTxIn(ScriptTxIn),
 }
 
@@ -66,6 +67,35 @@ pub struct RefTxIn {
 pub struct PubKeyTxIn {
     pub type_: String,
     pub tx_in: TxInParameter,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SimpleScriptTxIn {
+    pub type_: String,
+    pub tx_in: TxInParameter,
+    pub simple_script_tx_in: SimpleScriptTxInParameter,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SimpleScriptTxInParameter {
+    ProvidedSimpleScriptSource(ProvidedSimpleScriptSource),
+    InlineSimpleScriptSource(InlineSimpleScriptSource),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProvidedSimpleScriptSource {
+    pub type_: String,
+    pub script_cbor: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InlineSimpleScriptSource {
+    pub type_: String,
+    pub ref_tx_in: RefTxIn,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

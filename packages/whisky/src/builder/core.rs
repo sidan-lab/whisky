@@ -9,11 +9,11 @@ use sidan_csl_rs::{
         DRepDeregistration, DRepRegistration, DRepUpdate, Datum, DatumSource, DelegateStake,
         DeregisterStake, InlineDatumSource, InlineScriptSource, LanguageVersion, MeshTxBuilderBody,
         Metadata, MintItem, Output, PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource,
-        ProvidedScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer, RefTxIn, RegisterPool,
-        RegisterStake, RetirePool, ScriptSource, ScriptTxIn, ScriptTxInParameter,
-        StakeAndVoteDelegation, StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation,
-        TxIn, TxInParameter, UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation,
-        Withdrawal,
+        ProvidedScriptSource, ProvidedSimpleScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer,
+        RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptSource, ScriptTxIn,
+        ScriptTxInParameter, SimpleScriptTxIn, SimpleScriptTxInParameter, StakeAndVoteDelegation,
+        StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation, TxIn, TxInParameter,
+        UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation, Withdrawal,
     },
 };
 
@@ -101,11 +101,13 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.core.mesh_tx_builder_body.inputs.sort_by(|a, b| {
             let tx_in_data_a: &TxInParameter = match a {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => &simple_script_tx_in.tx_in,
                 TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
             };
 
             let tx_in_data_b: &TxInParameter = match b {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => &simple_script_tx_in.tx_in,
                 TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
             };
 
@@ -174,19 +176,39 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn tx_in_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
+    fn tx_in_script(&mut self, script_cbor: &str, version: Option<LanguageVersion>) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
         }
         let tx_in_item = tx_in_item.unwrap();
         match tx_in_item {
-            TxIn::PubKeyTxIn(_) => panic!("Script cannot be defined for a pubkey tx in"),
+            TxIn::PubKeyTxIn(input) => {
+                self.tx_in_item = Some(TxIn::SimpleScriptTxIn(SimpleScriptTxIn {
+                    type_: "SimpleScript".to_string(),
+                    tx_in: input.tx_in,
+                    simple_script_tx_in: SimpleScriptTxInParameter::ProvidedSimpleScriptSource(
+                        ProvidedSimpleScriptSource {
+                            type_: "Provided".to_string(),
+                            script_cbor: script_cbor.to_string(),
+                        },
+                    ),
+                }))
+            }
+            TxIn::SimpleScriptTxIn(mut input) => {
+                input.simple_script_tx_in = SimpleScriptTxInParameter::ProvidedSimpleScriptSource(
+                    ProvidedSimpleScriptSource {
+                        type_: "Provided".to_string(),
+                        script_cbor: script_cbor.to_string(),
+                    },
+                );
+                self.tx_in_item = Some(TxIn::SimpleScriptTxIn(input));
+            }
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                         script_cbor: script_cbor.to_string(),
-                        language_version: version,
+                        language_version: version.unwrap(),
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
@@ -202,6 +224,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let tx_in_item = tx_in_item.unwrap();
         match tx_in_item {
             TxIn::PubKeyTxIn(_) => panic!("Datum cannot be defined for a pubkey tx in"),
+            TxIn::SimpleScriptTxIn(_) => {
+                panic!("Datum cannot be defined for a simple script tx in")
+            }
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
@@ -221,6 +246,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let tx_in_item = tx_in_item.unwrap();
         match tx_in_item {
             TxIn::PubKeyTxIn(_) => panic!("Datum cannot be defined for a pubkey tx in"),
+            TxIn::SimpleScriptTxIn(_) => {
+                panic!("Datum cannot be defined for a simple script tx in")
+            }
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.datum_source =
                     Some(DatumSource::InlineDatumSource(InlineDatumSource {
@@ -241,6 +269,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let tx_in_item = tx_in_item.unwrap();
         match tx_in_item {
             TxIn::PubKeyTxIn(_) => panic!("Redeemer cannot be defined for a pubkey tx in"),
+            TxIn::SimpleScriptTxIn(_) => {
+                panic!("Redeemer cannot be defined for a simple script tx in")
+            }
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.redeemer = Some(redeemer);
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));
@@ -332,6 +363,9 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let tx_in_item = tx_in_item.unwrap();
         match tx_in_item {
             TxIn::PubKeyTxIn(_) => panic!("Script reference cannot be defined for a pubkey tx in"),
+            TxIn::SimpleScriptTxIn(_) => {
+                panic!("Script reference cannot be defined for a simple script tx in")
+            }
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
@@ -858,6 +892,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     _ => {}
                 }
             }
+            TxIn::SimpleScriptTxIn(_) => {}
             TxIn::PubKeyTxIn(_) => {}
         }
         self.core
@@ -934,6 +969,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input_value =
                         Value::from_asset_vec(pub_key_tx_in.tx_in.amount.clone().unwrap());
+                    required_assets.negate_assets(input_value);
+                }
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
+                    let input_value =
+                        Value::from_asset_vec(simple_script_tx_in.tx_in.amount.clone().unwrap());
                     required_assets.negate_assets(input_value);
                 }
                 TxIn::ScriptTxIn(script_tx_in) => {

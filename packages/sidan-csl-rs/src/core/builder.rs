@@ -10,6 +10,7 @@ use super::utils::{
 pub trait IMeshCSL {
     fn new(params: Option<Protocol>) -> Self;
     fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError>;
+    fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError>;
     fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError>;
     fn add_output(&mut self, output: Output) -> Result<(), JsError>;
     fn add_collateral(
@@ -147,6 +148,25 @@ impl IMeshCSL for MeshCSL {
             &to_value(&input.tx_in.amount.unwrap()),
         )?;
         Ok(())
+    }
+
+    fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError> {
+        match input.simple_script_tx_in {
+            SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) => {
+                self.tx_inputs_builder.add_native_script_input(
+                    &csl::NativeScript::from_hex(&script.script_cbor)?,
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                        input.tx_in.tx_index,
+                    ),
+                    &to_value(&input.tx_in.amount.unwrap()),
+                );
+                Ok(())
+            }
+            SimpleScriptTxInParameter::InlineSimpleScriptSource(_) => Err(JsError::from_str(
+                "Reference Native scripts not implemented",
+            )),
+        }
     }
 
     fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError> {
