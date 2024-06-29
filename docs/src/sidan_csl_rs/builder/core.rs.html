@@ -396,6 +396,24 @@
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
 <a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>cardano_serialization_lib::JsError;
 
 <span class="kw">use crate</span>::{
@@ -432,15 +450,15 @@
     serialize_tx_body(mesh_tx_builder_body, params).unwrap()
 }
 
-<span class="comment">// #[test]
-// fn test_js_serialize_tx_body() {
-//     let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"type":"PubKey","txIn":{"txHash":"1662c4b349907e4d92e0995fd9dcdc9a4489f7dff4f5cce6b4b3901de479308c","txIndex":14,"amount":[{"unit":"lovelace","quantity":"774643176"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}}],"outputs":[{"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","amount":[{"unit":"lovelace","quantity":"1231231"}],"datum":null,"referenceScript":null}],"collaterals":[],"requiredSignatures":[],"referenceInputs":[],"mints":[],"changeAddress":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
-//     let params_json = r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
-//     let tx_hex = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
-//     println!("tx_hex: {:?}", tx_hex);
-// }
+<span class="attr">#[test]
+</span><span class="kw">fn </span>test_js_serialize_tx_body() {
+    <span class="kw">let </span>mesh_tx_builder_body_json = <span class="string">r#"{"inputs":[{"pubKeyTxIn":{"type":"PubKey","txIn":{"txHash":"b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8","txIndex":0,"amount":[{"unit":"lovelace","quantity":"1000000000"}],"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq"}}}],"outputs":[{"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq","amount":[{"unit":"95cee82d7791c57fc5aed517d12155f247655bf6b1908292b5a2e9cc","quantity":"1"}],"datum":null,"referenceScript":null}],"collaterals":[{"type":"PubKey","txIn":{"txHash":"b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8","txIndex":0,"amount":[{"unit":"lovelace","quantity":"1000000000"}],"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq"}}],"requiredSignatures":[],"referenceInputs":[],"mints":[{"type":"Plutus","policyId":"95cee82d7791c57fc5aed517d12155f247655bf6b1908292b5a2e9cc","assetName":"","amount":1,"redeemer":{"data":"d87980","exUnits":{"mem":7000000,"steps":3000000000}},"scriptSource":{"providedScriptSource":{"scriptCbor":"59022c5902290100003323232323232323232222325333007323232323232533300d3370e90000008991919299980819b87480000044c8c8c8c94ccc050cdc3a400000229445281809000991980080080111299980b8008a6103d87a80001323253330163375e026601e6028004266e9520003301a0024bd70099802002000980d801180c8009bac3016001300e00713232323300100100222533301700114a226464a66602ca66602c66e3cdd71807801004099b88375a60366038603800490000a5113300400400114a060360046eb0c064004c8c8cc004004008894ccc05c00452f5c0264666444646600200200644a66603a00220062646603e6e9ccc07cdd48031980f9ba9375c60380026603e6ea0dd6980e800a5eb80cc00c00cc084008c07c004dd7180b0009bab301700133003003301b0023019001323300100100222533301600114bd6f7b630099191919299980b99b8f48900002100313301b337606ea4008dd3000998030030019bab3018003375c602c004603400460300026eacc054c058c058c058c058c03801cc03802cdd7180980098058010a50300b00130100013010002300e00130060032300d00114984d958c94ccc01ccdc3a40000022a666014600a0062930b0a99980399b874800800454ccc028c01400c52616163005002230053754002460066ea80055cd2ab9d5573caae7d5d02ba157449812bd8799fd8799f5820b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8ff00ff0001","languageVersion":"V2"}}}],"changeAddress":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":["5820b7cbcc113d2fe1c6f97d858c2e512459b36034c67f630749567d8783757394c7"],"withdrawals":[]}"#</span>;
+    <span class="kw">let </span>params_json = <span class="string">r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#</span>;
+    <span class="kw">let </span>tx_hex = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
+    <span class="macro">println!</span>(<span class="string">"tx_hex: {:?}"</span>, tx_hex);
+}
 
-</span><span class="doccomment">/// ## Transaction building method
+<span class="doccomment">/// ## Transaction building method
 ///
 /// Serialize the transaction body
 ///
@@ -458,34 +476,45 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;String, JsError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>mesh_csl = MeshCSL::new(params);
 
+    <span class="macro">println!</span>(<span class="string">"1"</span>);
     MeshTxBuilderCore::add_all_inputs(<span class="kw-2">&amp;mut </span>mesh_csl, mesh_tx_builder_body.inputs.clone())<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"2"</span>);
     MeshTxBuilderCore::add_all_outputs(<span class="kw-2">&amp;mut </span>mesh_csl, mesh_tx_builder_body.outputs.clone())<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"3"</span>);
     MeshTxBuilderCore::add_all_collaterals(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.collaterals.clone(),
     )<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"4"</span>);
     MeshTxBuilderCore::add_all_reference_inputs(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
     )<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"5"</span>);
     MeshTxBuilderCore::add_all_withdrawals(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.withdrawals.clone(),
     )<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"6"</span>);
     MeshTxBuilderCore::add_all_mints(<span class="kw-2">&amp;mut </span>mesh_csl, mesh_tx_builder_body.mints.clone())<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"7"</span>);
     MeshTxBuilderCore::add_all_certificates(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.certificates.clone(),
     )<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"8"</span>);
     MeshTxBuilderCore::add_validity_range(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.validity_range.clone(),
     );
+    <span class="macro">println!</span>(<span class="string">"9"</span>);
     MeshTxBuilderCore::add_all_required_signature(
         <span class="kw-2">&amp;mut </span>mesh_csl,
         mesh_tx_builder_body.required_signatures.clone(),
     )<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"10"</span>);
     MeshTxBuilderCore::add_all_metadata(<span class="kw-2">&amp;mut </span>mesh_csl, mesh_tx_builder_body.metadata.clone())<span class="question-mark">?</span>;
+    <span class="macro">println!</span>(<span class="string">"11"</span>);
 
     mesh_csl.add_script_hash()<span class="question-mark">?</span>;
     <span class="comment">// if self.mesh_tx_builder_body.change_address != "" {
@@ -602,6 +631,9 @@
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             <span class="kw">match </span>input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) =&gt; mesh_csl.add_tx_in(pub_key_tx_in)<span class="question-mark">?</span>,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) =&gt; {
+                    mesh_csl.add_simple_script_tx_in(simple_script_tx_in)<span class="question-mark">?
+                </span>}
                 TxIn::ScriptTxIn(script_tx_in) =&gt; mesh_csl.add_script_tx_in(script_tx_in)<span class="question-mark">?</span>,
             };
         }
@@ -660,14 +692,18 @@
 
     <span class="kw">fn </span>add_all_mints(mesh_csl: <span class="kw-2">&amp;mut </span>MeshCSL, mints: Vec&lt;MintItem&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>mint_builder = csl::MintBuilder::new();
+        <span class="macro">println!</span>(<span class="string">"6-1"</span>);
         <span class="kw">for </span>(index, mint) <span class="kw">in </span>mints.into_iter().enumerate() {
+            <span class="macro">println!</span>(<span class="string">"6-2"</span>);
             <span class="kw">match </span>mint.type_.as_str() {
                 <span class="string">"Plutus" </span>=&gt; mesh_csl.add_plutus_mint(<span class="kw-2">&amp;mut </span>mint_builder, mint, index <span class="kw">as </span>u64)<span class="question-mark">?</span>,
                 <span class="string">"Native" </span>=&gt; mesh_csl.add_native_mint(<span class="kw-2">&amp;mut </span>mint_builder, mint)<span class="question-mark">?</span>,
                 <span class="kw">_ </span>=&gt; {}
             };
         }
+        <span class="macro">println!</span>(<span class="string">"6-3"</span>);
         mesh_csl.tx_builder.set_mint_builder(<span class="kw-2">&amp;</span>mint_builder);
+        <span class="macro">println!</span>(<span class="string">"6-4"</span>);
         <span class="prelude-val">Ok</span>(())
     }
 

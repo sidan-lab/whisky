@@ -829,6 +829,25 @@
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
 <a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::net::{Ipv4Addr, Ipv6Addr};
 
 <span class="kw">use crate</span>::{csl, model::<span class="kw-2">*</span>};
@@ -841,6 +860,7 @@
 <span class="kw">pub trait </span>IMeshCSL {
     <span class="kw">fn </span>new(params: <span class="prelude-ty">Option</span>&lt;Protocol&gt;) -&gt; <span class="self">Self</span>;
     <span class="kw">fn </span>add_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: PubKeyTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt;;
+    <span class="kw">fn </span>add_simple_script_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: SimpleScriptTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt;;
     <span class="kw">fn </span>add_script_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: ScriptTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt;;
     <span class="kw">fn </span>add_output(<span class="kw-2">&amp;mut </span><span class="self">self</span>, output: Output) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt;;
     <span class="kw">fn </span>add_collateral(
@@ -980,14 +1000,33 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn </span>add_simple_script_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: SimpleScriptTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt; {
+        <span class="kw">match </span>input.simple_script_tx_in {
+            SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) =&gt; {
+                <span class="self">self</span>.tx_inputs_builder.add_native_script_input(
+                    <span class="kw-2">&amp;</span>csl::NativeScript::from_hex(<span class="kw-2">&amp;</span>script.script_cbor)<span class="question-mark">?</span>,
+                    <span class="kw-2">&amp;</span>csl::TransactionInput::new(
+                        <span class="kw-2">&amp;</span>csl::TransactionHash::from_hex(<span class="kw-2">&amp;</span>input.tx_in.tx_hash)<span class="question-mark">?</span>,
+                        input.tx_in.tx_index,
+                    ),
+                    <span class="kw-2">&amp;</span>to_value(<span class="kw-2">&amp;</span>input.tx_in.amount.unwrap()),
+                );
+                <span class="prelude-val">Ok</span>(())
+            }
+            SimpleScriptTxInParameter::InlineSimpleScriptSource(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(JsError::from_str(
+                <span class="string">"Reference Native scripts not implemented"</span>,
+            )),
+        }
+    }
+
     <span class="kw">fn </span>add_script_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: ScriptTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt; {
         <span class="kw">let </span>datum_source = input.script_tx_in.datum_source.unwrap();
         <span class="kw">let </span>script_source = input.script_tx_in.script_source.unwrap();
         <span class="kw">let </span>redeemer = input.script_tx_in.redeemer.unwrap();
         <span class="kw">let </span>csl_datum: csl::DatumSource = <span class="kw">match </span>datum_source {
-            DatumSource::ProvidedDatumSource(datum) =&gt; csl::DatumSource::new(
-                <span class="kw-2">&amp;</span>csl::PlutusData::from_json(<span class="kw-2">&amp;</span>datum.data, csl::PlutusDatumSchema::DetailedSchema)<span class="question-mark">?</span>,
-            ),
+            DatumSource::ProvidedDatumSource(datum) =&gt; {
+                csl::DatumSource::new(<span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>datum.data)<span class="question-mark">?</span>)
+            }
             DatumSource::InlineDatumSource(datum) =&gt; {
                 <span class="kw">let </span>ref_input = csl::TransactionInput::new(
                     <span class="kw-2">&amp;</span>csl::TransactionHash::from_hex(<span class="kw-2">&amp;</span>datum.tx_hash)<span class="question-mark">?</span>,
@@ -1030,7 +1069,7 @@
         <span class="kw">let </span>csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             <span class="kw-2">&amp;</span>csl::RedeemerTag::new_spend(),
             <span class="kw-2">&amp;</span>to_bignum(<span class="number">0</span>),
-            <span class="kw-2">&amp;</span>csl::PlutusData::from_json(<span class="kw-2">&amp;</span>redeemer.data, csl::PlutusDatumSchema::DetailedSchema)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>redeemer.data)<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span>csl::ExUnits::new(
                 <span class="kw-2">&amp;</span>to_bignum(redeemer.ex_units.mem),
                 <span class="kw-2">&amp;</span>to_bignum(redeemer.ex_units.steps),
@@ -1056,17 +1095,12 @@
             <span class="kw">match </span>datum.type_.as_str() {
                 <span class="string">"Hash" </span>=&gt; {
                     output_builder = output_builder.with_data_hash(<span class="kw-2">&amp;</span>csl::hash_plutus_data(
-                        <span class="kw-2">&amp;</span>csl::PlutusData::from_json(
-                            <span class="kw-2">&amp;</span>datum.data,
-                            csl::PlutusDatumSchema::DetailedSchema,
-                        )<span class="question-mark">?</span>,
+                        <span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>datum.data)<span class="question-mark">?</span>,
                     ));
                 }
                 <span class="string">"Inline" </span>=&gt; {
-                    output_builder = output_builder.with_plutus_data(<span class="kw-2">&amp;</span>csl::PlutusData::from_json(
-                        <span class="kw-2">&amp;</span>datum.data,
-                        csl::PlutusDatumSchema::DetailedSchema,
-                    )<span class="question-mark">?</span>);
+                    output_builder =
+                        output_builder.with_plutus_data(<span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>datum.data)<span class="question-mark">?</span>);
                 }
                 <span class="kw">_ </span>=&gt; {}
             };
@@ -1180,7 +1214,7 @@
         <span class="kw">let </span>csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             <span class="kw-2">&amp;</span>csl::RedeemerTag::new_spend(),
             <span class="kw-2">&amp;</span>to_bignum(<span class="number">0</span>),
-            <span class="kw-2">&amp;</span>csl::PlutusData::from_json(<span class="kw-2">&amp;</span>redeemer.data, csl::PlutusDatumSchema::DetailedSchema)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>redeemer.data)<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span>csl::ExUnits::new(
                 <span class="kw-2">&amp;</span>to_bignum(redeemer.ex_units.mem),
                 <span class="kw-2">&amp;</span>to_bignum(redeemer.ex_units.steps),
@@ -1202,27 +1236,30 @@
         mint: MintItem,
         index: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt; {
+        <span class="macro">println!</span>(<span class="string">"6-2-1"</span>);
         <span class="kw">let </span>redeemer_info = mint.redeemer.unwrap();
+        <span class="macro">println!</span>(<span class="string">"6-2-2"</span>);
         <span class="kw">let </span>mint_redeemer = csl::Redeemer::new(
             <span class="kw-2">&amp;</span>csl::RedeemerTag::new_mint(),
             <span class="kw-2">&amp;</span>to_bignum(index),
-            <span class="kw-2">&amp;</span>csl::PlutusData::from_json(
-                <span class="kw-2">&amp;</span>redeemer_info.data,
-                csl::PlutusDatumSchema::DetailedSchema,
-            )<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>redeemer_info.data)<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span>csl::ExUnits::new(
                 <span class="kw-2">&amp;</span>to_bignum(redeemer_info.ex_units.mem),
                 <span class="kw-2">&amp;</span>to_bignum(redeemer_info.ex_units.steps),
             ),
         );
+        <span class="macro">println!</span>(<span class="string">"6-2-3"</span>);
         <span class="kw">let </span>script_source_info = mint.script_source.unwrap();
+        <span class="macro">println!</span>(<span class="string">"6-2-4"</span>);
         <span class="kw">let </span>mint_script = <span class="kw">match </span>script_source_info {
             ScriptSource::InlineScriptSource(script) =&gt; {
+                <span class="macro">println!</span>(<span class="string">"6-2-5"</span>);
                 <span class="kw">let </span>language_version: csl::Language = <span class="kw">match </span>script.language_version {
                     LanguageVersion::V1 =&gt; csl::Language::new_plutus_v1(),
                     LanguageVersion::V2 =&gt; csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 =&gt; csl::Language::new_plutus_v3(),
                 };
+                <span class="macro">println!</span>(<span class="string">"6-2-6"</span>);
                 csl::PlutusScriptSource::new_ref_input(
                     <span class="kw-2">&amp;</span>csl::ScriptHash::from_hex(mint.policy_id.as_str())<span class="question-mark">?</span>,
                     <span class="kw-2">&amp;</span>csl::TransactionInput::new(
@@ -1234,11 +1271,13 @@
                 )
             }
             ScriptSource::ProvidedScriptSource(script) =&gt; {
+                <span class="macro">println!</span>(<span class="string">"6-2-7"</span>);
                 <span class="kw">let </span>language_version: csl::Language = <span class="kw">match </span>script.language_version {
                     LanguageVersion::V1 =&gt; csl::Language::new_plutus_v1(),
                     LanguageVersion::V2 =&gt; csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 =&gt; csl::Language::new_plutus_v3(),
                 };
+                <span class="macro">println!</span>(<span class="string">"6-2-8"</span>);
                 csl::PlutusScriptSource::new(<span class="kw-2">&amp;</span>csl::PlutusScript::from_hex_with_version(
                     script.script_cbor.as_str(),
                     <span class="kw-2">&amp;</span>language_version,
@@ -1246,11 +1285,13 @@
             }
         };
 
+        <span class="macro">println!</span>(<span class="string">"6-2-9"</span>);
         mint_builder.add_asset(
             <span class="kw-2">&amp;</span>csl::MintWitness::new_plutus_script(<span class="kw-2">&amp;</span>mint_script, <span class="kw-2">&amp;</span>mint_redeemer),
             <span class="kw-2">&amp;</span>csl::AssetName::new(hex::decode(mint.asset_name).unwrap())<span class="question-mark">?</span>,
             <span class="kw-2">&amp;</span>csl::Int::new_i32(mint.amount.try_into().unwrap()),
         )<span class="question-mark">?</span>;
+        <span class="macro">println!</span>(<span class="string">"6-2-10"</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1612,10 +1653,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(change_datum) = change_datum {
             <span class="self">self</span>.tx_builder.add_change_if_needed_with_datum(
                 <span class="kw-2">&amp;</span>csl::Address::from_bech32(<span class="kw-2">&amp;</span>change_address)<span class="question-mark">?</span>,
-                <span class="kw-2">&amp;</span>csl::OutputDatum::new_data(<span class="kw-2">&amp;</span>csl::PlutusData::from_json(
-                    <span class="kw-2">&amp;</span>change_datum.data,
-                    csl::PlutusDatumSchema::DetailedSchema,
-                )<span class="question-mark">?</span>),
+                <span class="kw-2">&amp;</span>csl::OutputDatum::new_data(<span class="kw-2">&amp;</span>csl::PlutusData::from_hex(<span class="kw-2">&amp;</span>change_datum.data)<span class="question-mark">?</span>),
             )<span class="question-mark">?</span>;
         } <span class="kw">else </span>{
             <span class="self">self</span>.tx_builder

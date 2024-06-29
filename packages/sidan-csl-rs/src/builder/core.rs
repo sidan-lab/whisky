@@ -34,13 +34,13 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
     serialize_tx_body(mesh_tx_builder_body, params).unwrap()
 }
 
-// #[test]
-// fn test_js_serialize_tx_body() {
-//     let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"type":"PubKey","txIn":{"txHash":"1662c4b349907e4d92e0995fd9dcdc9a4489f7dff4f5cce6b4b3901de479308c","txIndex":14,"amount":[{"unit":"lovelace","quantity":"774643176"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}}],"outputs":[{"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","amount":[{"unit":"lovelace","quantity":"1231231"}],"datum":null,"referenceScript":null}],"collaterals":[],"requiredSignatures":[],"referenceInputs":[],"mints":[],"changeAddress":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
-//     let params_json = r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
-//     let tx_hex = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
-//     println!("tx_hex: {:?}", tx_hex);
-// }
+#[test]
+fn test_js_serialize_tx_body() {
+    let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"type":"PubKey","txIn":{"txHash":"b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8","txIndex":0,"amount":[{"unit":"lovelace","quantity":"1000000000"}],"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq"}}}],"outputs":[{"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq","amount":[{"unit":"95cee82d7791c57fc5aed517d12155f247655bf6b1908292b5a2e9cc","quantity":"1"}],"datum":null,"referenceScript":null}],"collaterals":[{"type":"PubKey","txIn":{"txHash":"b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8","txIndex":0,"amount":[{"unit":"lovelace","quantity":"1000000000"}],"address":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq"}}],"requiredSignatures":[],"referenceInputs":[],"mints":[{"type":"Plutus","policyId":"95cee82d7791c57fc5aed517d12155f247655bf6b1908292b5a2e9cc","assetName":"","amount":1,"redeemer":{"data":"d87980","exUnits":{"mem":7000000,"steps":3000000000}},"scriptSource":{"providedScriptSource":{"scriptCbor":"59022c5902290100003323232323232323232222325333007323232323232533300d3370e90000008991919299980819b87480000044c8c8c8c94ccc050cdc3a400000229445281809000991980080080111299980b8008a6103d87a80001323253330163375e026601e6028004266e9520003301a0024bd70099802002000980d801180c8009bac3016001300e00713232323300100100222533301700114a226464a66602ca66602c66e3cdd71807801004099b88375a60366038603800490000a5113300400400114a060360046eb0c064004c8c8cc004004008894ccc05c00452f5c0264666444646600200200644a66603a00220062646603e6e9ccc07cdd48031980f9ba9375c60380026603e6ea0dd6980e800a5eb80cc00c00cc084008c07c004dd7180b0009bab301700133003003301b0023019001323300100100222533301600114bd6f7b630099191919299980b99b8f48900002100313301b337606ea4008dd3000998030030019bab3018003375c602c004603400460300026eacc054c058c058c058c058c03801cc03802cdd7180980098058010a50300b00130100013010002300e00130060032300d00114984d958c94ccc01ccdc3a40000022a666014600a0062930b0a99980399b874800800454ccc028c01400c52616163005002230053754002460066ea80055cd2ab9d5573caae7d5d02ba157449812bd8799fd8799f5820b789161dd0906ff55dbbbb2535d81e76568fcb0ebec24f5c554558dba83da0a8ff00ff0001","languageVersion":"V2"}}}],"changeAddress":"addr_test1qrfdlg620vjgsayzyljeyt2m5c0m6k9nhnhz2rupz3lt50x5wfge2g6j5q86l6qq553z5rapruml9ed5hmdgap4ldv7s58qmhq","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":["5820b7cbcc113d2fe1c6f97d858c2e512459b36034c67f630749567d8783757394c7"],"withdrawals":[]}"#;
+    let params_json = r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
+    let tx_hex = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
+    println!("tx_hex: {:?}", tx_hex);
+}
 
 /// ## Transaction building method
 ///
@@ -60,34 +60,45 @@ pub fn serialize_tx_body(
 ) -> Result<String, JsError> {
     let mut mesh_csl = MeshCSL::new(params);
 
+    println!("1");
     MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
+    println!("2");
     MeshTxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone())?;
+    println!("3");
     MeshTxBuilderCore::add_all_collaterals(
         &mut mesh_csl,
         mesh_tx_builder_body.collaterals.clone(),
     )?;
+    println!("4");
     MeshTxBuilderCore::add_all_reference_inputs(
         &mut mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
     )?;
+    println!("5");
     MeshTxBuilderCore::add_all_withdrawals(
         &mut mesh_csl,
         mesh_tx_builder_body.withdrawals.clone(),
     )?;
+    println!("6");
     MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
+    println!("7");
     MeshTxBuilderCore::add_all_certificates(
         &mut mesh_csl,
         mesh_tx_builder_body.certificates.clone(),
     )?;
+    println!("8");
     MeshTxBuilderCore::add_validity_range(
         &mut mesh_csl,
         mesh_tx_builder_body.validity_range.clone(),
     );
+    println!("9");
     MeshTxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
         mesh_tx_builder_body.required_signatures.clone(),
     )?;
+    println!("10");
     MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
+    println!("11");
 
     mesh_csl.add_script_hash()?;
     // if self.mesh_tx_builder_body.change_address != "" {
@@ -204,7 +215,9 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         for input in inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => mesh_csl.add_tx_in(pub_key_tx_in)?,
-                TxIn::SimpleScriptTxIn(simple_script_tx_in) => mesh_csl.add_simple_script_tx_in(simple_script_tx_in)?,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
+                    mesh_csl.add_simple_script_tx_in(simple_script_tx_in)?
+                }
                 TxIn::ScriptTxIn(script_tx_in) => mesh_csl.add_script_tx_in(script_tx_in)?,
             };
         }
@@ -263,14 +276,18 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
 
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) -> Result<(), JsError> {
         let mut mint_builder = csl::MintBuilder::new();
+        println!("6-1");
         for (index, mint) in mints.into_iter().enumerate() {
+            println!("6-2");
             match mint.type_.as_str() {
                 "Plutus" => mesh_csl.add_plutus_mint(&mut mint_builder, mint, index as u64)?,
                 "Native" => mesh_csl.add_native_mint(&mut mint_builder, mint)?,
                 _ => {}
             };
         }
+        println!("6-3");
         mesh_csl.tx_builder.set_mint_builder(&mint_builder);
+        println!("6-4");
         Ok(())
     }
 
