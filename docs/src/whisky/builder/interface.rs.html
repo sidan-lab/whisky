@@ -914,17 +914,21 @@
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
 <a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>cardano_serialization_lib::JsError;
 <span class="kw">use </span>sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
         Anchor, Asset, DRep, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams,
-        Protocol, PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal,
+        Protocol, PubKeyTxIn, TxIn, UTxO, Withdrawal,
     },
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::service::{IEvaluator, IFetcher, ISubmitter};
+
+<span class="kw">use super</span>::{WData, WRedeemer};
 
 <span class="kw">pub struct </span>MeshTxBuilder {
     <span class="kw">pub </span>core: MeshTxBuilderCore,
@@ -1056,12 +1060,12 @@
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, leave as None for Native scripts
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>tx_in_script(<span class="kw-2">&amp;mut </span><span class="self">self</span>, script_cbor: <span class="kw-2">&amp;</span>str, version: LanguageVersion) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>tx_in_script(<span class="kw-2">&amp;mut </span><span class="self">self</span>, script_cbor: <span class="kw-2">&amp;</span>str, version: <span class="prelude-ty">Option</span>&lt;LanguageVersion&gt;) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1074,7 +1078,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>tx_in_datum_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>tx_in_datum_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: WData) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1096,7 +1100,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1123,7 +1127,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>tx_out_datum_hash_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>tx_out_datum_hash_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: WData) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1136,7 +1140,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>tx_out_inline_datum_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>tx_out_inline_datum_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: WData) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1206,7 +1210,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>spending_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>spending_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1294,7 +1298,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>withdrawal_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>withdrawal_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1307,7 +1311,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>withdrawal_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>withdrawal_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1382,7 +1386,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>mint_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>mint_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1395,7 +1399,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>mint_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: Redeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>mint_reference_tx_in_redeemer_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>, redeemer: WRedeemer) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///
@@ -1703,7 +1707,7 @@
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    </span><span class="kw">fn </span>change_output_datum(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
+    </span><span class="kw">fn </span>change_output_datum(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: WData) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>;
 
     <span class="doccomment">/// ## Transaction building method
     ///

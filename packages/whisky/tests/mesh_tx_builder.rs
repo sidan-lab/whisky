@@ -1,8 +1,11 @@
 #[cfg(test)]
 mod mesh_tx_builder_core_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::model::{Asset, Budget, LanguageVersion, Redeemer};
-    use whisky::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
+    use sidan_csl_rs::model::{Asset, Budget, LanguageVersion};
+    use whisky::{
+        builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        core::common::{builtin_byte_string, con_str0},
+    };
 
     #[test]
     fn test_mesh_tx_builder_core() {
@@ -55,8 +58,8 @@ mod mesh_tx_builder_core_tests {
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .spending_reference_tx_in_inline_datum_present()
-            .spending_reference_tx_in_redeemer_value(Redeemer {
-                data,
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(data),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -87,9 +90,9 @@ mod mesh_tx_builder_core_tests {
                 vec![asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
-            .tx_in_datum_value(&data)
-            .spending_reference_tx_in_redeemer_value(Redeemer {
-                data: data.clone(),
+            .tx_in_datum_value(JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -127,9 +130,9 @@ mod mesh_tx_builder_core_tests {
                 LanguageVersion::V2,
                 100,
             )
-            .tx_in_datum_value(&data)
-            .spending_reference_tx_in_redeemer_value(Redeemer {
-                data: data.clone(),
+            .tx_in_datum_value(JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -162,9 +165,9 @@ mod mesh_tx_builder_core_tests {
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .tx_in_script(script_cbor, Some(LanguageVersion::V2))
-            .tx_in_datum_value(&data)
-            .spending_reference_tx_in_redeemer_value(Redeemer {
-                data: data.clone(),
+            .tx_in_datum_value(JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -203,9 +206,9 @@ mod mesh_tx_builder_core_tests {
                 LanguageVersion::V2,
                 100,
             )
-            .tx_in_datum_value(&data)
-            .spending_reference_tx_in_redeemer_value(Redeemer {
-                data: data.clone(),
+            .tx_in_datum_value(JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -245,12 +248,8 @@ mod mesh_tx_builder_core_tests {
             LanguageVersion::V2,
             100,
         )
-        .mint_redeemer_value(Redeemer {
-            data: to_string(&json!({
-                "constructor": 0,
-                "fields": ["test"]
-            }))
-            .unwrap(),
+        .mint_redeemer_value(WRedeemer {
+            data: JSON(con_str0(json!([builtin_byte_string("1234abcd")])).to_string()),
             ex_units: Budget {
                 mem: 3386819,
                 steps: 1048170931,

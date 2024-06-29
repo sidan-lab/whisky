@@ -174,9 +174,9 @@ impl IMeshCSL for MeshCSL {
         let script_source = input.script_tx_in.script_source.unwrap();
         let redeemer = input.script_tx_in.redeemer.unwrap();
         let csl_datum: csl::DatumSource = match datum_source {
-            DatumSource::ProvidedDatumSource(datum) => csl::DatumSource::new(
-                &csl::PlutusData::from_json(&datum.data, csl::PlutusDatumSchema::DetailedSchema)?,
-            ),
+            DatumSource::ProvidedDatumSource(datum) => {
+                csl::DatumSource::new(&csl::PlutusData::from_hex(&datum.data)?)
+            }
             DatumSource::InlineDatumSource(datum) => {
                 let ref_input = csl::TransactionInput::new(
                     &csl::TransactionHash::from_hex(&datum.tx_hash)?,
@@ -219,7 +219,7 @@ impl IMeshCSL for MeshCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)?,
+            &csl::PlutusData::from_hex(&redeemer.data)?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
@@ -245,17 +245,12 @@ impl IMeshCSL for MeshCSL {
             match datum.type_.as_str() {
                 "Hash" => {
                     output_builder = output_builder.with_data_hash(&csl::hash_plutus_data(
-                        &csl::PlutusData::from_json(
-                            &datum.data,
-                            csl::PlutusDatumSchema::DetailedSchema,
-                        )?,
+                        &csl::PlutusData::from_hex(&datum.data)?,
                     ));
                 }
                 "Inline" => {
-                    output_builder = output_builder.with_plutus_data(&csl::PlutusData::from_json(
-                        &datum.data,
-                        csl::PlutusDatumSchema::DetailedSchema,
-                    )?);
+                    output_builder =
+                        output_builder.with_plutus_data(&csl::PlutusData::from_hex(&datum.data)?);
                 }
                 _ => {}
             };
@@ -369,7 +364,7 @@ impl IMeshCSL for MeshCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_json(&redeemer.data, csl::PlutusDatumSchema::DetailedSchema)?,
+            &csl::PlutusData::from_hex(&redeemer.data)?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
@@ -391,27 +386,30 @@ impl IMeshCSL for MeshCSL {
         mint: MintItem,
         index: u64,
     ) -> Result<(), JsError> {
+        println!("6-2-1");
         let redeemer_info = mint.redeemer.unwrap();
+        println!("6-2-2");
         let mint_redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_mint(),
             &to_bignum(index),
-            &csl::PlutusData::from_json(
-                &redeemer_info.data,
-                csl::PlutusDatumSchema::DetailedSchema,
-            )?,
+            &csl::PlutusData::from_hex(&redeemer_info.data)?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer_info.ex_units.mem),
                 &to_bignum(redeemer_info.ex_units.steps),
             ),
         );
+        println!("6-2-3");
         let script_source_info = mint.script_source.unwrap();
+        println!("6-2-4");
         let mint_script = match script_source_info {
             ScriptSource::InlineScriptSource(script) => {
+                println!("6-2-5");
                 let language_version: csl::Language = match script.language_version {
                     LanguageVersion::V1 => csl::Language::new_plutus_v1(),
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
+                println!("6-2-6");
                 csl::PlutusScriptSource::new_ref_input(
                     &csl::ScriptHash::from_hex(mint.policy_id.as_str())?,
                     &csl::TransactionInput::new(
@@ -423,11 +421,13 @@ impl IMeshCSL for MeshCSL {
                 )
             }
             ScriptSource::ProvidedScriptSource(script) => {
+                println!("6-2-7");
                 let language_version: csl::Language = match script.language_version {
                     LanguageVersion::V1 => csl::Language::new_plutus_v1(),
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
+                println!("6-2-8");
                 csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
                     script.script_cbor.as_str(),
                     &language_version,
@@ -435,11 +435,13 @@ impl IMeshCSL for MeshCSL {
             }
         };
 
+        println!("6-2-9");
         mint_builder.add_asset(
             &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
             &csl::AssetName::new(hex::decode(mint.asset_name).unwrap())?,
             &csl::Int::new_i32(mint.amount.try_into().unwrap()),
         )?;
+        println!("6-2-10");
         Ok(())
     }
 
@@ -801,10 +803,7 @@ impl IMeshCSL for MeshCSL {
         if let Some(change_datum) = change_datum {
             self.tx_builder.add_change_if_needed_with_datum(
                 &csl::Address::from_bech32(&change_address)?,
-                &csl::OutputDatum::new_data(&csl::PlutusData::from_json(
-                    &change_datum.data,
-                    csl::PlutusDatumSchema::DetailedSchema,
-                )?),
+                &csl::OutputDatum::new_data(&csl::PlutusData::from_hex(&change_datum.data)?),
             )?;
         } else {
             self.tx_builder

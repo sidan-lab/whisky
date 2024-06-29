@@ -17,7 +17,7 @@ use sidan_csl_rs::{
     },
 };
 
-use super::{IMeshTxBuilder, MeshTxBuilder, MeshTxEvaluator};
+use super::{IMeshTxBuilder, MeshTxBuilder, MeshTxEvaluator, WData, WRedeemer};
 use crate::service::ITxEvaluation;
 
 #[async_trait]
@@ -216,7 +216,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn tx_in_datum_value(&mut self, data: &str) -> &mut Self {
+    fn tx_in_datum_value(&mut self, data: WData) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -227,13 +227,18 @@ impl IMeshTxBuilder for MeshTxBuilder {
             TxIn::SimpleScriptTxIn(_) => {
                 panic!("Datum cannot be defined for a simple script tx in")
             }
-            TxIn::ScriptTxIn(mut input) => {
-                input.script_tx_in.datum_source =
-                    Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
-                        data: data.to_string(),
-                    }));
-                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
-            }
+            TxIn::ScriptTxIn(mut input) => match data.to_cbor() {
+                Ok(raw_data) => {
+                    input.script_tx_in.datum_source =
+                        Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
+                            data: raw_data.to_string(),
+                        }));
+                    self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+                }
+                Err(_) => {
+                    panic!("Error converting datum to CBOR");
+                }
+            },
         }
         self
     }
@@ -261,7 +266,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -272,10 +277,18 @@ impl IMeshTxBuilder for MeshTxBuilder {
             TxIn::SimpleScriptTxIn(_) => {
                 panic!("Redeemer cannot be defined for a simple script tx in")
             }
-            TxIn::ScriptTxIn(mut input) => {
-                input.script_tx_in.redeemer = Some(redeemer);
-                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
-            }
+            TxIn::ScriptTxIn(mut input) => match redeemer.data.to_cbor() {
+                Ok(raw_redeemer) => {
+                    input.script_tx_in.redeemer = Some(Redeemer {
+                        data: raw_redeemer,
+                        ex_units: redeemer.ex_units,
+                    });
+                    self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+                }
+                Err(_) => {
+                    panic!("Error converting redeemer to CBOR");
+                }
+            },
         }
         self
     }
@@ -297,31 +310,45 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn tx_out_datum_hash_value(&mut self, data: &str) -> &mut Self {
+    fn tx_out_datum_hash_value(&mut self, data: WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
         }
         let mut tx_output = tx_output.unwrap();
-        tx_output.datum = Some(Datum {
-            type_: "Hash".to_string(),
-            data: data.to_string(),
-        });
-        self.tx_output = Some(tx_output);
+        match data.to_cbor() {
+            Ok(raw_data) => {
+                tx_output.datum = Some(Datum {
+                    type_: "Hash".to_string(),
+                    data: raw_data,
+                });
+                self.tx_output = Some(tx_output);
+            }
+            Err(_) => {
+                panic!("Error converting datum to CBOR");
+            }
+        }
         self
     }
 
-    fn tx_out_inline_datum_value(&mut self, data: &str) -> &mut Self {
+    fn tx_out_inline_datum_value(&mut self, data: WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
         }
         let mut tx_output = tx_output.unwrap();
-        tx_output.datum = Some(Datum {
-            type_: "Inline".to_string(),
-            data: data.to_string(),
-        });
-        self.tx_output = Some(tx_output);
+        match data.to_cbor() {
+            Ok(raw_data) => {
+                tx_output.datum = Some(Datum {
+                    type_: "Inline".to_string(),
+                    data: raw_data,
+                });
+                self.tx_output = Some(tx_output);
+            }
+            Err(_) => {
+                panic!("Error converting datum to CBOR");
+            }
+        }
         self
     }
 
@@ -385,7 +412,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.tx_in_inline_datum_present()
     }
 
-    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         self.tx_in_redeemer_value(redeemer)
     }
 
@@ -482,7 +509,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn withdrawal_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn withdrawal_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
             panic!("Undefined input")
@@ -492,15 +519,21 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {
                 panic!("Script cannot be defined for a pubkey withdrawal")
             }
-            Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
-                withdraw.redeemer = Some(redeemer);
-                self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
-            }
+            Withdrawal::PlutusScriptWithdrawal(mut withdraw) => match redeemer.data.to_cbor() {
+                Ok(raw_redeemer) => {
+                    withdraw.redeemer = Some(Redeemer {
+                        data: raw_redeemer,
+                        ex_units: redeemer.ex_units,
+                    });
+                    self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
+                }
+                Err(_) => panic!("Error converting redeemer to CBOR"),
+            },
         }
         self
     }
 
-    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         self.withdrawal_redeemer_value(redeemer)
     }
 
@@ -568,7 +601,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn mint_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -577,12 +610,22 @@ impl IMeshTxBuilder for MeshTxBuilder {
         if mint_item.type_ == "Native" {
             panic!("Redeemer cannot be defined for Native script mints");
         }
-        mint_item.redeemer = Some(redeemer);
-        self.mint_item = Some(mint_item);
+        match redeemer.data.to_cbor() {
+            Ok(raw_redeemer) => {
+                mint_item.redeemer = Some(Redeemer {
+                    data: raw_redeemer,
+                    ex_units: redeemer.ex_units,
+                });
+                self.mint_item = Some(mint_item);
+            }
+            Err(_) => {
+                panic!("Error converting redeemer to CBOR");
+            }
+        }
         self
     }
 
-    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self {
+    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
         self.mint_redeemer_value(redeemer)
     }
 
@@ -824,11 +867,18 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn change_output_datum(&mut self, data: &str) -> &mut Self {
-        self.core.mesh_tx_builder_body.change_datum = Some(Datum {
-            type_: "Inline".to_string(),
-            data: data.to_string(),
-        });
+    fn change_output_datum(&mut self, data: WData) -> &mut Self {
+        match data.to_cbor() {
+            Ok(raw_data) => {
+                self.core.mesh_tx_builder_body.change_datum = Some(Datum {
+                    type_: "Inline".to_string(),
+                    data: raw_data,
+                });
+            }
+            Err(_) => {
+                panic!("Error converting datum to CBOR");
+            }
+        }
         self
     }
 

@@ -4,11 +4,13 @@ use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
         Anchor, Asset, DRep, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams,
-        Protocol, PubKeyTxIn, Redeemer, TxIn, UTxO, Withdrawal,
+        Protocol, PubKeyTxIn, TxIn, UTxO, Withdrawal,
     },
 };
 
 use crate::service::{IEvaluator, IFetcher, ISubmitter};
+
+use super::{WData, WRedeemer};
 
 pub struct MeshTxBuilder {
     pub core: MeshTxBuilderCore,
@@ -158,7 +160,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_datum_value(&mut self, data: &str) -> &mut Self;
+    fn tx_in_datum_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -180,7 +182,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -207,7 +209,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_datum_hash_value(&mut self, data: &str) -> &mut Self;
+    fn tx_out_datum_hash_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -220,7 +222,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_inline_datum_value(&mut self, data: &str) -> &mut Self;
+    fn tx_out_inline_datum_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -290,7 +292,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -378,7 +380,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn withdrawal_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn withdrawal_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -391,7 +393,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -466,7 +468,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn mint_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -479,7 +481,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -787,7 +789,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn change_output_datum(&mut self, data: &str) -> &mut Self;
+    fn change_output_datum(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
