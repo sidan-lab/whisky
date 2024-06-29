@@ -848,6 +848,24 @@
 <a href="#846" id="846">846</a>
 <a href="#847" id="847">847</a>
 <a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::net::{Ipv4Addr, Ipv6Addr};
 
 <span class="kw">use crate</span>::{csl, model::<span class="kw-2">*</span>};
@@ -1004,7 +1022,9 @@
         <span class="kw">match </span>input.simple_script_tx_in {
             SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) =&gt; {
                 <span class="self">self</span>.tx_inputs_builder.add_native_script_input(
-                    <span class="kw-2">&amp;</span>csl::NativeScript::from_hex(<span class="kw-2">&amp;</span>script.script_cbor)<span class="question-mark">?</span>,
+                    <span class="kw-2">&amp;</span>csl::NativeScriptSource::new(<span class="kw-2">&amp;</span>csl::NativeScript::from_hex(
+                        <span class="kw-2">&amp;</span>script.script_cbor,
+                    )<span class="question-mark">?</span>),
                     <span class="kw-2">&amp;</span>csl::TransactionInput::new(
                         <span class="kw-2">&amp;</span>csl::TransactionHash::from_hex(<span class="kw-2">&amp;</span>input.tx_in.tx_hash)<span class="question-mark">?</span>,
                         input.tx_in.tx_index,
@@ -1013,10 +1033,26 @@
                 );
                 <span class="prelude-val">Ok</span>(())
             }
-            SimpleScriptTxInParameter::InlineSimpleScriptSource(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(JsError::from_str(
-                <span class="string">"Reference Native scripts not implemented"</span>,
-            )),
-        }
+            SimpleScriptTxInParameter::InlineSimpleScriptSource(script) =&gt; {
+                <span class="self">self</span>.tx_inputs_builder.add_native_script_input(
+                    <span class="kw-2">&amp;</span>csl::NativeScriptSource::new_ref_input(
+                        <span class="kw-2">&amp;</span>csl::ScriptHash::from_hex(<span class="kw-2">&amp;</span>script.simple_script_hash)<span class="question-mark">?</span>,
+                        <span class="kw-2">&amp;</span>csl::TransactionInput::new(
+                            <span class="kw-2">&amp;</span>csl::TransactionHash::from_hex(<span class="kw-2">&amp;</span>script.ref_tx_in.tx_hash)<span class="question-mark">?</span>,
+                            script.ref_tx_in.tx_index,
+                        ),
+                    ),
+                    <span class="kw-2">&amp;</span>csl::TransactionInput::new(
+                        <span class="kw-2">&amp;</span>csl::TransactionHash::from_hex(<span class="kw-2">&amp;</span>input.tx_in.tx_hash)<span class="question-mark">?</span>,
+                        input.tx_in.tx_index,
+                    ),
+                    <span class="kw-2">&amp;</span>to_value(<span class="kw-2">&amp;</span>input.tx_in.amount.unwrap()),
+                );
+                <span class="prelude-val">Ok</span>(())
+            } <span class="comment">// Err(JsError::from_str(
+              //     "Reference Native scripts not implemented",
+              // )),
+        </span>}
     }
 
     <span class="kw">fn </span>add_script_tx_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: ScriptTxIn) -&gt; <span class="prelude-ty">Result</span>&lt;(), JsError&gt; {
