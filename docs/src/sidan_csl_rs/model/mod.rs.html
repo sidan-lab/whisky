@@ -465,6 +465,7 @@
 <a href="#463" id="463">463</a>
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>action;
 <span class="kw">mod </span>asset;
 <span class="kw">mod </span>data;
@@ -563,6 +564,7 @@
 </span><span class="kw">pub struct </span>InlineSimpleScriptSource {
     <span class="kw">pub </span>type_: String,
     <span class="kw">pub </span>ref_tx_in: RefTxIn,
+    <span class="kw">pub </span>simple_script_hash: String,
 }
 
 <span class="attr">#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

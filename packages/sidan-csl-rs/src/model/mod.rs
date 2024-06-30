@@ -96,6 +96,7 @@ pub struct ProvidedSimpleScriptSource {
 pub struct InlineSimpleScriptSource {
     pub type_: String,
     pub ref_tx_in: RefTxIn,
+    pub simple_script_hash: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

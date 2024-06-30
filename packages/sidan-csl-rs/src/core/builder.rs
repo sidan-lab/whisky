@@ -154,7 +154,9 @@ impl IMeshCSL for MeshCSL {
         match input.simple_script_tx_in {
             SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) => {
                 self.tx_inputs_builder.add_native_script_input(
-                    &csl::NativeScript::from_hex(&script.script_cbor)?,
+                    &csl::NativeScriptSource::new(&csl::NativeScript::from_hex(
+                        &script.script_cbor,
+                    )?),
                     &csl::TransactionInput::new(
                         &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                         input.tx_in.tx_index,
@@ -163,9 +165,25 @@ impl IMeshCSL for MeshCSL {
                 );
                 Ok(())
             }
-            SimpleScriptTxInParameter::InlineSimpleScriptSource(_) => Err(JsError::from_str(
-                "Reference Native scripts not implemented",
-            )),
+            SimpleScriptTxInParameter::InlineSimpleScriptSource(script) => {
+                self.tx_inputs_builder.add_native_script_input(
+                    &csl::NativeScriptSource::new_ref_input(
+                        &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
+                        &csl::TransactionInput::new(
+                            &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                            script.ref_tx_in.tx_index,
+                        ),
+                    ),
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                        input.tx_in.tx_index,
+                    ),
+                    &to_value(&input.tx_in.amount.unwrap()),
+                );
+                Ok(())
+            } // Err(JsError::from_str(
+              //     "Reference Native scripts not implemented",
+              // )),
         }
     }
 
