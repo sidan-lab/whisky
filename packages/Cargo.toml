@@ -1,6 +1,8 @@
 [workspace]
+version = "0.6.7"
 resolver = "2"
 members = [
     "sidan-csl-rs",
     "whisky",
+    "whisky-examples"
 ]
