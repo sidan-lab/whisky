@@ -117,9 +117,9 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "cardano-serialization-lib"
-version = "12.0.0-beta.1"
+version = "12.0.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f65e643224e676b78a1d405ddeafbf599294ab4eb9d91f56ada1463759a0ede"
+checksum = "ea37ee203a7a3ed30f79cd115771a223414e7f75fcd6164c71e518e813a5389d"
 dependencies = [
  "bech32 0.7.3",
  "cbor_event",
@@ -1184,7 +1184,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.6.7"
+version = "0.6.8"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -1487,7 +1487,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.6.7"
+version = "0.6.8"
 dependencies = [
  "async-trait",
  "cardano-serialization-lib",
@@ -1509,7 +1509,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.6.7"
+version = "0.6.8"
 dependencies = [
  "whisky",
 ]
