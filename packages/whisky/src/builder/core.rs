@@ -73,7 +73,12 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
-                    Err(_) => panic!("Error evaluating transaction"),
+                    Err(err) => {
+                        return Err(JsError::from_str(&format!(
+                            "Error evaluating transaction: {:?}",
+                            err
+                        )))
+                    }
                 }
             }
             None => self,
@@ -1040,17 +1045,19 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     address: Some(input.output.address.clone()),
                 },
             })?;
+            let pub_key_input = TxIn::PubKeyTxIn(PubKeyTxIn {
+                tx_in: TxInParameter {
+                    tx_hash: input.input.tx_hash.clone(),
+                    tx_index: input.input.output_index,
+                    amount: Some(input.output.amount.clone()),
+                    address: Some(input.output.address.clone()),
+                },
+            });
             self.core
                 .mesh_tx_builder_body
                 .inputs
-                .push(TxIn::PubKeyTxIn(PubKeyTxIn {
-                    tx_in: TxInParameter {
-                        tx_hash: input.input.tx_hash,
-                        tx_index: input.input.output_index,
-                        amount: Some(input.output.amount),
-                        address: Some(input.output.address),
-                    },
-                }));
+                .push(pub_key_input.clone());
+            self.inputs_for_evaluation.push(input);
         }
         Ok(())
     }
