@@ -73,7 +73,12 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
-                    Err(_) => panic!("Error evaluating transaction"),
+                    Err(err) => {
+                        return Err(JsError::from_str(&format!(
+                            "Error evaluating transaction: {:?}",
+                            err
+                        )))
+                    }
                 }
             }
             None => self,

@@ -99,9 +99,7 @@ impl IEvaluator for MeshTxEvaluator {
         inputs: &[UTxO],
         additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError> {
-        let res = self.evaluate_tx_sync(tx_hex, inputs, additional_txs);
-        println!("res: {:?}", res);
-        res
+        self.evaluate_tx_sync(tx_hex, inputs, additional_txs)
     }
 }
 
