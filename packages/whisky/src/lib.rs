@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! whisky = "^0.6.1"
+//! whisky = "^<the-latest-version>"
 //! ```
 //!
 //! ## Getting Started
