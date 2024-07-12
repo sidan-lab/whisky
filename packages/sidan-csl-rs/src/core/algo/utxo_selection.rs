@@ -1,5 +1,24 @@
-use crate::model::*;
+use cardano_serialization_lib::JsError;
+
+use crate::{model::*, *};
 use std::collections::HashSet;
+
+#[wasm_bindgen]
+pub fn js_select_utxos(
+    json_str_inputs: &str,
+    json_str_required_assets: &str,
+    threshold: &str,
+) -> Result<String, JsError> {
+    let inputs: Vec<UTxO> =
+        serde_json::from_str(json_str_inputs).expect("Error deserializing inputs");
+    let required_assets: Vec<Asset> = serde_json::from_str(json_str_required_assets)
+        .expect("Error deserializing required_assets");
+    let required_value = Value::from_asset_vec(required_assets);
+
+    select_utxos(inputs, required_value, threshold.to_string())
+        .map_err(|e| JsError::from_str(&e))
+        .map(|utxos| serde_json::to_string(&utxos).unwrap())
+}
 
 pub fn select_utxos(
     inputs: Vec<UTxO>,

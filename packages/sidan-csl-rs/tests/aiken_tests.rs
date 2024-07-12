@@ -9,7 +9,7 @@ mod aiken_tests {
         use serde_json::{json, to_string};
         let script =
           "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
-        let params = vec![to_string(&json!({ "bytes": "1234"})).unwrap()];
+        let params = [to_string(&json!({ "bytes": "1234"})).unwrap()];
 
         let mut aiken_params = JsVecString::new();
         aiken_params.add(params[0].clone());

@@ -2,9 +2,11 @@ mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
         core::common::con_str0,
-        model::{Asset, Budget, LanguageVersion, Redeemer},
+        model::{Asset, Budget, LanguageVersion},
     };
-    use whisky::builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam};
+    use whisky::builder::{
+        IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer,
+    };
 
     #[test]
     fn test_complex_plutus_mint_spend_with_ref_tx() {
@@ -52,111 +54,128 @@ mod int_tests {
             params: None,
         });
 
-        mesh.tx_in(
-            "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
-            3,
-            vec![Asset::new_from_str("lovelace", "9692479606")],
-            "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-        )
-        .read_only_tx_in_reference(
-            "8b7ea04a142933b3d8005bf98be906bdba10978891593b383deac933497e2ea7",
-            1,
-        )
-        .mint_plutus_script_v2()
-        .mint(1, cns_policy_id, domain_with_ext)
-        .mint_tx_in_reference(
-            cns_token_mp_script_ref_txhash,
-            cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
-            cns_policy_id,
-            LanguageVersion::V2,
-            100,
-        )
-        .mint_redeemer_value(Redeemer {
-            data: to_string(&json!({
-                "constructor": 0,
-                "fields": [{ "bytes": domain }]
-            }))
-            .unwrap(),
-            ex_units: Budget {
-                mem: 3386819,
-                steps: 1048170931,
-            },
-        })
-        .spending_plutus_script_v2()
-        .tx_in(
-            record_tx_hash,
-            record_tx_id,
-            vec![Asset::new(
-                record_token_policy_id.to_string() + record_token_name_hex,
-                "1".to_string(),
-            )],
-            "addr_test1wz97vqzhce0m4ek4cpnnlzvlaf5gdzck46axlur094lnzcgj0pq2u",
-        )
-        .spending_reference_tx_in_inline_datum_present()
-        .spending_reference_tx_in_redeemer_value(Redeemer {
-            data: to_string(&json!({
-              "constructor": 0,
-              "fields": [{ "bytes": domain }],
-            }))
-            .unwrap(),
-            ex_units: Budget {
-                mem: 9978951,
-                steps: 4541421719,
-            },
-        })
-        .spending_tx_in_reference(
-            record_validator_script_ref_txhash,
-            record_validator_script_ref_txid.parse::<u32>().unwrap(),
-            "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
-            LanguageVersion::V2,
-            100,
-        )
-        .tx_out(
-            wallet_address,
-            vec![
-                Asset::new_from_str("lovelace", "2000000"),
-                Asset::new(cns_policy_id.to_string() + domain_with_ext, "1".to_string()),
-            ],
-        )
-        .tx_out(
-            cns_owner_addr,
-            vec![Asset::new_from_str("lovelace", "30000000")],
-        )
-        .tx_out(
-            record_validator_addr,
-            vec![
-                Asset::new_from_str("lovelace", "20000000"),
-                Asset::new(
+        let res = mesh
+            .tx_in(
+                "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
+                3,
+                vec![Asset::new_from_str("lovelace", "9692479606")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )
+            .read_only_tx_in_reference(
+                "8b7ea04a142933b3d8005bf98be906bdba10978891593b383deac933497e2ea7",
+                1,
+            )
+            .mint_plutus_script_v2()
+            .mint(1, cns_policy_id, domain_with_ext)
+            .mint_tx_in_reference(
+                cns_token_mp_script_ref_txhash,
+                cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
+                cns_policy_id,
+                LanguageVersion::V2,
+                100,
+            )
+            .mint_redeemer_value(WRedeemer {
+                data: JSON(
+                    to_string(&json!({
+                        "constructor": 0,
+                        "fields": [{ "bytes": domain }]
+                    }))
+                    .unwrap(),
+                ),
+                ex_units: Budget {
+                    mem: 3386819,
+                    steps: 1048170931,
+                },
+            })
+            .spending_plutus_script_v2()
+            .tx_in(
+                record_tx_hash,
+                record_tx_id,
+                vec![Asset::new(
                     record_token_policy_id.to_string() + record_token_name_hex,
                     "1".to_string(),
+                )],
+                "addr_test1wz97vqzhce0m4ek4cpnnlzvlaf5gdzck46axlur094lnzcgj0pq2u",
+            )
+            .spending_reference_tx_in_inline_datum_present()
+            .spending_reference_tx_in_redeemer_value(WRedeemer {
+                data: JSON(
+                    to_string(&json!({
+                      "constructor": 0,
+                      "fields": [{ "bytes": domain }],
+                    }))
+                    .unwrap(),
                 ),
-            ],
-        )
-        .tx_out_inline_datum_value(
-            to_string(&json!({
-              "constructor": 0,
-              "fields": [{ "bytes": domain }],
-            }))
-            .unwrap()
-            .as_str(),
-        )
-        .required_signer_hash(cns_owner_pubkey)
-        .metadata_value("721", to_string(&metadata).unwrap().as_str())
-        .tx_in_collateral(
-            "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
-            6,
-            vec![Asset::new_from_str("lovelace", "10000000")],
-            "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-        )
-        .tx_in_collateral(
-            "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
-            7,
-            vec![Asset::new_from_str("lovelace", "10000000")],
-            "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-        )
-        .change_address(wallet_address)
-        .change_output_datum(&con_str0(json!([])).to_string())
-        .complete_sync(None);
+                ex_units: Budget {
+                    mem: 9978951,
+                    steps: 4541421719,
+                },
+            })
+            .spending_tx_in_reference(
+                record_validator_script_ref_txhash,
+                record_validator_script_ref_txid.parse::<u32>().unwrap(),
+                "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
+                LanguageVersion::V2,
+                100,
+            )
+            .tx_out(
+                wallet_address,
+                vec![
+                    Asset::new_from_str("lovelace", "2000000"),
+                    Asset::new(cns_policy_id.to_string() + domain_with_ext, "1".to_string()),
+                ],
+            )
+            .tx_out(
+                cns_owner_addr,
+                vec![Asset::new_from_str("lovelace", "30000000")],
+            )
+            .tx_out(
+                record_validator_addr,
+                vec![
+                    Asset::new_from_str("lovelace", "20000000"),
+                    Asset::new(
+                        record_token_policy_id.to_string() + record_token_name_hex,
+                        "1".to_string(),
+                    ),
+                ],
+            )
+            .tx_out_inline_datum_value(JSON(
+                to_string(&json!({
+                  "constructor": 0,
+                  "fields": [{ "bytes": domain }],
+                }))
+                .unwrap(),
+            ))
+            .required_signer_hash(cns_owner_pubkey)
+            .metadata_value("721", to_string(&metadata).unwrap().as_str())
+            .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                6,
+                vec![Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )
+            .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                7,
+                vec![Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )
+            .change_address(wallet_address)
+            .change_output_datum(JSON(con_str0(json!([])).to_string()))
+            .complete_sync(None);
+
+        match res {
+            Ok(_) => {
+                let signed_tx = mesh.complete_signing();
+                println!("{}", signed_tx);
+                assert!(mesh.core.mesh_csl.tx_hex != *"");
+            }
+            Err(e) => {
+                println!("error: {:?}", e);
+                // failing the test case
+                panic!()
+            }
+        }
         println!("{}", mesh.core.mesh_csl.tx_hex);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
@@ -179,6 +198,80 @@ mod int_tests {
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
+            .unwrap()
+            .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_simple_withdraw() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let signed_tx = mesh
+            .tx_in(
+                "fbd3e8091c9f0c5fb446be9e58d9235f548546a5a7d5f60ee56e389344db9c5e",
+                0,
+                vec![Asset::new_from_str("lovelace", "9496607660")],
+                "addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459",
+            )
+            .change_address("addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459")
+            .withdrawal("stake_test1uraj0xqlekpdwlxeugg2s2qwq896n4kzkuhwxxnqggwpjeqe9s9k2", 0)
+            .required_signer_hash("fb27981fcd82d77cd9e210a8280e01cba9d6c2b72ee31a60421c1964")
+            .required_signer_hash("64980e4d19ed6a2532aca6e7aaeb8922b6bc8f15b1ba2878d3bc2f27")
+            .signing_key("58208d4cfa90e8bd0c48c52d2fb62c77ba3f6f5eb46f640d5f997390012928d670f7")
+            .signing_key("5820ba73019f1239fa47f8d9c0c42c5d05bf34f2b2f6ebd1c556f8f86e5bee1aac66")
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_plutus_withdraw() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let signed_tx = mesh
+            .tx_in(
+                "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
+                0,
+                vec![Asset::new_from_str("lovelace", "9999639476")],
+                "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+            )
+            .tx_in_collateral(
+            "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
+            0,
+            vec![Asset::new_from_str("lovelace", "9999639476")],
+            "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+            )
+            .change_address("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw")
+            .withdrawal_plutus_script_v2()
+            .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
+            .withdrawal_script("5251010000322253330034a229309b2b2b9a01", LanguageVersion::V2)
+            .withdrawal_redeemer_value(WRedeemer {
+                data: JSON(con_str0(json!([])).to_string()),
+                ex_units: Budget {
+                    mem: 2501,
+                    steps: 617656,
+                },
+            })
+            .required_signer_hash("4f91183f5fc7c81cbc11d1ecbfde2d1cfc1a71ef9de999bdc1e15ecb")
+            .signing_key("5820c835cd2413c6330537c85e3d510b313dfdeee5708206e76ce8bd387cdd4b6bb2")
+            .complete_sync(None)
+            .unwrap()
             .complete_signing();
 
         println!("{}", signed_tx);

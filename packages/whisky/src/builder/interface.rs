@@ -1,28 +1,33 @@
 use async_trait::async_trait;
+use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
     builder::MeshTxBuilderCore,
     model::{
-        Asset, LanguageVersion, MeshTxBuilderBody, MintItem, Output, Protocol, PubKeyTxIn,
-        Redeemer, TxIn, UTxO,
+        Anchor, Asset, DRep, LanguageVersion, MeshTxBuilderBody, MintItem, Output, PoolParams,
+        Protocol, PubKeyTxIn, TxIn, UTxO, Withdrawal,
     },
 };
 
 use crate::service::{IEvaluator, IFetcher, ISubmitter};
 
+use super::{WData, WRedeemer};
+
 pub struct MeshTxBuilder {
     pub core: MeshTxBuilderCore,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
-    pub extra_inputs: Vec<UTxO>,
-    pub selection_threshold: u64,
+    pub withdrawal_item: Option<Withdrawal>,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,
     pub adding_script_input: bool,
     pub adding_plutus_mint: bool,
+    pub adding_plutus_withdrawal: bool,
     pub fetcher: Option<Box<dyn IFetcher>>,
     pub evaluator: Option<Box<dyn IEvaluator>>,
     pub submitter: Option<Box<dyn ISubmitter>>,
+    pub extra_inputs: Vec<UTxO>,
+    pub selection_threshold: u64,
     pub chained_txs: Vec<String>,
     pub inputs_for_evaluation: Vec<UTxO>,
 }
@@ -38,12 +43,25 @@ pub struct MeshTxBuilderParam {
 pub trait IMeshTxBuilder {
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance
+    /// Create a new MeshTxBuilder instance with option params
+    ///
+    /// ### Arguments
+    ///
+    /// * `param` - Parameters for setting up the MeshTxBuilder instance, including evaluator, fetcher, submitter, and protocol parameters
     ///
     /// ### Returns
     ///
     /// * `Self` - A new MeshTxBuilder instance
     fn new(param: MeshTxBuilderParam) -> Self;
+
+    /// ## Transaction building method
+    ///
+    /// Create a new MeshTxBuilder instance without option params
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - A new MeshTxBuilder instance
+    fn new_core() -> Self;
 
     /// ## Transaction building method
     ///  
@@ -56,7 +74,10 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    async fn complete(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+    async fn complete(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError>;
 
     /// ## Transaction building method
     ///
@@ -69,7 +90,10 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn complete_sync(&mut self, customized_tx: Option<MeshTxBuilderBody>) -> &mut Self;
+    fn complete_sync(
+        &mut self,
+        customized_tx: Option<MeshTxBuilderBody>,
+    ) -> Result<&mut Self, JsError>;
 
     /// ## Transaction building method
     ///
@@ -118,12 +142,12 @@ pub trait IMeshTxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, leave as None for Native scripts
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+    fn tx_in_script(&mut self, script_cbor: &str, version: Option<LanguageVersion>) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -136,7 +160,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_datum_value(&mut self, data: &str) -> &mut Self;
+    fn tx_in_datum_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -158,7 +182,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -185,7 +209,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_datum_hash_value(&mut self, data: &str) -> &mut Self;
+    fn tx_out_datum_hash_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -198,7 +222,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_inline_datum_value(&mut self, data: &str) -> &mut Self;
+    fn tx_out_inline_datum_value(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -268,7 +292,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -283,6 +307,93 @@ pub trait IMeshTxBuilder {
     ///
     /// * `Self` - The MeshTxBuilder instance
     fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_plutus_script_v2(&mut self) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a withdrawal reference to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `tx_hash` - The transaction hash
+    /// * `tx_index` - The transaction index
+    /// * `withdrawal_script_hash` - The withdrawal script hash
+    /// * `version` - The language version
+    /// * `scrip_size` - Size of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        withdrawal_script_hash: &str,
+        version: LanguageVersion,
+        script_size: usize,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Withdraw stake rewards in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_address` - The address corresponding to the stake key
+    /// * `coin` - The amount of lovelaces in the withdrawal
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal(&mut self, stake_address: &str, coin: u64) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a withdrawal script to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `script_cbor` - The script in CBOR format
+    /// * `version` - The language version
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Set the transaction withdrawal redeemer value in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `redeemer` - The redeemer value
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Set the withdrawal reference redeemer value in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `redeemer` - The redeemer value
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -357,7 +468,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn mint_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -370,7 +481,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: Redeemer) -> &mut Self;
+    fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -409,6 +520,253 @@ pub trait IMeshTxBuilder {
 
     /// ## Transaction building method
     ///
+    /// Add a pool registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `pool_params` - Parameters of pool to be registered
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn register_pool_certificate(&mut self, pool_params: PoolParams) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_id` - id of the pool that will be delegated to
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake deregistration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a pool retire certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `pool_id` - id of the pool that will be retired
+    /// * `epoch` - The epoch that the pool will be retired from
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a vote delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake and vote delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_and_vote_delegation_certificate(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a vote registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a stake vote registration and delegation certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `stake_key_hash` - Hash of the stake key
+    /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
+    /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn stake_vote_registration_and_delegation(
+        &mut self,
+        stake_key_hash: &str,
+        pool_key_hash: &str,
+        drep: DRep,
+        coin: u64,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add commitee hot auth certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `committee_cold_key_hash` - Hash of the committee cold key
+    /// * `committee_hot_key_hash` - Hash of the commitee hot key
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn committee_hot_auth(
+        &mut self,
+        committee_cold_key_hash: &str,
+        committee_hot_key_hash: &str,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add commitee cold resign certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `committee_cold_key_hash` - Hash of the committee cold key
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn commitee_cold_resign(
+        &mut self,
+        committee_cold_key_hash: &str,
+        anchor: Option<Anchor>,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep registration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `coin` - Deposit for certificate registration
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_registration(
+        &mut self,
+        voting_key_hash: &str,
+        coin: u64,
+        anchor: Option<Anchor>,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep deregistration certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `coin` - Deposit for certificate registration
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add DRep update certificate to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `voting_key_hash` - Hash of the voting key
+    /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
     /// Change the address in the MeshTxBuilder instance
     ///
     /// ### Arguments
@@ -431,7 +789,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn change_output_datum(&mut self, data: &str) -> &mut Self;
+    fn change_output_datum(&mut self, data: WData) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -533,6 +891,11 @@ pub trait IMeshTxBuilder {
 
     /// ## Internal method
     ///
+    /// Queue a withdrawal in the MeshTxBuilder instance
+    fn queue_withdrawal(&mut self);
+
+    /// ## Internal method
+    ///
     /// Queue a mint in the MeshTxBuilder instance
     fn queue_mint(&mut self);
 
@@ -549,5 +912,5 @@ pub trait IMeshTxBuilder {
     ///
     /// * `extra_inputs` - A vector of extra inputs provided
     /// * `threshold` - The threshold as configured
-    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64);
+    fn add_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> Result<(), JsError>;
 }

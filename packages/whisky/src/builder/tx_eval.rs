@@ -121,7 +121,7 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
         let resolved_input = ResolvedInput {
             input: TransactionInput {
                 transaction_id: Hash::from(tx_hash),
-                index: utxo.input.output_index.try_into().unwrap(),
+                index: utxo.input.output_index.into(),
             },
             output: TransactionOutput::PostAlonzo(PostAlonzoTransactionOutput {
                 address: Bytes::from(

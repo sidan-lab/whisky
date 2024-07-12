@@ -6,15 +6,22 @@ pub struct SerializedAddress {
     pub_key_hash: String,
     script_hash: String,
     stake_key_hash: String,
+    stake_key_script_hash: String,
 }
 
 #[wasm_bindgen]
 impl SerializedAddress {
-    pub fn new(pub_key_hash: String, script_hash: String, stake_key_hash: String) -> Self {
+    pub fn new(
+        pub_key_hash: String,
+        script_hash: String,
+        stake_key_hash: String,
+        stake_key_script_hash: String,
+    ) -> Self {
         Self {
             pub_key_hash,
             script_hash,
             stake_key_hash,
+            stake_key_script_hash,
         }
     }
 
@@ -28,5 +35,9 @@ impl SerializedAddress {
 
     pub fn get_stake_key_hash(&self) -> String {
         self.stake_key_hash.clone()
+    }
+
+    pub fn get_stake_key_script_hash(&self) -> String {
+        self.stake_key_script_hash.clone()
     }
 }

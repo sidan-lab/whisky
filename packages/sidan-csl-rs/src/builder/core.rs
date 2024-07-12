@@ -1,3 +1,6 @@
+use builder::TxBuildResult;
+use cardano_serialization_lib::JsError;
+
 use crate::{
     core::builder::{IMeshCSL, MeshCSL},
     csl,
@@ -7,17 +10,45 @@ use crate::{
 
 use super::{interface::MeshTxBuilderCore, IMeshTxBuilderCore};
 
+/// ## WASM Transaction building method
+///
+/// Serialize the transaction body
+///
+/// ### Arguments
+///
+/// * `mesh_tx_builder_body_json` - The transaction builder body information, serialized as JSON string
+/// * `params_json` - Optional protocol parameters, default as Cardano mainnet configuration, serialized as JSON string
+///
+/// ### Returns
+///
+/// * `String` - the built transaction hex
 #[wasm_bindgen]
-pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> String {
-    let mesh_tx_builder_body: MeshTxBuilderBody = serde_json::from_str(mesh_tx_builder_body_json)
-        .expect("Error deserializing transaction body");
+pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> TxBuildResult {
+    let mesh_tx_builder_body: MeshTxBuilderBody =
+        match serde_json::from_str(mesh_tx_builder_body_json) {
+            Ok(mesh_tx_builder_body) => mesh_tx_builder_body,
+            Err(e) => {
+                return TxBuildResult::new("failure".to_string(), format!("Invalid JSON: {:?}", e))
+            }
+        };
 
     let params: Option<Protocol> = match serde_json::from_str(params_json) {
         Ok(params) => Some(params),
         Err(_) => None,
     };
 
-    serialize_tx_body(mesh_tx_builder_body, params)
+    match serialize_tx_body(mesh_tx_builder_body, params) {
+        Ok(tx_hex) => TxBuildResult::new("success".to_string(), tx_hex.to_string()),
+        Err(e) => TxBuildResult::new("failure".to_string(), format!("{:?}", e)),
+    }
+}
+
+#[test]
+fn test_js_serialize_tx_body() {
+    let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"txIn":{"txHash":"5b0145fe7b0212a7807e7dba24997049374d965f587300a2039b73cd30806c78","txIndex":1,"amount":[{"unit":"lovelace","quantity":"1132923230"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}}],"outputs":[{"address":"addr_test1wpnlxv2xv9a9ucvnvzqakwepzl9ltx7jzgm53av2e9ncv4sysemm8","amount":[{"unit":"lovelace","quantity":"1600000"}],"datum":{"hash":{"type":"Mesh","content":"supersecret"}},"referenceScript":null}],"collaterals":[{"txIn":{"txHash":"ec0c2e70b898cf531b03c9db937602e98c45378d9fa8e8a5b5a91ec5c1d7540d","txIndex":5,"amount":[{"unit":"lovelace","quantity":"5000000"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}],"requiredSignatures":[],"referenceInputs":[],"mints":[],"changeAddress":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
+    let params_json = r#"{"epoch":0,"coinsPerUTxOSize":"4310","priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":"2000000","maxTxSize":16384,"maxValSize":"5000","poolDeposit":"500000000","maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
+    let tx_build_result = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
+    println!("{:?}", tx_build_result);
 }
 
 /// ## Transaction building method
@@ -27,45 +58,36 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
 /// ### Arguments
 ///
 /// * `mesh_tx_builder_body` - The transaction builder body information
+/// * `params` - Optional protocol parameters, default as Cardano mainnet configuration
 ///
 /// ### Returns
 ///
 /// * `String` - the built transaction hex
 pub fn serialize_tx_body(
-    mut mesh_tx_builder_body: MeshTxBuilderBody,
+    mesh_tx_builder_body: MeshTxBuilderBody,
     params: Option<Protocol>,
-) -> String {
+) -> Result<String, JsError> {
     let mut mesh_csl = MeshCSL::new(params);
 
-    mesh_tx_builder_body
-        .mints
-        .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
-
-    mesh_tx_builder_body.inputs.sort_by(|a, b| {
-        let tx_in_data_a: &TxInParameter = match a {
-            TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
-            TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
-        };
-
-        let tx_in_data_b: &TxInParameter = match b {
-            TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
-            TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in,
-        };
-
-        tx_in_data_a
-            .tx_hash
-            .cmp(&tx_in_data_b.tx_hash)
-            .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
-    });
-
-    MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone());
-    MeshTxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone());
-    MeshTxBuilderCore::add_all_collaterals(&mut mesh_csl, mesh_tx_builder_body.collaterals.clone());
+    MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
+    MeshTxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone())?;
+    MeshTxBuilderCore::add_all_collaterals(
+        &mut mesh_csl,
+        mesh_tx_builder_body.collaterals.clone(),
+    )?;
     MeshTxBuilderCore::add_all_reference_inputs(
         &mut mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
-    );
-    MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone());
+    )?;
+    MeshTxBuilderCore::add_all_withdrawals(
+        &mut mesh_csl,
+        mesh_tx_builder_body.withdrawals.clone(),
+    )?;
+    MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
+    MeshTxBuilderCore::add_all_certificates(
+        &mut mesh_csl,
+        mesh_tx_builder_body.certificates.clone(),
+    )?;
     MeshTxBuilderCore::add_validity_range(
         &mut mesh_csl,
         mesh_tx_builder_body.validity_range.clone(),
@@ -73,10 +95,10 @@ pub fn serialize_tx_body(
     MeshTxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
         mesh_tx_builder_body.required_signatures.clone(),
-    );
-    MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone());
+    )?;
+    MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
 
-    mesh_csl.add_script_hash();
+    mesh_csl.add_script_hash()?;
     // if self.mesh_tx_builder_body.change_address != "" {
     //     let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
     //     let collateral_vec: Vec<u64> = collateral_inputs
@@ -145,7 +167,7 @@ pub fn serialize_tx_body(
     mesh_csl.add_change(
         mesh_tx_builder_body.change_address.clone(),
         mesh_tx_builder_body.change_datum.clone(),
-    );
+    )?;
     mesh_csl.build_tx()
 }
 
@@ -159,9 +181,11 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 collaterals: vec![],
                 required_signatures: JsVecString::new(),
                 reference_inputs: vec![],
+                withdrawals: vec![],
                 mints: vec![],
                 change_address: "".to_string(),
                 change_datum: None,
+                certificates: vec![],
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -169,7 +193,7 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 },
                 signing_key: JsVecString::new(),
             },
-            tx_evaluation_multiplier_percentage: 10,
+            tx_evaluation_multiplier_percentage: 110,
         }
     }
 
@@ -185,46 +209,148 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
-    fn add_all_inputs(mesh_csl: &mut MeshCSL, inputs: Vec<TxIn>) {
+    fn add_all_inputs(mesh_csl: &mut MeshCSL, inputs: Vec<TxIn>) -> Result<(), JsError> {
         for input in inputs {
             match input {
-                TxIn::PubKeyTxIn(pub_key_tx_in) => mesh_csl.add_tx_in(pub_key_tx_in),
-                TxIn::ScriptTxIn(script_tx_in) => mesh_csl.add_script_tx_in(script_tx_in),
+                TxIn::PubKeyTxIn(pub_key_tx_in) => mesh_csl.add_tx_in(pub_key_tx_in)?,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
+                    mesh_csl.add_simple_script_tx_in(simple_script_tx_in)?
+                }
+                TxIn::ScriptTxIn(script_tx_in) => mesh_csl.add_script_tx_in(script_tx_in)?,
             };
         }
         mesh_csl.tx_builder.set_inputs(&mesh_csl.tx_inputs_builder);
+        Ok(())
     }
 
-    fn add_all_outputs(mesh_csl: &mut MeshCSL, outputs: Vec<Output>) {
+    fn add_all_outputs(mesh_csl: &mut MeshCSL, outputs: Vec<Output>) -> Result<(), JsError> {
         for output in outputs {
-            mesh_csl.add_output(output);
+            mesh_csl.add_output(output)?;
         }
+        Ok(())
     }
 
-    fn add_all_collaterals(mesh_csl: &mut MeshCSL, collaterals: Vec<PubKeyTxIn>) {
+    fn add_all_collaterals(
+        mesh_csl: &mut MeshCSL,
+        collaterals: Vec<PubKeyTxIn>,
+    ) -> Result<(), JsError> {
         let mut collateral_builder = csl::TxInputsBuilder::new();
         for collateral in collaterals {
-            mesh_csl.add_collateral(&mut collateral_builder, collateral)
+            mesh_csl.add_collateral(&mut collateral_builder, collateral)?
         }
-        mesh_csl.tx_builder.set_collateral(&collateral_builder)
+        mesh_csl.tx_builder.set_collateral(&collateral_builder);
+        Ok(())
     }
 
-    fn add_all_reference_inputs(mesh_csl: &mut MeshCSL, ref_inputs: Vec<RefTxIn>) {
+    fn add_all_reference_inputs(
+        mesh_csl: &mut MeshCSL,
+        ref_inputs: Vec<RefTxIn>,
+    ) -> Result<(), JsError> {
         for ref_input in ref_inputs {
-            mesh_csl.add_reference_input(ref_input);
+            mesh_csl.add_reference_input(ref_input)?;
         }
+        Ok(())
     }
 
-    fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) {
+    fn add_all_withdrawals(
+        mesh_csl: &mut MeshCSL,
+        withdrawals: Vec<Withdrawal>,
+    ) -> Result<(), JsError> {
+        for withdrawal in withdrawals {
+            match withdrawal {
+                Withdrawal::PubKeyWithdrawal(pub_key_withdrawal) => {
+                    mesh_csl.add_pub_key_withdrawal(pub_key_withdrawal)?
+                }
+                Withdrawal::PlutusScriptWithdrawal(plutus_script_withdrawal) => {
+                    mesh_csl.add_plutus_withdrawal(plutus_script_withdrawal)?
+                }
+            }
+        }
+        mesh_csl
+            .tx_builder
+            .set_withdrawals_builder(&mesh_csl.tx_withdrawals_builder);
+        Ok(())
+    }
+
+    fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) -> Result<(), JsError> {
         let mut mint_builder = csl::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
-            match mint.type_.as_str() {
-                "Plutus" => mesh_csl.add_plutus_mint(&mut mint_builder, mint, index as u64),
-                "Native" => mesh_csl.add_native_mint(&mut mint_builder, mint),
-                _ => {}
+            match mint.type_ {
+                MintItemType::Plutus => {
+                    mesh_csl.add_plutus_mint(&mut mint_builder, mint, index as u64)?
+                }
+                MintItemType::Native => mesh_csl.add_native_mint(&mut mint_builder, mint)?,
             };
         }
-        mesh_csl.tx_builder.set_mint_builder(&mint_builder)
+        mesh_csl.tx_builder.set_mint_builder(&mint_builder);
+        Ok(())
+    }
+
+    fn add_all_certificates(
+        mesh_csl: &mut MeshCSL,
+        certificates: Vec<Certificate>,
+    ) -> Result<(), JsError> {
+        let mut certificates_builder = csl::CertificatesBuilder::new();
+        for cert in certificates {
+            match cert {
+                Certificate::RegisterPool(register_pool) => {
+                    mesh_csl.add_register_pool_cert(&mut certificates_builder, register_pool)?
+                }
+                Certificate::RegisterStake(register_stake) => {
+                    mesh_csl.add_register_stake_cert(&mut certificates_builder, register_stake)?
+                }
+                Certificate::DelegateStake(delegate_stake) => {
+                    mesh_csl.add_delegate_stake_cert(&mut certificates_builder, delegate_stake)?
+                }
+                Certificate::DeregisterStake(deregister_stake) => mesh_csl
+                    .add_deregister_stake_cert(&mut certificates_builder, deregister_stake)?,
+                Certificate::RetirePool(retire_pool) => {
+                    mesh_csl.add_retire_pool_cert(&mut certificates_builder, retire_pool)?
+                }
+                Certificate::VoteDelegation(vote_delegation) => {
+                    mesh_csl.add_vote_delegation_cert(&mut certificates_builder, vote_delegation)?
+                }
+                Certificate::StakeAndVoteDelegation(stake_and_vote_delegation) => mesh_csl
+                    .add_stake_and_vote_delegation_cert(
+                        &mut certificates_builder,
+                        stake_and_vote_delegation,
+                    )?,
+                Certificate::StakeRegistrationAndDelegation(stake_registration_and_delegation) => {
+                    mesh_csl.add_stake_registration_and_delegation_cert(
+                        &mut certificates_builder,
+                        stake_registration_and_delegation,
+                    )?
+                }
+                Certificate::VoteRegistrationAndDelegation(vote_registration_and_delegation) => {
+                    mesh_csl.add_vote_registration_and_delgation_cert(
+                        &mut certificates_builder,
+                        vote_registration_and_delegation,
+                    )?
+                }
+                Certificate::StakeVoteRegistrationAndDelegation(
+                    stake_vote_registration_and_delegation,
+                ) => mesh_csl.add_stake_vote_registration_and_delegation_cert(
+                    &mut certificates_builder,
+                    stake_vote_registration_and_delegation,
+                )?,
+                Certificate::CommitteeHotAuth(committee_hot_auth) => mesh_csl
+                    .add_committee_hot_auth_cert(&mut certificates_builder, committee_hot_auth)?,
+                Certificate::CommitteeColdResign(commitee_cold_resign) => mesh_csl
+                    .add_commitee_cold_resign_cert(
+                        &mut certificates_builder,
+                        commitee_cold_resign,
+                    )?,
+                Certificate::DRepRegistration(drep_registration) => mesh_csl
+                    .add_drep_registration_cert(&mut certificates_builder, drep_registration)?,
+                Certificate::DRepDeregistration(drep_deregistration) => mesh_csl
+                    .add_drep_deregistration_cert(&mut certificates_builder, drep_deregistration)?,
+                Certificate::DRepUpdate(drep_update) => {
+                    mesh_csl.add_drep_update_cert(&mut certificates_builder, drep_update)?
+                }
+            }
+        }
+        mesh_csl.tx_builder.set_certs_builder(&certificates_builder);
+        Ok(())
     }
 
     fn add_validity_range(mesh_csl: &mut MeshCSL, validity_range: ValidityRange) {
@@ -236,16 +362,24 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
-    fn add_all_required_signature(mesh_csl: &mut MeshCSL, required_signatures: JsVecString) {
+    fn add_all_required_signature(
+        mesh_csl: &mut MeshCSL,
+        required_signatures: JsVecString,
+    ) -> Result<(), JsError> {
         for pub_key_hash in required_signatures {
-            mesh_csl.add_required_signature(pub_key_hash);
+            mesh_csl.add_required_signature(pub_key_hash)?;
         }
+        Ok(())
     }
 
-    fn add_all_metadata(mesh_csl: &mut MeshCSL, all_metadata: Vec<Metadata>) {
+    fn add_all_metadata(
+        mesh_csl: &mut MeshCSL,
+        all_metadata: Vec<Metadata>,
+    ) -> Result<(), JsError> {
         for metadata in all_metadata {
-            mesh_csl.add_metadata(metadata);
+            mesh_csl.add_metadata(metadata)?;
         }
+        Ok(())
     }
 
     // fn add_collateral_return(&mut self, change_address: String) {
