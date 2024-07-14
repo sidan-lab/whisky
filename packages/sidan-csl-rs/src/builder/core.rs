@@ -288,11 +288,13 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         println!("6-1");
         for (index, mint) in mints.into_iter().enumerate() {
             println!("6-2");
-            match mint.type_ {
-                MintItemType::Plutus => {
-                    mesh_csl.add_plutus_mint(&mut mint_builder, mint, index as u64)?
+            match mint {
+                MintItem::ScriptMint(script_mint) => {
+                    mesh_csl.add_plutus_mint(&mut mint_builder, script_mint, index as u64)?
                 }
-                MintItemType::Native => mesh_csl.add_native_mint(&mut mint_builder, mint)?,
+                MintItem::SimpleScriptMint(simple_script_mint) => {
+                    mesh_csl.add_native_mint(&mut mint_builder, simple_script_mint)?
+                }
             };
         }
         println!("6-3");

@@ -20,7 +20,7 @@ pub async fn mint_tokens(
             &to_mint_asset.policy(),
             &to_mint_asset.name(),
         )
-        .minting_script(&script.script_cbor, script.language_version)
+        .minting_script(&script.script_cbor, Some(script.language_version))
         .mint_redeemer_value(WRedeemer {
             data: WData::JSON(redeemer.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
