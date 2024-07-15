@@ -10,15 +10,15 @@ pub trait IEvaluator: Send {
     async fn evaluate_tx(
         &self,
         tx_hex: &str,
-        inputs: &[UTxO],           // Change the type from &Vec<UTxO> to &[UTxO]
-        additional_txs: &[String], // Change the type from &Vec<String> to &[String]
+        inputs: &[UTxO],
+        additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError>;
 
     fn evaluate_tx_sync(
         &self,
         tx_hex: &str,
-        inputs: &[UTxO],           // Change the type from &Vec<UTxO> to &[UTxO]
-        additional_txs: &[String], // Change the type from &Vec<String> to &[String]
+        inputs: &[UTxO],
+        additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError>;
 }
 
