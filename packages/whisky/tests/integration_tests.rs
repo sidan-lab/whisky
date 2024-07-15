@@ -71,7 +71,7 @@ mod int_tests {
                 cns_token_mp_script_ref_txhash,
                 cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
                 cns_policy_id,
-                LanguageVersion::V2,
+                Some(LanguageVersion::V2),
                 100,
             )
             .mint_redeemer_value(WRedeemer {

@@ -275,13 +275,16 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) -> Result<(), JsError> {
         let mut mint_builder = csl::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
-            match mint.type_ {
-                MintItemType::Plutus => {
-                    mesh_csl.add_plutus_mint(&mut mint_builder, mint, index as u64)?
+            match mint {
+                MintItem::ScriptMint(script_mint) => {
+                    mesh_csl.add_plutus_mint(&mut mint_builder, script_mint, index as u64)?
                 }
-                MintItemType::Native => mesh_csl.add_native_mint(&mut mint_builder, mint)?,
+                MintItem::SimpleScriptMint(simple_script_mint) => {
+                    mesh_csl.add_native_mint(&mut mint_builder, simple_script_mint)?
+                }
             };
         }
+        println!("6-3");
         mesh_csl.tx_builder.set_mint_builder(&mint_builder);
         Ok(())
     }

@@ -7,14 +7,15 @@ use sidan_csl_rs::{
     model::{
         Anchor, Asset, Certificate, CommitteeColdResign, CommitteeHotAuth, DRep,
         DRepDeregistration, DRepRegistration, DRepUpdate, Datum, DatumSource, DelegateStake,
-        DeregisterStake, InlineDatumSource, InlineScriptSource, LanguageVersion, MeshTxBuilderBody,
-        Metadata, MintItem, MintItemType, Output, PlutusScriptWithdrawal, PoolParams,
-        ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource, PubKeyTxIn,
-        PubKeyWithdrawal, Redeemer, RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptSource,
-        ScriptTxIn, ScriptTxInParameter, SimpleScriptTxIn, SimpleScriptTxInParameter,
-        StakeAndVoteDelegation, StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation,
-        TxIn, TxInParameter, UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation,
-        Withdrawal,
+        DeregisterStake, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
+        LanguageVersion, MeshTxBuilderBody, Metadata, MintItem, MintParameter, Output,
+        OutputScriptSource, PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource,
+        ProvidedScriptSource, ProvidedSimpleScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer,
+        RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptMint, ScriptSource, ScriptTxIn,
+        ScriptTxInParameter, SimpleScriptMint, SimpleScriptSource, SimpleScriptTxIn,
+        SimpleScriptTxInParameter, StakeAndVoteDelegation, StakeRegistrationAndDelegation,
+        StakeVoteRegistrationAndDelegation, TxIn, TxInParameter, UTxO, Value, VoteDelegation,
+        VoteRegistrationAndDelegation, Withdrawal,
     },
 };
 
@@ -99,10 +100,17 @@ impl IMeshTxBuilder for MeshTxBuilder {
             }
         }
 
-        self.core
-            .mesh_tx_builder_body
-            .mints
-            .sort_by(|a, b| a.policy_id.cmp(&b.policy_id));
+        self.core.mesh_tx_builder_body.mints.sort_by(|a, b| {
+            let a_mint = match a {
+                MintItem::ScriptMint(a_script_mint) => &a_script_mint.mint,
+                MintItem::SimpleScriptMint(a_simple_script_mint) => &a_simple_script_mint.mint,
+            };
+            let b_mint = match b {
+                MintItem::ScriptMint(b_script_mint) => &b_script_mint.mint,
+                MintItem::SimpleScriptMint(b_simple_script_mint) => &b_simple_script_mint.mint,
+            };
+            a_mint.policy_id.cmp(&b_mint.policy_id)
+        });
 
         self.core.mesh_tx_builder_body.inputs.sort_by(|a, b| {
             let tx_in_data_a: &TxInParameter = match a {
@@ -350,17 +358,31 @@ impl IMeshTxBuilder for MeshTxBuilder {
     fn tx_out_reference_script(
         &mut self,
         script_cbor: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
     ) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
         }
         let mut tx_output = tx_output.unwrap();
-        tx_output.reference_script = Some(ProvidedScriptSource {
-            script_cbor: script_cbor.to_string(),
-            language_version: version,
-        });
+        match version {
+            Some(language_version) => {
+                tx_output.reference_script = Some(OutputScriptSource::ProvidedScriptSource(
+                    ProvidedScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                        language_version,
+                    },
+                ));
+            }
+            None => {
+                tx_output.reference_script = Some(OutputScriptSource::ProvidedSimpleScriptSource(
+                    ProvidedSimpleScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                    },
+                ))
+            }
+        }
+
         self.tx_output = Some(tx_output);
         self
     }
@@ -391,8 +413,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
             TxIn::ScriptTxIn(mut input) => {
                 input.script_tx_in.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-                        tx_hash: tx_hash.to_string(),
-                        tx_index,
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
                         spending_script_hash: spending_script_hash.to_string(),
                         language_version: version,
                         script_size,
@@ -447,8 +471,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
                 withdrawal.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-                        tx_hash: tx_hash.to_string(),
-                        tx_index,
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
                         spending_script_hash: withdrawal_script_hash.to_string(),
                         language_version: version,
                         script_size,
@@ -541,34 +567,55 @@ impl IMeshTxBuilder for MeshTxBuilder {
         if self.mint_item.is_some() {
             self.queue_mint();
         }
-        let mint_type = if self.adding_plutus_mint {
-            MintItemType::Plutus
+        if self.adding_plutus_mint {
+            self.mint_item = Some(MintItem::ScriptMint(ScriptMint {
+                mint: MintParameter {
+                    policy_id: policy.to_string(),
+                    asset_name: name.to_string(),
+                    amount: quantity,
+                },
+                redeemer: None,
+                script_source: None,
+            }))
         } else {
-            MintItemType::Native
+            self.mint_item = Some(MintItem::SimpleScriptMint(SimpleScriptMint {
+                mint: MintParameter {
+                    policy_id: policy.to_string(),
+                    asset_name: name.to_string(),
+                    amount: quantity,
+                },
+                script_source: None,
+            }))
         };
-        self.mint_item = Some(MintItem {
-            type_: mint_type,
-            policy_id: policy.to_string(),
-            asset_name: name.to_string(),
-            amount: quantity,
-            redeemer: None,
-            script_source: None,
-        });
         self.adding_plutus_mint = false;
         self
     }
 
-    fn minting_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
+    fn minting_script(&mut self, script_cbor: &str, version: Option<LanguageVersion>) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
         }
-        let mut mint_item = mint_item.unwrap();
-        mint_item.script_source = Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
-            script_cbor: script_cbor.to_string(),
-            language_version: version,
-        }));
-        self.mint_item = Some(mint_item);
+        let mint_item = mint_item.unwrap();
+        match mint_item {
+            MintItem::ScriptMint(mut script_mint) => {
+                script_mint.script_source =
+                    Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                        language_version: version
+                            .expect("Plutus mints must have version specified"),
+                    }));
+                self.mint_item = Some(MintItem::ScriptMint(script_mint));
+            }
+            MintItem::SimpleScriptMint(mut simple_script_mint) => {
+                simple_script_mint.script_source = Some(
+                    SimpleScriptSource::ProvidedSimpleScriptSource(ProvidedSimpleScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                    }),
+                );
+                self.mint_item = Some(MintItem::SimpleScriptMint(simple_script_mint));
+            }
+        }
         self
     }
 
@@ -577,22 +624,42 @@ impl IMeshTxBuilder for MeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         spending_script_hash: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
         }
-        let mut mint_item = mint_item.unwrap();
-        mint_item.script_source = Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-            tx_hash: tx_hash.to_string(),
-            tx_index,
-            spending_script_hash: spending_script_hash.to_string(),
-            language_version: version,
-            script_size,
-        }));
-        self.mint_item = Some(mint_item);
+        let mint_item = mint_item.unwrap();
+        match mint_item {
+            MintItem::ScriptMint(mut script_mint) => {
+                script_mint.script_source =
+                    Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
+                        spending_script_hash: spending_script_hash.to_string(),
+                        language_version: version
+                            .expect("Plutus mints must have version specified"),
+                        script_size,
+                    }));
+                self.mint_item = Some(MintItem::ScriptMint(script_mint));
+            }
+            MintItem::SimpleScriptMint(mut simple_script_mint) => {
+                simple_script_mint.script_source = Some(
+                    SimpleScriptSource::InlineSimpleScriptSource(InlineSimpleScriptSource {
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
+                        simple_script_hash: spending_script_hash.to_string(),
+                    }),
+                );
+                self.mint_item = Some(MintItem::SimpleScriptMint(simple_script_mint));
+            }
+        }
         self
     }
 
@@ -601,22 +668,25 @@ impl IMeshTxBuilder for MeshTxBuilder {
         if mint_item.is_none() {
             panic!("Undefined mint");
         }
-        let mut mint_item = mint_item.unwrap();
-        if mint_item.type_ == MintItemType::Native {
-            panic!("Redeemer cannot be defined for Native script mints");
-        }
-        match redeemer.data.to_cbor() {
-            Ok(raw_redeemer) => {
-                mint_item.redeemer = Some(Redeemer {
-                    data: raw_redeemer,
-                    ex_units: redeemer.ex_units,
-                });
-                self.mint_item = Some(mint_item);
+        let mint_item = mint_item.unwrap();
+        match mint_item {
+            MintItem::ScriptMint(mut script_mint) => match redeemer.data.to_cbor() {
+                Ok(raw_redeemer) => {
+                    script_mint.redeemer = Some(Redeemer {
+                        data: raw_redeemer,
+                        ex_units: redeemer.ex_units,
+                    });
+                    self.mint_item = Some(MintItem::ScriptMint(script_mint));
+                }
+                Err(_) => {
+                    panic!("Error converting redeemer to CBOR");
+                }
+            },
+            MintItem::SimpleScriptMint(_) => {
+                panic!("Redeemer values cannot be defined for native script mints")
             }
-            Err(_) => {
-                panic!("Error converting redeemer to CBOR");
-            }
         }
+
         self
     }
 
@@ -963,11 +1033,27 @@ impl IMeshTxBuilder for MeshTxBuilder {
     }
 
     fn queue_mint(&mut self) {
-        let mint_item = self.mint_item.clone().unwrap();
-        if mint_item.script_source.is_none() {
-            panic!("Missing mint script information");
+        let mint_item = self.mint_item.take().unwrap();
+        match mint_item {
+            MintItem::ScriptMint(script_mint) => {
+                if script_mint.script_source.is_none() {
+                    panic!("Missing mint script information");
+                }
+                self.core
+                    .mesh_tx_builder_body
+                    .mints
+                    .push(MintItem::ScriptMint(script_mint));
+            }
+            MintItem::SimpleScriptMint(simple_script_mint) => {
+                if simple_script_mint.script_source.is_none() {
+                    panic!("Missing mint script information");
+                }
+                self.core
+                    .mesh_tx_builder_body
+                    .mints
+                    .push(MintItem::SimpleScriptMint(simple_script_mint));
+            }
         }
-        self.core.mesh_tx_builder_body.mints.push(mint_item);
         self.mint_item = None;
     }
 
@@ -1025,7 +1111,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
             }
         }
 
-        for mint in &self.core.mesh_tx_builder_body.mints {
+        for mint_item in &self.core.mesh_tx_builder_body.mints {
+            let mint = match mint_item {
+                MintItem::ScriptMint(script_mint) => &script_mint.mint,
+                MintItem::SimpleScriptMint(simple_script_mint) => &simple_script_mint.mint,
+            };
             let mint_amount = Asset::new(
                 mint.policy_id.clone() + &mint.asset_name,
                 mint.amount.to_string(),
