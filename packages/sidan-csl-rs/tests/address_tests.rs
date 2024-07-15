@@ -1,6 +1,10 @@
 mod address_tests {
     use sidan_csl_rs::{
-        core::utils::{script_to_address, serialize_bech32_address},
+        core::utils::{
+            parse_native_script_address_to_bech32,
+            parse_native_script_address_with_stake_key_to_bech32, script_to_address,
+            serialize_bech32_address,
+        },
         model::SerializedAddress,
     };
 
@@ -100,5 +104,34 @@ mod address_tests {
                     "867c8b572e5ac8f0c14aa7417cb9caec9d1ff50e994f772eab2d69f4".to_string()
                 )
         );
+    }
+
+    #[test]
+    fn test_native_script_address() {
+        let addr1 = parse_native_script_address_to_bech32(
+            "8200581c2aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd",
+            0,
+        );
+        assert!(addr1 == "addr_test1wzn8220w2d4qmswdd5fc43nyfw4prgy93wej5343axp549ct0wq0u");
+
+        let addr2 = parse_native_script_address_to_bech32(
+            "8200581ce98433a163ea7d30ed8816ad6a1e2605a083959253081a801e0bc31f",
+            0,
+        );
+        assert!(addr2 == "addr_test1wpfwxg49mkrla9mutmjmj83lgthdanxk09d8aa83tz7c3yswlna53");
+
+        let addr3 = parse_native_script_address_with_stake_key_to_bech32(
+            "8200581ce98433a163ea7d30ed8816ad6a1e2605a083959253081a801e0bc31f",
+            "fb27981fcd82d77cd9e210a8280e01cba9d6c2b72ee31a60421c1964",
+            0,
+        );
+        assert!(addr3 == "addr_test1zpfwxg49mkrla9mutmjmj83lgthdanxk09d8aa83tz7c3yhmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqerzc3a");
+
+        let addr4 = parse_native_script_address_with_stake_key_to_bech32(
+            "8200581c2aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd",
+            "fb27981fcd82d77cd9e210a8280e01cba9d6c2b72ee31a60421c1964",
+            0,
+        );
+        assert!(addr4 == "addr_test1zzn8220w2d4qmswdd5fc43nyfw4prgy93wej5343axp549lmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqp2yyls");
     }
 }
