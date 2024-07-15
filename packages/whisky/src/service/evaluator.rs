@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use cardano_serialization_lib::JsError;
 
-use sidan_csl_rs::model::{Action, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO};
+use sidan_csl_rs::model::{Action, MintItem, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO};
 
 use crate::builder::MeshTxBuilder;
 
@@ -10,15 +10,15 @@ pub trait IEvaluator: Send {
     async fn evaluate_tx(
         &self,
         tx_hex: &str,
-        inputs: &[UTxO],           // Change the type from &Vec<UTxO> to &[UTxO]
-        additional_txs: &[String], // Change the type from &Vec<String> to &[String]
+        inputs: &[UTxO],
+        additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError>;
 
     fn evaluate_tx_sync(
         &self,
         tx_hex: &str,
-        inputs: &[UTxO],           // Change the type from &Vec<UTxO> to &[UTxO]
-        additional_txs: &[String], // Change the type from &Vec<String> to &[String]
+        inputs: &[UTxO],
+        additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError>;
 }
 
@@ -42,11 +42,14 @@ impl ITxEvaluation for MeshTxBuilder {
                     }
                 }
                 RedeemerTag::Mint => {
-                    let mint = &mut self.core.mesh_tx_builder_body.mints
+                    let mint_item = &mut self.core.mesh_tx_builder_body.mints
                         [redeemer_evaluation.index as usize];
-                    let redeemer: &mut Redeemer = mint.redeemer.as_mut().unwrap();
-                    redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
-                    redeemer.ex_units.steps = redeemer_evaluation.budget.steps * multiplier / 100;
+                    if let MintItem::ScriptMint(mint) = mint_item {
+                        let redeemer: &mut Redeemer = mint.redeemer.as_mut().unwrap();
+                        redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
+                        redeemer.ex_units.steps =
+                            redeemer_evaluation.budget.steps * multiplier / 100;
+                    }
                 }
                 RedeemerTag::Cert => {
                     // TODO

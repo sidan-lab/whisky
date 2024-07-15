@@ -4,8 +4,8 @@ use std::collections::HashSet;
 
 use crate::csl;
 use crate::model::{
-    Asset, Datum, JsVecString, LanguageVersion, MeshTxBuilderBody, Output, ProvidedScriptSource,
-    UTxO, UtxoInput, UtxoOutput, ValidityRange,
+    Asset, Datum, JsVecString, LanguageVersion, MeshTxBuilderBody, Output, OutputScriptSource,
+    ProvidedScriptSource, UTxO, UtxoInput, UtxoOutput, ValidityRange,
 };
 
 use super::utils::calculate_tx_hash;
@@ -176,7 +176,7 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
         )
     });
 
-    let reference_script: Option<ProvidedScriptSource> = match output.script_ref() {
+    let reference_script: Option<OutputScriptSource> = match output.script_ref() {
         Some(csl_script_ref) => {
             let plutus_script = csl_script_ref.plutus_script().unwrap();
             let language_version = match plutus_script.language_version().kind() {
@@ -184,10 +184,12 @@ fn csl_output_to_mesh_output(output: csl::TransactionOutput) -> Output {
                 csl::LanguageKind::PlutusV2 => LanguageVersion::V2,
                 csl::LanguageKind::PlutusV3 => LanguageVersion::V3,
             };
-            Some(ProvidedScriptSource {
-                script_cbor: plutus_script.to_hex(),
-                language_version,
-            })
+            Some(OutputScriptSource::ProvidedScriptSource(
+                ProvidedScriptSource {
+                    script_cbor: plutus_script.to_hex(),
+                    language_version,
+                },
+            ))
         }
         None => None,
     };

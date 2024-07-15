@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use crate::{csl, model::*};
-use cardano_serialization_lib::{Credential, JsError};
+use cardano_serialization_lib::{Credential, JsError, MintWitness};
 
 use super::utils::{
     build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_drep, to_value,
@@ -24,13 +24,13 @@ pub trait IMeshCSL {
     fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
-        mint: MintItem,
+        script_mint: ScriptMint,
         index: u64,
     ) -> Result<(), JsError>;
     fn add_native_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
-        mint: MintItem,
+        native_mint: SimpleScriptMint,
     ) -> Result<(), JsError>;
     fn add_register_pool_cert(
         &mut self,
@@ -225,8 +225,8 @@ impl IMeshCSL for MeshCSL {
                 csl::PlutusScriptSource::new_ref_input(
                     &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
-                        script.tx_index,
+                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                        script.ref_tx_in.tx_index,
                     ),
                     &language_version,
                     script.script_size,
@@ -274,17 +274,28 @@ impl IMeshCSL for MeshCSL {
 
         if output.reference_script.is_some() {
             let output_script = output.reference_script.unwrap();
-            let language_version: csl::Language = match output_script.language_version {
-                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-            };
-            output_builder = output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
-                &csl::PlutusScript::from_hex_with_version(
-                    &output_script.script_cbor,
-                    &language_version,
-                )?,
-            ))
+            match output_script {
+                OutputScriptSource::ProvidedScriptSource(script) => {
+                    let language_version: csl::Language = match script.language_version {
+                        LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                        LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                        LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                    };
+                    output_builder =
+                        output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
+                            &csl::PlutusScript::from_hex_with_version(
+                                &script.script_cbor,
+                                &language_version,
+                            )?,
+                        ))
+                }
+                OutputScriptSource::ProvidedSimpleScriptSource(script) => {
+                    output_builder =
+                        output_builder.with_script_ref(&csl::ScriptRef::new_native_script(
+                            &csl::NativeScript::from_hex(&script.script_cbor)?,
+                        ))
+                }
+            }
         }
 
         let tx_value = to_value(&output.amount);
@@ -368,8 +379,8 @@ impl IMeshCSL for MeshCSL {
                 csl::PlutusScriptSource::new_ref_input(
                     &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
-                        script.tx_index,
+                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                        script.ref_tx_in.tx_index,
                     ),
                     &language_version,
                     script.script_size,
@@ -399,10 +410,10 @@ impl IMeshCSL for MeshCSL {
     fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
-        mint: MintItem,
+        script_mint: ScriptMint,
         index: u64,
     ) -> Result<(), JsError> {
-        let redeemer_info = mint.redeemer.unwrap();
+        let redeemer_info = script_mint.redeemer.unwrap();
         let mint_redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_mint(),
             &to_bignum(index),
@@ -412,7 +423,7 @@ impl IMeshCSL for MeshCSL {
                 &to_bignum(redeemer_info.ex_units.steps),
             ),
         );
-        let script_source_info = mint.script_source.unwrap();
+        let script_source_info = script_mint.script_source.unwrap();
         let mint_script = match script_source_info {
             ScriptSource::InlineScriptSource(script) => {
                 let language_version: csl::Language = match script.language_version {
@@ -421,10 +432,10 @@ impl IMeshCSL for MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(mint.policy_id.as_str())?,
+                    &csl::ScriptHash::from_hex(script_mint.mint.policy_id.as_str())?,
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.tx_hash)?,
-                        script.tx_index,
+                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                        script.ref_tx_in.tx_index,
                     ),
                     &language_version,
                     script.script_size,
@@ -444,8 +455,8 @@ impl IMeshCSL for MeshCSL {
         };
         mint_builder.add_asset(
             &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-            &csl::AssetName::new(hex::decode(mint.asset_name).unwrap())?,
-            &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+            &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).unwrap())?,
+            &csl::Int::new_i32(script_mint.mint.amount.try_into().unwrap()),
         )?;
         Ok(())
     }
@@ -453,20 +464,28 @@ impl IMeshCSL for MeshCSL {
     fn add_native_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
-        mint: MintItem,
+        native_mint: SimpleScriptMint,
     ) -> Result<(), JsError> {
-        let script_info = mint.script_source.unwrap();
+        let script_info = native_mint.script_source.unwrap();
         match script_info {
-            ScriptSource::ProvidedScriptSource(script) => mint_builder.add_asset(
+            SimpleScriptSource::ProvidedSimpleScriptSource(script) => mint_builder.add_asset(
                 &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
                     &csl::NativeScript::from_hex(&script.script_cbor)?,
                 )),
-                &csl::AssetName::new(hex::decode(mint.asset_name).unwrap())?,
-                &csl::Int::new_i32(mint.amount.try_into().unwrap()),
+                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
+                &csl::Int::new_i32(native_mint.mint.amount.try_into().unwrap()),
             )?,
-            ScriptSource::InlineScriptSource(_) => {} // Err(csl::JsError::from_str(
-                                                      //     "Native scripts cannot be referenced",
-                                                      // )),
+            SimpleScriptSource::InlineSimpleScriptSource(script) => mint_builder.add_asset(
+                &MintWitness::new_native_script(&csl::NativeScriptSource::new_ref_input(
+                    &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                        script.ref_tx_in.tx_index,
+                    ),
+                )),
+                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
+                &csl::Int::new_i32(native_mint.mint.amount.try_into().unwrap()),
+            )?,
         };
         Ok(())
     }

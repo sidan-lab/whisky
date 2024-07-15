@@ -231,13 +231,16 @@ pub trait IMeshTxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn tx_out_reference_script(&mut self, script_cbor: &str, version: LanguageVersion)
-        -> &mut Self;
+    fn tx_out_reference_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -426,12 +429,12 @@ pub trait IMeshTxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn minting_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+    fn minting_script(&mut self, script_cbor: &str, version: Option<LanguageVersion>) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -442,7 +445,7 @@ pub trait IMeshTxBuilder {
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
     /// * `spending_script_hash` - The spending script hash
-    /// * `version` - The language version
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     /// * `script_size` - Size of the script
     ///
     /// ### Returns
@@ -453,7 +456,7 @@ pub trait IMeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         spending_script_hash: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self;
 

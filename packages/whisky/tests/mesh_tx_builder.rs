@@ -245,7 +245,7 @@ mod mesh_tx_builder_core_tests {
             "63210437b543c8a11afbbc6765aa205eb2733cb74e2805afd4c1c8cb72bd8e22",
             0,
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700",
-            LanguageVersion::V2,
+            Some(LanguageVersion::V2),
             100,
         )
         .mint_redeemer_value(WRedeemer {
