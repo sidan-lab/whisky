@@ -8,7 +8,7 @@ use sidan_csl_rs::{
     },
 };
 
-use crate::service::{IEvaluator, IFetcher, ISubmitter};
+use crate::service::{Evaluator, Fetcher, Submitter};
 
 use super::{WData, WRedeemer};
 
@@ -23,9 +23,9 @@ pub struct MeshTxBuilder {
     pub adding_script_input: bool,
     pub adding_plutus_mint: bool,
     pub adding_plutus_withdrawal: bool,
-    pub fetcher: Option<Box<dyn IFetcher>>,
-    pub evaluator: Option<Box<dyn IEvaluator>>,
-    pub submitter: Option<Box<dyn ISubmitter>>,
+    pub fetcher: Option<Box<dyn Fetcher>>,
+    pub evaluator: Option<Box<dyn Evaluator>>,
+    pub submitter: Option<Box<dyn Submitter>>,
     pub extra_inputs: Vec<UTxO>,
     pub selection_threshold: u64,
     pub chained_txs: Vec<String>,
@@ -33,9 +33,9 @@ pub struct MeshTxBuilder {
 }
 
 pub struct MeshTxBuilderParam {
-    pub evaluator: Option<Box<dyn IEvaluator>>,
-    pub fetcher: Option<Box<dyn IFetcher>>,
-    pub submitter: Option<Box<dyn ISubmitter>>,
+    pub evaluator: Option<Box<dyn Evaluator>>,
+    pub fetcher: Option<Box<dyn Fetcher>>,
+    pub submitter: Option<Box<dyn Submitter>>,
     pub params: Option<Protocol>,
 }
 

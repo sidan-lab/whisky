@@ -4,4 +4,4 @@ use async_trait::async_trait;
 // use crate::model::Action;
 
 #[async_trait]
-pub trait IFetcher: Send {}
+pub trait Fetcher: Send {}

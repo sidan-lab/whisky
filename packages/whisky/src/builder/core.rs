@@ -20,7 +20,7 @@ use sidan_csl_rs::{
 };
 
 use super::{IMeshTxBuilder, MeshTxBuilder, MeshTxEvaluator, WData, WRedeemer};
-use crate::service::ITxEvaluation;
+use crate::service::TxEvaluation;
 
 #[async_trait]
 impl IMeshTxBuilder for MeshTxBuilder {

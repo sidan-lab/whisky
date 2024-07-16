@@ -24,7 +24,10 @@ noop_proc_macro = "0.3.0"
 pallas-codec = "0.22.0"
 pallas-primitives = "0.22.0"
 pallas-traverse = "0.22.0"
+maestro = { git = "https://github.com/maestro-org/rust-sdk.git" }
 sidan-csl-rs = { version = "=0.6.10", path = "../sidan-csl-rs" }
+reqwest = "0.12.5"
+tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
@@ -32,3 +35,6 @@ codegen-units = 1
 opt-level = "s"
 incremental = true
 lto = true
+
+[dev-dependencies]
+dotenv = "0.15.0"

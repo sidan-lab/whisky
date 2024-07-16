@@ -6,27 +6,20 @@ use sidan_csl_rs::model::{Action, MintItem, Redeemer, RedeemerTag, ScriptTxIn, T
 use crate::builder::MeshTxBuilder;
 
 #[async_trait]
-pub trait IEvaluator: Send {
+pub trait Evaluator: Send {
     async fn evaluate_tx(
         &self,
         tx_hex: &str,
         inputs: &[UTxO],
         additional_txs: &[String],
     ) -> Result<Vec<Action>, JsError>;
-
-    fn evaluate_tx_sync(
-        &self,
-        tx_hex: &str,
-        inputs: &[UTxO],
-        additional_txs: &[String],
-    ) -> Result<Vec<Action>, JsError>;
 }
 
-pub trait ITxEvaluation {
+pub trait TxEvaluation {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self;
 }
 
-impl ITxEvaluation for MeshTxBuilder {
+impl TxEvaluation for MeshTxBuilder {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self {
         let multiplier = self.core.tx_evaluation_multiplier_percentage;
         for redeemer_evaluation in tx_evaluation {
