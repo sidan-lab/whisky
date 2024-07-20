@@ -32,7 +32,7 @@ impl Asset {
     pub fn quantity(&self) -> String {
         self.quantity.clone()
     }
-    pub fn quantity_u64(&self) -> u64 {
+    pub fn quantity_i128(&self) -> i128 {
         self.quantity.parse().unwrap()
     }
 }
@@ -48,7 +48,7 @@ mod test {
         assert_eq!(asset.policy(), "lovelace".to_string());
         assert_eq!(asset.name(), "".to_string());
         assert_eq!(asset.quantity(), "1000000".to_string());
-        assert_eq!(asset.quantity_u64(), 1000000);
+        assert_eq!(asset.quantity_i128(), 1000000);
     }
 
     #[test]
@@ -69,6 +69,6 @@ mod test {
         );
         assert_eq!(asset.name(), "68696e736f6e2e616461".to_string());
         assert_eq!(asset.quantity(), "89346934".to_string());
-        assert_eq!(asset.quantity_u64(), 89346934);
+        assert_eq!(asset.quantity_i128(), 89346934);
     }
 }
