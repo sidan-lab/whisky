@@ -16,7 +16,7 @@ pub async fn mint_tokens(
 
     mesh.mint_plutus_script_v2()
         .mint(
-            to_mint_asset.quantity_u64(),
+            to_mint_asset.quantity_i128(),
             &to_mint_asset.policy(),
             &to_mint_asset.name(),
         )

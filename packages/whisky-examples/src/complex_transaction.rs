@@ -59,7 +59,7 @@ pub async fn complex_transaction(
         .tx_in_script(&script.script_cbor, Some(script.language_version))
         .mint_plutus_script_v2()
         .mint(
-            to_mint_asset_1.quantity_u64(),
+            to_mint_asset_1.quantity_i128(),
             &to_mint_asset_1.policy(),
             &to_mint_asset_1.name(),
         )
@@ -70,7 +70,7 @@ pub async fn complex_transaction(
         .minting_script(&script_1.script_cbor, Some(script_1.language_version))
         .mint_plutus_script_v2()
         .mint(
-            to_mint_asset_2.quantity_u64(),
+            to_mint_asset_2.quantity_i128(),
             &to_mint_asset_2.policy(),
             &to_mint_asset_2.name(),
         )

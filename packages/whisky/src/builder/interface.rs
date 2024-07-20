@@ -420,7 +420,7 @@ pub trait IMeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn mint(&mut self, quantity: u64, policy: &str, name: &str) -> &mut Self;
+    fn mint(&mut self, quantity: i128, policy: &str, name: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///

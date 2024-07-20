@@ -7,9 +7,9 @@ mod redeemer;
 mod script;
 mod tx_builder_body;
 mod tx_in;
+mod utxo;
 mod validity_range;
 mod withdrawal;
-mod utxo;
 
 pub use certificate::*;
 pub use datum::*;
@@ -20,6 +20,6 @@ pub use redeemer::*;
 pub use script::*;
 pub use tx_builder_body::*;
 pub use tx_in::*;
+pub use utxo::*;
 pub use validity_range::*;
 pub use withdrawal::*;
-pub use utxo::*;

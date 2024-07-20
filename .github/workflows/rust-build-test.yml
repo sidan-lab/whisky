@@ -50,8 +50,8 @@ jobs:
         if: matrix.os != 'ubuntu-latest'
         run: >
           cd packages/whisky &&
-          cargo test
-          --verbose
+          echo "MAESTRO_API_KEY=${{ secrets.MAESTRO_API_KEY }}" > .env &&
+          cargo test --verbose
 
       - name: Run core tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
@@ -68,6 +68,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: >
           cd packages/whisky &&
+          echo "MAESTRO_API_KEY=${{ secrets.MAESTRO_API_KEY }}" > .env &&
           cargo install cargo-tarpaulin
           && cargo tarpaulin
           --verbose
