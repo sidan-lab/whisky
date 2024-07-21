@@ -54,7 +54,7 @@ jobs:
 
       - name: Run rust tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
-        run: |
+        run: >
           cd packages/whisky &&
           cargo test --verbose
 
