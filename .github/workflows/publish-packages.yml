@@ -20,6 +20,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      MAESTRO_API_KEY: ${{ secrets.MAESTRO_API_KEY }}
+
     steps:
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
@@ -38,6 +41,9 @@ jobs:
           cargo build
           --locked
           --verbose
+
+      - name: Create .env file
+        run: echo "MAESTRO_API_KEY=${MAESTRO_API_KEY}" > packages/whisky/.env
 
       - name: Run core tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
