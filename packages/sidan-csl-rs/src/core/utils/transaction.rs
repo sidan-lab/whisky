@@ -37,12 +37,22 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         vkey_witnesses.add(&vkey_witness);
     }
     witness_set.set_vkeys(&vkey_witnesses);
-    let signed_transaction = csl::FixedTransaction::new(
-        &unsigned_transaction.raw_body(),
-        &witness_set.to_bytes(),
-        true,
-    )
-    .unwrap();
+    let signed_transaction: csl::FixedTransaction = match &unsigned_transaction.raw_auxiliary_data()
+    {
+        Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
+            &unsigned_transaction.raw_body(),
+            &unsigned_transaction.raw_witness_set(),
+            &raw_auxiliary_data,
+            true,
+        )
+        .unwrap(),
+        None => csl::FixedTransaction::new(
+            &unsigned_transaction.raw_body(),
+            &witness_set.to_bytes(),
+            true,
+        )
+        .unwrap(),
+    };
     signed_transaction.to_hex()
 }
 
@@ -56,11 +66,25 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
 
 #[wasm_bindgen]
 pub fn remove_witness_set(tx_hex: String) -> String {
-    let signed_transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
-    csl::Transaction::new(
-        &signed_transaction.body(),
-        &csl::TransactionWitnessSet::new(),
-        signed_transaction.auxiliary_data().clone(),
-    )
-    .to_hex()
+    let signed_transaction = csl::FixedTransaction::from_hex(&tx_hex).unwrap();
+    let unsigned_transaction: csl::FixedTransaction = match &signed_transaction.raw_auxiliary_data()
+    {
+        Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
+            &signed_transaction.raw_body(),
+            &csl::TransactionWitnessSet::new().to_bytes(),
+            &raw_auxiliary_data,
+            true,
+        )
+        .unwrap(),
+        None => csl::FixedTransaction::new(
+            &signed_transaction.raw_body(),
+            &csl::TransactionWitnessSet::new().to_bytes(),
+            true,
+        )
+        .unwrap(),
+    };
+    unsigned_transaction.to_hex()
 }
+
+// #[wasm_bindgen]
+// pub fn merge_vkey_witnesses_to_transaction(tx_hex: String, witness_set_hex: String) -> String {}
