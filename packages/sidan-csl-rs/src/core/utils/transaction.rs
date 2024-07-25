@@ -15,7 +15,8 @@ pub fn calculate_tx_hash(tx_hex: &str) -> String {
 
 #[wasm_bindgen]
 pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
-    let unsigned_transaction: csl::Transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
+    let unsigned_transaction: csl::FixedTransaction =
+        csl::FixedTransaction::from_hex(&tx_hex).unwrap();
     let tx_body = unsigned_transaction.body();
     let mut witness_set = unsigned_transaction.witness_set();
     let mut vkey_witnesses = witness_set
@@ -33,11 +34,12 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         vkey_witnesses.add(&vkey_witness);
     }
     witness_set.set_vkeys(&vkey_witnesses);
-    let signed_transaction = csl::Transaction::new(
-        &tx_body,
-        &witness_set,
-        unsigned_transaction.auxiliary_data(),
-    );
+    let signed_transaction = csl::FixedTransaction::new(
+        &unsigned_transaction.raw_body(),
+        &witness_set.to_bytes(),
+        true,
+    )
+    .unwrap();
     signed_transaction.to_hex()
 }
 
@@ -49,6 +51,7 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
 //     println!("Pub key hash {:?}", skey.to_public().hash().to_hex());
 // }
 
+#[wasm_bindgen]
 pub fn remove_witness_set(tx_hex: String) -> String {
     let signed_transaction = csl::Transaction::from_hex(&tx_hex).unwrap();
     csl::Transaction::new(
