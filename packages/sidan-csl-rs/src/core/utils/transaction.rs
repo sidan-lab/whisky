@@ -24,13 +24,16 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         .unwrap_or_else(csl::Vkeywitnesses::new)
         .clone();
     for key in signing_keys {
-        let clean_hex = if &key[0..4] == "5820" {
+        let clean_hex = if &key[0..4] == "5820" && key.len() == 68 {
             key[4..].to_string()
         } else {
             key.to_string()
         };
         let skey = csl::PrivateKey::from_hex(&clean_hex).unwrap();
-        let vkey_witness = csl::make_vkey_witness(&csl::hash_transaction(&tx_body), &skey);
+        let vkey_witness = csl::make_vkey_witness(
+            &csl::TransactionHash::from(blake2b256(&unsigned_transaction.raw_body())),
+            &skey,
+        );
         vkey_witnesses.add(&vkey_witness);
     }
     witness_set.set_vkeys(&vkey_witnesses);
