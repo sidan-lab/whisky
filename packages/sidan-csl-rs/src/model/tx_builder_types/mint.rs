@@ -29,5 +29,5 @@ pub struct SimpleScriptMint {
 pub struct MintParameter {
     pub policy_id: String,
     pub asset_name: String,
-    pub amount: u64,
+    pub amount: i128,
 }

@@ -23,7 +23,7 @@ use uplc::{
     Hash, TransactionInput,
 };
 
-use crate::service::IEvaluator;
+use crate::service::Evaluator;
 
 pub struct MeshTxEvaluator {}
 
@@ -39,8 +39,7 @@ impl Default for MeshTxEvaluator {
     }
 }
 
-#[async_trait]
-impl IEvaluator for MeshTxEvaluator {
+impl MeshTxEvaluator {
     fn evaluate_tx_sync(
         &self,
         tx_hex: &str,
@@ -93,6 +92,10 @@ impl IEvaluator for MeshTxEvaluator {
                 .collect()
         })
     }
+}
+
+#[async_trait]
+impl Evaluator for MeshTxEvaluator {
     async fn evaluate_tx(
         &self,
         tx_hex: &str,

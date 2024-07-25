@@ -6,3 +6,5 @@ target
 */**/output
 rust/pkg
 docs
+
+*/**/.env

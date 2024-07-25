@@ -456,7 +456,7 @@ impl IMeshCSL for MeshCSL {
         mint_builder.add_asset(
             &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
             &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).unwrap())?,
-            &csl::Int::new_i32(script_mint.mint.amount.try_into().unwrap()),
+            &csl::Int::from_str(&script_mint.mint.amount.to_string()).unwrap(),
         )?;
         Ok(())
     }
@@ -473,7 +473,7 @@ impl IMeshCSL for MeshCSL {
                     &csl::NativeScript::from_hex(&script.script_cbor)?,
                 )),
                 &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
-                &csl::Int::new_i32(native_mint.mint.amount.try_into().unwrap()),
+                &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
             )?,
             SimpleScriptSource::InlineSimpleScriptSource(script) => mint_builder.add_asset(
                 &MintWitness::new_native_script(&csl::NativeScriptSource::new_ref_input(
@@ -484,7 +484,7 @@ impl IMeshCSL for MeshCSL {
                     ),
                 )),
                 &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
-                &csl::Int::new_i32(native_mint.mint.amount.try_into().unwrap()),
+                &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
             )?,
         };
         Ok(())

@@ -20,7 +20,7 @@ use sidan_csl_rs::{
 };
 
 use super::{IMeshTxBuilder, MeshTxBuilder, MeshTxEvaluator, WData, WRedeemer};
-use crate::service::ITxEvaluation;
+use crate::service::TxEvaluation;
 
 #[async_trait]
 impl IMeshTxBuilder for MeshTxBuilder {
@@ -563,7 +563,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn mint(&mut self, quantity: u64, policy: &str, name: &str) -> &mut Self {
+    fn mint(&mut self, quantity: i128, policy: &str, name: &str) -> &mut Self {
         if self.mint_item.is_some() {
             self.queue_mint();
         }

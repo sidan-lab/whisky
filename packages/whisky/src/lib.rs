@@ -48,6 +48,7 @@
 //! All user facing APIs are documentation at the [builder interface](builder/trait.IMeshTxBuilder.html).
 
 pub mod builder;
+pub mod provider;
 pub mod service;
 pub use sidan_csl_rs::builder as builder_core;
 pub use sidan_csl_rs::core;
