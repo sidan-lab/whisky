@@ -277,4 +277,31 @@ mod int_tests {
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_native_script_ref() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let signed_tx = mesh
+            .tx_in(
+                "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052",
+                80,
+                vec![Asset::new_from_str("lovelace", "4633697637")],
+                "addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w",
+            )
+            .change_address("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w")
+            .tx_out("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w", vec![Asset::new_from_str("lovelace", "5000000")])
+            .tx_out_reference_script("8200581ce3d28c78fa125198affefff50269125c81ba34e598890ed1d077f171", None)
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
 }
