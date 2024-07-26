@@ -4,8 +4,9 @@ mod int_tests {
         core::common::con_str0,
         model::{Asset, Budget, LanguageVersion},
     };
-    use whisky::builder::{
-        IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer,
+    use whisky::{
+        builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        core::utils::merge_vkey_witnesses_to_transaction,
     };
 
     #[test]
@@ -273,6 +274,35 @@ mod int_tests {
             .complete_sync(None)
             .unwrap()
             .complete_signing();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_native_script_ref() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = mesh
+            .tx_in(
+                "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052",
+                80,
+                vec![Asset::new_from_str("lovelace", "4633697637")],
+                "addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w",
+            )
+            .change_address("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w")
+            .tx_out("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w", vec![Asset::new_from_str("lovelace", "5000000")])
+            .tx_out_reference_script("8200581ce3d28c78fa125198affefff50269125c81ba34e598890ed1d077f171", None)
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing();
+
+        let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
 
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");

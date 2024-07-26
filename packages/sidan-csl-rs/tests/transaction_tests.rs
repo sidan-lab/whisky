@@ -1,6 +1,11 @@
 mod transaction_tests {
     use cardano_serialization_lib as csl;
-    use sidan_csl_rs::core::utils::{build_tx_builder, calculate_tx_hash, to_bignum};
+    use sidan_csl_rs::{
+        core::utils::{
+            build_tx_builder, calculate_tx_hash, remove_witness_set, sign_transaction, to_bignum,
+        },
+        model::JsVecString,
+    };
 
     #[test]
     fn test_calculate_tx_hash() {
@@ -104,5 +109,22 @@ mod transaction_tests {
             .unwrap();
 
         assert!(tx_builder.build().unwrap().outputs().len() == 2);
+    }
+
+    #[test]
+    fn test_signing_transaction() {
+        let mut signing_keys = JsVecString::new();
+        signing_keys.add(
+            "5820010f2ecd1312019694f7cc3bba11cdc386ed320906881cd0a3a8ca05988882ba".to_string(),
+        );
+        let signed_tx = sign_transaction("84a30081825820616733c08d8e5846b2669f78074c6c0d1e0e63ec8ef33acbe573aff1f622748e010182a200581d70a67529ee536a0dc1cd6d138ac6644baa11a0858bb32a46b1e9834a97011a001e8480a200581d602aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd011b0000000253c9cc4e021a00028759a0f5f6".to_string(), signing_keys);
+        println!("{}", signed_tx);
+        assert!(signed_tx == "84a30081825820616733c08d8e5846b2669f78074c6c0d1e0e63ec8ef33acbe573aff1f622748e010182a200581d70a67529ee536a0dc1cd6d138ac6644baa11a0858bb32a46b1e9834a97011a001e8480a200581d602aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd011b0000000253c9cc4e021a00028759a10081825820f444bd136f6b12767072dc541571412479280efd367335afcf15c5ddf09a98335840ea5ac790a6f75d47da28b13d55021c234ec961f81e35d5b9c447055377c70b066fb28a7e2c01978439712cc85d42f5e00b8c07b6b2b8f36d87178de6ee6d4e02f5f6")
+    }
+
+    #[test]
+    fn test_remove_witness_set() {
+        let signed_tx = "84a30081825820616733c08d8e5846b2669f78074c6c0d1e0e63ec8ef33acbe573aff1f622748e010182a200581d70a67529ee536a0dc1cd6d138ac6644baa11a0858bb32a46b1e9834a97011a001e8480a200581d602aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd011b0000000253c9cc4e021a00028759a10081825820f444bd136f6b12767072dc541571412479280efd367335afcf15c5ddf09a98335840ea5ac790a6f75d47da28b13d55021c234ec961f81e35d5b9c447055377c70b066fb28a7e2c01978439712cc85d42f5e00b8c07b6b2b8f36d87178de6ee6d4e02f5f6";
+        assert!(remove_witness_set(signed_tx.to_string()) == "84a30081825820616733c08d8e5846b2669f78074c6c0d1e0e63ec8ef33acbe573aff1f622748e010182a200581d70a67529ee536a0dc1cd6d138ac6644baa11a0858bb32a46b1e9834a97011a001e8480a200581d602aa80698b309b95c849a426edc5b600b8fe6cf2598bc14a3b444bdfd011b0000000253c9cc4e021a00028759a0f5f6")
     }
 }
