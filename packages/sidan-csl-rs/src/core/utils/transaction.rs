@@ -17,7 +17,6 @@ pub fn calculate_tx_hash(tx_hex: &str) -> String {
 pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
     let unsigned_transaction: csl::FixedTransaction =
         csl::FixedTransaction::from_hex(&tx_hex).unwrap();
-    let tx_body = unsigned_transaction.body();
     let mut witness_set = unsigned_transaction.witness_set();
     let mut vkey_witnesses = witness_set
         .vkeys()
@@ -86,5 +85,42 @@ pub fn remove_witness_set(tx_hex: String) -> String {
     unsigned_transaction.to_hex()
 }
 
-// #[wasm_bindgen]
-// pub fn merge_vkey_witnesses_to_transaction(tx_hex: String, witness_set_hex: String) -> String {}
+#[wasm_bindgen]
+pub fn merge_vkey_witnesses_to_transaction(
+    tx_hex: String,
+    added_witness_set_hex: String,
+) -> String {
+    let unsigned_transaction: csl::FixedTransaction =
+        csl::FixedTransaction::from_hex(&tx_hex).unwrap();
+    let mut witness_set = unsigned_transaction.witness_set();
+    let mut vkey_witnesses = witness_set
+        .vkeys()
+        .unwrap_or_else(csl::Vkeywitnesses::new)
+        .clone();
+    let added_vkey_witnesses = csl::TransactionWitnessSet::from_hex(&added_witness_set_hex)
+        .unwrap()
+        .vkeys()
+        .expect("Expected vkeys to add to transaction");
+
+    for index in 0..added_vkey_witnesses.len() {
+        vkey_witnesses.add(&added_vkey_witnesses.get(index));
+    }
+    witness_set.set_vkeys(&vkey_witnesses);
+    let signed_transaction: csl::FixedTransaction = match &unsigned_transaction.raw_auxiliary_data()
+    {
+        Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
+            &unsigned_transaction.raw_body(),
+            &unsigned_transaction.raw_witness_set(),
+            &raw_auxiliary_data,
+            true,
+        )
+        .unwrap(),
+        None => csl::FixedTransaction::new(
+            &unsigned_transaction.raw_body(),
+            &witness_set.to_bytes(),
+            true,
+        )
+        .unwrap(),
+    };
+    signed_transaction.to_hex()
+}
