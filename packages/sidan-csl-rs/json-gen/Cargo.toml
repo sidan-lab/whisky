@@ -5,7 +5,6 @@ edition = "2018"
 authors = ["EMURGO"]
 license = "MIT"
 
-
 [dependencies]
 serde_json = { version = "1.0.114", features = ["arbitrary_precision"] }
 schemars = "0.8.8"
