@@ -4,8 +4,9 @@ mod int_tests {
         core::common::con_str0,
         model::{Asset, Budget, LanguageVersion},
     };
-    use whisky::builder::{
-        IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer,
+    use whisky::{
+        builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        core::utils::merge_vkey_witnesses_to_transaction,
     };
 
     #[test]
@@ -287,7 +288,7 @@ mod int_tests {
             params: None,
         });
 
-        let signed_tx = mesh
+        let unsigned_tx = mesh
             .tx_in(
                 "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052",
                 80,
@@ -300,6 +301,8 @@ mod int_tests {
             .complete_sync(None)
             .unwrap()
             .complete_signing();
+
+        let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
 
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
