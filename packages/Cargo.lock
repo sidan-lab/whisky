@@ -300,6 +300,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cardano-serialization-lib-json-schema-gen"
+version = "0.0.1"
+dependencies = [
+ "cardano-serialization-lib",
+ "schemars",
+ "serde_json",
+]
+
+[[package]]
 name = "cbor_event"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
