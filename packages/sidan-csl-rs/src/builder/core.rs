@@ -34,7 +34,12 @@ pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) 
 
     let params: Option<Protocol> = match serde_json::from_str(params_json) {
         Ok(params) => Some(params),
-        Err(_) => None,
+        Err(e) => {
+            return TxBuildResult::new(
+                "failure".to_string(),
+                format!("Invalid Protocol Param JSON: {:?} \n {:?}", params_json, e),
+            )
+        }
     };
 
     match serialize_tx_body(mesh_tx_builder_body, params) {
