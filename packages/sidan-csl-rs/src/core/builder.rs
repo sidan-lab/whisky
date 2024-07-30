@@ -859,7 +859,7 @@ impl IMeshCSL for MeshCSL {
     }
 
     fn build_tx(&mut self) -> Result<String, JsError> {
-        let tx = self.tx_builder.build_tx().unwrap();
+        let tx = self.tx_builder.build_tx()?;
         self.tx_hex = tx.to_hex();
         Ok(self.tx_hex.to_string())
     }
