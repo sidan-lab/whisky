@@ -1118,7 +1118,7 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 [[package]]
 name = "maestro"
 version = "1.1.2"
-source = "git+https://github.com/maestro-org/rust-sdk.git#831f54e8ead69951444d10597e50c0d882d11471"
+source = "git+https://github.com/maestro-org/rust-sdk.git?rev=831f54e8ead69951444d10597e50c0d882d11471#831f54e8ead69951444d10597e50c0d882d11471"
 dependencies = [
  "chrono",
  "reqwest 0.11.27",
