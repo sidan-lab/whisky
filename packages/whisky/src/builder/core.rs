@@ -13,9 +13,9 @@ use sidan_csl_rs::{
         ProvidedScriptSource, ProvidedSimpleScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer,
         RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptMint, ScriptSource, ScriptTxIn,
         ScriptTxInParameter, SimpleScriptMint, SimpleScriptSource, SimpleScriptTxIn,
-        SimpleScriptTxInParameter, StakeAndVoteDelegation, StakeRegistrationAndDelegation,
-        StakeVoteRegistrationAndDelegation, TxIn, TxInParameter, UTxO, Value, VoteDelegation,
-        VoteRegistrationAndDelegation, Withdrawal,
+        SimpleScriptTxInParameter, SimpleScriptWithdrawal, StakeAndVoteDelegation,
+        StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation, TxIn, TxInParameter,
+        UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation, Withdrawal,
     },
 };
 
@@ -456,7 +456,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         withdrawal_script_hash: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
@@ -468,6 +468,17 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {
                 panic!("Script reference cannot be defined for a pubkey withdrawal")
             }
+            Withdrawal::SimpleScriptWithdrawal(mut withdrawal) => {
+                withdrawal.script_source = Some(SimpleScriptSource::InlineSimpleScriptSource(
+                    InlineSimpleScriptSource {
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
+                        simple_script_hash: withdrawal_script_hash.to_string(),
+                    },
+                ))
+            }
             Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
                 withdrawal.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
@@ -476,7 +487,8 @@ impl IMeshTxBuilder for MeshTxBuilder {
                             tx_index,
                         },
                         spending_script_hash: withdrawal_script_hash.to_string(),
-                        language_version: version,
+                        language_version: version
+                            .expect("Plutus withdrawals require a language version"),
                         script_size,
                     }));
                 self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdrawal));
@@ -518,6 +530,13 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {
                 panic!("Script cannot be defined for a pubkey withdrawal")
             }
+            Withdrawal::SimpleScriptWithdrawal(mut withdraw) => {
+                withdraw.script_source = Some(SimpleScriptSource::ProvidedSimpleScriptSource(
+                    ProvidedSimpleScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                    },
+                ))
+            }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
                 withdraw.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
@@ -538,7 +557,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let withdrawal_item = withdrawal_item.unwrap();
         match withdrawal_item {
             Withdrawal::PubKeyWithdrawal(_) => {
-                panic!("Script cannot be defined for a pubkey withdrawal")
+                panic!("Redeemer cannot be defined for a pubkey withdrawal")
+            }
+            Withdrawal::SimpleScriptWithdrawal(_) => {
+                panic!("Redeemer cannot be defined for a native script withdrawal")
             }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => match redeemer.data.to_cbor() {
                 Ok(raw_redeemer) => {
@@ -1023,6 +1045,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     _ => {}
                 }
             }
+            Withdrawal::SimpleScriptWithdrawal(withdrawal) => match withdrawal.script_source {
+                None => panic!("Script source missing from native script withdrawal"),
+                _ => {}
+            },
             Withdrawal::PubKeyWithdrawal(_) => {}
         }
         self.core

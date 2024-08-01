@@ -269,6 +269,9 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 Withdrawal::PlutusScriptWithdrawal(plutus_script_withdrawal) => {
                     mesh_csl.add_plutus_withdrawal(plutus_script_withdrawal)?
                 }
+                Withdrawal::SimpleScriptWithdrawal(simple_script_withdrawal) => {
+                    mesh_csl.add_simple_script_withdrawal(simple_script_withdrawal)?
+                }
             }
         }
         mesh_csl

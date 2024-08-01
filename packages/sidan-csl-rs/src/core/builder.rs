@@ -21,6 +21,10 @@ pub trait IMeshCSL {
     fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError>;
     fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError>;
     fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError>;
+    fn add_simple_script_withdrawal(
+        &mut self,
+        withdrawal: SimpleScriptWithdrawal,
+    ) -> Result<(), JsError>;
     fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
@@ -405,6 +409,43 @@ impl IMeshCSL for MeshCSL {
             &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
         )?;
         Ok(())
+    }
+
+    fn add_simple_script_withdrawal(
+        &mut self,
+        withdrawal: SimpleScriptWithdrawal,
+    ) -> Result<(), JsError> {
+        let csl_native_script_source = match withdrawal.script_source {
+            Some(script_source) => match script_source {
+                SimpleScriptSource::ProvidedSimpleScriptSource(ProvidedSimpleScriptSource {
+                    script_cbor: provided_script,
+                }) => csl::NativeScriptSource::new(
+                    &csl::NativeScript::from_hex(&provided_script).unwrap(),
+                ),
+                SimpleScriptSource::InlineSimpleScriptSource(InlineSimpleScriptSource {
+                    ref_tx_in,
+                    simple_script_hash,
+                }) => csl::NativeScriptSource::new_ref_input(
+                    &csl::ScriptHash::from_hex(&simple_script_hash).unwrap(),
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&ref_tx_in.tx_hash).unwrap(),
+                        ref_tx_in.tx_index,
+                    ),
+                ),
+            },
+            None => {
+                return Err(JsError::from_str(
+                    "Missing script source for native script withdrawal",
+                ))
+            }
+        };
+
+        self.tx_withdrawals_builder.add_with_native_script(
+            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
+                .unwrap(),
+            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
+            &csl_native_script_source,
+        )
     }
 
     fn add_plutus_mint(

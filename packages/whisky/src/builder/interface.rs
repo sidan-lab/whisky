@@ -329,8 +329,8 @@ pub trait IMeshTxBuilder {
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
     /// * `withdrawal_script_hash` - The withdrawal script hash
-    /// * `version` - The language version
-    /// * `scrip_size` - Size of the script
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
+    /// * `script_size` - Size of the script
     ///
     /// ### Returns
     ///
@@ -340,7 +340,7 @@ pub trait IMeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         withdrawal_script_hash: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self;
 
