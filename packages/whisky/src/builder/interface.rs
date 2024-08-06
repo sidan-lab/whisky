@@ -365,12 +365,16 @@ pub trait IMeshTxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self;
+    fn withdrawal_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self;
 
     /// ## Transaction building method
     ///

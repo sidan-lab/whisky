@@ -521,7 +521,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
+    fn withdrawal_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
             panic!("Undefined withdrawal")
@@ -542,7 +546,8 @@ impl IMeshTxBuilder for MeshTxBuilder {
                 withdraw.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                         script_cbor: script_cbor.to_string(),
-                        language_version: version,
+                        language_version: version
+                            .expect("Plutus withdrawals require a language version"),
                     }));
                 self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
             }

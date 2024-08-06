@@ -471,7 +471,7 @@ impl IMeshCSL for MeshCSL {
     ) -> Result<(), JsError> {
         match cert {
             Certificate::BasicCertificate(basic_cert) => {
-                certificates_builder.add(&to_csl_cert(basic_cert)?)
+                certificates_builder.add(&to_csl_cert(basic_cert)?)?
             }
             Certificate::ScriptCertificate(script_cert) => {
                 let cert_script_source: csl::PlutusScriptSource = match script_cert.script_source {
@@ -528,7 +528,7 @@ impl IMeshCSL for MeshCSL {
                         &cert_redeemer,
                     );
                 certificates_builder
-                    .add_with_plutus_witness(&to_csl_cert(script_cert.cert)?, &csl_plutus_witness)
+                    .add_with_plutus_witness(&to_csl_cert(script_cert.cert)?, &csl_plutus_witness)?
             }
             Certificate::SimpleScriptCertificate(simple_script_cert) => {
                 let script_info = simple_script_cert.simple_script_source;
@@ -550,10 +550,14 @@ impl IMeshCSL for MeshCSL {
                             )
                         }
                     },
-                    None => todo!(),
+                    None => {
+                        return Err(JsError::from_str(
+                            "Missing Native Script Source in Native Cert",
+                        ))
+                    }
                 };
                 certificates_builder
-                    .add_with_native_script(&to_csl_cert(simple_script_cert.cert)?, &script_source)
+                    .add_with_native_script(&to_csl_cert(simple_script_cert.cert)?, &script_source)?
             }
         };
         Ok(())
