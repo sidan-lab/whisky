@@ -770,6 +770,48 @@ pub trait IMeshTxBuilder {
 
     /// ## Transaction building method
     ///
+    /// Add script witness to certificate
+    ///
+    /// ### Arguments
+    ///
+    /// * `script_cbor` - The script in CBOR format
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn certificate_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
+    /// Add a Certificate transaction input reference to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `tx_hash` - The transaction hash
+    /// * `tx_index` - The transaction index
+    /// * `spending_script_hash` - The spending script hash
+    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
+    /// * `script_size` - Size of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn certificate_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        spending_script_hash: &str,
+        version: Option<LanguageVersion>,
+        script_size: usize,
+    ) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
     /// Change the address in the MeshTxBuilder instance
     ///
     /// ### Arguments

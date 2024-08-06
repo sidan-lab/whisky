@@ -1,8 +1,18 @@
 use serde::{Deserialize, Serialize};
 
+use super::{Redeemer, ScriptSource, SimpleScriptSource};
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Certificate {
+    BasicCertificate(CertificateType),
+    ScriptCertificate(ScriptCertificate),
+    SimpleScriptCertificate(SimpleScriptCertificate),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CertificateType {
     RegisterStake(RegisterStake),
     DeregisterStake(DeregisterStake),
     DelegateStake(DelegateStake),
@@ -18,6 +28,21 @@ pub enum Certificate {
     DRepRegistration(DRepRegistration),
     DRepDeregistration(DRepDeregistration),
     DRepUpdate(DRepUpdate),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ScriptCertificate {
+    pub cert: CertificateType,
+    pub redeemer: Option<Redeemer>,
+    pub script_source: Option<ScriptSource>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SimpleScriptCertificate {
+    pub cert: CertificateType,
+    pub simple_script_source: Option<SimpleScriptSource>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
