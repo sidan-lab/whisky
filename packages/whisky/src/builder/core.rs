@@ -1256,10 +1256,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     _ => {}
                 }
             }
-            Withdrawal::SimpleScriptWithdrawal(withdrawal) => match withdrawal.script_source {
-                None => panic!("Script source missing from native script withdrawal"),
-                _ => {}
-            },
+            Withdrawal::SimpleScriptWithdrawal(withdrawal) => {
+                if withdrawal.script_source.is_none() {
+                    panic!("Script source missing from native script withdrawal")
+                }
+            }
             Withdrawal::PubKeyWithdrawal(_) => {}
         }
         self.core

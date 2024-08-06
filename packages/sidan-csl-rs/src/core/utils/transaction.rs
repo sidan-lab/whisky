@@ -41,7 +41,7 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
             &unsigned_transaction.raw_body(),
             &unsigned_transaction.raw_witness_set(),
-            &raw_auxiliary_data,
+            raw_auxiliary_data,
             true,
         )
         .unwrap(),
@@ -71,7 +71,7 @@ pub fn remove_witness_set(tx_hex: String) -> String {
         Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
             &signed_transaction.raw_body(),
             &csl::TransactionWitnessSet::new().to_bytes(),
-            &raw_auxiliary_data,
+            raw_auxiliary_data,
             true,
         )
         .unwrap(),
@@ -111,7 +111,7 @@ pub fn merge_vkey_witnesses_to_transaction(
         Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
             &unsigned_transaction.raw_body(),
             &unsigned_transaction.raw_witness_set(),
-            &raw_auxiliary_data,
+            raw_auxiliary_data,
             true,
         )
         .unwrap(),
