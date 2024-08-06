@@ -816,6 +816,19 @@ pub trait IMeshTxBuilder {
 
     /// ## Transaction building method
     ///
+    /// Add a Certificate Redeemer to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `redeemer` - The redeemer value
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    fn certificate_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self;
+
+    /// ## Transaction building method
+    ///
     /// Change the address in the MeshTxBuilder instance
     ///
     /// ### Arguments

@@ -1115,6 +1115,50 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
+    fn certificate_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        if last_cert.is_none() {
+            panic!("Undefined certificate");
+        }
+        let last_cert = last_cert.unwrap();
+        let current_redeemer = match redeemer.data.to_cbor() {
+            Ok(raw_redeemer) => Some(Redeemer {
+                data: raw_redeemer,
+                ex_units: redeemer.ex_units,
+            }),
+            Err(_) => {
+                panic!("Error converting certificate redeemer to CBOR")
+            }
+        };
+        match last_cert {
+            Certificate::BasicCertificate(basic_cert) => self
+                .core
+                .mesh_tx_builder_body
+                .certificates
+                .push(Certificate::ScriptCertificate(ScriptCertificate {
+                    cert: basic_cert,
+                    redeemer: current_redeemer,
+                    script_source: None,
+                })),
+
+            Certificate::ScriptCertificate(script_cert) => self
+                .core
+                .mesh_tx_builder_body
+                .certificates
+                .push(Certificate::ScriptCertificate(ScriptCertificate {
+                    cert: script_cert.cert,
+                    redeemer: current_redeemer,
+                    script_source: script_cert.script_source,
+                })),
+
+            Certificate::SimpleScriptCertificate(_) => {
+                panic!("Native script cert cannot use redeemers")
+            }
+        }
+
+        self
+    }
+
     fn change_address(&mut self, address: &str) -> &mut Self {
         self.core.mesh_tx_builder_body.change_address = address.to_string();
         self
