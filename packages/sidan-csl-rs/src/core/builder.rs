@@ -1,12 +1,7 @@
-use std::net::{Ipv4Addr, Ipv6Addr};
-
 use crate::{csl, model::*};
-use cardano_serialization_lib::{Credential, JsError, MintWitness};
+use cardano_serialization_lib::{JsError, MintWitness};
 
-use super::utils::{
-    build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_cert, to_csl_drep,
-    to_value,
-};
+use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value};
 
 pub trait IMeshCSL {
     fn new(params: Option<Protocol>) -> Self;
@@ -556,8 +551,10 @@ impl IMeshCSL for MeshCSL {
                         ))
                     }
                 };
-                certificates_builder
-                    .add_with_native_script(&to_csl_cert(simple_script_cert.cert)?, &script_source)?
+                certificates_builder.add_with_native_script(
+                    &to_csl_cert(simple_script_cert.cert)?,
+                    &script_source,
+                )?
             }
         };
         Ok(())

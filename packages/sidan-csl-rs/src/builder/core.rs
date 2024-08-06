@@ -1,5 +1,5 @@
 use builder::TxBuildResult;
-use cardano_serialization_lib::{CertificatesBuilder, JsError};
+use cardano_serialization_lib::JsError;
 
 use crate::{
     core::builder::{IMeshCSL, MeshCSL},
