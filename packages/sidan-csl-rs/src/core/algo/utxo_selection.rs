@@ -15,18 +15,18 @@ pub fn js_select_utxos(
         .expect("Error deserializing required_assets");
     let required_value = Value::from_asset_vec(required_assets);
 
-    select_utxos(inputs, required_value, threshold.to_string())
+    select_utxos(&inputs, required_value, threshold)
         .map_err(|e| JsError::from_str(&e))
         .map(|utxos| serde_json::to_string(&utxos).unwrap())
 }
 
 pub fn select_utxos(
-    inputs: Vec<UTxO>,
+    inputs: &[UTxO],
     required_assets: Value,
-    threshold: String,
+    threshold: &str,
 ) -> Result<Vec<UTxO>, String> {
     let mut total_required_assets = required_assets.clone();
-    total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold));
+    total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold.to_string()));
 
     // Classify the utxos
     let mut only_lovelace: Vec<usize> = vec![];
@@ -103,7 +103,11 @@ pub fn select_utxos(
     for unit in required_units.clone() {
         if total_required_assets.get(&unit) > 0 {
             println!("Total required assets: {:?}", total_required_assets);
-            return Err("Selection failed".to_string());
+            return Err(format!(
+                "Selection failed, {:?} value missing. Reminder, in this selection you required for {:?} extra lovelace as threshold",
+                total_required_assets,
+                threshold
+            ));
         }
     }
 
@@ -134,7 +138,6 @@ fn test_basic_selection() {
 
     let mut required_assets: Value = Value::new();
     required_assets.add_asset(Asset::new_from_str("lovelace", "5000000"));
-    let selected_list =
-        select_utxos(utxo_list.clone(), required_assets, "5000000".to_string()).unwrap();
+    let selected_list = select_utxos(&utxo_list, required_assets, "5000000").unwrap();
     assert_eq!(utxo_list, selected_list);
 }
