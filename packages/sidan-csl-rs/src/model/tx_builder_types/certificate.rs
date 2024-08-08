@@ -104,20 +104,21 @@ pub struct PoolMetadata {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterStake {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
+    pub coin: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DelegateStake {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub pool_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeregisterStake {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -130,7 +131,7 @@ pub struct RetirePool {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VoteDelegation {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub drep: DRep,
 }
 
@@ -146,7 +147,7 @@ pub enum DRep {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StakeAndVoteDelegation {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub pool_key_hash: String,
     pub drep: DRep,
 }
@@ -154,7 +155,7 @@ pub struct StakeAndVoteDelegation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StakeRegistrationAndDelegation {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub pool_key_hash: String,
     pub coin: u64,
 }
@@ -162,7 +163,7 @@ pub struct StakeRegistrationAndDelegation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VoteRegistrationAndDelegation {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub drep: DRep,
     pub coin: u64,
 }
@@ -170,7 +171,7 @@ pub struct VoteRegistrationAndDelegation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StakeVoteRegistrationAndDelegation {
-    pub stake_key_hash: String,
+    pub stake_key_address: String,
     pub pool_key_hash: String,
     pub drep: DRep,
     pub coin: u64,
@@ -179,14 +180,14 @@ pub struct StakeVoteRegistrationAndDelegation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitteeHotAuth {
-    pub committee_cold_key_hash: String,
-    pub committee_hot_key_hash: String,
+    pub committee_cold_key_address: String,
+    pub committee_hot_key_address: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitteeColdResign {
-    pub committee_cold_key_hash: String,
+    pub committee_cold_key_address: String,
     pub anchor: Option<Anchor>,
 }
 
@@ -200,7 +201,7 @@ pub struct Anchor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepRegistration {
-    pub voting_key_hash: String,
+    pub voting_key_address: String,
     pub coin: u64,
     pub anchor: Option<Anchor>,
 }
@@ -208,13 +209,13 @@ pub struct DRepRegistration {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepDeregistration {
-    pub voting_key_hash: String,
+    pub voting_key_address: String,
     pub coin: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepUpdate {
-    pub voting_key_hash: String,
+    pub voting_key_address: String,
     pub anchor: Option<Anchor>,
 }

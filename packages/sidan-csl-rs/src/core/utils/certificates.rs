@@ -50,13 +50,27 @@ pub fn to_csl_cert(cert: CertificateType) -> Result<csl::Certificate, JsError> {
         CertificateType::StakeAndVoteDelegation(stake_and_vote_deleg_cert) => {
             to_stake_and_vote_delegation_cert(stake_and_vote_deleg_cert)
         }
-        CertificateType::StakeRegistrationAndDelegation(stake_reg_and_deleg_cert) => to_stake_registration_and_delegation_cert(stake_reg_and_deleg_cert),
-        CertificateType::VoteRegistrationAndDelegation(vote_reg_and_deleg_cert) => to_vote_registration_and_delgation_cert(vote_reg_and_deleg_cert),
-        CertificateType::StakeVoteRegistrationAndDelegation(stake_vote_reg_and_deleg_cert) => to_stake_vote_registration_and_delegation_cert(stake_vote_reg_and_deleg_cert),
-        CertificateType::CommitteeHotAuth(committee_hot_auth_cert) => to_committee_hot_auth_cert(committee_hot_auth_cert),
-        CertificateType::CommitteeColdResign(committee_cold_resign_cert) => to_commitee_cold_resign_cert(committee_cold_resign_cert),
-        CertificateType::DRepRegistration(drep_registration_cert) => to_drep_registration_cert(drep_registration_cert),
-        CertificateType::DRepDeregistration(drep_deregistration_cert) => to_drep_deregistration_cert(drep_deregistration_cert),
+        CertificateType::StakeRegistrationAndDelegation(stake_reg_and_deleg_cert) => {
+            to_stake_registration_and_delegation_cert(stake_reg_and_deleg_cert)
+        }
+        CertificateType::VoteRegistrationAndDelegation(vote_reg_and_deleg_cert) => {
+            to_vote_registration_and_delgation_cert(vote_reg_and_deleg_cert)
+        }
+        CertificateType::StakeVoteRegistrationAndDelegation(stake_vote_reg_and_deleg_cert) => {
+            to_stake_vote_registration_and_delegation_cert(stake_vote_reg_and_deleg_cert)
+        }
+        CertificateType::CommitteeHotAuth(committee_hot_auth_cert) => {
+            to_committee_hot_auth_cert(committee_hot_auth_cert)
+        }
+        CertificateType::CommitteeColdResign(committee_cold_resign_cert) => {
+            to_commitee_cold_resign_cert(committee_cold_resign_cert)
+        }
+        CertificateType::DRepRegistration(drep_registration_cert) => {
+            to_drep_registration_cert(drep_registration_cert)
+        }
+        CertificateType::DRepDeregistration(drep_deregistration_cert) => {
+            to_drep_deregistration_cert(drep_deregistration_cert)
+        }
         CertificateType::DRepUpdate(drep_update_cert) => to_drep_update_cert(drep_update_cert),
     }
 }
@@ -131,18 +145,20 @@ fn to_register_pool_cert(register_pool: RegisterPool) -> Result<csl::Certificate
 
 fn to_register_stake_cert(register_stake: RegisterStake) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_stake_registration(
-        &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
-            &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash)?,
-        )),
+        &csl::StakeRegistration::new(
+            &csl::Address::from_bech32(&register_stake.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
+        ),
     ))
 }
 
 fn to_delegate_stake_cert(delegate_stake: DelegateStake) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_stake_delegation(
         &csl::StakeDelegation::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &delegate_stake.stake_key_hash,
-            )?),
+            &csl::Address::from_bech32(&delegate_stake.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
             &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id)?,
         ),
     ))
@@ -152,9 +168,11 @@ fn to_deregister_stake_cert(
     deregister_stake: DeregisterStake,
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_stake_deregistration(
-        &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
-            &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash)?,
-        )),
+        &csl::StakeDeregistration::new(
+            &csl::Address::from_bech32(&deregister_stake.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
+        ),
     ))
 }
 
@@ -170,9 +188,9 @@ fn to_retire_pool_cert(retire_pool: RetirePool) -> Result<csl::Certificate, JsEr
 fn to_vote_delegation_cert(vote_delegation: VoteDelegation) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_vote_delegation(
         &csl::VoteDelegation::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &vote_delegation.stake_key_hash,
-            )?),
+            &csl::Address::from_bech32(&vote_delegation.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
             &to_csl_drep(&vote_delegation.drep)?,
         ),
     ))
@@ -183,9 +201,9 @@ fn to_stake_and_vote_delegation_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_stake_and_vote_delegation(
         &csl::StakeAndVoteDelegation::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &stake_and_vote_delegation.stake_key_hash,
-            )?),
+            &csl::Address::from_bech32(&stake_and_vote_delegation.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
             &csl::Ed25519KeyHash::from_hex(&stake_and_vote_delegation.pool_key_hash)?,
             &to_csl_drep(&stake_and_vote_delegation.drep)?,
         ),
@@ -197,9 +215,9 @@ fn to_stake_registration_and_delegation_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_stake_registration_and_delegation(
         &csl::StakeRegistrationAndDelegation::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &stake_registration_and_delegation.stake_key_hash,
-            )?),
+            &csl::Address::from_bech32(&stake_registration_and_delegation.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
             &csl::Ed25519KeyHash::from_hex(&stake_registration_and_delegation.pool_key_hash)?,
             &to_bignum(stake_registration_and_delegation.coin),
         ),
@@ -211,9 +229,9 @@ fn to_vote_registration_and_delgation_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_vote_registration_and_delegation(
         &csl::VoteRegistrationAndDelegation::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &vote_registration_and_delgation.stake_key_hash,
-            )?),
+            &csl::Address::from_bech32(&vote_registration_and_delgation.stake_key_address)?
+                .payment_cred()
+                .unwrap(),
             &to_csl_drep(&vote_registration_and_delgation.drep)?,
             &to_bignum(vote_registration_and_delgation.coin),
         ),
@@ -226,9 +244,11 @@ fn to_stake_vote_registration_and_delegation_cert(
     Ok(
         csl::Certificate::new_stake_vote_registration_and_delegation(
             &csl::StakeVoteRegistrationAndDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &stake_vote_registration_and_delegation.stake_key_hash,
-                )?),
+                &csl::Address::from_bech32(
+                    &stake_vote_registration_and_delegation.stake_key_address,
+                )?
+                .payment_cred()
+                .unwrap(),
                 &csl::Ed25519KeyHash::from_hex(
                     &stake_vote_registration_and_delegation.pool_key_hash,
                 )?,
@@ -244,12 +264,12 @@ fn to_committee_hot_auth_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_committee_hot_auth(
         &csl::CommitteeHotAuth::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &committee_hot_auth.committee_cold_key_hash,
-            )?),
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &committee_hot_auth.committee_hot_key_hash,
-            )?),
+            &csl::Address::from_bech32(&committee_hot_auth.committee_cold_key_address)?
+                .payment_cred()
+                .unwrap(),
+            &csl::Address::from_bech32(&committee_hot_auth.committee_hot_key_address)?
+                .payment_cred()
+                .unwrap(),
         ),
     ))
 }
@@ -257,9 +277,10 @@ fn to_committee_hot_auth_cert(
 fn to_commitee_cold_resign_cert(
     committee_cold_resign: CommitteeColdResign,
 ) -> Result<csl::Certificate, JsError> {
-    let committee_cold_key = &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-        &committee_cold_resign.committee_cold_key_hash,
-    )?);
+    let committee_cold_key =
+        &csl::Address::from_bech32(&committee_cold_resign.committee_cold_key_address)?
+            .payment_cred()
+            .unwrap();
     match committee_cold_resign.anchor {
         Some(anchor) => Ok(csl::Certificate::new_committee_cold_resign(
             &csl::CommitteeColdResign::new_with_anchor(
@@ -278,9 +299,9 @@ fn to_drep_registration_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_drep_registration(
         &csl::DrepRegistration::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &drep_registration.voting_key_hash,
-            )?),
+            &csl::Address::from_bech32(&drep_registration.voting_key_address)?
+                .payment_cred()
+                .unwrap(),
             &to_bignum(drep_registration.coin),
         ),
     ))
@@ -291,9 +312,9 @@ fn to_drep_deregistration_cert(
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_drep_deregistration(
         &csl::DrepDeregistration::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &drep_deregistration.voting_key_hash,
-            )?),
+            &csl::Address::from_bech32(&drep_deregistration.voting_key_address)?
+                .payment_cred()
+                .unwrap(),
             &to_bignum(drep_deregistration.coin),
         ),
     ))
@@ -303,16 +324,16 @@ fn to_drep_update_cert(drep_update: DRepUpdate) -> Result<csl::Certificate, JsEr
     match drep_update.anchor {
         Some(anchor) => Ok(csl::Certificate::new_drep_update(
             &csl::DrepUpdate::new_with_anchor(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &drep_update.voting_key_hash,
-                )?),
+                &csl::Address::from_bech32(&drep_update.voting_key_address)?
+                    .payment_cred()
+                    .unwrap(),
                 &to_csl_anchor(&anchor)?,
             ),
         )),
         None => Ok(csl::Certificate::new_drep_update(&csl::DrepUpdate::new(
-            &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                &drep_update.voting_key_hash,
-            )?),
+            &csl::Address::from_bech32(&drep_update.voting_key_address)?
+                .payment_cred()
+                .unwrap(),
         ))),
     }
 }

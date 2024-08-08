@@ -764,38 +764,39 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+    fn register_stake_certificate(&mut self, stake_key_address: &str, coin: u64) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
+                    coin,
                 }),
             ));
         self
     }
 
-    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self {
+    fn delegate_stake_certificate(&mut self, stake_key_address: &str, pool_id: &str) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DelegateStake(DelegateStake {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                     pool_id: pool_id.to_string(),
                 }),
             ));
         self
     }
 
-    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+    fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DeregisterStake(DeregisterStake {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                 }),
             ));
         self
@@ -814,13 +815,13 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self {
+    fn vote_delegation_certificate(&mut self, stake_key_address: &str, drep: DRep) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteDelegation(VoteDelegation {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                     drep,
                 }),
             ));
@@ -829,7 +830,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn stake_and_vote_delegation_certificate(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
     ) -> &mut Self {
@@ -838,7 +839,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                     pool_key_hash: pool_key_hash.to_string(),
                     drep,
                 }),
@@ -848,7 +849,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn stake_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         coin: u64,
     ) -> &mut Self {
@@ -857,7 +858,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                     pool_key_hash: pool_key_hash.to_string(),
                     coin,
                 }),
@@ -867,7 +868,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         drep: DRep,
         coin: u64,
     ) -> &mut Self {
@@ -876,7 +877,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
-                    stake_key_hash: stake_key_hash.to_string(),
+                    stake_key_address: stake_key_address.to_string(),
                     drep,
                     coin,
                 }),
@@ -886,7 +887,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn stake_vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
         coin: u64,
@@ -897,7 +898,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeVoteRegistrationAndDelegation(
                     StakeVoteRegistrationAndDelegation {
-                        stake_key_hash: stake_key_hash.to_string(),
+                        stake_key_address: stake_key_address.to_string(),
                         pool_key_hash: pool_key_hash.to_string(),
                         drep,
                         coin,
@@ -909,16 +910,16 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn committee_hot_auth(
         &mut self,
-        committee_cold_key_hash: &str,
-        committee_hot_key_hash: &str,
+        committee_cold_key_address: &str,
+        committee_hot_key_address: &str,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeHotAuth(CommitteeHotAuth {
-                    committee_cold_key_hash: committee_cold_key_hash.to_string(),
-                    committee_hot_key_hash: committee_hot_key_hash.to_string(),
+                    committee_cold_key_address: committee_cold_key_address.to_string(),
+                    committee_hot_key_address: committee_hot_key_address.to_string(),
                 }),
             ));
         self
@@ -926,7 +927,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn commitee_cold_resign(
         &mut self,
-        committee_cold_key_hash: &str,
+        committee_cold_key_address: &str,
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
@@ -934,7 +935,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeColdResign(CommitteeColdResign {
-                    committee_cold_key_hash: committee_cold_key_hash.to_string(),
+                    committee_cold_key_address: committee_cold_key_address.to_string(),
                     anchor,
                 }),
             ));
@@ -943,7 +944,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
 
     fn drep_registration(
         &mut self,
-        voting_key_hash: &str,
+        voting_key_address: &str,
         coin: u64,
         anchor: Option<Anchor>,
     ) -> &mut Self {
@@ -952,7 +953,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepRegistration(DRepRegistration {
-                    voting_key_hash: voting_key_hash.to_string(),
+                    voting_key_address: voting_key_address.to_string(),
                     coin,
                     anchor,
                 }),
@@ -960,26 +961,26 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self {
+    fn drep_deregistration(&mut self, voting_key_addres: &str, coin: u64) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepDeregistration(DRepDeregistration {
-                    voting_key_hash: voting_key_hash.to_string(),
+                    voting_key_address: voting_key_addres.to_string(),
                     coin,
                 }),
             ));
         self
     }
 
-    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self {
+    fn drep_update(&mut self, voting_key_address: &str, anchor: Option<Anchor>) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
                 DRepUpdate {
-                    voting_key_hash: voting_key_hash.to_string(),
+                    voting_key_address: voting_key_address.to_string(),
                     anchor,
                 },
             )));

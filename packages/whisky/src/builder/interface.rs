@@ -544,12 +544,13 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
+    /// * `coin` - Deposit for certificate registration
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+    fn register_stake_certificate(&mut self, stake_key_address: &str, coin: u64) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -557,13 +558,13 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `pool_id` - id of the pool that will be delegated to
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self;
+    fn delegate_stake_certificate(&mut self, stake_key_address: &str, pool_id: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -571,12 +572,12 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self;
+    fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -598,13 +599,13 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self;
+    fn vote_delegation_certificate(&mut self, stake_key_address: &str, drep: DRep) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -612,7 +613,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
     /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
     ///
@@ -621,7 +622,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn stake_and_vote_delegation_certificate(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
     ) -> &mut Self;
@@ -632,7 +633,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
     /// * `coin` - Deposit for certificate registration
     ///
@@ -641,7 +642,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn stake_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         coin: u64,
     ) -> &mut Self;
@@ -652,7 +653,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
     /// * `coin` - Deposit for certificate registration
     ///
@@ -661,7 +662,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         drep: DRep,
         coin: u64,
     ) -> &mut Self;
@@ -672,7 +673,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `stake_key_hash` - Hash of the stake key
+    /// * `stake_key_address` - Address of the stake key
     /// * `pool_key_hash` - Hash of pool key that will be delegated to, same as pool id
     /// * `drep` - The drep that will be voted for, or always abstain / always no confidence
     /// * `coin` - Deposit for certificate registration
@@ -682,7 +683,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn stake_vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
         coin: u64,
@@ -694,16 +695,16 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `committee_cold_key_hash` - Hash of the committee cold key
-    /// * `committee_hot_key_hash` - Hash of the commitee hot key
+    /// * `committee_cold_key_address` - Address of the committee cold key
+    /// * `committee_hot_key_address` - Address of the commitee hot key
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
     fn committee_hot_auth(
         &mut self,
-        committee_cold_key_hash: &str,
-        committee_hot_key_hash: &str,
+        committee_cold_key_address: &str,
+        committee_hot_key_address: &str,
     ) -> &mut Self;
 
     /// ## Transaction building method
@@ -712,7 +713,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `committee_cold_key_hash` - Hash of the committee cold key
+    /// * `committee_cold_key_address` - Address of the committee cold key
     /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
     ///
     /// ### Returns
@@ -720,7 +721,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn commitee_cold_resign(
         &mut self,
-        committee_cold_key_hash: &str,
+        committee_cold_key_address: &str,
         anchor: Option<Anchor>,
     ) -> &mut Self;
 
@@ -730,7 +731,7 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `voting_key_hash` - Hash of the voting key
+    /// * `voting_key_address` - Address of the voting key
     /// * `coin` - Deposit for certificate registration
     /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
     ///
@@ -739,7 +740,7 @@ pub trait IMeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     fn drep_registration(
         &mut self,
-        voting_key_hash: &str,
+        voting_key_address: &str,
         coin: u64,
         anchor: Option<Anchor>,
     ) -> &mut Self;
@@ -750,13 +751,13 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `voting_key_hash` - Hash of the voting key
+    /// * `voting_key_address` - Address of the voting key
     /// * `coin` - Deposit for certificate registration
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self;
+    fn drep_deregistration(&mut self, voting_key_address: &str, coin: u64) -> &mut Self;
 
     /// ## Transaction building method
     ///
@@ -764,13 +765,13 @@ pub trait IMeshTxBuilder {
     ///
     /// ### Arguments
     ///
-    /// * `voting_key_hash` - Hash of the voting key
+    /// * `voting_key_address` - Address of the voting key
     /// * `anchor` - The Anchor, this is a URL and a hash of the doc at this URL
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self;
+    fn drep_update(&mut self, voting_key_address: &str, anchor: Option<Anchor>) -> &mut Self;
 
     /// ## Transaction building method
     ///

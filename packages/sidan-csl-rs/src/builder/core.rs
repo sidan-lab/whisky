@@ -293,7 +293,6 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 }
             };
         }
-        println!("6-3");
         mesh_csl.tx_builder.set_mint_builder(&mint_builder);
         Ok(())
     }
