@@ -1,5 +1,4 @@
 mod int_tests {
-    use cardano_serialization_lib as csl;
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
         core::common::con_str0,
@@ -7,7 +6,7 @@ mod int_tests {
     };
     use whisky::{
         builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
-        core::utils::{merge_vkey_witnesses_to_transaction, to_bignum},
+        core::utils::merge_vkey_witnesses_to_transaction,
     };
 
     #[test]

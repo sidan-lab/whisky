@@ -10,31 +10,31 @@ pub fn wasm_script_to_address(
     is_script_stake_key: bool,
 ) -> String {
     match stake_hash {
-        Some(stake) => {
-            script_to_address(network_id, script_hash, Some((stake, is_script_stake_key)))
-        }
-        None => script_to_address(network_id, script_hash, None),
+        Some(stake) => script_to_address(
+            network_id,
+            &script_hash,
+            Some((&stake, is_script_stake_key)),
+        ),
+        None => script_to_address(network_id, &script_hash, None),
     }
 }
 
 pub fn script_to_address(
     network_id: u8,
-    script_hash: String,
-    stake_hash: Option<(String, bool)>,
+    script_hash: &str,
+    stake_hash: Option<(&str, bool)>,
 ) -> String {
     match stake_hash {
         Some((stake, is_script)) => {
             let stake_cred = if is_script {
-                csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(&stake).unwrap())
+                csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(stake).unwrap())
             } else {
-                csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(&stake).unwrap())
+                csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(stake).unwrap())
             };
 
             csl::BaseAddress::new(
                 network_id,
-                &csl::Credential::from_scripthash(
-                    &csl::ScriptHash::from_hex(&script_hash).unwrap(),
-                ),
+                &csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(script_hash).unwrap()),
                 &stake_cred,
             )
             .to_address()
@@ -44,7 +44,7 @@ pub fn script_to_address(
 
         None => csl::EnterpriseAddress::new(
             network_id,
-            &csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(&script_hash).unwrap()),
+            &csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(script_hash).unwrap()),
         )
         .to_address()
         .to_bech32(None)
@@ -53,9 +53,9 @@ pub fn script_to_address(
 }
 
 #[wasm_bindgen]
-pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
+pub fn deserialize_bech32_address(bech32_addr: &str) -> DeserializedAddress {
     let csl_address =
-        csl::BaseAddress::from_address(&csl::Address::from_bech32(&bech32_addr).unwrap());
+        csl::BaseAddress::from_address(&csl::Address::from_bech32(bech32_addr).unwrap());
     match csl_address {
         Some(address) => {
             let csl_key_hash = address
@@ -78,16 +78,16 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
                 .to_scripthash()
                 .map(|stake_key_script_hash| stake_key_script_hash.to_hex());
 
-            SerializedAddress::new(
-                csl_key_hash.unwrap_or("".to_string()),
-                csl_script_hash.unwrap_or("".to_string()),
-                csl_stake_key_hash.unwrap_or("".to_string()),
-                csl_stake_key_script_hash.unwrap_or("".to_string()),
+            DeserializedAddress::new(
+                &csl_key_hash.unwrap_or("".to_string()),
+                &csl_script_hash.unwrap_or("".to_string()),
+                &csl_stake_key_hash.unwrap_or("".to_string()),
+                &csl_stake_key_script_hash.unwrap_or("".to_string()),
             )
         }
         None => {
             let csl_enterprize_address = csl::EnterpriseAddress::from_address(
-                &csl::Address::from_bech32(&bech32_addr).unwrap(),
+                &csl::Address::from_bech32(bech32_addr).unwrap(),
             )
             .unwrap();
 
@@ -101,11 +101,11 @@ pub fn serialize_bech32_address(bech32_addr: String) -> SerializedAddress {
                 .to_scripthash()
                 .map(|script_hash| script_hash.to_hex());
 
-            SerializedAddress::new(
-                csl_key_hash.unwrap_or("".to_string()),
-                csl_script_hash.unwrap_or("".to_string()),
-                "".to_string(),
-                "".to_string(),
+            DeserializedAddress::new(
+                &csl_key_hash.unwrap_or("".to_string()),
+                &csl_script_hash.unwrap_or("".to_string()),
+                "",
+                "",
             )
         }
     }

@@ -11,6 +11,11 @@ pub struct Asset {
 }
 
 impl Asset {
+    pub fn unit_to_tuple(unit: &str) -> (String, String) {
+        let policy = unit.chars().take(56).collect();
+        let name = unit.chars().skip(56).collect();
+        (policy, name)
+    }
     pub fn new(unit: String, quantity: String) -> Self {
         Asset { unit, quantity }
     }
