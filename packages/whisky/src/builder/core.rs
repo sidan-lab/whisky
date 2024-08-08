@@ -1363,7 +1363,12 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
 
         let selected_inputs =
-            select_utxos(extra_inputs, required_assets, threshold.to_string()).unwrap();
+            match select_utxos(&extra_inputs, required_assets, &threshold.to_string()) {
+                Ok(inputs) => inputs,
+                Err(_) => {
+                    return Err(JsError::from_str("Error selecting inputs"));
+                }
+            };
 
         for input in selected_inputs {
             self.core.mesh_csl.add_tx_in(PubKeyTxIn {
