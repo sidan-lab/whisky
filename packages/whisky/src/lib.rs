@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! whisky = "^0.6.1"
+//! whisky = "^0.6.14"
 //! ```
 //!
 //! ## Getting Started
@@ -50,6 +50,7 @@
 pub mod builder;
 pub mod provider;
 pub mod service;
+pub mod utils;
 pub use sidan_csl_rs::builder as builder_core;
 pub use sidan_csl_rs::core;
 pub use sidan_csl_rs::csl;

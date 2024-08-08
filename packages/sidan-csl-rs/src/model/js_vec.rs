@@ -36,3 +36,9 @@ impl IntoIterator for JsVecString {
         self.0.into_iter()
     }
 }
+
+impl JsVecString {
+    pub fn iter(&self) -> std::slice::Iter<String> {
+        self.0.iter()
+    }
+}

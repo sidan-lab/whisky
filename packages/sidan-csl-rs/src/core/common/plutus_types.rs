@@ -24,6 +24,10 @@ pub fn bool(b: bool) -> Value {
     }
 }
 
+pub fn byte_string(bytes: &str) -> Value {
+    json!({ "bytes": bytes })
+}
+
 pub fn builtin_byte_string(bytes: &str) -> Value {
     json!({ "bytes": bytes })
 }

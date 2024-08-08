@@ -5,17 +5,17 @@ use sidan_csl_rs::{
     core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
     csl,
     model::{
-        Anchor, Asset, Certificate, CommitteeColdResign, CommitteeHotAuth, DRep,
+        Anchor, Asset, Certificate, CertificateType, CommitteeColdResign, CommitteeHotAuth, DRep,
         DRepDeregistration, DRepRegistration, DRepUpdate, Datum, DatumSource, DelegateStake,
         DeregisterStake, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
         LanguageVersion, MeshTxBuilderBody, Metadata, MintItem, MintParameter, Output,
         OutputScriptSource, PlutusScriptWithdrawal, PoolParams, ProvidedDatumSource,
         ProvidedScriptSource, ProvidedSimpleScriptSource, PubKeyTxIn, PubKeyWithdrawal, Redeemer,
-        RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptMint, ScriptSource, ScriptTxIn,
-        ScriptTxInParameter, SimpleScriptMint, SimpleScriptSource, SimpleScriptTxIn,
-        SimpleScriptTxInParameter, StakeAndVoteDelegation, StakeRegistrationAndDelegation,
-        StakeVoteRegistrationAndDelegation, TxIn, TxInParameter, UTxO, Value, VoteDelegation,
-        VoteRegistrationAndDelegation, Withdrawal,
+        RefTxIn, RegisterPool, RegisterStake, RetirePool, ScriptCertificate, ScriptMint,
+        ScriptSource, ScriptTxIn, ScriptTxInParameter, SimpleScriptCertificate, SimpleScriptMint,
+        SimpleScriptSource, SimpleScriptTxIn, SimpleScriptTxInParameter, StakeAndVoteDelegation,
+        StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation, TxIn, TxInParameter,
+        UTxO, Value, VoteDelegation, VoteRegistrationAndDelegation, Withdrawal,
     },
 };
 
@@ -456,7 +456,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         withdrawal_script_hash: &str,
-        version: LanguageVersion,
+        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
@@ -468,6 +468,17 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {
                 panic!("Script reference cannot be defined for a pubkey withdrawal")
             }
+            Withdrawal::SimpleScriptWithdrawal(mut withdrawal) => {
+                withdrawal.script_source = Some(SimpleScriptSource::InlineSimpleScriptSource(
+                    InlineSimpleScriptSource {
+                        ref_tx_in: RefTxIn {
+                            tx_hash: tx_hash.to_string(),
+                            tx_index,
+                        },
+                        simple_script_hash: withdrawal_script_hash.to_string(),
+                    },
+                ))
+            }
             Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
                 withdrawal.script_source =
                     Some(ScriptSource::InlineScriptSource(InlineScriptSource {
@@ -476,7 +487,8 @@ impl IMeshTxBuilder for MeshTxBuilder {
                             tx_index,
                         },
                         spending_script_hash: withdrawal_script_hash.to_string(),
-                        language_version: version,
+                        language_version: version
+                            .expect("Plutus withdrawals require a language version"),
                         script_size,
                     }));
                 self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdrawal));
@@ -508,7 +520,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self
     }
 
-    fn withdrawal_script(&mut self, script_cbor: &str, version: LanguageVersion) -> &mut Self {
+    fn withdrawal_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
             panic!("Undefined withdrawal")
@@ -518,11 +534,19 @@ impl IMeshTxBuilder for MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {
                 panic!("Script cannot be defined for a pubkey withdrawal")
             }
+            Withdrawal::SimpleScriptWithdrawal(mut withdraw) => {
+                withdraw.script_source = Some(SimpleScriptSource::ProvidedSimpleScriptSource(
+                    ProvidedSimpleScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                    },
+                ))
+            }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
                 withdraw.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                         script_cbor: script_cbor.to_string(),
-                        language_version: version,
+                        language_version: version
+                            .expect("Plutus withdrawals require a language version"),
                     }));
                 self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
             }
@@ -538,7 +562,10 @@ impl IMeshTxBuilder for MeshTxBuilder {
         let withdrawal_item = withdrawal_item.unwrap();
         match withdrawal_item {
             Withdrawal::PubKeyWithdrawal(_) => {
-                panic!("Script cannot be defined for a pubkey withdrawal")
+                panic!("Redeemer cannot be defined for a pubkey withdrawal")
+            }
+            Withdrawal::SimpleScriptWithdrawal(_) => {
+                panic!("Redeemer cannot be defined for a native script withdrawal")
             }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => match redeemer.data.to_cbor() {
                 Ok(raw_redeemer) => {
@@ -731,38 +758,47 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::RegisterPool(RegisterPool { pool_params }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::RegisterPool(RegisterPool { pool_params }),
+            ));
         self
     }
 
-    fn register_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+    fn register_stake_certificate(&mut self, stake_key_address: &str, coin: u64) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::RegisterStake(RegisterStake {
-                stake_key_hash: stake_key_hash.to_string(),
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::RegisterStake(RegisterStake {
+                    stake_key_address: stake_key_address.to_string(),
+                    coin,
+                }),
+            ));
         self
     }
 
-    fn delegate_stake_certificate(&mut self, stake_key_hash: &str, pool_id: &str) -> &mut Self {
+    fn delegate_stake_certificate(&mut self, stake_key_address: &str, pool_id: &str) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::DelegateStake(DelegateStake {
-                stake_key_hash: stake_key_hash.to_string(),
-                pool_id: pool_id.to_string(),
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::DelegateStake(DelegateStake {
+                    stake_key_address: stake_key_address.to_string(),
+                    pool_id: pool_id.to_string(),
+                }),
+            ));
         self
     }
 
-    fn deregister_stake_certificate(&mut self, stake_key_hash: &str) -> &mut Self {
+    fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::DeregisterStake(DeregisterStake {
-                stake_key_hash: stake_key_hash.to_string(),
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::DeregisterStake(DeregisterStake {
+                    stake_key_address: stake_key_address.to_string(),
+                }),
+            ));
         self
     }
 
@@ -770,159 +806,357 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::RetirePool(RetirePool {
-                pool_id: pool_id.to_string(),
-                epoch,
-            }));
+            .push(Certificate::BasicCertificate(CertificateType::RetirePool(
+                RetirePool {
+                    pool_id: pool_id.to_string(),
+                    epoch,
+                },
+            )));
         self
     }
 
-    fn vote_delegation_certificate(&mut self, stake_key_hash: &str, drep: DRep) -> &mut Self {
+    fn vote_delegation_certificate(&mut self, stake_key_address: &str, drep: DRep) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::VoteDelegation(VoteDelegation {
-                stake_key_hash: stake_key_hash.to_string(),
-                drep,
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::VoteDelegation(VoteDelegation {
+                    stake_key_address: stake_key_address.to_string(),
+                    drep,
+                }),
+            ));
         self
     }
 
     fn stake_and_vote_delegation_certificate(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::StakeAndVoteDelegation(
-                StakeAndVoteDelegation {
-                    stake_key_hash: stake_key_hash.to_string(),
+            .push(Certificate::BasicCertificate(
+                CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
+                    stake_key_address: stake_key_address.to_string(),
                     pool_key_hash: pool_key_hash.to_string(),
                     drep,
-                },
+                }),
             ));
         self
     }
 
     fn stake_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         coin: u64,
     ) -> &mut Self {
-        self.core.mesh_tx_builder_body.certificates.push(
-            Certificate::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
-                stake_key_hash: stake_key_hash.to_string(),
-                pool_key_hash: pool_key_hash.to_string(),
-                coin,
-            }),
-        );
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::BasicCertificate(
+                CertificateType::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
+                    stake_key_address: stake_key_address.to_string(),
+                    pool_key_hash: pool_key_hash.to_string(),
+                    coin,
+                }),
+            ));
         self
     }
 
     fn vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         drep: DRep,
         coin: u64,
     ) -> &mut Self {
-        self.core.mesh_tx_builder_body.certificates.push(
-            Certificate::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
-                stake_key_hash: stake_key_hash.to_string(),
-                drep,
-                coin,
-            }),
-        );
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::BasicCertificate(
+                CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
+                    stake_key_address: stake_key_address.to_string(),
+                    drep,
+                    coin,
+                }),
+            ));
         self
     }
 
     fn stake_vote_registration_and_delegation(
         &mut self,
-        stake_key_hash: &str,
+        stake_key_address: &str,
         pool_key_hash: &str,
         drep: DRep,
         coin: u64,
     ) -> &mut Self {
-        self.core.mesh_tx_builder_body.certificates.push(
-            Certificate::StakeVoteRegistrationAndDelegation(StakeVoteRegistrationAndDelegation {
-                stake_key_hash: stake_key_hash.to_string(),
-                pool_key_hash: pool_key_hash.to_string(),
-                drep,
-                coin,
-            }),
-        );
+        self.core
+            .mesh_tx_builder_body
+            .certificates
+            .push(Certificate::BasicCertificate(
+                CertificateType::StakeVoteRegistrationAndDelegation(
+                    StakeVoteRegistrationAndDelegation {
+                        stake_key_address: stake_key_address.to_string(),
+                        pool_key_hash: pool_key_hash.to_string(),
+                        drep,
+                        coin,
+                    },
+                ),
+            ));
         self
     }
 
     fn committee_hot_auth(
         &mut self,
-        committee_cold_key_hash: &str,
-        committee_hot_key_hash: &str,
+        committee_cold_key_address: &str,
+        committee_hot_key_address: &str,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::CommitteeHotAuth(CommitteeHotAuth {
-                committee_cold_key_hash: committee_cold_key_hash.to_string(),
-                committee_hot_key_hash: committee_hot_key_hash.to_string(),
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::CommitteeHotAuth(CommitteeHotAuth {
+                    committee_cold_key_address: committee_cold_key_address.to_string(),
+                    committee_hot_key_address: committee_hot_key_address.to_string(),
+                }),
+            ));
         self
     }
 
     fn commitee_cold_resign(
         &mut self,
-        committee_cold_key_hash: &str,
+        committee_cold_key_address: &str,
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::CommitteeColdResign(CommitteeColdResign {
-                committee_cold_key_hash: committee_cold_key_hash.to_string(),
-                anchor,
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::CommitteeColdResign(CommitteeColdResign {
+                    committee_cold_key_address: committee_cold_key_address.to_string(),
+                    anchor,
+                }),
+            ));
         self
     }
 
     fn drep_registration(
         &mut self,
-        voting_key_hash: &str,
+        voting_key_address: &str,
         coin: u64,
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::DRepRegistration(DRepRegistration {
-                voting_key_hash: voting_key_hash.to_string(),
-                coin,
-                anchor,
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::DRepRegistration(DRepRegistration {
+                    voting_key_address: voting_key_address.to_string(),
+                    coin,
+                    anchor,
+                }),
+            ));
         self
     }
 
-    fn drep_deregistration(&mut self, voting_key_hash: &str, coin: u64) -> &mut Self {
+    fn drep_deregistration(&mut self, voting_key_addres: &str, coin: u64) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::DRepDeregistration(DRepDeregistration {
-                voting_key_hash: voting_key_hash.to_string(),
-                coin,
-            }));
+            .push(Certificate::BasicCertificate(
+                CertificateType::DRepDeregistration(DRepDeregistration {
+                    voting_key_address: voting_key_addres.to_string(),
+                    coin,
+                }),
+            ));
         self
     }
 
-    fn drep_update(&mut self, voting_key_hash: &str, anchor: Option<Anchor>) -> &mut Self {
+    fn drep_update(&mut self, voting_key_address: &str, anchor: Option<Anchor>) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
-            .push(Certificate::DRepUpdate(DRepUpdate {
-                voting_key_hash: voting_key_hash.to_string(),
-                anchor,
-            }));
+            .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
+                DRepUpdate {
+                    voting_key_address: voting_key_address.to_string(),
+                    anchor,
+                },
+            )));
+        self
+    }
+
+    fn certificate_script(
+        &mut self,
+        script_cbor: &str,
+        version: Option<LanguageVersion>,
+    ) -> &mut Self {
+        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        if last_cert.is_none() {
+            panic!("Undefined certificate");
+        }
+        let last_cert = last_cert.unwrap();
+        match last_cert {
+            Certificate::BasicCertificate(basic_cert) => match version {
+                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: basic_cert,
+                        redeemer: None,
+                        script_source: Some(ScriptSource::ProvidedScriptSource(
+                            ProvidedScriptSource {
+                                script_cbor: script_cbor.to_string(),
+                                language_version: lang_ver,
+                            },
+                        )),
+                    }),
+                ),
+                None => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
+                        cert: basic_cert,
+                        simple_script_source: Some(SimpleScriptSource::ProvidedSimpleScriptSource(
+                            ProvidedSimpleScriptSource {
+                                script_cbor: script_cbor.to_string(),
+                            },
+                        )),
+                    }),
+                ),
+            },
+            Certificate::ScriptCertificate(script_cert) => match version {
+                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: script_cert.cert,
+                        redeemer: script_cert.redeemer,
+                        script_source: Some(ScriptSource::ProvidedScriptSource(
+                            ProvidedScriptSource {
+                                script_cbor: script_cbor.to_string(),
+                                language_version: lang_ver,
+                            },
+                        )),
+                    }),
+                ),
+                None => panic!("Language version has to be defined for plutus certificates"),
+            },
+            Certificate::SimpleScriptCertificate(_) => {
+                panic!("Native script cert had its script defined twice")
+            }
+        }
+
+        self
+    }
+
+    fn certificate_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        spending_script_hash: &str,
+        version: Option<LanguageVersion>,
+        script_size: usize,
+    ) -> &mut Self {
+        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        if last_cert.is_none() {
+            panic!("Undefined certificate");
+        }
+        let last_cert = last_cert.unwrap();
+        match last_cert {
+            Certificate::BasicCertificate(basic_cert) => match version {
+                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: basic_cert,
+                        redeemer: None,
+                        script_source: Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: tx_hash.to_string(),
+                                tx_index,
+                            },
+                            spending_script_hash: spending_script_hash.to_string(),
+                            language_version: lang_ver,
+                            script_size,
+                        })),
+                    }),
+                ),
+                None => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
+                        cert: basic_cert,
+                        simple_script_source: Some(SimpleScriptSource::InlineSimpleScriptSource(
+                            InlineSimpleScriptSource {
+                                ref_tx_in: RefTxIn {
+                                    tx_hash: tx_hash.to_string(),
+                                    tx_index,
+                                },
+                                simple_script_hash: spending_script_hash.to_string(),
+                            },
+                        )),
+                    }),
+                ),
+            },
+            Certificate::ScriptCertificate(script_cert) => match version {
+                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                    Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: script_cert.cert,
+                        redeemer: script_cert.redeemer,
+                        script_source: Some(ScriptSource::InlineScriptSource(InlineScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: tx_hash.to_string(),
+                                tx_index,
+                            },
+                            spending_script_hash: spending_script_hash.to_string(),
+                            language_version: lang_ver,
+                            script_size,
+                        })),
+                    }),
+                ),
+                None => panic!("Language version has to be defined for plutus certificates"),
+            },
+            Certificate::SimpleScriptCertificate(_) => {
+                panic!("Native script cert had its script defined twice")
+            }
+        }
+
+        self
+    }
+
+    fn certificate_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        if last_cert.is_none() {
+            panic!("Undefined certificate");
+        }
+        let last_cert = last_cert.unwrap();
+        let current_redeemer = match redeemer.data.to_cbor() {
+            Ok(raw_redeemer) => Some(Redeemer {
+                data: raw_redeemer,
+                ex_units: redeemer.ex_units,
+            }),
+            Err(_) => {
+                panic!("Error converting certificate redeemer to CBOR")
+            }
+        };
+        match last_cert {
+            Certificate::BasicCertificate(basic_cert) => self
+                .core
+                .mesh_tx_builder_body
+                .certificates
+                .push(Certificate::ScriptCertificate(ScriptCertificate {
+                    cert: basic_cert,
+                    redeemer: current_redeemer,
+                    script_source: None,
+                })),
+
+            Certificate::ScriptCertificate(script_cert) => self
+                .core
+                .mesh_tx_builder_body
+                .certificates
+                .push(Certificate::ScriptCertificate(ScriptCertificate {
+                    cert: script_cert.cert,
+                    redeemer: current_redeemer,
+                    script_source: script_cert.script_source,
+                })),
+
+            Certificate::SimpleScriptCertificate(_) => {
+                panic!("Native script cert cannot use redeemers")
+            }
+        }
+
         self
     }
 
@@ -1021,6 +1255,11 @@ impl IMeshTxBuilder for MeshTxBuilder {
                     (None, _) => panic!("Redeemer in script input cannot be None"),
                     (_, None) => panic!("Script source in script input cannot be None"),
                     _ => {}
+                }
+            }
+            Withdrawal::SimpleScriptWithdrawal(withdrawal) => {
+                if withdrawal.script_source.is_none() {
+                    panic!("Script source missing from native script withdrawal")
                 }
             }
             Withdrawal::PubKeyWithdrawal(_) => {}
@@ -1124,7 +1363,12 @@ impl IMeshTxBuilder for MeshTxBuilder {
         }
 
         let selected_inputs =
-            select_utxos(extra_inputs, required_assets, threshold.to_string()).unwrap();
+            match select_utxos(&extra_inputs, required_assets, &threshold.to_string()) {
+                Ok(inputs) => inputs,
+                Err(_) => {
+                    return Err(JsError::from_str("Error selecting inputs"));
+                }
+            };
 
         for input in selected_inputs {
             self.core.mesh_csl.add_tx_in(PubKeyTxIn {

@@ -38,12 +38,26 @@ fn test_apply_double_cbor_encoding() {
 }
 
 #[wasm_bindgen]
-pub fn apply_params_to_script(
-    plutus_script: String,
-    params_to_apply: JsVecString,
+pub fn js_apply_params_to_script(
+    plutus_script: &str,
+    params: JsVecString,
     param_type: BuilderDataType,
 ) -> Result<String, JsError> {
-    let double_encoded_script = apply_double_cbor_encoding(&plutus_script).unwrap();
+    let mut params_to_apply: Vec<&str> = vec![];
+
+    for param in params.iter() {
+        params_to_apply.push(param);
+    }
+
+    apply_params_to_script(plutus_script, &params_to_apply, param_type)
+}
+
+pub fn apply_params_to_script(
+    plutus_script: &str,
+    params_to_apply: &[&str],
+    param_type: BuilderDataType,
+) -> Result<String, JsError> {
+    let double_encoded_script = apply_double_cbor_encoding(plutus_script).unwrap();
     let plutus_script =
         PlutusScript::from_bytes(hex_to_bytes(&double_encoded_script).unwrap()).unwrap();
     let mut plutus_list = PlutusList::new();
@@ -51,11 +65,11 @@ pub fn apply_params_to_script(
         match param_type {
             BuilderDataType::JSON => {
                 let plutus_data =
-                    PlutusData::from_json(&param, PlutusDatumSchema::DetailedSchema).unwrap();
+                    PlutusData::from_json(param, PlutusDatumSchema::DetailedSchema).unwrap();
                 plutus_list.add(&plutus_data);
             }
             BuilderDataType::CBOR => {
-                let plutus_data = PlutusData::from_hex(&param).unwrap();
+                let plutus_data = PlutusData::from_hex(param).unwrap();
                 plutus_list.add(&plutus_data);
             }
         }

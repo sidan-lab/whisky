@@ -270,6 +270,9 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 Withdrawal::PlutusScriptWithdrawal(plutus_script_withdrawal) => {
                     mesh_csl.add_plutus_withdrawal(plutus_script_withdrawal)?
                 }
+                Withdrawal::SimpleScriptWithdrawal(simple_script_withdrawal) => {
+                    mesh_csl.add_simple_script_withdrawal(simple_script_withdrawal)?
+                }
             }
         }
         mesh_csl
@@ -290,7 +293,6 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                 }
             };
         }
-        println!("6-3");
         mesh_csl.tx_builder.set_mint_builder(&mint_builder);
         Ok(())
     }
@@ -300,63 +302,8 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         certificates: Vec<Certificate>,
     ) -> Result<(), JsError> {
         let mut certificates_builder = csl::CertificatesBuilder::new();
-        for cert in certificates {
-            match cert {
-                Certificate::RegisterPool(register_pool) => {
-                    mesh_csl.add_register_pool_cert(&mut certificates_builder, register_pool)?
-                }
-                Certificate::RegisterStake(register_stake) => {
-                    mesh_csl.add_register_stake_cert(&mut certificates_builder, register_stake)?
-                }
-                Certificate::DelegateStake(delegate_stake) => {
-                    mesh_csl.add_delegate_stake_cert(&mut certificates_builder, delegate_stake)?
-                }
-                Certificate::DeregisterStake(deregister_stake) => mesh_csl
-                    .add_deregister_stake_cert(&mut certificates_builder, deregister_stake)?,
-                Certificate::RetirePool(retire_pool) => {
-                    mesh_csl.add_retire_pool_cert(&mut certificates_builder, retire_pool)?
-                }
-                Certificate::VoteDelegation(vote_delegation) => {
-                    mesh_csl.add_vote_delegation_cert(&mut certificates_builder, vote_delegation)?
-                }
-                Certificate::StakeAndVoteDelegation(stake_and_vote_delegation) => mesh_csl
-                    .add_stake_and_vote_delegation_cert(
-                        &mut certificates_builder,
-                        stake_and_vote_delegation,
-                    )?,
-                Certificate::StakeRegistrationAndDelegation(stake_registration_and_delegation) => {
-                    mesh_csl.add_stake_registration_and_delegation_cert(
-                        &mut certificates_builder,
-                        stake_registration_and_delegation,
-                    )?
-                }
-                Certificate::VoteRegistrationAndDelegation(vote_registration_and_delegation) => {
-                    mesh_csl.add_vote_registration_and_delgation_cert(
-                        &mut certificates_builder,
-                        vote_registration_and_delegation,
-                    )?
-                }
-                Certificate::StakeVoteRegistrationAndDelegation(
-                    stake_vote_registration_and_delegation,
-                ) => mesh_csl.add_stake_vote_registration_and_delegation_cert(
-                    &mut certificates_builder,
-                    stake_vote_registration_and_delegation,
-                )?,
-                Certificate::CommitteeHotAuth(committee_hot_auth) => mesh_csl
-                    .add_committee_hot_auth_cert(&mut certificates_builder, committee_hot_auth)?,
-                Certificate::CommitteeColdResign(commitee_cold_resign) => mesh_csl
-                    .add_commitee_cold_resign_cert(
-                        &mut certificates_builder,
-                        commitee_cold_resign,
-                    )?,
-                Certificate::DRepRegistration(drep_registration) => mesh_csl
-                    .add_drep_registration_cert(&mut certificates_builder, drep_registration)?,
-                Certificate::DRepDeregistration(drep_deregistration) => mesh_csl
-                    .add_drep_deregistration_cert(&mut certificates_builder, drep_deregistration)?,
-                Certificate::DRepUpdate(drep_update) => {
-                    mesh_csl.add_drep_update_cert(&mut certificates_builder, drep_update)?
-                }
-            }
+        for (index, cert) in certificates.into_iter().enumerate() {
+            mesh_csl.add_cert(&mut certificates_builder, cert, index as u64)?
         }
         mesh_csl.tx_builder.set_certs_builder(&certificates_builder);
         Ok(())

@@ -11,7 +11,7 @@ pub fn delegate_stake(
     inputs: Vec<UTxO>,
 ) -> Result<String, JsError> {
     let mut mesh = MeshTxBuilder::new_core();
-    mesh.register_stake_certificate(stake_key_hash)
+    mesh.register_stake_certificate(stake_key_hash, 2000000)
         .delegate_stake_certificate(stake_key_hash, pool_id)
         .change_address(my_address)
         .select_utxos_from(inputs.clone(), 5000000)

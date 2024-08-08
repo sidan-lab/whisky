@@ -450,6 +450,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.65",
+]
+
+[[package]]
 name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2270,7 +2290,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.6.13"
+version = "0.6.14"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -2872,11 +2892,12 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.6.13"
+version = "0.6.14"
 dependencies = [
  "async-trait",
  "cardano-serialization-lib",
  "cryptoxide",
+ "derive_more",
  "dotenv",
  "getrandom",
  "hex",
@@ -2898,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.6.13"
+version = "0.6.14"
 dependencies = [
  "whisky",
 ]

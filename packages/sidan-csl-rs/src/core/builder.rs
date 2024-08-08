@@ -1,11 +1,7 @@
-use std::net::{Ipv4Addr, Ipv6Addr};
-
 use crate::{csl, model::*};
-use cardano_serialization_lib::{Credential, JsError, MintWitness};
+use cardano_serialization_lib::{JsError, MintWitness};
 
-use super::utils::{
-    build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_drep, to_value,
-};
+use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value};
 
 pub trait IMeshCSL {
     fn new(params: Option<Protocol>) -> Self;
@@ -21,6 +17,10 @@ pub trait IMeshCSL {
     fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError>;
     fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError>;
     fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError>;
+    fn add_simple_script_withdrawal(
+        &mut self,
+        withdrawal: SimpleScriptWithdrawal,
+    ) -> Result<(), JsError>;
     fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
@@ -32,80 +32,11 @@ pub trait IMeshCSL {
         mint_builder: &mut csl::MintBuilder,
         native_mint: SimpleScriptMint,
     ) -> Result<(), JsError>;
-    fn add_register_pool_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        register_pool: RegisterPool,
-    ) -> Result<(), JsError>;
-    fn add_register_stake_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        register_stake: RegisterStake,
-    ) -> Result<(), JsError>;
-    fn add_delegate_stake_cert(
+    fn add_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
-        delegate_stake: DelegateStake,
-    ) -> Result<(), JsError>;
-    fn add_deregister_stake_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        deregister_stake: DeregisterStake,
-    ) -> Result<(), JsError>;
-    fn add_retire_pool_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        retire_pool: RetirePool,
-    ) -> Result<(), JsError>;
-    fn add_vote_delegation_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        vote_delegation: VoteDelegation,
-    ) -> Result<(), JsError>;
-    fn add_stake_and_vote_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_and_vote_delegation: StakeAndVoteDelegation,
-    ) -> Result<(), JsError>;
-    fn add_stake_registration_and_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_registration_and_delegation: StakeRegistrationAndDelegation,
-    ) -> Result<(), JsError>;
-    fn add_vote_registration_and_delgation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        vote_registration_and_delgation: VoteRegistrationAndDelegation,
-    ) -> Result<(), JsError>;
-    fn add_stake_vote_registration_and_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_vote_registration_and_delegation: StakeVoteRegistrationAndDelegation,
-    ) -> Result<(), JsError>;
-    fn add_committee_hot_auth_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        committee_hot_auth: CommitteeHotAuth,
-    ) -> Result<(), JsError>;
-    fn add_commitee_cold_resign_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        committee_cold_resign: CommitteeColdResign,
-    ) -> Result<(), JsError>;
-    fn add_drep_registration_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_registration: DRepRegistration,
-    ) -> Result<(), JsError>;
-    fn add_drep_deregistration_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_deregistration: DRepDeregistration,
-    ) -> Result<(), JsError>;
-    fn add_drep_update_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_update: DRepUpdate,
+        cert: Certificate,
+        index: u64,
     ) -> Result<(), JsError>;
     fn add_invalid_before(&mut self, invalid_before: u64);
     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
@@ -407,6 +338,43 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
+    fn add_simple_script_withdrawal(
+        &mut self,
+        withdrawal: SimpleScriptWithdrawal,
+    ) -> Result<(), JsError> {
+        let csl_native_script_source = match withdrawal.script_source {
+            Some(script_source) => match script_source {
+                SimpleScriptSource::ProvidedSimpleScriptSource(ProvidedSimpleScriptSource {
+                    script_cbor: provided_script,
+                }) => csl::NativeScriptSource::new(
+                    &csl::NativeScript::from_hex(&provided_script).unwrap(),
+                ),
+                SimpleScriptSource::InlineSimpleScriptSource(InlineSimpleScriptSource {
+                    ref_tx_in,
+                    simple_script_hash,
+                }) => csl::NativeScriptSource::new_ref_input(
+                    &csl::ScriptHash::from_hex(&simple_script_hash).unwrap(),
+                    &csl::TransactionInput::new(
+                        &csl::TransactionHash::from_hex(&ref_tx_in.tx_hash).unwrap(),
+                        ref_tx_in.tx_index,
+                    ),
+                ),
+            },
+            None => {
+                return Err(JsError::from_str(
+                    "Missing script source for native script withdrawal",
+                ))
+            }
+        };
+
+        self.tx_withdrawals_builder.add_with_native_script(
+            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
+                .unwrap(),
+            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
+            &csl_native_script_source,
+        )
+    }
+
     fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
@@ -490,322 +458,105 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_register_pool_cert(
+    fn add_cert(
         &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        register_pool: RegisterPool,
+        certificates_builder: &mut csl::CertificatesBuilder,
+        cert: Certificate,
+        index: u64,
     ) -> Result<(), JsError> {
-        let mut relays = csl::Relays::new();
-        for relay in register_pool.pool_params.relays {
-            match relay {
-                Relay::SingleHostAddr(single_host_address_relay) => {
-                    let ipv4_bytes: Option<csl::Ipv4> =
-                        single_host_address_relay.ipv4.map(|ipv4_str| {
-                            let addr: Ipv4Addr =
-                                ipv4_str.parse().expect("ipv4 address parse failed");
-                            csl::Ipv4::new(addr.octets().to_vec()).unwrap()
-                        });
-
-                    let ipv6_bytes: Option<csl::Ipv6> =
-                        single_host_address_relay.ipv6.map(|ipv6_str| {
-                            let addr: Ipv6Addr =
-                                ipv6_str.parse().expect("ipv6 address parse failed");
-                            csl::Ipv6::new(addr.octets().to_vec()).unwrap()
-                        });
-                    relays.add(&csl::Relay::new_single_host_addr(
-                        &csl::SingleHostAddr::new(
-                            single_host_address_relay.port,
-                            ipv4_bytes,
-                            ipv6_bytes,
+        match cert {
+            Certificate::BasicCertificate(basic_cert) => {
+                certificates_builder.add(&to_csl_cert(basic_cert)?)?
+            }
+            Certificate::ScriptCertificate(script_cert) => {
+                let cert_script_source: csl::PlutusScriptSource = match script_cert.script_source {
+                    Some(script_source) => match script_source {
+                        ScriptSource::InlineScriptSource(script) => {
+                            let language_version: csl::Language = match script.language_version {
+                                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                            };
+                            csl::PlutusScriptSource::new_ref_input(
+                                &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
+                                &csl::TransactionInput::new(
+                                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                                    script.ref_tx_in.tx_index,
+                                ),
+                                &language_version,
+                                script.script_size,
+                            )
+                        }
+                        ScriptSource::ProvidedScriptSource(script) => {
+                            let language_version: csl::Language = match script.language_version {
+                                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+                            };
+                            csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
+                                script.script_cbor.as_str(),
+                                &language_version,
+                            )?)
+                        }
+                    },
+                    None => {
+                        return Err(JsError::from_str(
+                            "Missing Plutus Script Source in Plutus Cert",
+                        ))
+                    }
+                };
+                let cert_redeemer = match script_cert.redeemer {
+                    Some(redeemer) => csl::Redeemer::new(
+                        &csl::RedeemerTag::new_cert(),
+                        &to_bignum(index),
+                        &csl::PlutusData::from_hex(&redeemer.data)?,
+                        &csl::ExUnits::new(
+                            &to_bignum(redeemer.ex_units.mem),
+                            &to_bignum(redeemer.ex_units.steps),
                         ),
-                    ));
-                }
-                Relay::SingleHostName(single_host_name_relay) => relays.add(
-                    &csl::Relay::new_single_host_name(&csl::SingleHostName::new(
-                        single_host_name_relay.port,
-                        &csl::DNSRecordAorAAAA::new(single_host_name_relay.domain_name)?,
-                    )),
-                ),
-                Relay::MultiHostName(multi_host_name_relay) => {
-                    relays.add(&csl::Relay::new_multi_host_name(&csl::MultiHostName::new(
-                        &csl::DNSRecordSRV::new(multi_host_name_relay.domain_name)?,
-                    )))
-                }
-            }
-        }
-
-        let mut pool_owners = csl::Ed25519KeyHashes::new();
-        for owner in register_pool.pool_params.owners {
-            pool_owners.add(&csl::Ed25519KeyHash::from_hex(&owner)?);
-        }
-
-        certificate_builder.add(&csl::Certificate::new_pool_registration(
-            &csl::PoolRegistration::new(&csl::PoolParams::new(
-                &csl::Ed25519KeyHash::from_hex(&register_pool.pool_params.operator)?,
-                &csl::VRFKeyHash::from_hex(&register_pool.pool_params.vrf_key_hash)?,
-                &csl::BigNum::from_str(&register_pool.pool_params.pledge)?,
-                &csl::BigNum::from_str(&register_pool.pool_params.cost)?,
-                &csl::UnitInterval::new(
-                    &csl::BigNum::from_str(&register_pool.pool_params.margin.0.to_string())?,
-                    &csl::BigNum::from_str(&register_pool.pool_params.margin.1.to_string())?,
-                ),
-                &csl::RewardAddress::from_address(&csl::Address::from_bech32(
-                    &register_pool.pool_params.reward_address,
-                )?)
-                .unwrap(),
-                &pool_owners,
-                &relays,
-                register_pool.pool_params.metadata.map(|data| {
-                    csl::PoolMetadata::new(
-                        &csl::URL::new(data.url).unwrap(),
-                        &csl::PoolMetadataHash::from_hex(&data.hash).unwrap(),
-                    )
-                }),
-            )),
-        ))?;
-        Ok(())
-    }
-
-    fn add_register_stake_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        register_stake: RegisterStake,
-    ) -> Result<(), JsError> {
-        certificates_builder.add(&csl::Certificate::new_stake_registration(
-            &csl::StakeRegistration::new(&csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_hex(&register_stake.stake_key_hash)?,
-            )),
-        ))?;
-        Ok(())
-    }
-
-    fn add_delegate_stake_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        delegate_stake: DelegateStake,
-    ) -> Result<(), JsError> {
-        certificates_builder.add(&csl::Certificate::new_stake_delegation(
-            &csl::StakeDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &delegate_stake.stake_key_hash,
-                )?),
-                &csl::Ed25519KeyHash::from_hex(&delegate_stake.pool_id)?,
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_deregister_stake_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        deregister_stake: DeregisterStake,
-    ) -> Result<(), JsError> {
-        certificates_builder.add(&csl::Certificate::new_stake_deregistration(
-            &csl::StakeDeregistration::new(&csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_hex(&deregister_stake.stake_key_hash)?,
-            )),
-        ))?;
-        Ok(())
-    }
-
-    fn add_retire_pool_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        retire_pool: RetirePool,
-    ) -> Result<(), JsError> {
-        certificates_builder.add(&csl::Certificate::new_pool_retirement(
-            &csl::PoolRetirement::new(
-                &csl::Ed25519KeyHash::from_hex(&retire_pool.pool_id)?,
-                retire_pool.epoch,
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_vote_delegation_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        vote_delegation: VoteDelegation,
-    ) -> Result<(), JsError> {
-        certificates_builder.add(&csl::Certificate::new_vote_delegation(
-            &csl::VoteDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &vote_delegation.stake_key_hash,
-                )?),
-                &to_csl_drep(&vote_delegation.drep)?,
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_stake_and_vote_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_and_vote_delegation: StakeAndVoteDelegation,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_stake_and_vote_delegation(
-            &csl::StakeAndVoteDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &stake_and_vote_delegation.stake_key_hash,
-                )?),
-                &csl::Ed25519KeyHash::from_hex(&stake_and_vote_delegation.pool_key_hash)?,
-                &to_csl_drep(&stake_and_vote_delegation.drep)?,
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_stake_registration_and_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_registration_and_delegation: StakeRegistrationAndDelegation,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_stake_registration_and_delegation(
-            &csl::StakeRegistrationAndDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &stake_registration_and_delegation.stake_key_hash,
-                )?),
-                &csl::Ed25519KeyHash::from_hex(&stake_registration_and_delegation.pool_key_hash)?,
-                &to_bignum(stake_registration_and_delegation.coin),
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_vote_registration_and_delgation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        vote_registration_and_delgation: VoteRegistrationAndDelegation,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_vote_registration_and_delegation(
-            &csl::VoteRegistrationAndDelegation::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &vote_registration_and_delgation.stake_key_hash,
-                )?),
-                &to_csl_drep(&vote_registration_and_delgation.drep)?,
-                &to_bignum(vote_registration_and_delgation.coin),
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_stake_vote_registration_and_delegation_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        stake_vote_registration_and_delegation: StakeVoteRegistrationAndDelegation,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(
-            &csl::Certificate::new_stake_vote_registration_and_delegation(
-                &csl::StakeVoteRegistrationAndDelegation::new(
-                    &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                        &stake_vote_registration_and_delegation.stake_key_hash,
-                    )?),
-                    &csl::Ed25519KeyHash::from_hex(
-                        &stake_vote_registration_and_delegation.pool_key_hash,
-                    )?,
-                    &to_csl_drep(&stake_vote_registration_and_delegation.drep)?,
-                    &to_bignum(stake_vote_registration_and_delegation.coin),
-                ),
-            ),
-        )
-    }
-
-    fn add_committee_hot_auth_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        committee_hot_auth: CommitteeHotAuth,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_committee_hot_auth(
-            &csl::CommitteeHotAuth::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &committee_hot_auth.committee_cold_key_hash,
-                )?),
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &committee_hot_auth.committee_hot_key_hash,
-                )?),
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_commitee_cold_resign_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        committee_cold_resign: CommitteeColdResign,
-    ) -> Result<(), JsError> {
-        let committee_cold_key = &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-            &committee_cold_resign.committee_cold_key_hash,
-        )?);
-        match committee_cold_resign.anchor {
-            Some(anchor) => {
-                certificate_builder.add(&csl::Certificate::new_committee_cold_resign(
-                    &csl::CommitteeColdResign::new_with_anchor(
-                        committee_cold_key,
-                        &to_csl_anchor(&anchor)?,
                     ),
-                ))?;
+                    None => return Err(JsError::from_str("Missing Redeemer in Plutus Cert")),
+                };
+                let csl_plutus_witness: csl::PlutusWitness =
+                    csl::PlutusWitness::new_with_ref_without_datum(
+                        &cert_script_source,
+                        &cert_redeemer,
+                    );
+                certificates_builder
+                    .add_with_plutus_witness(&to_csl_cert(script_cert.cert)?, &csl_plutus_witness)?
             }
-            None => {
-                certificate_builder.add(&csl::Certificate::new_committee_cold_resign(
-                    &csl::CommitteeColdResign::new(committee_cold_key),
-                ))?;
+            Certificate::SimpleScriptCertificate(simple_script_cert) => {
+                let script_info = simple_script_cert.simple_script_source;
+                let script_source: csl::NativeScriptSource = match script_info {
+                    Some(script_source) => match script_source {
+                        SimpleScriptSource::ProvidedSimpleScriptSource(script) => {
+                            csl::NativeScriptSource::new(&csl::NativeScript::from_hex(
+                                &script.script_cbor,
+                            )?)
+                        }
+
+                        SimpleScriptSource::InlineSimpleScriptSource(script) => {
+                            csl::NativeScriptSource::new_ref_input(
+                                &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
+                                &csl::TransactionInput::new(
+                                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                                    script.ref_tx_in.tx_index,
+                                ),
+                            )
+                        }
+                    },
+                    None => {
+                        return Err(JsError::from_str(
+                            "Missing Native Script Source in Native Cert",
+                        ))
+                    }
+                };
+                certificates_builder.add_with_native_script(
+                    &to_csl_cert(simple_script_cert.cert)?,
+                    &script_source,
+                )?
             }
-        }
-        Ok(())
-    }
-
-    fn add_drep_registration_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_registration: DRepRegistration,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_drep_registration(
-            &csl::DrepRegistration::new(
-                &Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &drep_registration.voting_key_hash,
-                )?),
-                &to_bignum(drep_registration.coin),
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_drep_deregistration_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_deregistration: DRepDeregistration,
-    ) -> Result<(), JsError> {
-        certificate_builder.add(&csl::Certificate::new_drep_deregistration(
-            &csl::DrepDeregistration::new(
-                &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                    &drep_deregistration.voting_key_hash,
-                )?),
-                &to_bignum(drep_deregistration.coin),
-            ),
-        ))?;
-        Ok(())
-    }
-
-    fn add_drep_update_cert(
-        &mut self,
-        certificate_builder: &mut csl::CertificatesBuilder,
-        drep_update: DRepUpdate,
-    ) -> Result<(), JsError> {
-        match drep_update.anchor {
-            Some(anchor) => certificate_builder.add(&csl::Certificate::new_drep_update(
-                &csl::DrepUpdate::new_with_anchor(
-                    &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(
-                        &drep_update.voting_key_hash,
-                    )?),
-                    &to_csl_anchor(&anchor)?,
-                ),
-            )),
-            None => certificate_builder.add(&csl::Certificate::new_drep_update(
-                &csl::DrepUpdate::new(&csl::Credential::from_keyhash(
-                    &csl::Ed25519KeyHash::from_hex(&drep_update.voting_key_hash)?,
-                )),
-            )),
-        }?;
+        };
         Ok(())
     }
 
