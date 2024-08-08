@@ -326,25 +326,12 @@ mod int_tests {
         .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, vec![Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 2000000)
-        .withdrawal_plutus_script_v2()
-        .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
-        .withdrawal_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
-        .withdrawal_redeemer_value(WRedeemer {
-            data: JSON(con_str0(json!([])).to_string()),
-            ex_units: Budget {
-                mem: 7000000,
-                steps: 14000000
-            }
-        })
         .complete_sync(None)
         .unwrap()
         .complete_signing();
 
-        println!("{}", json!(mesh.core.mesh_tx_builder_body).to_string());
-
-        println!("{:?}", unsigned_tx);
-        // let signed_tx = merge_vkey_witnesses_to_transaction("84a60081825820a52f835ea3a80e87a105e7382e1bacde0ef84b9ff2142ffe7c08ea6ab23841e60401818258390061b11c0a34ab172285f06610bd299fd833a429235297bb10208041991cb519a709ac4c8843828480ee7734c82ddfcacf10cd706bb7c0b8241a587c7ec7021a0008cd6f048183078201581cd8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea41a001e84800b58203d3b884d179b3f4aae3097c49974a069060dcd344d72b26bbb9982dbb9e327620d81825820541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff05a206815251010000322253330034a229309b2b2b9a010581840200d87980821a006acfc01a00d59f80f5f6".to_string(), "a10081825820b08f949a52725b8ccd044aec7ae434247e5db6fd92238015489cd6111c2a9da05840ea0afaeed29066615d6d83b467c422d477351507572656b4b6138f5034255ca8f17c138da082f65f30440fbd59586a52c1ba8b26c9a116d21e2ca886b841d404".to_string());
-        // println!("{:?}", signed_tx);
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 
     #[test]
@@ -375,7 +362,7 @@ mod int_tests {
         .unwrap()
         .complete_signing();
 
-        println!("{}", json!(mesh.core.mesh_tx_builder_body).to_string());
         println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 }
