@@ -3,9 +3,9 @@
     <h2 align="center" style="border-bottom: none"><img style="position: relative; top: 0.25rem;" src="./assets/logo.png" alt="Aiken" height="30" /> Whisky - Cardano Rust SDK</h2>
 
 [![Licence](https://img.shields.io/github/license/sidan-lab/whisky)](https://github.com/sidan-lab/whisky/blob/master/LICENSE)
-[![Build](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml)
-[![Build](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml)
-[![Build](https://github.com/sidan-lab/whisky/actions/workflows/static.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/static.yml)
+[![Test](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml/badge.svg)](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml)
+[![Publish](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml/badge.svg)](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml)
+[![Docs](https://github.com/sidan-lab/whisky/actions/workflows/static.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/static.yml)
 
   <hr/>
 </div>
