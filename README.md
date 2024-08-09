@@ -1,5 +1,13 @@
 <div align="center">
-<img src="asset/word_logo.png" alt="My Image" width="272" height="93">
+  <hr />
+    <h2 align="center" style="border-bottom: none"><img style="position: relative; top: 0.25rem;" src="./assets/logo.png" alt="Aiken" height="30" /> Whisky - Cardano Rust SDK</h2>
+
+[![Licence](https://img.shields.io/github/license/sidan-lab/whisky)](https://github.com/sidan-lab/whisky/blob/master/LICENSE)
+[![Build](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml)
+[![Build](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml)
+[![Build](https://github.com/sidan-lab/whisky/actions/workflows/static.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/static.yml)
+
+  <hr/>
 </div>
 
 # whisky
@@ -61,3 +69,5 @@ async fn my_first_whisky_tx(
 ## APIs
 
 Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.
+
+![Alt](https://repobeats.axiom.co/api/embed/2e35716a9dd3250972c06ca2b4c7f1846ef7c51e.svg "Repobeats analytics image")
