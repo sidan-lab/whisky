@@ -1,11 +1,15 @@
 <div align="center">
   <hr />
-    <h2 align="center" style="border-bottom: none"><img style="position: relative; top: 0.25rem;" src="./assets/logo.png" alt="Aiken" height="30" /> Whisky - Cardano Rust SDK</h2>
+    <h2 align="center" style="border-bottom: none"><img style="position: relative; top: 0.25rem;" src="https://raw.githubusercontent.com/sidan-lab/brand_assets/main/whisky.png" alt="Whisky" height="30" /> Whisky - Cardano Rust SDK</h2>
 
 [![Licence](https://img.shields.io/github/license/sidan-lab/whisky)](https://github.com/sidan-lab/whisky/blob/master/LICENSE)
 [![Test](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml/badge.svg)](https://github.com/sidan-lab/whisky/actions/workflows/rust-build-test.yml)
 [![Publish](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml/badge.svg)](https://github.com/sidan-lab/whisky/actions/workflows/publish-packages.yml)
 [![Docs](https://github.com/sidan-lab/whisky/actions/workflows/static.yml/badge.svg?branch=master)](https://github.com/sidan-lab/whisky/actions/workflows/static.yml)
+
+[![Twitter/X](https://img.shields.io/badge/Follow%20us-@sidan__lab-blue?logo=x&style=for-the-badge)](https://x.com/sidan_lab)
+[![Crates.io](https://img.shields.io/crates/v/whisky?style=for-the-badge)](https://crates.io/crates/whisky)
+[![NPM](https://img.shields.io/npm/v/%40sidan-lab%2Fsidan-csl-rs-nodejs?style=for-the-badge)](https://www.npmjs.com/package/@sidan-lab/sidan-csl-rs-nodejs)
 
   <hr/>
 </div>
