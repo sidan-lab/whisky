@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
-    builder::{serialize_tx_body, IMeshTxBuilderCore, MeshTxBuilderCore},
-    core::{algo::select_utxos, builder::IMeshCSL, utils::build_tx_builder},
+    builder::{serialize_tx_body, MeshTxBuilderCore},
+    core::{algo::select_utxos, utils::build_tx_builder},
     csl,
     model::{
         Anchor, Asset, Certificate, CertificateType, CommitteeColdResign, CommitteeHotAuth, DRep,
@@ -725,7 +725,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.core
             .mesh_tx_builder_body
             .required_signatures
-            .add(pub_key_hash.to_string());
+            .push(pub_key_hash.to_string());
         self
     }
 
@@ -1202,7 +1202,7 @@ impl IMeshTxBuilder for MeshTxBuilder {
         self.core
             .mesh_tx_builder_body
             .signing_key
-            .add(skey_hex.to_string());
+            .push(skey_hex.to_string());
         self
     }
 

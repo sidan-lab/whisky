@@ -1,61 +1,8 @@
-use builder::TxBuildResult;
 use cardano_serialization_lib::JsError;
 
-use crate::{
-    core::builder::{IMeshCSL, MeshCSL},
-    csl,
-    model::*,
-    *,
-};
+use crate::{core::builder::MeshCSL, csl, model::*, *};
 
-use super::{interface::MeshTxBuilderCore, IMeshTxBuilderCore};
-
-/// ## WASM Transaction building method
-///
-/// Serialize the transaction body
-///
-/// ### Arguments
-///
-/// * `mesh_tx_builder_body_json` - The transaction builder body information, serialized as JSON string
-/// * `params_json` - Optional protocol parameters, default as Cardano mainnet configuration, serialized as JSON string
-///
-/// ### Returns
-///
-/// * `String` - the built transaction hex
-#[wasm_bindgen]
-pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> TxBuildResult {
-    let mesh_tx_builder_body: MeshTxBuilderBody =
-        match serde_json::from_str(mesh_tx_builder_body_json) {
-            Ok(mesh_tx_builder_body) => mesh_tx_builder_body,
-            Err(e) => {
-                return TxBuildResult::new("failure".to_string(), format!("Invalid JSON: {:?}", e))
-            }
-        };
-
-    let params: Option<Protocol> = match serde_json::from_str(params_json) {
-        Ok(params) => Some(params),
-        Err(e) => {
-            return TxBuildResult::new(
-                "failure".to_string(),
-                format!("Invalid Protocol Param JSON: {:?} \n {:?}", params_json, e),
-            )
-        }
-    };
-
-    match serialize_tx_body(mesh_tx_builder_body, params) {
-        Ok(tx_hex) => TxBuildResult::new("success".to_string(), tx_hex.to_string()),
-        Err(e) => TxBuildResult::new("failure".to_string(), format!("{:?}", e)),
-    }
-}
-
-#[test]
-fn test_js_serialize_tx_body() {
-    let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"txIn":{"txHash":"989c9d1b383a79dbfc7ff197f0cbf2e38cb35ae2c982ba0b5b0d3bee92be7b19","txIndex":0,"amount":[{"unit":"lovelace","quantity":"1000000000"}],"address":"addr_test1qrjvlw7rzlr33audzdak2dwcjsrp3npa9tqy78e44nmcu5ap2gwze63uc7tk94t4tq0y06nqhr42qdpsw9k06c2qc7tqzjkxjr"}}}],"outputs":[{"address":"addr_test1qrjvlw7rzlr33audzdak2dwcjsrp3npa9tqy78e44nmcu5ap2gwze63uc7tk94t4tq0y06nqhr42qdpsw9k06c2qc7tqzjkxjr","amount":[{"unit":"67dd133868f14107b25772f3c5abaa1e0549f4b400b5e0e3a1136152000643b05465737431","quantity":"1"}],"datum":null,"referenceScript":null},{"address":"addr_test1wpna6yecdrc5zpaj2ae083dt4g0q2j05ksqttc8r5yfkz5sxwvzyq","amount":[{"unit":"67dd133868f14107b25772f3c5abaa1e0549f4b400b5e0e3a1136152000de1405465737431","quantity":"1"}],"datum":{"inline":"d8799fa4446e616d6545546573743145696d6167655835697066733a2f2f516d527a6963705265757477436b4d36616f74754b6a4572464355443231334470775071364279757a4d4a617561496d656469615479706549696d6167652f6a70674b6465736372697074696f6e5348656c6c6f20776f726c64202d20434950363802ff"},"referenceScript":null}],"collaterals":[],"requiredSignatures":["e4cfbbc317c718f78d137b6535d8940618cc3d2ac04f1f35acf78e53"],"referenceInputs":[],"mints":[{"scriptMint":{"mint":{"policyId":"67dd133868f14107b25772f3c5abaa1e0549f4b400b5e0e3a1136152","assetName":"000643b05465737431","amount":1},"redeemer":{"data":"d8799f446d657368ff","exUnits":{"mem":7000000,"steps":3000000000}},"scriptSource":{"providedScriptSource":{"scriptCbor":"5883588101000032323232323232322232533300632323232533300a3370e9000000899b8f375c601c601000e911046d6573680014a0601000260180026018002600800429309b2b19299980319b87480000044c8c94ccc02cc03400852616375c601600260080062c60080044600a6ea80048c00cdd5000ab9a5573aaae7955cfaba15745","languageVersion":"v2"}}}},{"scriptMint":{"mint":{"policyId":"67dd133868f14107b25772f3c5abaa1e0549f4b400b5e0e3a1136152","assetName":"000de1405465737431","amount":1},"redeemer":{"data":"d8799f446d657368ff","exUnits":{"mem":7000000,"steps":3000000000}},"scriptSource":{"providedScriptSource":{"scriptCbor":"5883588101000032323232323232322232533300632323232533300a3370e9000000899b8f375c601c601000e911046d6573680014a0601000260180026018002600800429309b2b19299980319b87480000044c8c94ccc02cc03400852616375c601600260080062c60080044600a6ea80048c00cdd5000ab9a5573aaae7955cfaba15745","languageVersion":"v2"}}}}],"changeAddress":"addr_test1qq7lutcvhg5dl0z4rurdpdy9c0khp7ymel83wf8jt6d9qgap2gwze63uc7tk94t4tq0y06nqhr42qdpsw9k06c2qc7tql6q7cf","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
-    // let mesh_tx_builder_body_json = r#"{"inputs":[{"pubKeyTxIn":{"txIn":{"txHash":"5b0145fe7b0212a7807e7dba24997049374d965f587300a2039b73cd30806c78","txIndex":1,"amount":[{"unit":"lovelace","quantity":"1132923230"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}}],"outputs":[{"address":"addr_test1wpnlxv2xv9a9ucvnvzqakwepzl9ltx7jzgm53av2e9ncv4sysemm8","amount":[{"unit":"lovelace","quantity":"1600000"}],"datum":{"hash":{"type":"Mesh","content":"supersecret"}},"referenceScript":null}],"collaterals":[{"txIn":{"txHash":"ec0c2e70b898cf531b03c9db937602e98c45378d9fa8e8a5b5a91ec5c1d7540d","txIndex":5,"amount":[{"unit":"lovelace","quantity":"5000000"}],"address":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn"}}],"requiredSignatures":[],"referenceInputs":[],"mints":[],"changeAddress":"addr_test1qq0yavv5uve45rwvfaw96qynrqt8ckpmkwcg08vlwxxdncxk82f5wz75mzaesmqzl79xqsmedwgucwtuav5str6untqqmykcpn","metadata":[],"validityRange":{"invalidBefore":null,"invalidHereafter":null},"certificates":[],"signingKey":[],"withdrawals":[]}"#;
-    let params_json = r#"{"epoch":0,"coinsPerUtxoSize":4310,"priceMem":0.0577,"priceStep":0.0000721,"minFeeA":44,"minFeeB":155381,"keyDeposit":2000000,"maxTxSize":16384,"maxValSize":5000,"poolDeposit":500000000,"maxCollateralInputs":3,"decentralisation":0,"maxBlockSize":98304,"collateralPercent":150,"maxBlockHeaderSize":1100,"minPoolCost":"340000000","maxTxExMem":"16000000","maxTxExSteps":"10000000000","maxBlockExMem":"80000000","maxBlockExSteps":"40000000000"}"#;
-    let tx_build_result = js_serialize_tx_body(mesh_tx_builder_body_json, params_json);
-    println!("{:?}", tx_build_result);
-}
+use super::interface::MeshTxBuilderCore;
 
 /// ## Transaction building method
 ///
@@ -100,7 +47,11 @@ pub fn serialize_tx_body(
     );
     MeshTxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
-        mesh_tx_builder_body.required_signatures.clone(),
+        &mesh_tx_builder_body
+            .required_signatures
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>(),
     )?;
     MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
 
@@ -177,15 +128,23 @@ pub fn serialize_tx_body(
     mesh_csl.build_tx()
 }
 
-impl IMeshTxBuilderCore for MeshTxBuilderCore {
-    fn new_core(params: Option<Protocol>) -> Self {
+impl MeshTxBuilderCore {
+    /// ## Transaction building method
+    ///
+    /// Create a new MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - A new MeshTxBuilder instance
+    ///
+    pub fn new_core(params: Option<Protocol>) -> Self {
         Self {
             mesh_csl: MeshCSL::new(params),
             mesh_tx_builder_body: MeshTxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
                 collaterals: vec![],
-                required_signatures: JsVecString::new(),
+                required_signatures: vec![],
                 reference_inputs: vec![],
                 withdrawals: vec![],
                 mints: vec![],
@@ -197,24 +156,51 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
                     invalid_before: None,
                     invalid_hereafter: None,
                 },
-                signing_key: JsVecString::new(),
+                signing_key: vec![],
             },
             tx_evaluation_multiplier_percentage: 110,
         }
     }
 
-    fn complete_signing(&mut self) -> String {
+    /// ## Transaction building method
+    ///
+    /// Complete the signing process
+    ///
+    /// ### Returns
+    ///
+    /// * `String` - The signed transaction in hex
+    pub fn complete_signing(&mut self) -> String {
         let signing_keys = self.mesh_tx_builder_body.signing_key.clone();
-        self.add_all_signing_keys(signing_keys);
+        self.add_all_signing_keys(
+            &signing_keys
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>(),
+        );
         self.mesh_csl.tx_hex.to_string()
     }
 
-    fn add_all_signing_keys(&mut self, signing_keys: JsVecString) {
+    /// ## Internal method
+    ///
+    /// Add multiple signing keys to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `signing_keys` - A vector of signing keys in hexadecimal
+    fn add_all_signing_keys(&mut self, signing_keys: &[&str]) {
         if !signing_keys.is_empty() {
             self.mesh_csl.add_signing_keys(signing_keys);
         }
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple inputs to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `inputs` - A vector of inputs
     fn add_all_inputs(mesh_csl: &mut MeshCSL, inputs: Vec<TxIn>) -> Result<(), JsError> {
         for input in inputs {
             match input {
@@ -229,6 +215,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple outputs to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `outputs` - A vector of outputs
     fn add_all_outputs(mesh_csl: &mut MeshCSL, outputs: Vec<Output>) -> Result<(), JsError> {
         for output in outputs {
             mesh_csl.add_output(output)?;
@@ -236,6 +230,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple collaterals to the MeshTxBuilder instance
+    ///
+    /// ## Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `collaterals` - A vector of collaterals
     fn add_all_collaterals(
         mesh_csl: &mut MeshCSL,
         collaterals: Vec<PubKeyTxIn>,
@@ -248,6 +250,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple reference inputs to the MeshTxBuilder instance
+    ///
+    /// ## Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `ref_inputs` - A vector of reference inputs
     fn add_all_reference_inputs(
         mesh_csl: &mut MeshCSL,
         ref_inputs: Vec<RefTxIn>,
@@ -258,6 +268,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple withdrawals to the MeshTxBuilder instance
+    ///
+    /// ## Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `withdrawals` - A vector of withdrawals
     fn add_all_withdrawals(
         mesh_csl: &mut MeshCSL,
         withdrawals: Vec<Withdrawal>,
@@ -281,6 +299,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple mints to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `mints` - A vector of mints
     fn add_all_mints(mesh_csl: &mut MeshCSL, mints: Vec<MintItem>) -> Result<(), JsError> {
         let mut mint_builder = csl::MintBuilder::new();
         for (index, mint) in mints.into_iter().enumerate() {
@@ -297,6 +323,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple certificates to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `certificates` - A vector of certificates
     fn add_all_certificates(
         mesh_csl: &mut MeshCSL,
         certificates: Vec<Certificate>,
@@ -309,6 +343,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add a validity range to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `validity_range` - The validity range
     fn add_validity_range(mesh_csl: &mut MeshCSL, validity_range: ValidityRange) {
         if validity_range.invalid_before.is_some() {
             mesh_csl.add_invalid_before(validity_range.invalid_before.unwrap())
@@ -318,9 +360,17 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         }
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple required signatures to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `required_signatures` - A vector of required signatures
     fn add_all_required_signature(
         mesh_csl: &mut MeshCSL,
-        required_signatures: JsVecString,
+        required_signatures: &[&str],
     ) -> Result<(), JsError> {
         for pub_key_hash in required_signatures {
             mesh_csl.add_required_signature(pub_key_hash)?;
@@ -328,6 +378,14 @@ impl IMeshTxBuilderCore for MeshTxBuilderCore {
         Ok(())
     }
 
+    /// ## Internal method
+    ///
+    /// Add multiple metadata to the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `all_metadata` - A vector of metadata
     fn add_all_metadata(
         mesh_csl: &mut MeshCSL,
         all_metadata: Vec<Metadata>,

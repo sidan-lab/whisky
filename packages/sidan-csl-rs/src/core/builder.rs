@@ -3,54 +3,54 @@ use cardano_serialization_lib::{JsError, MintWitness};
 
 use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value};
 
-pub trait IMeshCSL {
-    fn new(params: Option<Protocol>) -> Self;
-    fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError>;
-    fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError>;
-    fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError>;
-    fn add_output(&mut self, output: Output) -> Result<(), JsError>;
-    fn add_collateral(
-        &mut self,
-        collateral_builder: &mut csl::TxInputsBuilder,
-        collateral: PubKeyTxIn,
-    ) -> Result<(), JsError>;
-    fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError>;
-    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError>;
-    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError>;
-    fn add_simple_script_withdrawal(
-        &mut self,
-        withdrawal: SimpleScriptWithdrawal,
-    ) -> Result<(), JsError>;
-    fn add_plutus_mint(
-        &mut self,
-        mint_builder: &mut csl::MintBuilder,
-        script_mint: ScriptMint,
-        index: u64,
-    ) -> Result<(), JsError>;
-    fn add_native_mint(
-        &mut self,
-        mint_builder: &mut csl::MintBuilder,
-        native_mint: SimpleScriptMint,
-    ) -> Result<(), JsError>;
-    fn add_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        cert: Certificate,
-        index: u64,
-    ) -> Result<(), JsError>;
-    fn add_invalid_before(&mut self, invalid_before: u64);
-    fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
-    fn add_change(
-        &mut self,
-        change_address: String,
-        change_datum: Option<Datum>,
-    ) -> Result<(), JsError>;
-    fn add_signing_keys(&mut self, signing_keys: JsVecString);
-    fn add_required_signature(&mut self, pub_key_hash: String) -> Result<(), JsError>;
-    fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError>;
-    fn add_script_hash(&mut self) -> Result<(), JsError>;
-    fn build_tx(&mut self) -> Result<String, JsError>;
-}
+// pub trait IMeshCSL {
+//     fn new(params: Option<Protocol>) -> Self;
+//     fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError>;
+//     fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError>;
+//     fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError>;
+//     fn add_output(&mut self, output: Output) -> Result<(), JsError>;
+//     fn add_collateral(
+//         &mut self,
+//         collateral_builder: &mut csl::TxInputsBuilder,
+//         collateral: PubKeyTxIn,
+//     ) -> Result<(), JsError>;
+//     fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError>;
+//     fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError>;
+//     fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError>;
+//     fn add_simple_script_withdrawal(
+//         &mut self,
+//         withdrawal: SimpleScriptWithdrawal,
+//     ) -> Result<(), JsError>;
+//     fn add_plutus_mint(
+//         &mut self,
+//         mint_builder: &mut csl::MintBuilder,
+//         script_mint: ScriptMint,
+//         index: u64,
+//     ) -> Result<(), JsError>;
+//     fn add_native_mint(
+//         &mut self,
+//         mint_builder: &mut csl::MintBuilder,
+//         native_mint: SimpleScriptMint,
+//     ) -> Result<(), JsError>;
+//     fn add_cert(
+//         &mut self,
+//         certificates_builder: &mut csl::CertificatesBuilder,
+//         cert: Certificate,
+//         index: u64,
+//     ) -> Result<(), JsError>;
+//     fn add_invalid_before(&mut self, invalid_before: u64);
+//     fn add_invalid_hereafter(&mut self, invalid_hereafter: u64);
+//     fn add_change(
+//         &mut self,
+//         change_address: String,
+//         change_datum: Option<Datum>,
+//     ) -> Result<(), JsError>;
+//     fn add_signing_keys(&mut self, signing_keys: JsVecString);
+//     fn add_required_signature(&mut self, pub_key_hash: String) -> Result<(), JsError>;
+//     fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError>;
+//     fn add_script_hash(&mut self) -> Result<(), JsError>;
+//     fn build_tx(&mut self) -> Result<String, JsError>;
+// }
 
 pub struct MeshCSL {
     pub tx_hex: String,
@@ -59,8 +59,8 @@ pub struct MeshCSL {
     pub tx_withdrawals_builder: csl::WithdrawalsBuilder,
 }
 
-impl IMeshCSL for MeshCSL {
-    fn new(params: Option<Protocol>) -> MeshCSL {
+impl MeshCSL {
+    pub fn new(params: Option<Protocol>) -> MeshCSL {
         MeshCSL {
             tx_hex: String::new(),
             tx_builder: build_tx_builder(params),
@@ -69,7 +69,7 @@ impl IMeshCSL for MeshCSL {
         }
     }
 
-    fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError> {
+    pub fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), JsError> {
         self.tx_inputs_builder.add_regular_input(
             &csl::Address::from_bech32(&input.tx_in.address.unwrap())?,
             &csl::TransactionInput::new(
@@ -81,7 +81,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError> {
+    pub fn add_simple_script_tx_in(&mut self, input: SimpleScriptTxIn) -> Result<(), JsError> {
         match input.simple_script_tx_in {
             SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) => {
                 self.tx_inputs_builder.add_native_script_input(
@@ -118,7 +118,7 @@ impl IMeshCSL for MeshCSL {
         }
     }
 
-    fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError> {
+    pub fn add_script_tx_in(&mut self, input: ScriptTxIn) -> Result<(), JsError> {
         let datum_source = input.script_tx_in.datum_source.unwrap();
         let script_source = input.script_tx_in.script_source.unwrap();
         let redeemer = input.script_tx_in.redeemer.unwrap();
@@ -185,7 +185,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_output(&mut self, output: Output) -> Result<(), JsError> {
+    pub fn add_output(&mut self, output: Output) -> Result<(), JsError> {
         let mut output_builder = csl::TransactionOutputBuilder::new()
             .with_address(&csl::Address::from_bech32(&output.address)?);
         if output.datum.is_some() {
@@ -251,7 +251,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_collateral(
+    pub fn add_collateral(
         &mut self,
         collateral_builder: &mut csl::TxInputsBuilder,
         collateral: PubKeyTxIn,
@@ -267,7 +267,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError> {
+    pub fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), JsError> {
         let csl_ref_input = csl::TransactionInput::new(
             &csl::TransactionHash::from_hex(&ref_input.tx_hash)?,
             ref_input.tx_index,
@@ -276,7 +276,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError> {
+    pub fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), JsError> {
         self.tx_withdrawals_builder.add(
             &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
                 .unwrap(),
@@ -285,7 +285,10 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_plutus_withdrawal(&mut self, withdrawal: PlutusScriptWithdrawal) -> Result<(), JsError> {
+    pub fn add_plutus_withdrawal(
+        &mut self,
+        withdrawal: PlutusScriptWithdrawal,
+    ) -> Result<(), JsError> {
         let script_source = withdrawal.script_source.unwrap();
         let redeemer = withdrawal.redeemer.unwrap();
 
@@ -338,7 +341,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_simple_script_withdrawal(
+    pub fn add_simple_script_withdrawal(
         &mut self,
         withdrawal: SimpleScriptWithdrawal,
     ) -> Result<(), JsError> {
@@ -375,7 +378,7 @@ impl IMeshCSL for MeshCSL {
         )
     }
 
-    fn add_plutus_mint(
+    pub fn add_plutus_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
         script_mint: ScriptMint,
@@ -429,7 +432,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_native_mint(
+    pub fn add_native_mint(
         &mut self,
         mint_builder: &mut csl::MintBuilder,
         native_mint: SimpleScriptMint,
@@ -458,7 +461,7 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_cert(
+    pub fn add_cert(
         &mut self,
         certificates_builder: &mut csl::CertificatesBuilder,
         cert: Certificate,
@@ -560,17 +563,17 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_invalid_before(&mut self, invalid_before: u64) {
+    pub fn add_invalid_before(&mut self, invalid_before: u64) {
         self.tx_builder
             .set_validity_start_interval_bignum(to_bignum(invalid_before));
     }
 
-    fn add_invalid_hereafter(&mut self, invalid_hereafter: u64) {
+    pub fn add_invalid_hereafter(&mut self, invalid_hereafter: u64) {
         self.tx_builder
             .set_ttl_bignum(&to_bignum(invalid_hereafter));
     }
 
-    fn add_change(
+    pub fn add_change(
         &mut self,
         change_address: String,
         change_datum: Option<Datum>,
@@ -587,29 +590,30 @@ impl IMeshCSL for MeshCSL {
         Ok(())
     }
 
-    fn add_signing_keys(&mut self, signing_keys: JsVecString) {
-        self.tx_hex = sign_transaction(self.tx_hex.to_string(), signing_keys);
+    pub fn add_signing_keys(&mut self, signing_keys: &[&str]) -> Result<(), JsError> {
+        self.tx_hex = sign_transaction(&self.tx_hex, signing_keys)?;
+        Ok(())
     }
 
-    fn add_required_signature(&mut self, pub_key_hash: String) -> Result<(), JsError> {
+    pub fn add_required_signature(&mut self, pub_key_hash: &str) -> Result<(), JsError> {
         self.tx_builder
             .add_required_signer(&csl::Ed25519KeyHash::from_hex(&pub_key_hash)?);
         Ok(())
     }
 
-    fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError> {
+    pub fn add_metadata(&mut self, metadata: Metadata) -> Result<(), JsError> {
         self.tx_builder
             .add_json_metadatum(&csl::BigNum::from_str(&metadata.tag)?, metadata.metadata)?;
         Ok(())
     }
 
-    fn add_script_hash(&mut self) -> Result<(), JsError> {
+    pub fn add_script_hash(&mut self) -> Result<(), JsError> {
         self.tx_builder
             .calc_script_data_hash(&csl::TxBuilderConstants::plutus_vasil_cost_models())?;
         Ok(())
     }
 
-    fn build_tx(&mut self) -> Result<String, JsError> {
+    pub fn build_tx(&mut self) -> Result<String, JsError> {
         let tx = self.tx_builder.build_tx()?;
         self.tx_hex = tx.to_hex();
         Ok(self.tx_hex.to_string())

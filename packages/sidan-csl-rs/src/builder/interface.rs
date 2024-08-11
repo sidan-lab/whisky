@@ -2,30 +2,6 @@ use cardano_serialization_lib::JsError;
 
 use crate::{core::builder::MeshCSL, model::*, *};
 
-#[wasm_bindgen]
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct TxBuildResult {
-    status: String,
-    data: String,
-}
-
-#[wasm_bindgen]
-impl TxBuildResult {
-    pub fn new(status: String, data: String) -> Self {
-        Self { status, data }
-    }
-
-    #[wasm_bindgen]
-    pub fn get_status(&self) -> String {
-        self.status.clone()
-    }
-
-    #[wasm_bindgen]
-    pub fn get_data(&self) -> String {
-        self.data.clone()
-    }
-}
-
 pub struct MeshTxBuilderCore {
     pub mesh_csl: MeshCSL,
     pub mesh_tx_builder_body: MeshTxBuilderBody,
@@ -50,7 +26,6 @@ pub trait IMeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `String` - The signed transaction in hex
-
     fn complete_signing(&mut self) -> String;
 
     /// ## Internal method
