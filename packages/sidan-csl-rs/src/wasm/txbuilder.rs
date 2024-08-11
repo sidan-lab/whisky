@@ -17,22 +17,22 @@ use crate::*;
 ///
 /// * `String` - the built transaction hex
 #[wasm_bindgen]
-pub fn js_serialize_tx_body(
-    mesh_tx_builder_body_json: &str,
-    params_json: &str,
-) -> WasmResult<String> {
+pub fn js_serialize_tx_body(mesh_tx_builder_body_json: &str, params_json: &str) -> WasmResult {
     let mesh_tx_builder_body: MeshTxBuilderBody =
         match serde_json::from_str(mesh_tx_builder_body_json) {
             Ok(mesh_tx_builder_body) => mesh_tx_builder_body,
             Err(e) => {
-                return WasmResult::new("failure".to_string(), format!("Invalid JSON: {:?}", e))
+                return WasmResult::new_error(
+                    "failure".to_string(),
+                    format!("Invalid JSON: {:?}", e),
+                )
             }
         };
 
     let params: Option<Protocol> = match serde_json::from_str(params_json) {
         Ok(params) => Some(params),
         Err(e) => {
-            return WasmResult::new(
+            return WasmResult::new_error(
                 "failure".to_string(),
                 format!("Invalid Protocol Param JSON: {:?} \n {:?}", params_json, e),
             )

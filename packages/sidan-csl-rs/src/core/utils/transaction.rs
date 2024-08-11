@@ -1,4 +1,4 @@
-use crate::{csl, model::*, *};
+use crate::{csl, *};
 use cardano_serialization_lib::JsError;
 use cryptoxide::blake2b::Blake2b;
 
@@ -13,9 +13,8 @@ pub fn calculate_tx_hash(tx_hex: &str) -> Result<String, JsError> {
     Ok(csl::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex())
 }
 
-#[wasm_bindgen]
 pub fn sign_transaction(tx_hex: &str, signing_keys: &[&str]) -> Result<String, JsError> {
-    let unsigned_transaction: csl::FixedTransaction = csl::FixedTransaction::from_hex(&tx_hex)?;
+    let unsigned_transaction: csl::FixedTransaction = csl::FixedTransaction::from_hex(tx_hex)?;
     let mut witness_set = unsigned_transaction.witness_set();
     let mut vkey_witnesses = witness_set
         .vkeys()

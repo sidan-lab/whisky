@@ -1,5 +1,5 @@
 use whisky::{
-    builder::{IMeshTxBuilder, MeshTxBuilder, WData, WRedeemer},
+    builder::{MeshTxBuilder, WData, WRedeemer},
     csl::JsError,
     model::{Asset, Budget, ProvidedScriptSource, UTxO},
 };

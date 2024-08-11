@@ -5,7 +5,7 @@ mod int_tests {
         model::{Asset, Budget, LanguageVersion},
     };
     use whisky::{
-        builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
         core::utils::merge_vkey_witnesses_to_transaction,
     };
 
@@ -167,7 +167,7 @@ mod int_tests {
 
         match res {
             Ok(_) => {
-                let signed_tx = mesh.complete_signing();
+                let signed_tx = mesh.complete_signing().unwrap();
                 println!("{}", signed_tx);
                 assert!(mesh.core.mesh_csl.tx_hex != *"");
             }
@@ -200,7 +200,7 @@ mod int_tests {
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
             .unwrap()
-            .complete_signing();
+            .complete_signing().unwrap();
 
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
@@ -230,7 +230,7 @@ mod int_tests {
             .signing_key("5820ba73019f1239fa47f8d9c0c42c5d05bf34f2b2f6ebd1c556f8f86e5bee1aac66")
             .complete_sync(None)
             .unwrap()
-            .complete_signing();
+            .complete_signing().unwrap();
 
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
@@ -273,7 +273,7 @@ mod int_tests {
             .signing_key("5820c835cd2413c6330537c85e3d510b313dfdeee5708206e76ce8bd387cdd4b6bb2")
             .complete_sync(None)
             .unwrap()
-            .complete_signing();
+            .complete_signing().unwrap();
 
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
@@ -300,7 +300,7 @@ mod int_tests {
             .tx_out_reference_script("8200581ce3d28c78fa125198affefff50269125c81ba34e598890ed1d077f171", None)
             .complete_sync(None)
             .unwrap()
-            .complete_signing();
+            .complete_signing().unwrap();
 
         let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
 
@@ -327,7 +327,7 @@ mod int_tests {
         .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 2000000)
         .complete_sync(None)
         .unwrap()
-        .complete_signing();
+        .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
@@ -359,7 +359,7 @@ mod int_tests {
             }})
         .complete_sync(None)    
         .unwrap()
-        .complete_signing();
+        .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");

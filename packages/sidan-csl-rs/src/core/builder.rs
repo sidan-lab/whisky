@@ -597,7 +597,7 @@ impl MeshCSL {
 
     pub fn add_required_signature(&mut self, pub_key_hash: &str) -> Result<(), JsError> {
         self.tx_builder
-            .add_required_signer(&csl::Ed25519KeyHash::from_hex(&pub_key_hash)?);
+            .add_required_signer(&csl::Ed25519KeyHash::from_hex(pub_key_hash)?);
         Ok(())
     }
 

@@ -3,7 +3,7 @@ mod mesh_tx_builder_core_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::model::{Asset, Budget, LanguageVersion};
     use whisky::{
-        builder::{IMeshTxBuilder, MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        builder::{MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
         core::common::{builtin_byte_string, con_str0},
     };
 

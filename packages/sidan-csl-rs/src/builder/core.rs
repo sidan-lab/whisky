@@ -1,8 +1,12 @@
 use cardano_serialization_lib::JsError;
 
-use crate::{core::builder::MeshCSL, csl, model::*, *};
+use crate::{core::builder::MeshCSL, csl, model::*};
 
-use super::interface::MeshTxBuilderCore;
+pub struct MeshTxBuilderCore {
+    pub mesh_csl: MeshCSL,
+    pub mesh_tx_builder_body: MeshTxBuilderBody,
+    pub tx_evaluation_multiplier_percentage: u64,
+}
 
 /// ## Transaction building method
 ///
@@ -169,15 +173,15 @@ impl MeshTxBuilderCore {
     /// ### Returns
     ///
     /// * `String` - The signed transaction in hex
-    pub fn complete_signing(&mut self) -> String {
+    pub fn complete_signing(&mut self) -> Result<String, JsError> {
         let signing_keys = self.mesh_tx_builder_body.signing_key.clone();
         self.add_all_signing_keys(
             &signing_keys
                 .iter()
                 .map(|s| s.as_str())
                 .collect::<Vec<&str>>(),
-        );
-        self.mesh_csl.tx_hex.to_string()
+        )?;
+        Ok(self.mesh_csl.tx_hex.to_string())
     }
 
     /// ## Internal method
@@ -187,10 +191,11 @@ impl MeshTxBuilderCore {
     /// ### Arguments
     ///
     /// * `signing_keys` - A vector of signing keys in hexadecimal
-    fn add_all_signing_keys(&mut self, signing_keys: &[&str]) {
+    fn add_all_signing_keys(&mut self, signing_keys: &[&str]) -> Result<(), JsError> {
         if !signing_keys.is_empty() {
-            self.mesh_csl.add_signing_keys(signing_keys);
+            self.mesh_csl.add_signing_keys(signing_keys)?;
         }
+        Ok(())
     }
 
     /// ## Internal method

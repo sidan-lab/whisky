@@ -1,8 +1,4 @@
-use whisky::{
-    builder::{IMeshTxBuilder, MeshTxBuilder},
-    csl::JsError,
-    model::UTxO,
-};
+use whisky::{builder::MeshTxBuilder, csl::JsError, model::UTxO};
 
 pub fn delegate_stake(
     stake_key_hash: &str,
