@@ -5,7 +5,7 @@ mod mint;
 mod tx_eval;
 mod tx_in;
 mod tx_out;
-mod withdraw;
+mod withdrawal;
 
 use cardano_serialization_lib::JsError;
 pub use data::*;
@@ -22,9 +22,9 @@ pub struct MeshTxBuilder {
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,
-    pub adding_script_input: bool,
-    pub adding_plutus_mint: bool,
-    pub adding_plutus_withdrawal: bool,
+    pub adding_script_input: Option<LanguageVersion>,
+    pub adding_plutus_mint: Option<LanguageVersion>,
+    pub adding_plutus_withdrawal: Option<LanguageVersion>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub submitter: Option<Box<dyn Submitter>>,
@@ -62,9 +62,9 @@ impl MeshTxBuilder {
             mint_item: None,
             collateral_item: None,
             tx_output: None,
-            adding_script_input: false,
-            adding_plutus_mint: false,
-            adding_plutus_withdrawal: false,
+            adding_script_input: None,
+            adding_plutus_mint: None,
+            adding_plutus_withdrawal: None,
             fetcher: param.fetcher,
             evaluator: match param.evaluator {
                 Some(evaluator) => Some(evaluator),
@@ -472,5 +472,11 @@ impl MeshTxBuilder {
             self.inputs_for_evaluation.push(input);
         }
         Ok(())
+    }
+}
+
+impl Default for MeshTxBuilder {
+    fn default() -> Self {
+        Self::new_core()
     }
 }

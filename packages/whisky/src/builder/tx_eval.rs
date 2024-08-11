@@ -25,6 +25,7 @@ use uplc::{
 
 use crate::service::Evaluator;
 
+#[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}
 
 impl MeshTxEvaluator {

@@ -7,7 +7,7 @@ pub struct Redeemer {
     pub ex_units: Budget,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Budget {
     pub mem: u64,

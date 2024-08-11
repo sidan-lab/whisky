@@ -5,13 +5,56 @@ use super::{MeshTxBuilder, WRedeemer};
 impl MeshTxBuilder {
     /// ## Transaction building method
     ///
+    /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `language_version` - The language version of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn mint_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+        match language_version {
+            LanguageVersion::V1 => self.mint_plutus_script_v1(),
+            LanguageVersion::V2 => self.mint_plutus_script_v2(),
+            LanguageVersion::V3 => self.mint_plutus_script_v3(),
+        }
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is minting a Plutus script v1 in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn mint_plutus_script_v1(&mut self) -> &mut Self {
+        self.adding_plutus_mint = Some(LanguageVersion::V1);
+        self
+    }
+
+    /// ## Transaction building method
+    ///
     /// Indicate that the transaction is minting a Plutus script v2 in the MeshTxBuilder instance
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
     pub fn mint_plutus_script_v2(&mut self) -> &mut Self {
-        self.adding_plutus_mint = true;
+        self.adding_plutus_mint = Some(LanguageVersion::V2);
+        self
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is minting a Plutus script v2 in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn mint_plutus_script_v3(&mut self) -> &mut Self {
+        self.adding_plutus_mint = Some(LanguageVersion::V3);
         self
     }
 
@@ -32,27 +75,29 @@ impl MeshTxBuilder {
         if self.mint_item.is_some() {
             self.queue_mint();
         }
-        if self.adding_plutus_mint {
-            self.mint_item = Some(MintItem::ScriptMint(ScriptMint {
-                mint: MintParameter {
-                    policy_id: policy.to_string(),
-                    asset_name: name.to_string(),
-                    amount: quantity,
-                },
-                redeemer: None,
-                script_source: None,
-            }))
-        } else {
-            self.mint_item = Some(MintItem::SimpleScriptMint(SimpleScriptMint {
-                mint: MintParameter {
-                    policy_id: policy.to_string(),
-                    asset_name: name.to_string(),
-                    amount: quantity,
-                },
-                script_source: None,
-            }))
-        };
-        self.adding_plutus_mint = false;
+        match &self.adding_plutus_mint {
+            Some(_) => {
+                self.mint_item = Some(MintItem::ScriptMint(ScriptMint {
+                    mint: MintParameter {
+                        policy_id: policy.to_string(),
+                        asset_name: name.to_string(),
+                        amount: quantity,
+                    },
+                    redeemer: None,
+                    script_source: None,
+                }))
+            }
+            None => {
+                self.mint_item = Some(MintItem::SimpleScriptMint(SimpleScriptMint {
+                    mint: MintParameter {
+                        policy_id: policy.to_string(),
+                        asset_name: name.to_string(),
+                        amount: quantity,
+                    },
+                    script_source: None,
+                }))
+            }
+        }
         self
     }
 
@@ -68,11 +113,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn minting_script(
-        &mut self,
-        script_cbor: &str,
-        version: Option<LanguageVersion>,
-    ) -> &mut Self {
+    pub fn minting_script(&mut self, script_cbor: &str) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -83,9 +124,12 @@ impl MeshTxBuilder {
                 script_mint.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                         script_cbor: script_cbor.to_string(),
-                        language_version: version
+                        language_version: self
+                            .adding_plutus_mint
+                            .clone()
                             .expect("Plutus mints must have version specified"),
                     }));
+                self.adding_plutus_mint = None;
                 self.mint_item = Some(MintItem::ScriptMint(script_mint));
             }
             MintItem::SimpleScriptMint(mut simple_script_mint) => {
@@ -108,7 +152,7 @@ impl MeshTxBuilder {
     ///
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
-    /// * `spending_script_hash` - The spending script hash
+    /// * `script_hash` - The script hash
     /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     /// * `script_size` - Size of the script
     ///
@@ -119,8 +163,7 @@ impl MeshTxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: &str,
-        version: Option<LanguageVersion>,
+        script_hash: &str,
         script_size: usize,
     ) -> &mut Self {
         let mint_item = self.mint_item.take();
@@ -136,8 +179,10 @@ impl MeshTxBuilder {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
                         },
-                        spending_script_hash: spending_script_hash.to_string(),
-                        language_version: version
+                        script_hash: script_hash.to_string(),
+                        language_version: self
+                            .adding_plutus_mint
+                            .clone()
                             .expect("Plutus mints must have version specified"),
                         script_size,
                     }));
@@ -150,7 +195,7 @@ impl MeshTxBuilder {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
                         },
-                        simple_script_hash: spending_script_hash.to_string(),
+                        simple_script_hash: script_hash.to_string(),
                     }),
                 );
                 self.mint_item = Some(MintItem::SimpleScriptMint(simple_script_mint));

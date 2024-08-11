@@ -5,6 +5,59 @@ use sidan_csl_rs::model::*;
 impl MeshTxBuilder {
     /// ## Transaction building method
     ///
+    /// Indicate that the transaction is spending a Plutus script in the MeshTxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `language_version` - The language version of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn spending_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+        match language_version {
+            LanguageVersion::V1 => self.spending_plutus_script_v1(),
+            LanguageVersion::V2 => self.spending_plutus_script_v2(),
+            LanguageVersion::V3 => self.spending_plutus_script_v3(),
+        }
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is spending a Plutus script v1 in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn spending_plutus_script_v1(&mut self) -> &mut Self {
+        self.adding_script_input = Some(LanguageVersion::V1);
+        self
+    }
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is spending a Plutus script v2 in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn spending_plutus_script_v2(&mut self) -> &mut Self {
+        self.adding_script_input = Some(LanguageVersion::V2);
+        self
+    }
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is spending a Plutus script v2 in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn spending_plutus_script_v3(&mut self) -> &mut Self {
+        self.adding_script_input = Some(LanguageVersion::V3);
+        self
+    }
+
+    /// ## Transaction building method
+    ///
     /// Add a transaction input to the MeshTxBuilder instance
     ///
     /// ### Arguments
@@ -27,31 +80,34 @@ impl MeshTxBuilder {
         if self.tx_in_item.is_some() {
             self.queue_input();
         }
-        if !self.adding_script_input {
-            let item = TxIn::PubKeyTxIn(PubKeyTxIn {
-                tx_in: TxInParameter {
-                    tx_hash: tx_hash.to_string(),
-                    tx_index,
-                    amount: Some(amount),
-                    address: Some(address.to_string()),
-                },
-            });
-            self.tx_in_item = Some(item);
-        } else {
-            let item = TxIn::ScriptTxIn(ScriptTxIn {
-                tx_in: TxInParameter {
-                    tx_hash: tx_hash.to_string(),
-                    tx_index,
-                    amount: Some(amount),
-                    address: Some(address.to_string()),
-                },
-                script_tx_in: ScriptTxInParameter {
-                    script_source: None,
-                    datum_source: None,
-                    redeemer: None,
-                },
-            });
-            self.tx_in_item = Some(item);
+        match self.adding_script_input {
+            Some(_) => {
+                let item = TxIn::ScriptTxIn(ScriptTxIn {
+                    tx_in: TxInParameter {
+                        tx_hash: tx_hash.to_string(),
+                        tx_index,
+                        amount: Some(amount),
+                        address: Some(address.to_string()),
+                    },
+                    script_tx_in: ScriptTxInParameter {
+                        script_source: None,
+                        datum_source: None,
+                        redeemer: None,
+                    },
+                });
+                self.tx_in_item = Some(item);
+            }
+            None => {
+                let item = TxIn::PubKeyTxIn(PubKeyTxIn {
+                    tx_in: TxInParameter {
+                        tx_hash: tx_hash.to_string(),
+                        tx_index,
+                        amount: Some(amount),
+                        address: Some(address.to_string()),
+                    },
+                });
+                self.tx_in_item = Some(item);
+            }
         }
         self
     }
@@ -68,11 +124,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_in_script(
-        &mut self,
-        script_cbor: &str,
-        version: Option<LanguageVersion>,
-    ) -> &mut Self {
+    pub fn tx_in_script(&mut self, script_cbor: &str) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -89,6 +141,20 @@ impl MeshTxBuilder {
                     ),
                 }))
             }
+            TxIn::ScriptTxIn(mut input) => {
+                input.script_tx_in.script_source =
+                    Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                        script_cbor: script_cbor.to_string(),
+                        language_version: self
+                            .adding_script_input
+                            .clone()
+                            .expect("Plutus script must have version specified"),
+                    }));
+                self.adding_script_input = None;
+                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
+            }
+
+            // Technically this should be unreachable, but it's here for completeness
             TxIn::SimpleScriptTxIn(mut input) => {
                 input.simple_script_tx_in = SimpleScriptTxInParameter::ProvidedSimpleScriptSource(
                     ProvidedSimpleScriptSource {
@@ -96,14 +162,6 @@ impl MeshTxBuilder {
                     },
                 );
                 self.tx_in_item = Some(TxIn::SimpleScriptTxIn(input));
-            }
-            TxIn::ScriptTxIn(mut input) => {
-                input.script_tx_in.script_source =
-                    Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
-                        script_cbor: script_cbor.to_string(),
-                        language_version: version.unwrap(),
-                    }));
-                self.tx_in_item = Some(TxIn::ScriptTxIn(input));
             }
         }
         self
@@ -217,26 +275,13 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is spending a Plutus script v2 in the MeshTxBuilder instance
-    ///
-    /// ### Returns
-    ///
-    /// * `Self` - The MeshTxBuilder instance
-    pub fn spending_plutus_script_v2(&mut self) -> &mut Self {
-        self.adding_script_input = true;
-        self
-    }
-
-    /// ## Transaction building method
-    ///
     /// Add a spending transaction input reference to the MeshTxBuilder instance
     ///
     /// ### Arguments
     ///
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
-    /// * `spending_script_hash` - The spending script hash
-    /// * `version` - The language version
+    /// * `script_hash` - The spending script hash
     /// * `scrip_size` - Size of the script
     ///
     /// ### Returns
@@ -246,8 +291,7 @@ impl MeshTxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: &str,
-        version: LanguageVersion,
+        script_hash: &str,
         script_size: usize,
     ) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
@@ -267,8 +311,11 @@ impl MeshTxBuilder {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
                         },
-                        spending_script_hash: spending_script_hash.to_string(),
-                        language_version: version,
+                        script_hash: script_hash.to_string(),
+                        language_version: self
+                            .adding_script_input
+                            .clone()
+                            .expect("Plutus script must have version specified"),
                         script_size,
                     }));
                 self.tx_in_item = Some(TxIn::ScriptTxIn(input));

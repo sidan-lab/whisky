@@ -3,6 +3,7 @@ use cardano_serialization_lib::{JsError, MintWitness};
 
 use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value};
 
+#[derive(Clone, Debug)]
 pub struct MeshCSL {
     pub tx_hex: String,
     pub tx_builder: csl::TransactionBuilder,
@@ -105,7 +106,7 @@ impl MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
+                    &csl::ScriptHash::from_hex(&script.script_hash)?,
                     &csl::TransactionInput::new(
                         &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                         script.ref_tx_in.tx_index,
@@ -262,7 +263,7 @@ impl MeshCSL {
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
                 csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
+                    &csl::ScriptHash::from_hex(&script.script_hash)?,
                     &csl::TransactionInput::new(
                         &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                         script.ref_tx_in.tx_index,
@@ -432,7 +433,7 @@ impl MeshCSL {
                                 LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                             };
                             csl::PlutusScriptSource::new_ref_input(
-                                &csl::ScriptHash::from_hex(&script.spending_script_hash)?,
+                                &csl::ScriptHash::from_hex(&script.script_hash)?,
                                 &csl::TransactionInput::new(
                                     &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                                     script.ref_tx_in.tx_index,

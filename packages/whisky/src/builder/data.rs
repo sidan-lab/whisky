@@ -2,6 +2,7 @@ use crate::*;
 use cardano_serialization_lib::JsError;
 use model::Budget;
 
+#[derive(Clone, Debug)]
 pub enum WData {
     JSON(String),
     CBOR(String),
@@ -21,11 +22,13 @@ impl WData {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct WRedeemer {
     pub data: WData,
     pub ex_units: Budget,
 }
 
+#[derive(Clone, Debug)]
 pub struct WDatum {
     pub type_: String,
     pub data: WData,

@@ -26,6 +26,7 @@ pub struct AdditionalUtxo {
     pub txout_cbor: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct Maestro {
     api_key: String,
     http_client: reqwest::Client,
@@ -113,6 +114,7 @@ impl Maestro {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct MaestroProvider {
     pub maestro_client: Maestro,
 }

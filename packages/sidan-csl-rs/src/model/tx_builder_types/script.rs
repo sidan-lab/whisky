@@ -40,7 +40,7 @@ pub struct ProvidedScriptSource {
 #[serde(rename_all = "camelCase")]
 pub struct InlineScriptSource {
     pub ref_tx_in: RefTxIn,
-    pub spending_script_hash: String,
+    pub script_hash: String,
     pub language_version: LanguageVersion,
     pub script_size: usize,
 }

@@ -2,6 +2,7 @@ use super::core_csl::MeshCSL;
 use crate::{csl, model::*};
 use cardano_serialization_lib::JsError;
 
+#[derive(Clone, Debug)]
 pub struct MeshTxBuilderCore {
     pub mesh_csl: MeshCSL,
     pub mesh_tx_builder_body: MeshTxBuilderBody,

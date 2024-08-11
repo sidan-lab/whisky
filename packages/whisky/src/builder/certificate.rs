@@ -506,7 +506,7 @@ impl MeshTxBuilder {
     ///
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
-    /// * `spending_script_hash` - The spending script hash
+    /// * `script_hash` - The script hash
     /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     /// * `script_size` - Size of the script
     ///
@@ -517,7 +517,7 @@ impl MeshTxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        spending_script_hash: &str,
+        script_hash: &str,
         version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
@@ -537,7 +537,7 @@ impl MeshTxBuilder {
                                 tx_hash: tx_hash.to_string(),
                                 tx_index,
                             },
-                            spending_script_hash: spending_script_hash.to_string(),
+                            script_hash: script_hash.to_string(),
                             language_version: lang_ver,
                             script_size,
                         })),
@@ -552,7 +552,7 @@ impl MeshTxBuilder {
                                     tx_hash: tx_hash.to_string(),
                                     tx_index,
                                 },
-                                simple_script_hash: spending_script_hash.to_string(),
+                                simple_script_hash: script_hash.to_string(),
                             },
                         )),
                     }),
@@ -568,7 +568,7 @@ impl MeshTxBuilder {
                                 tx_hash: tx_hash.to_string(),
                                 tx_index,
                             },
-                            spending_script_hash: spending_script_hash.to_string(),
+                            script_hash: script_hash.to_string(),
                             language_version: lang_ver,
                             script_size,
                         })),

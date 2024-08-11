@@ -56,7 +56,7 @@ pub async fn complex_transaction(
             data: WData::JSON(redeemer.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
         })
-        .tx_in_script(&script.script_cbor, Some(script.language_version))
+        .tx_in_script(&script.script_cbor)
         .mint_plutus_script_v2()
         .mint(
             to_mint_asset_1.quantity_i128(),
@@ -67,7 +67,7 @@ pub async fn complex_transaction(
             data: WData::JSON(redeemer_1.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
         })
-        .minting_script(&script_1.script_cbor, Some(script_1.language_version))
+        .minting_script(&script_1.script_cbor)
         .mint_plutus_script_v2()
         .mint(
             to_mint_asset_2.quantity_i128(),
@@ -78,7 +78,7 @@ pub async fn complex_transaction(
             data: WData::JSON(redeemer_2.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
         })
-        .minting_script(&script_2.script_cbor, Some(script_2.language_version))
+        .minting_script(&script_2.script_cbor)
         .change_address(my_address)
         .tx_in_collateral(
             &collateral.input.tx_hash,

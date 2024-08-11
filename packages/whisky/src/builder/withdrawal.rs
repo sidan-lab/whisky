@@ -7,11 +7,54 @@ impl MeshTxBuilder {
     ///
     /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
     ///
+    /// ### Arguments
+    ///
+    /// * `language_version` - The language version of the script
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn withdrawal_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+        match language_version {
+            LanguageVersion::V1 => self.withdrawal_plutus_script_v1(),
+            LanguageVersion::V2 => self.withdrawal_plutus_script_v2(),
+            LanguageVersion::V3 => self.withdrawal_plutus_script_v3(),
+        }
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is withdrawing using a plutus V1 staking script in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn withdrawal_plutus_script_v1(&mut self) -> &mut Self {
+        self.adding_plutus_withdrawal = Some(LanguageVersion::V1);
+        self
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is withdrawing using a plutus V2 staking script in the MeshTxBuilder instance
+    ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
     pub fn withdrawal_plutus_script_v2(&mut self) -> &mut Self {
-        self.adding_plutus_withdrawal = true;
+        self.adding_plutus_withdrawal = Some(LanguageVersion::V2);
+        self
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Indicate that the transaction is withdrawing using a plutus V3 staking script in the MeshTxBuilder instance
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn withdrawal_plutus_script_v3(&mut self) -> &mut Self {
+        self.adding_plutus_withdrawal = Some(LanguageVersion::V3);
         self
     }
 
@@ -35,7 +78,6 @@ impl MeshTxBuilder {
         tx_hash: &str,
         tx_index: u32,
         withdrawal_script_hash: &str,
-        version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
@@ -65,8 +107,10 @@ impl MeshTxBuilder {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
                         },
-                        spending_script_hash: withdrawal_script_hash.to_string(),
-                        language_version: version
+                        script_hash: withdrawal_script_hash.to_string(),
+                        language_version: self
+                            .adding_plutus_withdrawal
+                            .clone()
                             .expect("Plutus withdrawals require a language version"),
                         script_size,
                     }));
@@ -92,22 +136,25 @@ impl MeshTxBuilder {
         if self.withdrawal_item.is_some() {
             self.queue_withdrawal();
         }
-        if !self.adding_plutus_withdrawal {
-            let withdrawal_item = Withdrawal::PubKeyWithdrawal(PubKeyWithdrawal {
-                address: stake_address.to_string(),
-                coin,
-            });
-            self.withdrawal_item = Some(withdrawal_item);
-        } else {
-            let withdrawal_item = Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
-                address: stake_address.to_string(),
-                coin,
-                script_source: None,
-                redeemer: None,
-            });
-            self.withdrawal_item = Some(withdrawal_item);
+
+        match self.adding_plutus_withdrawal {
+            Some(_) => {
+                let withdrawal_item = Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
+                    address: stake_address.to_string(),
+                    coin,
+                    script_source: None,
+                    redeemer: None,
+                });
+                self.withdrawal_item = Some(withdrawal_item);
+            }
+            None => {
+                let withdrawal_item = Withdrawal::PubKeyWithdrawal(PubKeyWithdrawal {
+                    address: stake_address.to_string(),
+                    coin,
+                });
+                self.withdrawal_item = Some(withdrawal_item);
+            }
         }
-        self.adding_plutus_withdrawal = false;
         self
     }
 
@@ -123,11 +170,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn withdrawal_script(
-        &mut self,
-        script_cbor: &str,
-        version: Option<LanguageVersion>,
-    ) -> &mut Self {
+    pub fn withdrawal_script(&mut self, script_cbor: &str) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
             panic!("Undefined withdrawal")
@@ -148,10 +191,13 @@ impl MeshTxBuilder {
                 withdraw.script_source =
                     Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                         script_cbor: script_cbor.to_string(),
-                        language_version: version
+                        language_version: self
+                            .adding_plutus_withdrawal
+                            .clone()
                             .expect("Plutus withdrawals require a language version"),
                     }));
                 self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
+                self.adding_plutus_withdrawal = None;
             }
         }
         self

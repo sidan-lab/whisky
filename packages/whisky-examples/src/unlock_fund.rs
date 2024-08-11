@@ -26,7 +26,7 @@ pub async fn unlock_fund(
             data: WData::JSON(redeemer.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
         })
-        .tx_in_script(&script.script_cbor, Some(script.language_version))
+        .tx_in_script(&script.script_cbor)
         .change_address(my_address)
         .tx_in_collateral(
             &collateral.input.tx_hash,

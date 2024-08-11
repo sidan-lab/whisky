@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod mesh_tx_builder_core_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::model::{Asset, Budget, LanguageVersion};
+    use sidan_csl_rs::model::{Asset, Budget};
     use whisky::{
         builder::{MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
         core::common::{builtin_byte_string, con_str0},
@@ -127,7 +127,6 @@ mod mesh_tx_builder_core_tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998",
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
-                LanguageVersion::V2,
                 100,
             )
             .tx_in_datum_value(JSON(data.clone()))
@@ -164,7 +163,7 @@ mod mesh_tx_builder_core_tests {
                 vec![asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
-            .tx_in_script(script_cbor, Some(LanguageVersion::V2))
+            .tx_in_script(script_cbor)
             .tx_in_datum_value(JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(WRedeemer {
                 data: JSON(data.clone()),
@@ -203,7 +202,6 @@ mod mesh_tx_builder_core_tests {
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998",
                 0,
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
-                LanguageVersion::V2,
                 100,
             )
             .tx_in_datum_value(JSON(data.clone()))
@@ -245,7 +243,6 @@ mod mesh_tx_builder_core_tests {
             "63210437b543c8a11afbbc6765aa205eb2733cb74e2805afd4c1c8cb72bd8e22",
             0,
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700",
-            Some(LanguageVersion::V2),
             100,
         )
         .mint_redeemer_value(WRedeemer {

@@ -72,7 +72,6 @@ mod int_tests {
                 cns_token_mp_script_ref_txhash,
                 cns_token_mp_script_ref_txid.parse::<u32>().unwrap(),
                 cns_policy_id,
-                Some(LanguageVersion::V2),
                 100,
             )
             .mint_redeemer_value(WRedeemer {
@@ -116,7 +115,6 @@ mod int_tests {
                 record_validator_script_ref_txhash,
                 record_validator_script_ref_txid.parse::<u32>().unwrap(),
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
-                LanguageVersion::V2,
                 100,
             )
             .tx_out(
@@ -261,7 +259,7 @@ mod int_tests {
             .change_address("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw")
             .withdrawal_plutus_script_v2()
             .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
-            .withdrawal_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
+            .withdrawal_script("5251010000322253330034a229309b2b2b9a01")
             .withdrawal_redeemer_value(WRedeemer {
                 data: JSON(con_str0(json!([])).to_string()),
                 ex_units: Budget {
