@@ -1,8 +1,6 @@
-use builder::serialize_tx_body;
+use crate::{core::builder::serialize_tx_body, *};
 use model::{MeshTxBuilderBody, Protocol};
 use wasm::WasmResult;
-
-use crate::*;
 
 /// ## WASM Transaction building method
 ///

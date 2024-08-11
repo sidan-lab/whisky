@@ -21,7 +21,7 @@
 //!
 //! ```rust
 //! use whisky::{
-//!     builder::{IMeshTxBuilder, MeshTxBuilder},
+//!     builder::MeshTxBuilder,
 //!     model::{Asset, UTxO},
 //! };
 //!
@@ -45,13 +45,12 @@
 //!
 //! ## APIs
 //!
-//! All user facing APIs are documentation at the [builder interface](builder/trait.IMeshTxBuilder.html).
-
+//! All user facing APIs are documentation at the [builder interface](builder/struct.MeshTxBuilder.html).
+//!
 pub mod builder;
 pub mod provider;
 pub mod service;
 pub mod utils;
-pub use sidan_csl_rs::builder as builder_core;
 pub use sidan_csl_rs::core;
 pub use sidan_csl_rs::csl;
 pub use sidan_csl_rs::model;
