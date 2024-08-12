@@ -28,7 +28,6 @@ maestro = { git = "https://github.com/maestro-org/rust-sdk.git", rev = "831f54e8
 sidan-csl-rs = { version = "=0.6.14", path = "../sidan-csl-rs" }
 reqwest = "0.12.5"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
-derive_more = { version = "1.0.0", features = ["deref"] }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

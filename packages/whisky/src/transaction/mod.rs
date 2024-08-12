@@ -2,9 +2,9 @@ use cardano_serialization_lib::JsError;
 
 use crate::builder::MeshTxBuilder;
 
-mod inputs;
-mod mints;
-mod withdrawal;
+pub mod inputs;
+pub mod mints;
+pub mod withdrawal;
 
 #[derive(Debug, Clone)]
 pub enum WhiskyScriptType {
@@ -71,6 +71,11 @@ impl WhiskyTx {
             None => return Err(JsError::from_str("No script type can be inferred, script must be provided after an indicating apis: unlock_from_script, mint_assets, withdraw_from_script")),
         };
         Ok(self)
+    }
+
+    pub async fn build(&mut self) -> Result<String, JsError> {
+        let _ = self.tx_builder.complete(None).await?;
+        Ok(self.tx_builder.tx_hex())
     }
 }
 

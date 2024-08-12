@@ -1,11 +1,14 @@
 use cardano_serialization_lib::JsError;
-use sidan_csl_rs::model::{LanguageVersion, UTxO, UtxoInput, UtxoOutput};
+use sidan_csl_rs::{
+    core::utils::get_script_hash,
+    model::{LanguageVersion, UTxO},
+};
 
 use crate::builder::{WData, WRedeemer};
 
-use super::{RefScriptInput, WhiskyTx};
+use super::WhiskyTx;
 
-pub struct Input {
+pub struct TxInput {
     pub utxo: UTxO,
     pub datum: InputDatum,
 }
@@ -19,10 +22,10 @@ impl WhiskyTx {
     pub fn unlock_with_full_eval(
         &mut self,
         language_version: LanguageVersion,
-        input: &[Input],
+        input: &[TxInput],
         redeemer: WRedeemer,
         script_cbor: &str,
-        ref_script_input: Option<RefScriptInput>,
+        ref_script_input: Option<UTxO>,
     ) -> Result<&mut Self, JsError> {
         for input in input.iter() {
             let utxo = &input.utxo;
@@ -45,26 +48,14 @@ impl WhiskyTx {
             }
             match ref_script_input.clone() {
                 Some(ref_script_input) => {
-                    self.tx_builder.spending_tx_in_reference(
-                        &ref_script_input.tx_hash,
-                        ref_script_input.tx_index,
-                        &ref_script_input.script_hash,
-                        ref_script_input.script_size,
-                    );
-                    self.tx_builder.input_for_evaluation(UTxO {
-                        input: UtxoInput {
-                            tx_hash: ref_script_input.tx_hash,
-                            output_index: ref_script_input.tx_index,
-                        },
-                        output: UtxoOutput {
-                            address: "".to_string(),
-                            amount: vec![],
-                            data_hash: None,
-                            plutus_data: None,
-                            script_ref: Some(script_cbor.to_string()),
-                            script_hash: None,
-                        },
-                    });
+                    self.tx_builder
+                        .spending_tx_in_reference(
+                            &ref_script_input.input.tx_hash,
+                            ref_script_input.input.output_index,
+                            &get_script_hash(script_cbor, language_version.clone())?,
+                            script_cbor.len() / 2,
+                        )
+                        .input_for_evaluation(ref_script_input);
                 }
                 None => {
                     self.tx_builder.tx_in_script(script_cbor);
@@ -72,6 +63,16 @@ impl WhiskyTx {
             }
             self.tx_builder.input_for_evaluation(utxo.clone());
         }
+        Ok(self)
+    }
+
+    pub fn add_collateral(&mut self, collateral: &UTxO) -> Result<&mut Self, JsError> {
+        self.tx_builder.tx_in_collateral(
+            &collateral.input.tx_hash,
+            collateral.input.output_index,
+            collateral.output.amount.clone(),
+            &collateral.output.address,
+        );
         Ok(self)
     }
 }
