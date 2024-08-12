@@ -362,4 +362,44 @@ mod int_tests {
         println!("{}", unsigned_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_mint_two_tokens_with_same_policy() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = mesh.
+        tx_in("b68d2e8340d9454c66b0530de8fdeca5bc829c577217b12f0c0beeb7f42b6b18", 0, vec![Asset::new_from_str("lovelace", "100000000000")], "addr_test1qrfkkp5dwgj07fljdum677pglfm5707hd8nwj5wgfqdhfp0m7kq4cxp4nznl6v9yp2wxvwl2vsh0mk7eq7g97vczj6uqse4e3j")
+        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, vec![Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+        .mint_plutus_script_v2()
+        .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4",  "7465737431")
+        .mint_redeemer_value(WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 7000000,
+                steps: 14000000
+            }})
+        .minting_script("5251010000322253330034a229309b2b2b9a01")
+        .mint_plutus_script_v2()
+        .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737431")
+        .mint_redeemer_value(WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 7000000,
+                steps: 14000000
+            }})
+        .minting_script("5251010000322253330034a229309b2b2b9a01")
+        .change_address("addr_test1qrfkkp5dwgj07fljdum677pglfm5707hd8nwj5wgfqdhfp0m7kq4cxp4nznl6v9yp2wxvwl2vsh0mk7eq7g97vczj6uqse4e3j")
+        .complete_sync(None)
+        .unwrap()
+        .complete_signing()
+        .unwrap();
+
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
 }
