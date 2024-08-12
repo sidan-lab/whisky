@@ -385,7 +385,7 @@ mod int_tests {
             }})
         .minting_script("5251010000322253330034a229309b2b2b9a01")
         .mint_plutus_script_v2()
-        .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737431")
+        .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737432")
         .mint_redeemer_value(WRedeemer {            
             data: JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
