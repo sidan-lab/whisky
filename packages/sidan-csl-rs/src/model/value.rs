@@ -14,7 +14,7 @@ impl Value {
     pub fn from_asset(asset: Asset) -> Self {
         let mut asset_map = HashMap::new();
         asset_map.insert(
-            asset.unit().to_string(),
+            Value::santitize_unit(&asset.unit()),
             asset.quantity().parse::<u64>().unwrap(),
         );
         Value(asset_map)
@@ -23,28 +23,36 @@ impl Value {
     pub fn from_asset_vec(assets: Vec<Asset>) -> Self {
         let mut asset_map = HashMap::new();
         for asset in assets {
-            let current_value = asset_map.entry(asset.unit().to_string()).or_insert(0);
+            let current_value = asset_map
+                .entry(Value::santitize_unit(&asset.unit()))
+                .or_insert(0);
             *current_value += asset.quantity().parse::<u64>().unwrap();
         }
         Value(asset_map)
     }
 
     pub fn add_asset(&mut self, asset: Asset) -> &mut Self {
-        let current_value = self.0.entry(asset.unit().to_string()).or_insert(0);
+        let current_value = self
+            .0
+            .entry(Value::santitize_unit(&asset.unit()))
+            .or_insert(0);
         *current_value += asset.quantity().parse::<u64>().unwrap();
         self
     }
 
     pub fn merge(&mut self, other: Value) -> &mut Self {
         for (key, value) in other.0 {
-            let current_value = self.0.entry(key).or_insert(0);
+            let current_value = self.0.entry(Value::santitize_unit(&key)).or_insert(0);
             *current_value += value;
         }
         self
     }
 
     pub fn negate_asset(&mut self, other: Asset) -> &mut Self {
-        let current_value = self.0.entry(other.unit().to_string()).or_insert(0);
+        let current_value = self
+            .0
+            .entry(Value::santitize_unit(&other.unit()))
+            .or_insert(0);
         let negate_quantity = other.quantity().parse::<u64>().unwrap();
         if *current_value <= negate_quantity {
             self.0.remove(&other.unit());
@@ -56,9 +64,10 @@ impl Value {
 
     pub fn negate_assets(&mut self, other: Value) -> &mut Self {
         for (key, value) in other.0 {
-            let current_value = self.0.entry(key.to_string()).or_insert(0);
+            let unit = Value::santitize_unit(&key);
+            let current_value = self.0.entry(unit.clone()).or_insert(0);
             if *current_value <= value {
-                self.0.remove(&key);
+                self.0.remove(&unit);
             } else {
                 *current_value -= value;
             }
@@ -69,13 +78,17 @@ impl Value {
     pub fn to_asset_vec(&self) -> Vec<Asset> {
         let mut assets = vec![];
         for (unit, quantity) in &self.0 {
-            assets.push(Asset::new(unit.to_string(), quantity.to_string()));
+            assets.push(Asset::new(
+                Value::santitize_unit(unit),
+                quantity.to_string(),
+            ));
         }
         assets
     }
 
     // Accessor
     pub fn get(&self, key: &str) -> u64 {
+        let key = if key.is_empty() { "lovelace" } else { key };
         match self.0.get(key) {
             Some(value) => *value,
             None => 0,
@@ -89,7 +102,11 @@ impl Value {
     // Comparison function
     pub fn geq(&self, other: &Value) -> bool {
         for (key, value) in &other.0 {
-            if self.0.get(key).map_or(false, |v| v < value) {
+            if self
+                .0
+                .get(&Value::santitize_unit(key))
+                .map_or(false, |v| v < value)
+            {
                 return false;
             }
         }
@@ -98,7 +115,11 @@ impl Value {
 
     pub fn leq(&self, other: &Value) -> bool {
         for (key, value) in &other.0 {
-            if self.0.get(key).map_or(false, |v| v > value) {
+            if self
+                .0
+                .get(&Value::santitize_unit(key))
+                .map_or(false, |v| v > value)
+            {
                 return false;
             }
         }
@@ -107,6 +128,14 @@ impl Value {
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    pub fn santitize_unit(unit: &str) -> String {
+        if unit.is_empty() {
+            "lovelace".to_string()
+        } else {
+            unit.to_string()
+        }
     }
 }
 
