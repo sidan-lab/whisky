@@ -31,19 +31,18 @@ impl MeshTxBuilder {
     /// ### Arguments
     ///
     /// * `stake_key_address` - Address of the stake key
-    /// * `coin` - Deposit for certificate registration
     ///
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn register_stake_certificate(&mut self, stake_key_address: &str, coin: u64) -> &mut Self {
+    pub fn register_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
                     stake_key_address: stake_key_address.to_string(),
-                    coin,
+                    coin: Protocol::default().key_deposit,
                 }),
             ));
         self
