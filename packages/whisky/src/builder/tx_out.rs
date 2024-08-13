@@ -15,7 +15,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_out(&mut self, address: &str, amount: Vec<Asset>) -> &mut Self {
+    pub fn tx_out(&mut self, address: &str, amount: &[Asset]) -> &mut Self {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
             self.core
@@ -25,7 +25,7 @@ impl MeshTxBuilder {
         }
         self.tx_output = Some(Output {
             address: address.to_string(),
-            amount,
+            amount: amount.to_vec(),
             datum: None,
             reference_script: None,
         });
@@ -43,7 +43,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_out_datum_hash_value(&mut self, data: WData) -> &mut Self {
+    pub fn tx_out_datum_hash_value(&mut self, data: &WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")
@@ -72,7 +72,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_out_inline_datum_value(&mut self, data: WData) -> &mut Self {
+    pub fn tx_out_inline_datum_value(&mut self, data: &WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
             panic!("Undefined output")

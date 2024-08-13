@@ -8,9 +8,9 @@ use super::{WhiskyScriptType, WhiskyTx};
 impl WhiskyTx {
     pub fn mint_asset(
         &mut self,
-        language_version: LanguageVersion,
-        mint_param: MintParameter,
-        redeemer: WRedeemer,
+        language_version: &LanguageVersion,
+        mint_param: &MintParameter,
+        redeemer: &WRedeemer,
     ) -> Result<&mut Self, JsError> {
         self.tx_builder
             .mint_plutus_script(language_version)

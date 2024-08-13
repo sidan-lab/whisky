@@ -21,26 +21,26 @@ pub enum InputDatum {
 impl WhiskyTx {
     pub fn unlock_with_full_eval(
         &mut self,
-        language_version: LanguageVersion,
+        language_version: &LanguageVersion,
         input: &[TxInput],
-        redeemer: WRedeemer,
+        redeemer: &WRedeemer,
         script_cbor: &str,
         ref_script_input: Option<UTxO>,
     ) -> Result<&mut Self, JsError> {
         for input in input.iter() {
             let utxo = &input.utxo;
             self.tx_builder
-                .spending_plutus_script(language_version.clone())
+                .spending_plutus_script(language_version)
                 .tx_in(
                     &utxo.input.tx_hash,
                     utxo.input.output_index,
-                    utxo.output.amount.clone(),
+                    &utxo.output.amount,
                     &utxo.output.address,
                 )
-                .tx_in_redeemer_value(redeemer.clone());
+                .tx_in_redeemer_value(redeemer);
             match &input.datum {
                 InputDatum::Hash(datum) => {
-                    self.tx_builder.tx_in_datum_value(datum.clone());
+                    self.tx_builder.tx_in_datum_value(datum);
                 }
                 InputDatum::Inline => {
                     self.tx_builder.tx_in_inline_datum_present();
@@ -55,13 +55,13 @@ impl WhiskyTx {
                             &get_script_hash(script_cbor, language_version.clone())?,
                             script_cbor.len() / 2,
                         )
-                        .input_for_evaluation(ref_script_input);
+                        .input_for_evaluation(&ref_script_input);
                 }
                 None => {
                     self.tx_builder.tx_in_script(script_cbor);
                 }
             }
-            self.tx_builder.input_for_evaluation(utxo.clone());
+            self.tx_builder.input_for_evaluation(utxo);
         }
         Ok(self)
     }
@@ -70,7 +70,7 @@ impl WhiskyTx {
         self.tx_builder.tx_in_collateral(
             &collateral.input.tx_hash,
             collateral.input.output_index,
-            collateral.output.amount.clone(),
+            &collateral.output.amount,
             &collateral.output.address,
         );
         Ok(self)

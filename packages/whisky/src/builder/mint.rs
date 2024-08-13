@@ -14,7 +14,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn mint_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+    pub fn mint_plutus_script(&mut self, language_version: &LanguageVersion) -> &mut Self {
         match language_version {
             LanguageVersion::V1 => self.mint_plutus_script_v1(),
             LanguageVersion::V2 => self.mint_plutus_script_v2(),
@@ -215,7 +215,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn mint_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn mint_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
             panic!("Undefined mint");
@@ -226,7 +226,7 @@ impl MeshTxBuilder {
                 Ok(raw_redeemer) => {
                     script_mint.redeemer = Some(Redeemer {
                         data: raw_redeemer,
-                        ex_units: redeemer.ex_units,
+                        ex_units: redeemer.clone().ex_units,
                     });
                     self.mint_item = Some(MintItem::ScriptMint(script_mint));
                 }
@@ -253,7 +253,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         self.mint_redeemer_value(redeemer)
     }
 }

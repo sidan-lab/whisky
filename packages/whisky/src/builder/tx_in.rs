@@ -14,7 +14,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn spending_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+    pub fn spending_plutus_script(&mut self, language_version: &LanguageVersion) -> &mut Self {
         match language_version {
             LanguageVersion::V1 => self.spending_plutus_script_v1(),
             LanguageVersion::V2 => self.spending_plutus_script_v2(),
@@ -74,7 +74,7 @@ impl MeshTxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        amount: Vec<Asset>,
+        amount: &[Asset],
         address: &str,
     ) -> &mut Self {
         if self.tx_in_item.is_some() {
@@ -86,7 +86,7 @@ impl MeshTxBuilder {
                     tx_in: TxInParameter {
                         tx_hash: tx_hash.to_string(),
                         tx_index,
-                        amount: Some(amount),
+                        amount: Some(amount.to_vec()),
                         address: Some(address.to_string()),
                     },
                     script_tx_in: ScriptTxInParameter {
@@ -102,7 +102,7 @@ impl MeshTxBuilder {
                     tx_in: TxInParameter {
                         tx_hash: tx_hash.to_string(),
                         tx_index,
-                        amount: Some(amount),
+                        amount: Some(amount.to_vec()),
                         address: Some(address.to_string()),
                     },
                 });
@@ -178,7 +178,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_in_datum_value(&mut self, data: WData) -> &mut Self {
+    pub fn tx_in_datum_value(&mut self, data: &WData) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -246,7 +246,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let tx_in_item = self.tx_in_item.take();
         if tx_in_item.is_none() {
             panic!("Undefined input")
@@ -261,7 +261,7 @@ impl MeshTxBuilder {
                 Ok(raw_redeemer) => {
                     input.script_tx_in.redeemer = Some(Redeemer {
                         data: raw_redeemer,
-                        ex_units: redeemer.ex_units,
+                        ex_units: redeemer.clone().ex_units,
                     });
                     self.tx_in_item = Some(TxIn::ScriptTxIn(input));
                 }
@@ -346,7 +346,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn spending_reference_tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         self.tx_in_redeemer_value(redeemer)
     }
 
@@ -391,7 +391,7 @@ impl MeshTxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        amount: Vec<Asset>,
+        amount: &[Asset],
         address: &str,
     ) -> &mut Self {
         let collateral_item = self.collateral_item.take();
@@ -405,7 +405,7 @@ impl MeshTxBuilder {
             tx_in: TxInParameter {
                 tx_hash: tx_hash.to_string(),
                 tx_index,
-                amount: Some(amount),
+                amount: Some(amount.to_vec()),
                 address: Some(address.to_string()),
             },
         });

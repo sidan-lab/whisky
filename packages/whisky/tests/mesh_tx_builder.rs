@@ -29,7 +29,7 @@ mod mesh_tx_builder_core_tests {
         mesh.tx_in(
             "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
             1,
-            vec![asset],
+            &[asset],
             "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
         );
     }
@@ -54,11 +54,11 @@ mod mesh_tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                vec![asset],
+                &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .spending_reference_tx_in_inline_datum_present()
-            .spending_reference_tx_in_redeemer_value(WRedeemer {
+            .spending_reference_tx_in_redeemer_value(&WRedeemer {
                 data: JSON(data),
                 ex_units: Budget {
                     mem: 3386819,
@@ -87,11 +87,11 @@ mod mesh_tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                vec![asset],
+                &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
-            .tx_in_datum_value(JSON(data.clone()))
-            .spending_reference_tx_in_redeemer_value(WRedeemer {
+            .tx_in_datum_value(&JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(&WRedeemer {
                 data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
@@ -120,7 +120,7 @@ mod mesh_tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                vec![asset],
+                &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .spending_tx_in_reference(
@@ -129,8 +129,8 @@ mod mesh_tx_builder_core_tests {
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 100,
             )
-            .tx_in_datum_value(JSON(data.clone()))
-            .spending_reference_tx_in_redeemer_value(WRedeemer {
+            .tx_in_datum_value(&JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(&WRedeemer {
                 data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
@@ -160,12 +160,12 @@ mod mesh_tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                vec![asset],
+                &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .tx_in_script(script_cbor)
-            .tx_in_datum_value(JSON(data.clone()))
-            .spending_reference_tx_in_redeemer_value(WRedeemer {
+            .tx_in_datum_value(&JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(&WRedeemer {
                 data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
@@ -195,7 +195,7 @@ mod mesh_tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                vec![asset],
+                &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .spending_tx_in_reference(
@@ -204,8 +204,8 @@ mod mesh_tx_builder_core_tests {
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 100,
             )
-            .tx_in_datum_value(JSON(data.clone()))
-            .spending_reference_tx_in_redeemer_value(WRedeemer {
+            .tx_in_datum_value(&JSON(data.clone()))
+            .spending_reference_tx_in_redeemer_value(&WRedeemer {
                 data: JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
@@ -230,7 +230,7 @@ mod mesh_tx_builder_core_tests {
         mesh.tx_in(
             "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
             3,
-            vec![Asset::new_from_str("lovelace", "9692479606")],
+            &[Asset::new_from_str("lovelace", "9692479606")],
             "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
         )
         .mint_plutus_script_v2()
@@ -245,7 +245,7 @@ mod mesh_tx_builder_core_tests {
             "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700",
             100,
         )
-        .mint_redeemer_value(WRedeemer {
+        .mint_redeemer_value(&WRedeemer {
             data: JSON(con_str0(json!([builtin_byte_string("1234abcd")])).to_string()),
             ex_units: Budget {
                 mem: 3386819,

@@ -14,12 +14,14 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn register_pool_certificate(&mut self, pool_params: PoolParams) -> &mut Self {
+    pub fn register_pool_certificate(&mut self, pool_params: &PoolParams) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
-                CertificateType::RegisterPool(RegisterPool { pool_params }),
+                CertificateType::RegisterPool(RegisterPool {
+                    pool_params: pool_params.clone(),
+                }),
             ));
         self
     }
@@ -140,7 +142,7 @@ impl MeshTxBuilder {
     pub fn vote_delegation_certificate(
         &mut self,
         stake_key_address: &str,
-        drep: DRep,
+        drep: &DRep,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
@@ -148,7 +150,7 @@ impl MeshTxBuilder {
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteDelegation(VoteDelegation {
                     stake_key_address: stake_key_address.to_string(),
-                    drep,
+                    drep: drep.clone(),
                 }),
             ));
         self
@@ -171,7 +173,7 @@ impl MeshTxBuilder {
         &mut self,
         stake_key_address: &str,
         pool_key_hash: &str,
-        drep: DRep,
+        drep: &DRep,
     ) -> &mut Self {
         self.core
             .mesh_tx_builder_body
@@ -180,7 +182,7 @@ impl MeshTxBuilder {
                 CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
                     stake_key_address: stake_key_address.to_string(),
                     pool_key_hash: pool_key_hash.to_string(),
-                    drep,
+                    drep: drep.clone(),
                 }),
             ));
         self
@@ -234,7 +236,7 @@ impl MeshTxBuilder {
     pub fn vote_registration_and_delegation(
         &mut self,
         stake_key_address: &str,
-        drep: DRep,
+        drep: &DRep,
         coin: u64,
     ) -> &mut Self {
         self.core
@@ -243,7 +245,7 @@ impl MeshTxBuilder {
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
                     stake_key_address: stake_key_address.to_string(),
-                    drep,
+                    drep: drep.clone(),
                     coin,
                 }),
             ));
@@ -268,7 +270,7 @@ impl MeshTxBuilder {
         &mut self,
         stake_key_address: &str,
         pool_key_hash: &str,
-        drep: DRep,
+        drep: &DRep,
         coin: u64,
     ) -> &mut Self {
         self.core
@@ -279,7 +281,7 @@ impl MeshTxBuilder {
                     StakeVoteRegistrationAndDelegation {
                         stake_key_address: stake_key_address.to_string(),
                         pool_key_hash: pool_key_hash.to_string(),
-                        drep,
+                        drep: drep.clone(),
                         coin,
                     },
                 ),
@@ -594,7 +596,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn certificate_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn certificate_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
@@ -603,7 +605,7 @@ impl MeshTxBuilder {
         let current_redeemer = match redeemer.data.to_cbor() {
             Ok(raw_redeemer) => Some(Redeemer {
                 data: raw_redeemer,
-                ex_units: redeemer.ex_units,
+                ex_units: redeemer.clone().ex_units,
             }),
             Err(_) => {
                 panic!("Error converting certificate redeemer to CBOR")

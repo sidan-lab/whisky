@@ -8,10 +8,10 @@ use super::{WhiskyScriptType, WhiskyTx};
 impl WhiskyTx {
     pub fn withdraw_from_script(
         &mut self,
-        language_version: LanguageVersion,
+        language_version: &LanguageVersion,
         stake_address: &str,
         withdrawal_amount: u64,
-        redeemer: WRedeemer,
+        redeemer: &WRedeemer,
     ) -> Result<&mut Self, JsError> {
         self.tx_builder
             .withdrawal_plutus_script(language_version)
@@ -34,10 +34,10 @@ mod tests {
     fn test_fn(tx: &mut WhiskyTx) -> Result<&mut WhiskyTx, JsError> {
         let res = tx
             .withdraw_from_script(
-                LanguageVersion::V2,
+                &LanguageVersion::V2,
                 "stake_address",
                 123,
-                WRedeemer {
+                &WRedeemer {
                     ex_units: Budget::default(),
                     data: WData::JSON(con_str0(json!([])).to_string()),
                 },

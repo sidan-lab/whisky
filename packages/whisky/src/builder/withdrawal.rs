@@ -14,7 +14,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn withdrawal_plutus_script(&mut self, language_version: LanguageVersion) -> &mut Self {
+    pub fn withdrawal_plutus_script(&mut self, language_version: &LanguageVersion) -> &mut Self {
         match language_version {
             LanguageVersion::V1 => self.withdrawal_plutus_script_v1(),
             LanguageVersion::V2 => self.withdrawal_plutus_script_v2(),
@@ -214,7 +214,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn withdrawal_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn withdrawal_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
             panic!("Undefined input")
@@ -231,7 +231,7 @@ impl MeshTxBuilder {
                 Ok(raw_redeemer) => {
                     withdraw.redeemer = Some(Redeemer {
                         data: raw_redeemer,
-                        ex_units: redeemer.ex_units,
+                        ex_units: redeemer.clone().ex_units,
                     });
                     self.withdrawal_item = Some(Withdrawal::PlutusScriptWithdrawal(withdraw));
                 }
@@ -252,7 +252,7 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: WRedeemer) -> &mut Self {
+    pub fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         self.withdrawal_redeemer_value(redeemer)
     }
 }

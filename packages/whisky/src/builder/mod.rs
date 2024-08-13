@@ -253,8 +253,8 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn input_for_evaluation(&mut self, input: UTxO) -> &mut Self {
-        self.inputs_for_evaluation.push(input);
+    pub fn input_for_evaluation(&mut self, input: &UTxO) -> &mut Self {
+        self.inputs_for_evaluation.push(input.clone());
         self
     }
 
@@ -270,9 +270,9 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn select_utxos_from(&mut self, extra_inputs: Vec<UTxO>, threshold: u64) -> &mut Self {
+    pub fn select_utxos_from(&mut self, extra_inputs: &[UTxO], threshold: u64) -> &mut Self {
         self.selection_threshold = threshold;
-        self.extra_inputs = extra_inputs;
+        self.extra_inputs.extend(extra_inputs.to_vec());
         self
     }
 
