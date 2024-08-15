@@ -77,16 +77,22 @@ impl MeshCSL {
         let datum_source = input.script_tx_in.datum_source.unwrap();
         let script_source = input.script_tx_in.script_source.unwrap();
         let redeemer = input.script_tx_in.redeemer.unwrap();
-        let csl_datum: csl::DatumSource = match datum_source {
-            DatumSource::ProvidedDatumSource(datum) => {
-                csl::DatumSource::new(&csl::PlutusData::from_hex(&datum.data)?)
-            }
+        let csl_datum: Option<csl::DatumSource> = match datum_source {
+            DatumSource::ProvidedDatumSource(datum) => Some(csl::DatumSource::new(
+                &csl::PlutusData::from_hex(&datum.data)?,
+            )),
             DatumSource::InlineDatumSource(datum) => {
                 let ref_input = csl::TransactionInput::new(
                     &csl::TransactionHash::from_hex(&datum.tx_hash)?,
                     datum.tx_index,
                 );
-                csl::DatumSource::new_ref_input(&ref_input)
+                if &input.tx_in.tx_hash == &datum.tx_hash
+                    && &input.tx_in.tx_index == &datum.tx_index
+                {
+                    None
+                } else {
+                    Some(csl::DatumSource::new_ref_input(&ref_input))
+                }
             }
         };
 
@@ -129,8 +135,14 @@ impl MeshCSL {
                 &to_bignum(redeemer.ex_units.steps),
             ),
         );
+
+        let csl_plutus_witness = match csl_datum {
+            Some(datum) => csl::PlutusWitness::new_with_ref(&csl_script, &datum, &csl_redeemer),
+            None => csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
+        };
+
         self.tx_inputs_builder.add_plutus_script_input(
-            &csl::PlutusWitness::new_with_ref(&csl_script, &csl_datum, &csl_redeemer),
+            &csl_plutus_witness,
             &csl::TransactionInput::new(
                 &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                 input.tx_in.tx_index,
