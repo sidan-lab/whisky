@@ -298,7 +298,7 @@ fn to_drep_registration_cert(
     drep_registration: DRepRegistration,
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_drep_registration(
-        &csl::DrepRegistration::new(
+        &csl::DRepRegistration::new(
             &csl::Address::from_bech32(&drep_registration.voting_key_address)?
                 .payment_cred()
                 .unwrap(),
@@ -311,7 +311,7 @@ fn to_drep_deregistration_cert(
     drep_deregistration: DRepDeregistration,
 ) -> Result<csl::Certificate, JsError> {
     Ok(csl::Certificate::new_drep_deregistration(
-        &csl::DrepDeregistration::new(
+        &csl::DRepDeregistration::new(
             &csl::Address::from_bech32(&drep_deregistration.voting_key_address)?
                 .payment_cred()
                 .unwrap(),
@@ -323,14 +323,14 @@ fn to_drep_deregistration_cert(
 fn to_drep_update_cert(drep_update: DRepUpdate) -> Result<csl::Certificate, JsError> {
     match drep_update.anchor {
         Some(anchor) => Ok(csl::Certificate::new_drep_update(
-            &csl::DrepUpdate::new_with_anchor(
+            &csl::DRepUpdate::new_with_anchor(
                 &csl::Address::from_bech32(&drep_update.voting_key_address)?
                     .payment_cred()
                     .unwrap(),
                 &to_csl_anchor(&anchor)?,
             ),
         )),
-        None => Ok(csl::Certificate::new_drep_update(&csl::DrepUpdate::new(
+        None => Ok(csl::Certificate::new_drep_update(&csl::DRepUpdate::new(
             &csl::Address::from_bech32(&drep_update.voting_key_address)?
                 .payment_cred()
                 .unwrap(),

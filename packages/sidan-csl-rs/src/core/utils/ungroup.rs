@@ -50,7 +50,7 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::Value {
         multi_asset.set_asset(
             &csl::ScriptHash::from_hex(&asset.unit()[0..56]).unwrap(),
             &csl::AssetName::new(name_bytes).unwrap(),
-            csl::BigNum::from_str(&asset.quantity().to_string()).unwrap(),
+            &csl::BigNum::from_str(&asset.quantity().to_string()).unwrap(),
         );
     }
 
