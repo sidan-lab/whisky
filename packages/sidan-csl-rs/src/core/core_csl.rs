@@ -1,7 +1,10 @@
 use crate::{csl, model::*};
 use cardano_serialization_lib::{JsError, MintWitness};
 
-use super::utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value};
+use super::{
+    constants::build_csl_cost_models,
+    utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value},
+};
 
 #[derive(Clone, Debug)]
 pub struct MeshCSL {
@@ -561,7 +564,7 @@ impl MeshCSL {
 
     pub fn add_script_hash(&mut self) -> Result<(), JsError> {
         self.tx_builder
-            .calc_script_data_hash(&csl::TxBuilderConstants::plutus_vasil_cost_models())?;
+            .calc_script_data_hash(&build_csl_cost_models())?;
         Ok(())
     }
 
