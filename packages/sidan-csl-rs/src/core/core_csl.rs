@@ -86,9 +86,7 @@ impl MeshCSL {
                     &csl::TransactionHash::from_hex(&datum.tx_hash)?,
                     datum.tx_index,
                 );
-                if &input.tx_in.tx_hash == &datum.tx_hash
-                    && &input.tx_in.tx_index == &datum.tx_index
-                {
+                if input.tx_in.tx_hash == datum.tx_hash && input.tx_in.tx_index == datum.tx_index {
                     None
                 } else {
                     Some(csl::DatumSource::new_ref_input(&ref_input))
