@@ -21,22 +21,22 @@
 //!
 //! ```rust
 //! use whisky::{
-//!     builder::{IMeshTxBuilder, MeshTxBuilder},
+//!     builder::MeshTxBuilder,
 //!     model::{Asset, UTxO},
 //! };
 //!
 //! async fn my_first_whisky_tx(
 //!     recipient_address: &str,
 //!     my_address: &str,
-//!     inputs: Vec<UTxO>,
+//!     inputs: &[UTxO],
 //! ) -> String {
 //!     let mut mesh = MeshTxBuilder::new_core();
 //!     mesh.tx_out(
 //!         &recipient_address,
-//!         vec![Asset::new_from_str("lovelace", "1000000")],
+//!         &[Asset::new_from_str("lovelace", "1000000")],
 //!     )
 //!         .change_address(my_address)
-//!         .select_utxos_from(inputs.clone(), 5000000)
+//!         .select_utxos_from(inputs, 5000000)
 //!         .complete(None)
 //!         .await;
 //!     mesh.tx_hex()
@@ -45,13 +45,13 @@
 //!
 //! ## APIs
 //!
-//! All user facing APIs are documentation at the [builder interface](builder/trait.IMeshTxBuilder.html).
-
+//! All user facing APIs are documentation at the [builder interface](builder/struct.MeshTxBuilder.html).
+//!
 pub mod builder;
 pub mod provider;
 pub mod service;
+pub mod transaction;
 pub mod utils;
-pub use sidan_csl_rs::builder as builder_core;
 pub use sidan_csl_rs::core;
 pub use sidan_csl_rs::csl;
 pub use sidan_csl_rs::model;

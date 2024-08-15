@@ -16,7 +16,7 @@ use pallas_primitives::babbage::{
 };
 use pallas_traverse::{Era, MultiEraTx};
 use sidan_csl_rs::core::constants::{get_v1_cost_models, get_v2_cost_models};
-use sidan_csl_rs::core::tx_parser::{IMeshTxParser, MeshTxParser};
+use sidan_csl_rs::core::tx_parser::MeshTxParser;
 use sidan_csl_rs::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
 use uplc::{
     tx::{eval_phase_two, ResolvedInput},
@@ -25,6 +25,7 @@ use uplc::{
 
 use crate::service::Evaluator;
 
+#[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}
 
 impl MeshTxEvaluator {
@@ -57,7 +58,7 @@ impl MeshTxEvaluator {
             .iter()
             .flat_map(|tx| {
                 let parsed_tx = MeshTxParser::new(tx);
-                parsed_tx.get_tx_outs_utxo()
+                parsed_tx.unwrap().get_tx_outs_utxo() //TODO: handle error
             })
             .collect();
 

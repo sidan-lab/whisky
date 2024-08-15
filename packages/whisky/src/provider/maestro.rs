@@ -3,10 +3,7 @@ use maestro::models::transactions::RedeemerEvaluation;
 use sidan_csl_rs::csl::JsError;
 use sidan_csl_rs::model::UTxO;
 use sidan_csl_rs::{
-    core::{
-        tx_parser::{IMeshTxParser, MeshTxParser},
-        utils::calculate_tx_hash,
-    },
+    core::{tx_parser::MeshTxParser, utils::calculate_tx_hash},
     model::{Action, Budget, RedeemerTag},
 };
 use std::error::Error;
@@ -29,6 +26,7 @@ pub struct AdditionalUtxo {
     pub txout_cbor: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct Maestro {
     api_key: String,
     http_client: reqwest::Client,
@@ -116,6 +114,7 @@ impl Maestro {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct MaestroProvider {
     pub maestro_client: Maestro,
 }
@@ -140,12 +139,13 @@ impl Evaluator for MaestroProvider {
             .flat_map(|tx| {
                 let parsed_tx = MeshTxParser::new(tx);
                 parsed_tx
+                    .unwrap() //TODO: add error handling
                     .get_tx_outs_cbor()
                     .iter()
                     .enumerate() // Add this line to get the index
                     .map(|(index, txout_cbor)| AdditionalUtxo {
-                        tx_hash: calculate_tx_hash(tx),
-                        index: index as u32, // Use the index here
+                        tx_hash: calculate_tx_hash(tx).unwrap(), // TODO: add error handling
+                        index: index as u32,                     // Use the index here
                         txout_cbor: txout_cbor.to_string(),
                     })
                     .collect::<Vec<AdditionalUtxo>>()

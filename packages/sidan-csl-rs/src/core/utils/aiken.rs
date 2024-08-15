@@ -44,12 +44,11 @@ pub fn js_apply_params_to_script(
     param_type: BuilderDataType,
 ) -> Result<String, JsError> {
     let mut params_to_apply: Vec<&str> = vec![];
-
     for param in params.iter() {
         params_to_apply.push(param);
     }
-
-    apply_params_to_script(plutus_script, &params_to_apply, param_type)
+    let param_script = apply_params_to_script(plutus_script, &params_to_apply, param_type)?;
+    Ok(param_script)
 }
 
 pub fn apply_params_to_script(

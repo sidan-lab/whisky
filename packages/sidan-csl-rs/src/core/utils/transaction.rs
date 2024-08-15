@@ -1,4 +1,5 @@
-use crate::{csl, model::*, *};
+use crate::{csl, *};
+use cardano_serialization_lib::JsError;
 use cryptoxide::blake2b::Blake2b;
 
 pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
@@ -7,16 +8,13 @@ pub(crate) fn blake2b256(data: &[u8]) -> [u8; 32] {
     out
 }
 
-#[wasm_bindgen]
-pub fn calculate_tx_hash(tx_hex: &str) -> String {
-    let csl_tx = csl::FixedTransaction::from_hex(tx_hex).unwrap();
-    csl::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex()
+pub fn calculate_tx_hash(tx_hex: &str) -> Result<String, JsError> {
+    let csl_tx = csl::FixedTransaction::from_hex(tx_hex)?;
+    Ok(csl::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex())
 }
 
-#[wasm_bindgen]
-pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
-    let unsigned_transaction: csl::FixedTransaction =
-        csl::FixedTransaction::from_hex(&tx_hex).unwrap();
+pub fn sign_transaction(tx_hex: &str, signing_keys: &[&str]) -> Result<String, JsError> {
+    let unsigned_transaction: csl::FixedTransaction = csl::FixedTransaction::from_hex(tx_hex)?;
     let mut witness_set = unsigned_transaction.witness_set();
     let mut vkey_witnesses = witness_set
         .vkeys()
@@ -28,7 +26,7 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
         } else {
             key.to_string()
         };
-        let skey = csl::PrivateKey::from_hex(&clean_hex).unwrap();
+        let skey = csl::PrivateKey::from_hex(&clean_hex)?;
         let vkey_witness = csl::make_vkey_witness(
             &csl::TransactionHash::from(blake2b256(&unsigned_transaction.raw_body())),
             &skey,
@@ -43,16 +41,14 @@ pub fn sign_transaction(tx_hex: String, signing_keys: JsVecString) -> String {
             &unsigned_transaction.raw_witness_set(),
             raw_auxiliary_data,
             true,
-        )
-        .unwrap(),
+        )?,
         None => csl::FixedTransaction::new(
             &unsigned_transaction.raw_body(),
             &witness_set.to_bytes(),
             true,
-        )
-        .unwrap(),
+        )?,
     };
-    signed_transaction.to_hex()
+    Ok(signed_transaction.to_hex())
 }
 
 // #[test]

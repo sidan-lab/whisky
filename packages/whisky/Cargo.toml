@@ -1,6 +1,6 @@
 [package]
 name = "whisky"
-version = "0.6.14"
+version = "0.7.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-cardano-serialization-lib = "12.0.0-beta.2"
+cardano-serialization-lib = "12.0.0-beta.6"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -18,17 +18,16 @@ cryptoxide = "0.4.4"
 serde-wasm-bindgen = "0.6.5"
 async-trait = "0.1.79"
 uplc = "=1.0.29-alpha"
-wasm-bindgen = { version = "=0.2.90", features = ["serde-serialize"] }
+wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
 pallas-codec = "0.22.0"
 pallas-primitives = "0.22.0"
 pallas-traverse = "0.22.0"
 maestro = { git = "https://github.com/maestro-org/rust-sdk.git", rev = "831f54e8ead69951444d10597e50c0d882d11471" }
-sidan-csl-rs = { version = "=0.6.14", path = "../sidan-csl-rs" }
+sidan-csl-rs = { version = "=0.7.0", path = "../sidan-csl-rs" }
 reqwest = "0.12.5"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
-derive_more = { version = "1.0.0", features = ["deref"] }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use cardano_serialization_lib::JsError;
 
-use sidan_csl_rs::model::{Action, MintItem, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO};
+use sidan_csl_rs::model::{
+    Action, Certificate, MintItem, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO, Withdrawal,
+};
 
 use crate::builder::MeshTxBuilder;
 
@@ -45,10 +47,24 @@ impl TxEvaluation for MeshTxBuilder {
                     }
                 }
                 RedeemerTag::Cert => {
-                    // TODO
+                    let cert_item = &mut self.core.mesh_tx_builder_body.certificates
+                        [redeemer_evaluation.index as usize];
+                    if let Certificate::ScriptCertificate(cert) = cert_item {
+                        let redeemer: &mut Redeemer = cert.redeemer.as_mut().unwrap();
+                        redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
+                        redeemer.ex_units.steps =
+                            redeemer_evaluation.budget.steps * multiplier / 100;
+                    }
                 }
                 RedeemerTag::Reward => {
-                    // TODO
+                    let withdrawal_item = &mut self.core.mesh_tx_builder_body.withdrawals
+                        [redeemer_evaluation.index as usize];
+                    if let Withdrawal::PlutusScriptWithdrawal(withdrawal) = withdrawal_item {
+                        let redeemer: &mut Redeemer = withdrawal.redeemer.as_mut().unwrap();
+                        redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
+                        redeemer.ex_units.steps =
+                            redeemer_evaluation.budget.steps * multiplier / 100;
+                    }
                 }
             }
         }
