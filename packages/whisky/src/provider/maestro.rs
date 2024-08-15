@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use maestro::models::transactions::RedeemerEvaluation;
+use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use sidan_csl_rs::csl::JsError;
 use sidan_csl_rs::model::UTxO;
 use sidan_csl_rs::{
