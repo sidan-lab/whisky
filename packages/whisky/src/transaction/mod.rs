@@ -74,7 +74,7 @@ impl WhiskyTx {
     }
 
     pub async fn build(&mut self) -> Result<String, JsError> {
-        let _ = self.tx_builder.complete(None).await?;
+        self.tx_builder.complete(None).await?;
         Ok(self.tx_builder.tx_hex())
     }
 }
