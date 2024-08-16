@@ -73,10 +73,10 @@ pub struct InlineDatumSource {
     pub tx_index: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ScriptSourceInfo {
-    pub tx_hash: String,
-    pub tx_index: u32,
-    pub spending_script_hash: Option<String>,
-}
+// #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// #[serde(rename_all = "camelCase")]
+// pub struct ScriptSourceInfo {
+//     pub tx_hash: String,
+//     pub tx_index: u32,
+//     pub spending_script_hash: Option<String>,
+// }

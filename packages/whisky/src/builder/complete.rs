@@ -24,10 +24,12 @@ impl MeshTxBuilder {
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
+                let inputs_for_evaluation: Vec<_> =
+                    self.inputs_for_evaluation.values().cloned().collect();
                 let tx_evaluation_result = evaluator
                     .evaluate_tx(
                         &self.core.mesh_csl.tx_hex,
-                        &self.inputs_for_evaluation.clone(),
+                        &inputs_for_evaluation,
                         &self.chained_txs.clone(),
                     )
                     .await;
