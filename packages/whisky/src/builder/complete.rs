@@ -35,12 +35,11 @@ impl MeshTxBuilder {
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
-                    Err(err) => {
-                        return Err(JsError::from_str(&format!(
-                            "Error evaluating transaction: {:?}",
-                            err
-                        )))
-                    }
+                    Err(err) => return Err(JsError::from_str(&format!(
+                        "Error evaluating transaction - tx_hex: [ {} ] ,Error message: [ {:?} ]",
+                        self.tx_hex(),
+                        err
+                    ))),
                 }
             }
             None => self,
