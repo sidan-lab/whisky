@@ -57,8 +57,8 @@ impl MeshTxBuilder {
     /// * `Self` - A new MeshTxBuilder instance
     pub fn new(param: MeshTxBuilderParam) -> Self {
         MeshTxBuilder {
-            core: MeshTxBuilderCore::new_core(None),
-            protocol_params: param.params,
+            core: MeshTxBuilderCore::new_core(param.params.clone()),
+            protocol_params: param.params.clone(),
             tx_in_item: None,
             withdrawal_item: None,
             mint_item: None,
@@ -322,6 +322,22 @@ impl MeshTxBuilder {
     pub fn select_utxos_from(&mut self, extra_inputs: &[UTxO], threshold: u64) -> &mut Self {
         self.selection_threshold = threshold;
         self.extra_inputs.extend(extra_inputs.to_vec());
+        self
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Selects the network to use, primarily to decide which cost models to use for evaluation and calculating script integrity hash
+    ///
+    /// ### Arguments
+    ///
+    /// * `network` - The network the current Tx is being built for. Custom Network takes in a vec of cost models
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn network(&mut self, network: Network) -> &mut Self {
+        self.core.mesh_tx_builder_body.network = Some(network);
         self
     }
 

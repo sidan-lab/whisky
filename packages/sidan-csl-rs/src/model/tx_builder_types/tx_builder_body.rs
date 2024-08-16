@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Certificate, Datum, Metadata, MintItem, Output, PubKeyTxIn, RefTxIn, TxIn, ValidityRange,
-    Withdrawal,
+    Certificate, Datum, Metadata, MintItem, Network, Output, PubKeyTxIn, RefTxIn, TxIn,
+    ValidityRange, Withdrawal,
 };
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -21,4 +21,5 @@ pub struct MeshTxBuilderBody {
     pub validity_range: ValidityRange,
     pub certificates: Vec<Certificate>,
     pub signing_key: Vec<String>,
+    pub network: Option<Network>,
 }
