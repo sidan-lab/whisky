@@ -112,9 +112,9 @@ impl Evaluator for MeshTxEvaluator {
 fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
     if cost_model_list.len() < 2 {
-        return Err(JsError::from_str(&format!(
-            "Cost models have to contain at least PlutusV1 and PlutusV2 costs"
-        )));
+        return Err(JsError::from_str(
+            "Cost models have to contain at least PlutusV1 and PlutusV2 costs",
+        ));
     };
     Ok(CostMdls {
         plutus_v1: Some(cost_model_list[0].clone()),

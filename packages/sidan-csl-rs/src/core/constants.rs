@@ -128,7 +128,7 @@ pub fn get_cost_models_from_network(network: &Network) -> Vec<Vec<i64>> {
 pub fn build_csl_cost_models(network: &Network) -> csl::Costmdls {
     let mut csl_cost_mdls = csl::Costmdls::new();
     let cost_model_list = get_cost_models_from_network(network);
-    for i in 0..cost_model_list.len() {
+    (0..cost_model_list.len()).for_each(|i| {
         let current_cost_model = &cost_model_list[i];
         if i == 0 {
             csl_cost_mdls.insert(
@@ -165,7 +165,7 @@ pub fn build_csl_cost_models(network: &Network) -> csl::Costmdls {
                 ),
             );
         }
-    }
+    });
 
     csl_cost_mdls
 }

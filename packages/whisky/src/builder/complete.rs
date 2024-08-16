@@ -35,7 +35,7 @@ impl MeshTxBuilder {
                         &self.core.mesh_csl.tx_hex,
                         &inputs_for_evaluation,
                         &self.chained_txs.clone(),
-                        &network,
+                        network,
                     )
                     .await;
                 match tx_evaluation_result {
