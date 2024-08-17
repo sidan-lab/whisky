@@ -60,7 +60,10 @@ pub fn serialize_tx_body(
     )?;
     MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
 
-    mesh_csl.add_script_hash()?;
+    match mesh_tx_builder_body.network {
+        Some(current_network) => mesh_csl.add_script_hash(current_network)?,
+        None => mesh_csl.add_script_hash(Network::Mainnet)?,
+    };
     // if self.mesh_tx_builder_body.change_address != "" {
     //     let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
     //     let collateral_vec: Vec<u64> = collateral_inputs
@@ -162,6 +165,7 @@ impl MeshTxBuilderCore {
                     invalid_hereafter: None,
                 },
                 signing_key: vec![],
+                network: None,
             },
             tx_evaluation_multiplier_percentage: 110,
         }

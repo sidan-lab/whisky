@@ -7,6 +7,8 @@ mod tx_in;
 mod tx_out;
 mod withdrawal;
 
+use std::collections::HashMap;
+
 use cardano_serialization_lib::JsError;
 pub use data::*;
 use sidan_csl_rs::{core::algo::select_utxos, core::builder::*, model::*};
@@ -31,7 +33,7 @@ pub struct MeshTxBuilder {
     pub extra_inputs: Vec<UTxO>,
     pub selection_threshold: u64,
     pub chained_txs: Vec<String>,
-    pub inputs_for_evaluation: Vec<UTxO>,
+    pub inputs_for_evaluation: HashMap<String, UTxO>,
 }
 
 pub struct MeshTxBuilderParam {
@@ -55,8 +57,8 @@ impl MeshTxBuilder {
     /// * `Self` - A new MeshTxBuilder instance
     pub fn new(param: MeshTxBuilderParam) -> Self {
         MeshTxBuilder {
-            core: MeshTxBuilderCore::new_core(None),
-            protocol_params: param.params,
+            core: MeshTxBuilderCore::new_core(param.params.clone()),
+            protocol_params: param.params.clone(),
             tx_in_item: None,
             withdrawal_item: None,
             mint_item: None,
@@ -74,7 +76,7 @@ impl MeshTxBuilder {
             extra_inputs: vec![],
             selection_threshold: 5_000_000,
             chained_txs: vec![],
-            inputs_for_evaluation: vec![],
+            inputs_for_evaluation: HashMap::new(),
         }
     }
 
@@ -254,7 +256,54 @@ impl MeshTxBuilder {
     ///
     /// * `Self` - The MeshTxBuilder instance
     pub fn input_for_evaluation(&mut self, input: &UTxO) -> &mut Self {
-        self.inputs_for_evaluation.push(input.clone());
+        let utxo_id = format!("{}{}", input.input.tx_hash, input.input.output_index);
+        let current_utxo = self.inputs_for_evaluation.get(&utxo_id);
+        match current_utxo {
+            Some(current_utxo) => {
+                let UtxoOutput {
+                    address,
+                    amount,
+                    data_hash,
+                    plutus_data,
+                    script_ref,
+                    script_hash,
+                } = input.clone().output;
+                let UtxoOutput {
+                    data_hash: current_data_hash,
+                    plutus_data: current_plutus_data,
+                    script_ref: current_script_ref,
+                    script_hash: current_script_hash,
+                    ..
+                } = current_utxo.output.clone();
+                let updated_utxo = UTxO {
+                    output: UtxoOutput {
+                        address,
+                        amount,
+                        data_hash: match data_hash {
+                            Some(_) => data_hash,
+                            None => current_data_hash,
+                        },
+                        plutus_data: match plutus_data {
+                            Some(_) => plutus_data,
+                            None => current_plutus_data,
+                        },
+                        script_ref: match script_ref {
+                            Some(_) => script_ref,
+                            None => current_script_ref,
+                        },
+                        script_hash: match script_hash {
+                            Some(_) => script_hash,
+                            None => current_script_hash,
+                        },
+                    },
+                    ..input.clone()
+                };
+                self.inputs_for_evaluation.insert(utxo_id, updated_utxo);
+            }
+            None => {
+                self.inputs_for_evaluation.insert(utxo_id, input.clone());
+            }
+        }
         self
     }
 
@@ -273,6 +322,22 @@ impl MeshTxBuilder {
     pub fn select_utxos_from(&mut self, extra_inputs: &[UTxO], threshold: u64) -> &mut Self {
         self.selection_threshold = threshold;
         self.extra_inputs.extend(extra_inputs.to_vec());
+        self
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Selects the network to use, primarily to decide which cost models to use for evaluation and calculating script integrity hash
+    ///
+    /// ### Arguments
+    ///
+    /// * `network` - The network the current Tx is being built for. Custom Network takes in a vec of cost models
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The MeshTxBuilder instance
+    pub fn network(&mut self, network: Network) -> &mut Self {
+        self.core.mesh_tx_builder_body.network = Some(network);
         self
     }
 
@@ -469,7 +534,7 @@ impl MeshTxBuilder {
                 .mesh_tx_builder_body
                 .inputs
                 .push(pub_key_input.clone());
-            self.inputs_for_evaluation.push(input);
+            self.input_for_evaluation(&input);
         }
         Ok(())
     }

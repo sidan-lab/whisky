@@ -24,20 +24,28 @@ impl MeshTxBuilder {
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
+                let network = match &self.core.mesh_tx_builder_body.network {
+                    Some(builder_network) => builder_network,
+                    None => &Network::Mainnet,
+                };
+                let inputs_for_evaluation: Vec<_> =
+                    self.inputs_for_evaluation.values().cloned().collect();
                 let tx_evaluation_result = evaluator
                     .evaluate_tx(
                         &self.core.mesh_csl.tx_hex,
-                        &self.inputs_for_evaluation.clone(),
+                        &inputs_for_evaluation,
                         &self.chained_txs.clone(),
+                        network,
                     )
                     .await;
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
                     Err(err) => {
                         return Err(JsError::from_str(&format!(
-                            "Error evaluating transaction: {:?}",
-                            err
-                        )))
+                        "Error evaluating transaction - tx_hex: [ {} ] ,Error message: [ {:?} ]",
+                        self.tx_hex(),
+                        err
+                    )))
                     }
                 }
             }

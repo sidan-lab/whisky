@@ -3,6 +3,7 @@ use cardano_serialization_lib as csl;
 use csl::JsError;
 use pallas_primitives::alonzo::RedeemerTag as PRedeemerTag;
 use pallas_primitives::conway::PlutusV2Script;
+use sidan_csl_rs::core::constants::get_cost_models_from_network;
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 use uplc::Fragment;
@@ -15,9 +16,8 @@ use pallas_primitives::babbage::{
     PseudoScript, ScriptRef, TransactionOutput, Value,
 };
 use pallas_traverse::{Era, MultiEraTx};
-use sidan_csl_rs::core::constants::{get_v1_cost_models, get_v2_cost_models};
 use sidan_csl_rs::core::tx_parser::MeshTxParser;
-use sidan_csl_rs::model::{Action, Asset, Budget, RedeemerTag, UTxO, UtxoOutput};
+use sidan_csl_rs::model::{Action, Asset, Budget, Network, RedeemerTag, UTxO, UtxoOutput};
 use uplc::{
     tx::{eval_phase_two, ResolvedInput},
     Hash, TransactionInput,
@@ -46,6 +46,7 @@ impl MeshTxEvaluator {
         tx_hex: &str,
         inputs: &[UTxO],
         additional_txs: &[String],
+        network: &Network,
     ) -> Result<Vec<Action>, JsError> {
         let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
         let mtx = MultiEraTx::decode_for_era(Era::Babbage, &tx_bytes);
@@ -68,7 +69,7 @@ impl MeshTxEvaluator {
         eval_phase_two(
             &tx,
             &to_pallas_utxos(&all_inputs)?,
-            Some(&get_cost_mdls()),
+            Some(&get_cost_mdls(network)?),
             None,
             &SlotConfig::default(),
             false,
@@ -102,16 +103,23 @@ impl Evaluator for MeshTxEvaluator {
         tx_hex: &str,
         inputs: &[UTxO],
         additional_txs: &[String],
+        network: &Network,
     ) -> Result<Vec<Action>, JsError> {
-        self.evaluate_tx_sync(tx_hex, inputs, additional_txs)
+        self.evaluate_tx_sync(tx_hex, inputs, additional_txs, network)
     }
 }
 
-fn get_cost_mdls() -> CostMdls {
-    CostMdls {
-        plutus_v1: Some(get_v1_cost_models()),
-        plutus_v2: Some(get_v2_cost_models()),
-    }
+fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
+    let cost_model_list = get_cost_models_from_network(network);
+    if cost_model_list.len() < 2 {
+        return Err(JsError::from_str(
+            "Cost models have to contain at least PlutusV1 and PlutusV2 costs",
+        ));
+    };
+    Ok(CostMdls {
+        plutus_v1: Some(cost_model_list[0].clone()),
+        plutus_v2: Some(cost_model_list[1].clone()),
+    })
 }
 
 fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
@@ -439,7 +447,8 @@ mod test {
                   script_ref: Some("5655010000322223253330054a229309b2b1bad0025735".to_string())
               }
           }],
-          &[]
+          &[],
+          &Network::Mainnet
       );
 
         let redeemers = result.unwrap();

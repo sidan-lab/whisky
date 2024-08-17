@@ -23,6 +23,7 @@ pub struct Protocol {
     pub collateral_percent: f64,
     pub max_collateral_inputs: i32,
     pub coins_per_utxo_size: u64,
+    pub min_fee_ref_script_cost_per_byte: u64,
 }
 
 impl Default for Protocol {
@@ -47,6 +48,7 @@ impl Default for Protocol {
             collateral_percent: 150.0,
             max_collateral_inputs: 3,
             coins_per_utxo_size: 4310,
+            min_fee_ref_script_cost_per_byte: 15,
             decentralisation: 0.0,
         }
     }

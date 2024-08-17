@@ -572,9 +572,9 @@ impl MeshCSL {
         Ok(())
     }
 
-    pub fn add_script_hash(&mut self) -> Result<(), JsError> {
+    pub fn add_script_hash(&mut self, network: Network) -> Result<(), JsError> {
         self.tx_builder
-            .calc_script_data_hash(&build_csl_cost_models())?;
+            .calc_script_data_hash(&build_csl_cost_models(&network))?;
         Ok(())
     }
 
