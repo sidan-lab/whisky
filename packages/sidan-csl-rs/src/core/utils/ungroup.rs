@@ -31,6 +31,7 @@ pub fn build_tx_builder(params: Option<Protocol>) -> csl::TransactionBuilder {
             ),
         ))
         .ref_script_coins_per_byte(&csl::UnitInterval::new(&to_bignum(0), &to_bignum(10000)))
+        .deduplicate_explicit_ref_inputs_with_regular_inputs(true)
         .build()
         .unwrap();
     csl::TransactionBuilder::new(&cfg)
