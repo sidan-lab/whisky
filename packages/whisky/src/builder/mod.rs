@@ -469,26 +469,26 @@ impl MeshTxBuilder {
         let mut required_assets = Value::new();
 
         for output in &self.core.mesh_tx_builder_body.outputs {
-            let output_value = Value::from_asset_vec(output.amount.clone());
-            required_assets.merge(output_value);
+            let output_value = Value::from_asset_vec(&output.amount);
+            required_assets.merge(&output_value);
         }
 
         for input in &self.core.mesh_tx_builder_body.inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input_value =
-                        Value::from_asset_vec(pub_key_tx_in.tx_in.amount.clone().unwrap());
-                    required_assets.negate_assets(input_value);
+                        Value::from_asset_vec(pub_key_tx_in.tx_in.amount.as_ref().unwrap());
+                    required_assets.negate_value(&input_value);
                 }
                 TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
                     let input_value =
-                        Value::from_asset_vec(simple_script_tx_in.tx_in.amount.clone().unwrap());
-                    required_assets.negate_assets(input_value);
+                        Value::from_asset_vec(simple_script_tx_in.tx_in.amount.as_ref().unwrap());
+                    required_assets.negate_value(&input_value);
                 }
                 TxIn::ScriptTxIn(script_tx_in) => {
                     let input_value =
-                        Value::from_asset_vec(script_tx_in.tx_in.amount.clone().unwrap());
-                    required_assets.negate_assets(input_value);
+                        Value::from_asset_vec(script_tx_in.tx_in.amount.as_ref().unwrap());
+                    required_assets.negate_value(&input_value);
                 }
             }
         }
@@ -498,11 +498,11 @@ impl MeshTxBuilder {
                 MintItem::ScriptMint(script_mint) => &script_mint.mint,
                 MintItem::SimpleScriptMint(simple_script_mint) => &simple_script_mint.mint,
             };
-            let mint_amount = Asset::new(
-                mint.policy_id.clone() + &mint.asset_name,
-                mint.amount.to_string(),
+
+            required_assets.negate_asset(
+                &format!("{}{}", mint.policy_id, &mint.asset_name),
+                mint.amount as u64,
             );
-            required_assets.negate_asset(mint_amount);
         }
 
         let selected_inputs =
