@@ -13,7 +13,7 @@ pub fn js_select_utxos(
         serde_json::from_str(json_str_inputs).expect("Error deserializing inputs");
     let required_assets: Vec<Asset> = serde_json::from_str(json_str_required_assets)
         .expect("Error deserializing required_assets");
-    let required_value = Value::from_asset_vec(required_assets);
+    let required_value = Value::from_asset_vec(&required_assets);
 
     select_utxos(&inputs, required_value, threshold)
         .map_err(|e| JsError::from_str(&e))
@@ -26,7 +26,7 @@ pub fn select_utxos(
     threshold: &str,
 ) -> Result<Vec<UTxO>, String> {
     let mut total_required_assets = required_assets.clone();
-    total_required_assets.add_asset(Asset::new("lovelace".to_string(), threshold.to_string()));
+    total_required_assets.add_asset("lovelace", threshold.parse::<u64>().unwrap());
 
     // Classify the utxos
     let mut only_lovelace: Vec<usize> = vec![];
@@ -47,7 +47,8 @@ pub fn select_utxos(
     let mut use_utxo = |index: usize, total_required_assets: &mut Value| {
         let utxo = inputs[index].clone();
         for asset in utxo.output.amount {
-            total_required_assets.negate_asset(Asset::new(asset.unit(), asset.quantity()));
+            total_required_assets
+                .negate_asset(&asset.unit(), asset.quantity().parse::<u64>().unwrap());
             used_utxos.insert(index);
         }
     };
@@ -137,7 +138,7 @@ fn test_basic_selection() {
     }];
 
     let mut required_assets: Value = Value::new();
-    required_assets.add_asset(Asset::new_from_str("lovelace", "5000000"));
+    required_assets.add_asset("lovelace", 5_000_000);
     let selected_list = select_utxos(&utxo_list, required_assets, "5000000").unwrap();
     assert_eq!(utxo_list, selected_list);
 }
