@@ -97,6 +97,7 @@ impl MeshTxBuilder {
                             tx_index,
                         },
                         simple_script_hash: withdrawal_script_hash.to_string(),
+                        script_size,
                     },
                 ))
             }

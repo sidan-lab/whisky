@@ -59,6 +59,7 @@ impl MeshCSL {
                             &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                             script.ref_tx_in.tx_index,
                         ),
+                        script.script_size,
                     ),
                     &csl::TransactionInput::new(
                         &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
@@ -320,12 +321,14 @@ impl MeshCSL {
                 SimpleScriptSource::InlineSimpleScriptSource(InlineSimpleScriptSource {
                     ref_tx_in,
                     simple_script_hash,
+                    script_size,
                 }) => csl::NativeScriptSource::new_ref_input(
                     &csl::ScriptHash::from_hex(&simple_script_hash).unwrap(),
                     &csl::TransactionInput::new(
                         &csl::TransactionHash::from_hex(&ref_tx_in.tx_hash).unwrap(),
                         ref_tx_in.tx_index,
                     ),
+                    script_size,
                 ),
             },
             None => {
@@ -418,6 +421,7 @@ impl MeshCSL {
                         &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                         script.ref_tx_in.tx_index,
                     ),
+                    script.script_size,
                 )),
                 &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
                 &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
@@ -510,6 +514,7 @@ impl MeshCSL {
                                     &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
                                     script.ref_tx_in.tx_index,
                                 ),
+                                script.script_size,
                             )
                         }
                     },
