@@ -1,4 +1,4 @@
-use cardano_serialization_lib::JsError;
+use sidan_csl_rs::csl::JsError;
 
 use crate::builder::MeshTxBuilder;
 

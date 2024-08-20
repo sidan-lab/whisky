@@ -1,9 +1,8 @@
 use async_trait::async_trait;
-use cardano_serialization_lib as csl;
-use csl::JsError;
 use pallas_primitives::alonzo::RedeemerTag as PRedeemerTag;
 use pallas_primitives::conway::PlutusV2Script;
 use sidan_csl_rs::core::constants::get_cost_models_from_network;
+use sidan_csl_rs::csl::{self, JsError};
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 use uplc::Fragment;

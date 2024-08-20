@@ -1,5 +1,4 @@
-use cardano_serialization_lib::JsError;
-use sidan_csl_rs::model::LanguageVersion;
+use sidan_csl_rs::{csl::JsError, model::LanguageVersion};
 
 use crate::builder::WRedeemer;
 
@@ -25,7 +24,11 @@ impl WhiskyTx {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use sidan_csl_rs::{core::common::con_str0, model::Budget, model::LanguageVersion};
+    use sidan_csl_rs::{
+        core::common::con_str0,
+        csl::JsError,
+        model::{Budget, LanguageVersion},
+    };
 
     use crate::builder::{WData, WRedeemer};
 

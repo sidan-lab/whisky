@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-cardano-serialization-lib = "12.0.0-beta.6"
+cardano-serialization-lib = "12.0.0-beta.7"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

@@ -2876,7 +2876,6 @@ name = "whisky"
 version = "0.7.3"
 dependencies = [
  "async-trait",
- "cardano-serialization-lib",
  "cryptoxide",
  "dotenv",
  "getrandom",

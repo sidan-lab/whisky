@@ -1,6 +1,8 @@
-use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
-    core::builder::serialize_tx_body, core::utils::build_tx_builder, csl, model::*,
+    core::builder::serialize_tx_body,
+    core::utils::build_tx_builder,
+    csl::{self, JsError},
+    model::*,
 };
 
 use super::{MeshTxBuilder, TxEvaluation};
