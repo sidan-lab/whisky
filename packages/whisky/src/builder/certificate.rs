@@ -554,6 +554,7 @@ impl MeshTxBuilder {
                                     tx_index,
                                 },
                                 simple_script_hash: script_hash.to_string(),
+                                script_size,
                             },
                         )),
                     }),

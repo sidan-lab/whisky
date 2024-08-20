@@ -20,6 +20,7 @@ pub struct ProvidedSimpleScriptSource {
 pub struct InlineSimpleScriptSource {
     pub ref_tx_in: RefTxIn,
     pub simple_script_hash: String,
+    pub script_size: usize,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
