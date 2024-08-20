@@ -1,9 +1,11 @@
 use async_trait::async_trait;
-use cardano_serialization_lib::JsError;
 
-use sidan_csl_rs::model::{
-    Action, Certificate, MintItem, Network, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO,
-    Withdrawal,
+use sidan_csl_rs::{
+    csl::JsError,
+    model::{
+        Action, Certificate, MintItem, Network, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO,
+        Withdrawal,
+    },
 };
 
 use crate::builder::MeshTxBuilder;

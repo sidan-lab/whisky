@@ -1,5 +1,5 @@
 use crate::*;
-use cardano_serialization_lib::JsError;
+use csl::JsError;
 use model::Budget;
 
 #[derive(Clone, Debug)]

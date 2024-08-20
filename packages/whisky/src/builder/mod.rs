@@ -9,9 +9,12 @@ mod withdrawal;
 
 use std::collections::HashMap;
 
-use cardano_serialization_lib::JsError;
 pub use data::*;
-use sidan_csl_rs::{core::algo::select_utxos, core::builder::*, model::*};
+use sidan_csl_rs::{
+    core::{algo::select_utxos, builder::*},
+    csl::JsError,
+    model::*,
+};
 pub use tx_eval::*;
 
 use crate::service::*;

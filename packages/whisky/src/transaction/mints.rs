@@ -1,5 +1,7 @@
-use cardano_serialization_lib::JsError;
-use sidan_csl_rs::model::{LanguageVersion, MintParameter};
+use sidan_csl_rs::{
+    csl::JsError,
+    model::{LanguageVersion, MintParameter},
+};
 
 use crate::builder::WRedeemer;
 

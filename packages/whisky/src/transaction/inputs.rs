@@ -1,6 +1,6 @@
-use cardano_serialization_lib::JsError;
 use sidan_csl_rs::{
     core::utils::get_script_hash,
+    csl::JsError,
     model::{LanguageVersion, UTxO},
 };
 
