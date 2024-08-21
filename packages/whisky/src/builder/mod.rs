@@ -380,8 +380,8 @@ impl MeshTxBuilder {
         match withdrawal_item {
             Withdrawal::PlutusScriptWithdrawal(withdrawal) => {
                 match (withdrawal.redeemer, withdrawal.script_source) {
-                    (None, _) => panic!("Redeemer in script input cannot be None"),
-                    (_, None) => panic!("Script source in script input cannot be None"),
+                    (None, _) => panic!("Redeemer in script withdrawal cannot be None"),
+                    (_, None) => panic!("Script source in script withdrawal cannot be None"),
                     _ => {}
                 }
             }
