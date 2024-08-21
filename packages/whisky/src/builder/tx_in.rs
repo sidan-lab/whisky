@@ -46,7 +46,7 @@ impl MeshTxBuilder {
     }
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is spending a Plutus script v2 in the MeshTxBuilder instance
+    /// Indicate that the transaction is spending a Plutus script v3 in the MeshTxBuilder instance
     ///
     /// ### Returns
     ///
