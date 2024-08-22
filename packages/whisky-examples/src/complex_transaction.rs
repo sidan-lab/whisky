@@ -42,8 +42,9 @@ pub async fn complex_transaction(
         script: script_2,
     } = to_mint_2;
 
-    let mut mesh = MeshTxBuilder::new_core();
-    mesh.spending_plutus_script_v2()
+    let mut tx_builder = MeshTxBuilder::new_core();
+    tx_builder
+        .spending_plutus_script_v2()
         .tx_in(
             &script_utxo.input.tx_hash,
             script_utxo.input.output_index,
@@ -90,5 +91,5 @@ pub async fn complex_transaction(
         .complete(None)
         .await?;
 
-    Ok(mesh.tx_hex())
+    Ok(tx_builder.tx_hex())
 }

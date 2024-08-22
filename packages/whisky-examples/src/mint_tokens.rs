@@ -12,15 +12,19 @@ pub async fn mint_tokens(
     inputs: &[UTxO],
     collateral: &UTxO,
 ) -> Result<String, JsError> {
-    let mut mesh = MeshTxBuilder::new_core();
+    let mut tx_builder = MeshTxBuilder::new_core();
 
-    mesh.mint_plutus_script_v2()
+    tx_builder
+        // .mint_plutus_script_v1()
+        .mint_plutus_script_v2()
+        // .mint_plutus_script_v3()
         .mint(
             to_mint_asset.quantity_i128(),
             &to_mint_asset.policy(),
             &to_mint_asset.name(),
         )
         .minting_script(&script.script_cbor)
+        // .mint_tx_in_reference(tx_hash, tx_index, script_hash, script_size) // For reference scripts
         .mint_redeemer_value(&WRedeemer {
             data: WData::JSON(redeemer.to_string()),
             ex_units: Budget { mem: 0, steps: 0 },
@@ -36,5 +40,5 @@ pub async fn mint_tokens(
         .complete(None)
         .await?;
 
-    Ok(mesh.tx_hex())
+    Ok(tx_builder.tx_hex())
 }
