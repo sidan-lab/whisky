@@ -4,7 +4,6 @@ mod int_tests {
         core::common::con_str0,
         model::{Asset, Budget, LanguageVersion},
     };
-    use cardano_serialization_lib::{self as csl, ScriptHash};
     use whisky::{
         builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
         core::utils::merge_vkey_witnesses_to_transaction,
@@ -413,7 +412,7 @@ mod int_tests {
             params: None,
         });
 
-        let reward_address = &csl::RewardAddress::new(0, &csl::Credential::from_scripthash(&ScriptHash::from_hex("237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb").unwrap())).to_address().to_bech32(None).unwrap();
+        let reward_address = "stake_test17q3hjj9svuvmmj5untsrclvlwzs8q528tzj0k3g5hgkzajc23t4fh";
 
         let unsigned_tx = mesh
         .spending_plutus_script_v2()
