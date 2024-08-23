@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 pub use data::*;
 use sidan_csl_rs::{
-    core::{algo::select_utxos, builder::*},
+    core::{algo::select_utxos, builder::*, utils::get_min_utxo_value},
     csl::JsError,
     model::*,
 };
@@ -380,8 +380,8 @@ impl MeshTxBuilder {
         match withdrawal_item {
             Withdrawal::PlutusScriptWithdrawal(withdrawal) => {
                 match (withdrawal.redeemer, withdrawal.script_source) {
-                    (None, _) => panic!("Redeemer in script input cannot be None"),
-                    (_, None) => panic!("Script source in script input cannot be None"),
+                    (None, _) => panic!("Redeemer in script withdrawal cannot be None"),
+                    (_, None) => panic!("Script source in script withdrawal cannot be None"),
                     _ => {}
                 }
             }
@@ -472,10 +472,16 @@ impl MeshTxBuilder {
         let mut required_assets = Value::new();
 
         for output in &self.core.mesh_tx_builder_body.outputs {
-            let output_value = Value::from_asset_vec(&output.amount);
+            let mut output_value = Value::from_asset_vec(&output.amount);
+            let pp = self.protocol_params.clone().unwrap_or_default();
+            if output_value.get("lovelace") == 0 {
+                output_value.merge(&Value::from_asset(&Asset::new(
+                    "lovelace".to_string(),
+                    get_min_utxo_value(output, &pp.coins_per_utxo_size)?,
+                )));
+            }
             required_assets.merge(&output_value);
         }
-
         for input in &self.core.mesh_tx_builder_body.inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {

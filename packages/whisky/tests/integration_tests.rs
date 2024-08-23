@@ -402,4 +402,66 @@ mod int_tests {
         println!("{}", unsigned_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn test_spend_withdraw_and_unreg() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let reward_address = "stake_test17q3hjj9svuvmmj5untsrclvlwzs8q528tzj0k3g5hgkzajc23t4fh";
+
+        let unsigned_tx = mesh
+        .spending_plutus_script_v2()
+        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, &[Asset::new_from_str("lovelace", "6904620")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
+        .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
+        .tx_in_inline_datum_present()
+        .spending_reference_tx_in_redeemer_value(&WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 35588,
+                steps: 13042895
+            }})
+        .spending_plutus_script_v2()
+        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, &[Asset::new_from_str("lovelace", "5159070")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
+        .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
+        .tx_in_inline_datum_present()
+        .spending_reference_tx_in_redeemer_value(&WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 35588,
+                steps: 13042895
+            }})
+        .deregister_stake_certificate(&reward_address)
+        .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
+        .certificate_redeemer_value(&WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 120022,
+                steps: 44400485
+            }})
+        .withdrawal_plutus_script_v2()
+        .withdrawal(&reward_address, 0)
+        .withdrawal_redeemer_value(&WRedeemer {            
+            data: JSON(con_str0(json!([])).to_string()),
+            ex_units: Budget {
+                mem: 120022,
+                steps: 44400485
+            }})
+        .withdrawal_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 953)
+        .read_only_tx_in_reference("d3e7e43ec9c85cfdb90f98fb40bb4edd58fdd3d056e32f827739fe0b915c6eb7", 0)
+        .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
+        .tx_in_collateral("3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814", 7, &[Asset::new_from_str("lovelace", "10000000")], "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x")
+        .required_signer_hash("258633d7e1be92e432054b2a968a0e447fd4441ef58ab8695317826e")
+        .required_signer_hash("5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa")
+        .complete_sync(None)
+        .unwrap()
+        .complete_signing()
+        .unwrap();    
+
+        println!("{}", unsigned_tx)
+    }
 }
