@@ -16,9 +16,9 @@
 
 # whisky
 
-This is a library for building off-chain code on Cardano. It is a cardano-cli like wrapper on cardano-serialization-lib (equivalent to MeshJS’s lower level APIs), supporting serious DApps’ backend on rust codebase. It has an active [F11 proposal](https://cardano.ideascale.com/c/idea/112172) for supporting the development.
+This is a library for building off-chain code on Cardano. It is a cardano-cli-like wrapper on cardano-serialization-lib (equivalent to MeshJS’s lower-level APIs), supporting serious DApps’ backend on the Rust codebase. It has an active [F11 proposal](https://cardano.ideascale.com/c/idea/112172) to support the development.
 
-`whisky` is composed of 2 layers - the root layer `sidan-csl-rs` and user-facing layer `whisky`. `sidan-csl-rs` composed of the core serialization logics with the pattern of json-to-transaction, compilable to wasm. `whisky` is the user-facing package where Rust Cardano developer can import directly for use.
+whisky is composed of 2 layers - the root layer sidan-csl-rs and the user-facing layer whisky. sidan-csl-rs composed of the core serialization logic with JSON-to-transaction pattern, compilable to wasm. whisky is the user-facing package that Rust Cardano developers can import directly for use.
 
 ## Features
 
