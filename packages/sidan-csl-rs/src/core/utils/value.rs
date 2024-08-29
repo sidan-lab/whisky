@@ -10,10 +10,12 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
     match &output.datum {
         Some(datum) => match datum {
             Datum::Inline(str_data) => {
-                tx_output_builder = tx_output_builder.with_plutus_data(&csl::PlutusData::from_hex(&str_data)?);
+                tx_output_builder =
+                    tx_output_builder.with_plutus_data(&csl::PlutusData::from_hex(str_data)?);
             }
             Datum::Hash(str_data_hash) => {
-                tx_output_builder = tx_output_builder.with_data_hash(&csl::DataHash::from_hex(&str_data_hash)?);
+                tx_output_builder =
+                    tx_output_builder.with_data_hash(&csl::DataHash::from_hex(str_data_hash)?);
             }
         },
         None => {}
@@ -21,9 +23,10 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
     match &output.reference_script {
         Some(output_script_source) => match output_script_source {
             OutputScriptSource::ProvidedSimpleScriptSource(simple_script) => {
-                tx_output_builder = tx_output_builder.with_script_ref(&csl::ScriptRef::new_native_script(
-                    &csl::NativeScript::from_hex(&simple_script.script_cbor)?,
-                ));
+                tx_output_builder =
+                    tx_output_builder.with_script_ref(&csl::ScriptRef::new_native_script(
+                        &csl::NativeScript::from_hex(&simple_script.script_cbor)?,
+                    ));
             }
             OutputScriptSource::ProvidedScriptSource(script) => {
                 let version = match script.language_version {
@@ -31,9 +34,10 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
                     LanguageVersion::V2 => csl::Language::new_plutus_v2(),
                     LanguageVersion::V3 => csl::Language::new_plutus_v3(),
                 };
-                tx_output_builder = tx_output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
-                    &csl::PlutusScript::from_hex_with_version(&script.script_cbor, &version)?,
-                ));
+                tx_output_builder =
+                    tx_output_builder.with_script_ref(&csl::ScriptRef::new_plutus_script(
+                        &csl::PlutusScript::from_hex_with_version(&script.script_cbor, &version)?,
+                    ));
             }
         },
         None => {}
@@ -46,7 +50,7 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
         .next()?
         .with_asset_and_min_required_coin_by_utxo_cost(
             &multi_asset,
-            &csl::DataCost::new_coins_per_byte(&to_bignum(coins_per_utxo_size.clone())),
+            &csl::DataCost::new_coins_per_byte(&to_bignum(*coins_per_utxo_size)),
         )?
         .build()?;
     Ok(final_output.amount().coin().to_str())

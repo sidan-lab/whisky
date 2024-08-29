@@ -435,7 +435,7 @@ mod int_tests {
                 mem: 35588,
                 steps: 13042895
             }})
-        .deregister_stake_certificate(&reward_address)
+        .deregister_stake_certificate(reward_address)
         .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
         .certificate_redeemer_value(&WRedeemer {            
             data: JSON(con_str0(json!([])).to_string()),
@@ -444,7 +444,7 @@ mod int_tests {
                 steps: 44400485
             }})
         .withdrawal_plutus_script_v2()
-        .withdrawal(&reward_address, 0)
+        .withdrawal(reward_address, 0)
         .withdrawal_redeemer_value(&WRedeemer {            
             data: JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
