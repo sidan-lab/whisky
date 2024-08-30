@@ -13,9 +13,15 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
                 tx_output_builder =
                     tx_output_builder.with_plutus_data(&csl::PlutusData::from_hex(str_data)?);
             }
-            Datum::Hash(str_data_hash) => {
-                tx_output_builder =
-                    tx_output_builder.with_data_hash(&csl::DataHash::from_hex(str_data_hash)?);
+            Datum::Hash(str_data) => {
+                tx_output_builder = tx_output_builder.with_data_hash(&csl::hash_plutus_data(
+                    &csl::PlutusData::from_hex(&str_data)?,
+                ));
+            }
+            Datum::Embedded(str_data) => {
+                tx_output_builder = tx_output_builder.with_data_hash(&csl::hash_plutus_data(
+                    &csl::PlutusData::from_hex(&str_data)?,
+                ));
             }
         },
         None => {}
