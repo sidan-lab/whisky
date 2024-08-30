@@ -81,6 +81,10 @@ impl MeshTxParser {
                     let plutus_data = Some(data);
                     (None, plutus_data)
                 }
+                Some(Datum::Embedded(data)) => {
+                    let data_hash = Some(data);
+                    (data_hash, None)
+                }
                 None => (None, None),
             };
             let tx_out_utxo: UTxO = UTxO {
