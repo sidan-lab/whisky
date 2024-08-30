@@ -61,6 +61,24 @@ impl MeshTxBuilder {
         self
     }
 
+    pub fn tx_out_datum_embed_value(&mut self, data: &WData) -> &mut Self {
+        let tx_output = self.tx_output.take();
+        if tx_output.is_none() {
+            panic!("Undefined output")
+        }
+        let mut tx_output = tx_output.unwrap();
+        match data.to_cbor() {
+            Ok(raw_data) => {
+                tx_output.datum = Some(Datum::Embedded(raw_data));
+                self.tx_output = Some(tx_output);
+            }
+            Err(_) => {
+                panic!("Error converting datum to CBOR");
+            }
+        }
+        self
+    }
+
     /// ## Transaction building method
     ///
     /// Set the transaction output inline datum value in the MeshTxBuilder instance

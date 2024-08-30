@@ -81,7 +81,7 @@ impl MeshTxParser {
                     let plutus_data = Some(data);
                     (None, plutus_data)
                 }
-                None => (None, None),
+                _ => (None, None),
             };
             let tx_out_utxo: UTxO = UTxO {
                 input: UtxoInput {
