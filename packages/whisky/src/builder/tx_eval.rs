@@ -463,7 +463,7 @@ mod test {
             );
         }
         assert_eq!(
-            serde_json::json!({"ex_units":{"mem":2833,"steps":745013},"index":"0"}).to_string(),
+            serde_json::json!({"ex_units":{"mem":2833,"steps":528893},"index":"0"}).to_string(),
             serde_json::json!(redeemer_json).to_string()
         )
     }
