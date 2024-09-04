@@ -166,6 +166,11 @@ impl MeshCSL {
                     output_builder =
                         output_builder.with_plutus_data(&csl::PlutusData::from_hex(&data)?);
                 }
+                Datum::Embedded(data) => {
+                    let datum = &csl::PlutusData::from_hex(&data)?;
+                    output_builder = output_builder.with_data_hash(&csl::hash_plutus_data(datum));
+                    self.tx_builder.add_extra_witness_datum(datum);
+                }
             };
         }
 

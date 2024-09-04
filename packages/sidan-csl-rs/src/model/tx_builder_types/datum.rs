@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum Datum {
     Inline(String),
     Hash(String),
+    Embedded(String),
 }
 
 impl Datum {
@@ -12,6 +13,7 @@ impl Datum {
         match self {
             Datum::Inline(s) => s,
             Datum::Hash(s) => s,
+            Datum::Embedded(s) => s,
         }
     }
 }

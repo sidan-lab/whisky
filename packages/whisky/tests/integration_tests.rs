@@ -5,7 +5,7 @@ mod int_tests {
         model::{Asset, Budget, LanguageVersion},
     };
     use whisky::{
-        builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::{self, JSON}, WRedeemer},
         core::utils::merge_vkey_witnesses_to_transaction,
     };
 
@@ -435,7 +435,7 @@ mod int_tests {
                 mem: 35588,
                 steps: 13042895
             }})
-        .deregister_stake_certificate(&reward_address)
+        .deregister_stake_certificate(reward_address)
         .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
         .certificate_redeemer_value(&WRedeemer {            
             data: JSON(con_str0(json!([])).to_string()),
@@ -444,7 +444,7 @@ mod int_tests {
                 steps: 44400485
             }})
         .withdrawal_plutus_script_v2()
-        .withdrawal(&reward_address, 0)
+        .withdrawal(reward_address, 0)
         .withdrawal_redeemer_value(&WRedeemer {            
             data: JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
@@ -462,6 +462,37 @@ mod int_tests {
         .complete_signing()
         .unwrap();    
 
-        println!("{}", unsigned_tx)
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_embedded_datum_output() {
+        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+        let signed_tx = mesh
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .tx_out("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh", &[Asset::new_from_str("lovelace", "2000000")])
+            .tx_out_datum_embed_value(&WData::JSON(json!({
+                "constructor": 0,
+                "fields": []
+              }).to_string()))
+            .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
+            .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing().unwrap();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 }
