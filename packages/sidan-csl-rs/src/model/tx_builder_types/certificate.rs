@@ -201,7 +201,7 @@ pub struct Anchor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepRegistration {
-    pub voting_key_address: String,
+    pub drep_id: String,
     pub coin: u64,
     pub anchor: Option<Anchor>,
 }
@@ -209,13 +209,13 @@ pub struct DRepRegistration {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepDeregistration {
-    pub voting_key_address: String,
+    pub drep_id: String,
     pub coin: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DRepUpdate {
-    pub voting_key_address: String,
+    pub drep_id: String,
     pub anchor: Option<Anchor>,
 }

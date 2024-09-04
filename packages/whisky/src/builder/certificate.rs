@@ -362,7 +362,7 @@ impl MeshTxBuilder {
     /// * `Self` - The MeshTxBuilder instance
     pub fn drep_registration(
         &mut self,
-        voting_key_address: &str,
+        drep_id: &str,
         coin: u64,
         anchor: Option<Anchor>,
     ) -> &mut Self {
@@ -371,7 +371,7 @@ impl MeshTxBuilder {
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepRegistration(DRepRegistration {
-                    voting_key_address: voting_key_address.to_string(),
+                    drep_id: drep_id.to_string(),
                     coin,
                     anchor,
                 }),
@@ -391,13 +391,13 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn drep_deregistration(&mut self, voting_key_addres: &str, coin: u64) -> &mut Self {
+    pub fn drep_deregistration(&mut self, drep_id: &str, coin: u64) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepDeregistration(DRepDeregistration {
-                    voting_key_address: voting_key_addres.to_string(),
+                    drep_id: drep_id.to_string(),
                     coin,
                 }),
             ));
@@ -416,13 +416,13 @@ impl MeshTxBuilder {
     /// ### Returns
     ///
     /// * `Self` - The MeshTxBuilder instance
-    pub fn drep_update(&mut self, voting_key_address: &str, anchor: Option<Anchor>) -> &mut Self {
+    pub fn drep_update(&mut self, drep_id: &str, anchor: Option<Anchor>) -> &mut Self {
         self.core
             .mesh_tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
                 DRepUpdate {
-                    voting_key_address: voting_key_address.to_string(),
+                    drep_id: drep_id.to_string(),
                     anchor,
                 },
             )));
