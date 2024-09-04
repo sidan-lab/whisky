@@ -5,5 +5,11 @@ edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
 
+[[bin]] # Bin to run the server
+name = "whisky-examples"
+path = "src/server.rs"
+
 [dependencies]
+actix-web = "4.9.0"
+serde = "1.0.209"
 whisky = { version = "=0.8.0", path = "../whisky" }
