@@ -1,0 +1,14 @@
+name = "sidan-lab/vodka"
+version = "0.0.1-beta"
+license = "Apache-2.0"
+description = "Aiken utils for project 'sidan-lab/vodka"
+
+[repository]
+user = "sidan-lab"
+project = "vodka"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "1.9.0"
+source = "github"

@@ -88,6 +88,7 @@ pub async fn complex_transaction(
             &collateral.output.address,
         )
         .select_utxos_from(inputs, 5000000)
+        .input_for_evaluation(script_utxo)
         .complete(None)
         .await?;
 

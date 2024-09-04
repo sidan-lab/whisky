@@ -44,7 +44,7 @@ impl MeshTxBuilder {
                     Ok(actions) => self.update_redeemer(actions),
                     Err(err) => {
                         return Err(JsError::from_str(&format!(
-                        "Error evaluating transaction - tx_hex: [ {} ] ,Error message: [ {:?} ]",
+                        "Error evaluating transaction - tx_hex: [ {} ] , Error message: [ {:?} ]",
                         self.tx_hex(),
                         err
                     )))

@@ -1,7 +1,7 @@
 use whisky::{
     builder::{MeshTxBuilder, WData},
     csl::JsError,
-    model::{Asset, UTxO},
+    model::UTxO,
 };
 
 pub fn lock_fund(
@@ -12,10 +12,7 @@ pub fn lock_fund(
 ) -> Result<String, JsError> {
     let mut tx_builder = MeshTxBuilder::new_core();
     tx_builder
-        .tx_out(
-            script_address,
-            &[Asset::new_from_str("lovelace", "1000000")],
-        )
+        .tx_out(script_address, &[])
         .tx_out_inline_datum_value(&WData::JSON(datum.to_string())) // JSON string datum
         // .tx_out_datum_hash_value(WData::JSON(datum.to_string())) // Datum hash
         .change_address(my_address)

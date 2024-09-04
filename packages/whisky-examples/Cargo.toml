@@ -1,6 +1,6 @@
 [package]
 name = "whisky-examples"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
@@ -10,6 +10,7 @@ name = "whisky-examples"
 path = "src/server.rs"
 
 [dependencies]
+actix-cors = "0.7.0"
 actix-web = "4.9.0"
 serde = "1.0.209"
-whisky = { version = "=0.8.0", path = "../whisky" }
+whisky = { version = "=0.8.1", path = "../whisky" }
