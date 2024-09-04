@@ -365,10 +365,9 @@ impl MeshTxBuilder {
             TxIn::SimpleScriptTxIn(_) => {}
             TxIn::PubKeyTxIn(_) => {}
         }
-        self.core
-            .mesh_tx_builder_body
-            .inputs
-            .push(self.tx_in_item.clone().unwrap());
+        let input = self.tx_in_item.clone().unwrap();
+        self.input_for_evaluation(&input.to_utxo());
+        self.core.mesh_tx_builder_body.inputs.push(input);
         self.tx_in_item = None
     }
 

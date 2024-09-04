@@ -170,9 +170,8 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
 
 fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsError> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
-        let csl_plutus_data =
-            csl::PlutusData::from_json(inline_datum, csl::PlutusDatumSchema::DetailedSchema)
-                .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
+        let csl_plutus_data = csl::PlutusData::from_hex(inline_datum)
+            .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
 
         let plutus_data_bytes = csl_plutus_data.to_bytes();
         let datum = CborWrap(
@@ -244,6 +243,8 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
 #[cfg(test)]
 mod test {
     use pallas_codec::minicbor::Decoder;
+
+    use crate::builder::WData;
 
     use super::*;
     use sidan_csl_rs::model::{Asset, UTxO, UtxoInput, UtxoOutput};
@@ -410,10 +411,13 @@ mod test {
                   address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
                   amount: vec![Asset::new_from_str("lovelace", "986990")],
                   data_hash: None,
-                  plutus_data: Some(serde_json::json!({
-                      "constructor": 0,
-                      "fields": []
-                  }).to_string()),
+                  plutus_data: Some(WData::JSON(
+                    serde_json::json!({
+                        "constructor": 0,
+                        "fields": []
+                    })
+                    .to_string(),
+                ).to_cbor().unwrap()),
                   script_hash: None,
                   script_ref: None,
               }

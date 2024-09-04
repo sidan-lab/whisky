@@ -3,6 +3,11 @@ use model::LanguageVersion;
 
 use crate::*;
 
+pub fn get_native_script_hash(script: &str) -> Result<String, JsError> {
+    let script_hash = csl::NativeScript::from_hex(script)?.hash().to_hex();
+    Ok(script_hash)
+}
+
 pub fn get_script_hash(script: &str, version: LanguageVersion) -> Result<String, JsError> {
     let language_version = match version {
         LanguageVersion::V1 => csl::Language::new_plutus_v1(),
