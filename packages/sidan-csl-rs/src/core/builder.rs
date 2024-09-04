@@ -25,6 +25,9 @@ pub fn serialize_tx_body(
     mesh_tx_builder_body: MeshTxBuilderBody,
     params: Option<Protocol>,
 ) -> Result<String, JsError> {
+    if mesh_tx_builder_body.change_address.is_empty() {
+        return Err(JsError::from_str("change address cannot be empty"));
+    }
     let mut mesh_csl = MeshCSL::new(params);
 
     MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
