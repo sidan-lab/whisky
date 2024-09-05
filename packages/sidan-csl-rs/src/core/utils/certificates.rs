@@ -297,46 +297,58 @@ fn to_commitee_cold_resign_cert(
 fn to_drep_registration_cert(
     drep_registration: DRepRegistration,
 ) -> Result<csl::Certificate, JsError> {
-    // TODO: handle script hash case
+    let drep = csl::DRep::from_bech32(&drep_registration.drep_id).unwrap();
+    let drep_credential = if drep.to_script_hash().is_some() {
+        csl::Credential::from_scripthash(&drep.to_script_hash().unwrap())
+    } else if drep.to_key_hash().is_some() {
+        csl::Credential::from_keyhash(&drep.to_key_hash().unwrap())
+    } else {
+        return Err(JsError::from_str(
+            "Error occured when deserializing DrepId to either script hash or key hash",
+        ));
+    };
+
     Ok(csl::Certificate::new_drep_registration(
-        &csl::DRepRegistration::new(
-            &csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_bech32(&drep_registration.drep_id).unwrap(),
-            ),
-            &to_bignum(drep_registration.coin),
-        ),
+        &csl::DRepRegistration::new(&drep_credential, &to_bignum(drep_registration.coin)),
     ))
 }
 
 fn to_drep_deregistration_cert(
     drep_deregistration: DRepDeregistration,
 ) -> Result<csl::Certificate, JsError> {
-    // TODO: handle script hash case
+    let drep = csl::DRep::from_bech32(&drep_deregistration.drep_id).unwrap();
+    let drep_credential = if drep.to_script_hash().is_some() {
+        csl::Credential::from_scripthash(&drep.to_script_hash().unwrap())
+    } else if drep.to_key_hash().is_some() {
+        csl::Credential::from_keyhash(&drep.to_key_hash().unwrap())
+    } else {
+        return Err(JsError::from_str(
+            "Error occured when deserializing DrepId to either script hash or key hash",
+        ));
+    };
+
     Ok(csl::Certificate::new_drep_deregistration(
-        &csl::DRepDeregistration::new(
-            &csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_bech32(&drep_deregistration.drep_id).unwrap(),
-            ),
-            &to_bignum(drep_deregistration.coin),
-        ),
+        &csl::DRepDeregistration::new(&drep_credential, &to_bignum(drep_deregistration.coin)),
     ))
 }
 
 fn to_drep_update_cert(drep_update: DRepUpdate) -> Result<csl::Certificate, JsError> {
-    // TODO: handle script hash case
+    let drep = csl::DRep::from_bech32(&drep_update.drep_id).unwrap();
+    let drep_credential = if drep.to_script_hash().is_some() {
+        csl::Credential::from_scripthash(&drep.to_script_hash().unwrap())
+    } else if drep.to_key_hash().is_some() {
+        csl::Credential::from_keyhash(&drep.to_key_hash().unwrap())
+    } else {
+        return Err(JsError::from_str(
+            "Error occured when deserializing DrepId to either script hash or key hash",
+        ));
+    };
     match drep_update.anchor {
         Some(anchor) => Ok(csl::Certificate::new_drep_update(
-            &csl::DRepUpdate::new_with_anchor(
-                &csl::Credential::from_keyhash(
-                    &csl::Ed25519KeyHash::from_bech32(&drep_update.drep_id).unwrap(),
-                ),
-                &to_csl_anchor(&anchor)?,
-            ),
+            &csl::DRepUpdate::new_with_anchor(&drep_credential, &to_csl_anchor(&anchor)?),
         )),
         None => Ok(csl::Certificate::new_drep_update(&csl::DRepUpdate::new(
-            &csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_bech32(&drep_update.drep_id).unwrap(),
-            ),
+            &drep_credential,
         ))),
     }
 }
