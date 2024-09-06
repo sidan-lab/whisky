@@ -522,7 +522,6 @@ mod int_tests {
             .complete_signing()
             .unwrap();
 
-        println!("{:?}", json!(mesh.core.mesh_tx_builder_body).to_string());
         println!("{}", unsigned_tx);
     }
 }
