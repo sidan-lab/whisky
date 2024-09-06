@@ -3420,7 +3420,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.8.2"
+version = "0.8.1"
 dependencies = [
  "async-trait",
  "cryptoxide",

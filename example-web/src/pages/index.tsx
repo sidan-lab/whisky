@@ -84,6 +84,7 @@ export default function Home() {
     const txHash = await wallet.submitTx(signedTx);
     console.log("txHash", txHash);
   };
+
   const unlockFund = async () => {
     // "8fb75f27f60e8149a091c749f9712ad59c9d114c457aed1c1acc8d9225d5c662"
     const inputs = await wallet.getUtxos();
