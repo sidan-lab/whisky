@@ -70,6 +70,8 @@ impl TxEvaluation for MeshTxBuilder {
                             redeemer_evaluation.budget.steps * multiplier / 100;
                     }
                 }
+                RedeemerTag::Propose => todo!(),
+                RedeemerTag::Vote => todo!(),
             }
         }
         self

@@ -1,18 +1,21 @@
 use async_trait::async_trait;
-use pallas_primitives::alonzo::RedeemerTag as PRedeemerTag;
+use pallas_codec::utils::NonEmptyKeyValuePairs;
 use pallas_primitives::conway::PlutusV2Script;
+use pallas_primitives::conway::RedeemerTag as PRedeemerTag;
 use sidan_csl_rs::core::constants::get_cost_models_from_network;
 use sidan_csl_rs::csl::{self, JsError};
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
-use uplc::Fragment;
 
 use csl::Address;
 use pallas_codec::minicbor::Decoder;
-use pallas_codec::utils::{Bytes, CborWrap, KeyValuePairs};
-use pallas_primitives::babbage::{
-    AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
-    PseudoScript, ScriptRef, TransactionOutput, Value,
+use pallas_codec::utils::{Bytes, CborWrap, KeyValuePairs, PositiveCoin};
+use pallas_primitives::{
+    conway::{
+        AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
+        PseudoScript, ScriptRef, TransactionOutput, Value,
+    },
+    Fragment,
 };
 use pallas_traverse::{Era, MultiEraTx};
 use sidan_csl_rs::core::tx_parser::MeshTxParser;
@@ -48,9 +51,9 @@ impl MeshTxEvaluator {
         network: &Network,
     ) -> Result<Vec<Action>, JsError> {
         let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
-        let mtx = MultiEraTx::decode_for_era(Era::Babbage, &tx_bytes);
+        let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
         let tx = match mtx {
-            Ok(MultiEraTx::Babbage(tx)) => tx.into_owned(),
+            Ok(MultiEraTx::Conway(tx)) => tx.into_owned(),
             _ => return Err(JsError::from_str("Invalid Tx Era")),
         };
 
@@ -88,6 +91,8 @@ impl MeshTxEvaluator {
                         PRedeemerTag::Mint => RedeemerTag::Mint,
                         PRedeemerTag::Cert => RedeemerTag::Cert,
                         PRedeemerTag::Reward => RedeemerTag::Reward,
+                        PRedeemerTag::Vote => RedeemerTag::Vote,
+                        PRedeemerTag::Propose => RedeemerTag::Propose,
                     },
                 })
                 .collect()
@@ -110,14 +115,15 @@ impl Evaluator for MeshTxEvaluator {
 
 fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
-    if cost_model_list.len() < 2 {
+    if cost_model_list.len() < 3 {
         return Err(JsError::from_str(
-            "Cost models have to contain at least PlutusV1 and PlutusV2 costs",
+            "Cost models have to contain at least PlutusV1, PlutusV2, and PlutusV3 costs",
         ));
     };
     Ok(CostMdls {
         plutus_v1: Some(cost_model_list[0].clone()),
         plutus_v2: Some(cost_model_list[1].clone()),
+        plutus_v3: Some(cost_model_list[2].clone()),
     })
 }
 
@@ -236,11 +242,14 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
                 AssetName::from(hex::decode(asset_name).map_err(|err| {
                     JsError::from_str(&format!("Invalid asset name found: {}", err))
                 })?);
-            mapped_assets.push((asset_name_bytes, asset_quantity.parse::<u64>().unwrap()));
+            mapped_assets.push((
+                asset_name_bytes,
+                PositiveCoin::try_from(asset_quantity.parse::<u64>().unwrap()).unwrap(),
+            ));
         }
-        multi_asset.push((policy_id, KeyValuePairs::Def(mapped_assets)));
+        multi_asset.push((policy_id, NonEmptyKeyValuePairs::Def(mapped_assets)));
     }
-    let pallas_multi_asset = KeyValuePairs::Def(multi_asset);
+    let pallas_multi_asset = pallas_codec::utils::NonEmptyKeyValuePairs::Def(multi_asset);
     Ok(Value::Multiasset(coins, pallas_multi_asset))
 }
 

@@ -13,4 +13,6 @@ pub enum RedeemerTag {
     Mint,
     Cert,
     Reward,
+    Vote,
+    Propose,
 }
