@@ -170,8 +170,12 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
 
 fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsError> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
-        let csl_plutus_data = csl::PlutusData::from_hex(inline_datum)
-            .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
+        let csl_plutus_data = csl::PlutusData::from_hex(inline_datum).map_err(|err| {
+            JsError::from_str(&format!(
+                "Invalid plutus data found for utxo: [{:?}], err: {}",
+                utxo_output, err
+            ))
+        })?;
 
         let plutus_data_bytes = csl_plutus_data.to_bytes();
         let datum = CborWrap(

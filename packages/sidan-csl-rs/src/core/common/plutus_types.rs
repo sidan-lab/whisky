@@ -43,22 +43,22 @@ pub fn list<T: Into<Value>>(p_list: Vec<T>) -> Value {
 
 // Other functions like currencySymbol, tokenName, etc., would create JSON objects
 pub fn currency_symbol(policy_id: &str) -> Value {
-    builtin_byte_string(policy_id)
+    byte_string(policy_id)
 }
 
 pub fn token_name(token_name: &str) -> Value {
-    builtin_byte_string(token_name)
+    byte_string(token_name)
 }
 
 pub fn maybe_staking_hash(stake_credential: &str, is_script_stake_key: bool) -> Value {
     if stake_credential.is_empty() {
         con_str1(json!([]))
     } else if is_script_stake_key {
-        con_str0(vec![con_str0(vec![con_str1(vec![builtin_byte_string(
+        con_str0(vec![con_str0(vec![con_str1(vec![byte_string(
             stake_credential,
         )])])])
     } else {
-        con_str0(vec![con_str0(vec![con_str0(vec![builtin_byte_string(
+        con_str0(vec![con_str0(vec![con_str0(vec![byte_string(
             stake_credential,
         )])])])
     }
@@ -70,7 +70,7 @@ pub fn pub_key_address(
     is_script_stake_key: bool,
 ) -> Value {
     con_str0(vec![
-        con_str0(vec![builtin_byte_string(bytes)]),
+        con_str0(vec![byte_string(bytes)]),
         maybe_staking_hash(stake_credential.unwrap_or(""), is_script_stake_key),
     ])
 }
@@ -81,7 +81,7 @@ pub fn script_address(
     is_script_stake_key: bool,
 ) -> Value {
     con_str0(vec![
-        con_str1(vec![builtin_byte_string(bytes)]),
+        con_str1(vec![byte_string(bytes)]),
         maybe_staking_hash(stake_credential.unwrap_or(""), is_script_stake_key),
     ])
 }
@@ -91,10 +91,11 @@ pub fn asset_class(policy_id: &str, asset_name: &str) -> Value {
 }
 
 pub fn tx_out_ref(tx_hash: &str, index: i64) -> Value {
-    con_str0(vec![
-        con_str0(vec![builtin_byte_string(tx_hash)]),
-        integer(index),
-    ])
+    con_str0(vec![con_str0(vec![byte_string(tx_hash)]), integer(index)])
+}
+
+pub fn output_reference(tx_hash: &str, index: i64) -> Value {
+    con_str0(vec![byte_string(tx_hash), integer(index)])
 }
 
 pub fn assoc_map<K: Into<Value>, V: Into<Value>>(items_map: Vec<(K, V)>) -> Value {
@@ -110,11 +111,11 @@ pub fn tuple<K: Into<Value>, V: Into<Value>>(key: K, value: V) -> Value {
 }
 
 pub fn payment_pub_key_hash(pub_key_hash: &str) -> Value {
-    builtin_byte_string(pub_key_hash)
+    byte_string(pub_key_hash)
 }
 
 pub fn pub_key_hash(pub_key_hash: &str) -> Value {
-    builtin_byte_string(pub_key_hash)
+    byte_string(pub_key_hash)
 }
 
 pub fn posix_time(posix_time: i64) -> Value {
