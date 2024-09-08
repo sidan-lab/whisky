@@ -68,7 +68,7 @@ impl MeshTxParser {
         Ok(tx_parser)
     }
 
-    pub fn get_tx_outs_utxo(&self) -> Vec<UTxO> {
+    pub fn get_tx_outs_utxo(&self) -> Result<Vec<UTxO>, JsError> {
         let tx_outs = self.tx_body.outputs.clone();
         let mut result = vec![];
         tx_outs.iter().enumerate().for_each(|(i, current_tx_out)| {
@@ -78,7 +78,11 @@ impl MeshTxParser {
                     (data_hash, None)
                 }
                 Some(Datum::Inline(data)) => {
-                    let plutus_data = Some(data);
+                    let datum_cbor =
+                        csl::PlutusData::from_json(&data, csl::PlutusDatumSchema::DetailedSchema)
+                            .unwrap() // TODO: error handling
+                            .to_hex();
+                    let plutus_data = Some(datum_cbor);
                     (None, plutus_data)
                 }
                 Some(Datum::Embedded(data)) => {
@@ -103,7 +107,7 @@ impl MeshTxParser {
             };
             result.push(tx_out_utxo);
         });
-        result
+        Ok(result)
     }
 
     pub fn get_tx_outs_cbor(&self) -> Vec<String> {

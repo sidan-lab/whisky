@@ -28,8 +28,6 @@ impl WhiskyTx {
         ref_script_input: Option<UTxO>,
     ) -> Result<&mut Self, JsError> {
         for input in input.iter() {
-            println!("input: {:?}", input.utxo);
-            println!("ref_script_input: {:?}", ref_script_input);
             let utxo = &input.utxo;
             self.tx_builder
                 .spending_plutus_script(language_version)
