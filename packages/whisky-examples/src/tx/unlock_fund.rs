@@ -1,5 +1,5 @@
 use whisky::{
-    builder::{MeshTxBuilder, WData, WRedeemer},
+    builder::{TxBuilder, WData, WRedeemer},
     core::utils::deserialize_bech32_address,
     csl::JsError,
     model::{Budget, ProvidedScriptSource, UTxO},
@@ -13,7 +13,7 @@ pub async fn unlock_fund(
     inputs: &[UTxO],
     collateral: &UTxO,
 ) -> Result<String, JsError> {
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
     let pub_key_hash = deserialize_bech32_address(my_address).get_pub_key_hash();
 
     tx_builder

@@ -1,11 +1,11 @@
 use sidan_csl_rs::model::*;
 
-use super::{MeshTxBuilder, WData};
+use super::{TxBuilder, WData};
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///
-    /// Add a transaction output to the MeshTxBuilder instance
+    /// Add a transaction output to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -14,7 +14,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn tx_out(&mut self, address: &str, amount: &[Asset]) -> &mut Self {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
@@ -34,7 +34,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the transaction output datum hash value in the MeshTxBuilder instance
+    /// Set the transaction output datum hash value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -42,7 +42,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn tx_out_datum_hash_value(&mut self, data: &WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
@@ -63,7 +63,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the transaction output embedded datum value in the MeshTxBuilder instance
+    /// Set the transaction output embedded datum value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -71,7 +71,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn tx_out_datum_embed_value(&mut self, data: &WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
@@ -92,7 +92,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the transaction output inline datum value in the MeshTxBuilder instance
+    /// Set the transaction output inline datum value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -100,7 +100,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn tx_out_inline_datum_value(&mut self, data: &WData) -> &mut Self {
         let tx_output = self.tx_output.take();
         if tx_output.is_none() {
@@ -121,7 +121,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a transaction output reference script to the MeshTxBuilder instance
+    /// Add a transaction output reference script to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -130,7 +130,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn tx_out_reference_script(
         &mut self,
         script_cbor: &str,

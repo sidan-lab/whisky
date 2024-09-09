@@ -5,9 +5,9 @@ use sidan_csl_rs::{
     model::*,
 };
 
-use super::{MeshTxBuilder, TxEvaluation};
+use super::{TxBuilder, TxEvaluation};
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///  
     /// Complete the transaction building process with fetching missing information & tx evaluation
@@ -18,10 +18,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub async fn complete(
         &mut self,
-        customized_tx: Option<MeshTxBuilderBody>,
+        customized_tx: Option<TxBuilderBody>,
     ) -> Result<&mut Self, JsError> {
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
@@ -66,10 +66,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn complete_sync(
         &mut self,
-        customized_tx: Option<MeshTxBuilderBody>,
+        customized_tx: Option<TxBuilderBody>,
     ) -> Result<&mut Self, JsError> {
         if customized_tx.is_some() {
             self.core.mesh_tx_builder_body = customized_tx.unwrap();

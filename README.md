@@ -47,7 +47,7 @@ yarn add @sidan-lab/sidan-csl-rs-browser
 
 ```rust
 use whisky::{
-    builder::{IMeshTxBuilder, MeshTxBuilder},
+    builder::TxBuilder,
     model::{Asset, UTxO},
 };
 
@@ -56,7 +56,7 @@ async fn my_first_whisky_tx(
     my_address: &str,
     inputs: Vec<UTxO>,
 ) -> String {
-    let mut mesh = MeshTxBuilder::new_core();
+    let mut mesh = TxBuilder::new_core();
     mesh.tx_out(
         &recipient_address,
         vec![Asset::new_from_str("lovelace", "1000000")],

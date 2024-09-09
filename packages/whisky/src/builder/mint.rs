@@ -1,11 +1,11 @@
 use sidan_csl_rs::model::*;
 
-use super::{MeshTxBuilder, WRedeemer};
+use super::{TxBuilder, WRedeemer};
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
+    /// Indicate that the transaction is withdrawing using a plutus staking script in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -13,7 +13,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_plutus_script(&mut self, language_version: &LanguageVersion) -> &mut Self {
         match language_version {
             LanguageVersion::V1 => self.mint_plutus_script_v1(),
@@ -24,11 +24,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is minting a Plutus script v1 in the MeshTxBuilder instance
+    /// Indicate that the transaction is minting a Plutus script v1 in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_plutus_script_v1(&mut self) -> &mut Self {
         self.adding_plutus_mint = Some(LanguageVersion::V1);
         self
@@ -36,11 +36,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is minting a Plutus script v2 in the MeshTxBuilder instance
+    /// Indicate that the transaction is minting a Plutus script v2 in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_plutus_script_v2(&mut self) -> &mut Self {
         self.adding_plutus_mint = Some(LanguageVersion::V2);
         self
@@ -48,11 +48,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is minting a Plutus script v2 in the MeshTxBuilder instance
+    /// Indicate that the transaction is minting a Plutus script v2 in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_plutus_script_v3(&mut self) -> &mut Self {
         self.adding_plutus_mint = Some(LanguageVersion::V3);
         self
@@ -60,7 +60,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Mint assets in the MeshTxBuilder instance
+    /// Mint assets in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -70,7 +70,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint(&mut self, quantity: i128, policy: &str, name: &str) -> &mut Self {
         if self.mint_item.is_some() {
             self.queue_mint();
@@ -103,7 +103,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a minting script to the MeshTxBuilder instance
+    /// Add a minting script to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -112,7 +112,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn minting_script(&mut self, script_cbor: &str) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
@@ -146,7 +146,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a minting transaction input reference to the MeshTxBuilder instance
+    /// Add a minting transaction input reference to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -158,7 +158,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_tx_in_reference(
         &mut self,
         tx_hash: &str,
@@ -207,7 +207,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the minting redeemer value in the MeshTxBuilder instance
+    /// Set the minting redeemer value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -215,7 +215,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let mint_item = self.mint_item.take();
         if mint_item.is_none() {
@@ -245,7 +245,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the minting reference transaction input redeemer value in the MeshTxBuilder instance
+    /// Set the minting reference transaction input redeemer value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -253,7 +253,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn mint_reference_tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         self.mint_redeemer_value(redeemer)
     }

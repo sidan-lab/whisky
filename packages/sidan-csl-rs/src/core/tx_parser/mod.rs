@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use crate::csl;
 use crate::model::{
-    Asset, Datum, LanguageVersion, MeshTxBuilderBody, Output, OutputScriptSource,
+    Asset, Datum, LanguageVersion, TxBuilderBody, Output, OutputScriptSource,
     ProvidedScriptSource, UTxO, UtxoInput, UtxoOutput, ValidityRange,
 };
 
@@ -15,7 +15,7 @@ pub struct MeshTxParser {
     pub tx_hash: String,
     pub tx_hex: String,
     pub tx_fee_lovelace: u64,
-    pub tx_body: MeshTxBuilderBody,
+    pub tx_body: TxBuilderBody,
     pub csl_tx_body: csl::TransactionBody,
     pub csl_witness_set: csl::TransactionWitnessSet,
 }
@@ -24,7 +24,7 @@ impl MeshTxParser {
     // Constructor method
     pub fn new(s: &str) -> Result<MeshTxParser, JsError> {
         // TODO: Deserialized into the tx_body
-        let mut tx_body = MeshTxBuilderBody {
+        let mut tx_body = TxBuilderBody {
             inputs: vec![],
             outputs: vec![],
             collaterals: vec![],

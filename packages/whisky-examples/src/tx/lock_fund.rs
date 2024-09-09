@@ -1,5 +1,5 @@
 use whisky::{
-    builder::{MeshTxBuilder, WData},
+    builder::{TxBuilder, WData},
     csl::JsError,
     model::UTxO,
 };
@@ -10,7 +10,7 @@ pub fn lock_fund(
     my_address: &str,
     inputs: &[UTxO],
 ) -> Result<String, JsError> {
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .tx_out(script_address, &[])
         .tx_out_inline_datum_value(&WData::JSON(datum.to_string())) // JSON string datum

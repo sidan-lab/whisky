@@ -5,7 +5,7 @@ mod int_tests {
         model::{Asset, Budget, LanguageVersion},
     };
     use whisky::{
-        builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::{self, JSON}, WRedeemer},
+        builder::{ TxBuilder, TxBuilderParam, WData::{self, JSON}, WRedeemer},
         core::utils::merge_vkey_witnesses_to_transaction, model::Anchor,
     };
 
@@ -48,7 +48,7 @@ mod int_tests {
         let record_tx_hash = "aae2b8a5bf420c0d2fc785d54fe3eacc107145dee01b8c61beedcd13e6be9a71";
         let record_tx_id = 0;
 
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -181,7 +181,7 @@ mod int_tests {
 
     #[test]
     fn test_simple_spend() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -206,7 +206,7 @@ mod int_tests {
 
     #[test]
     fn test_simple_withdraw() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -236,7 +236,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_withdraw() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -279,7 +279,7 @@ mod int_tests {
 
     #[test]
     fn test_native_script_ref() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -308,7 +308,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_script_cert_registration() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -333,7 +333,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_script_cert_deregistration() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -365,7 +365,7 @@ mod int_tests {
 
     #[test]
     fn test_mint_two_tokens_with_same_policy() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -405,7 +405,7 @@ mod int_tests {
 
     #[test]
     fn test_spend_withdraw_and_unreg() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -468,7 +468,7 @@ mod int_tests {
 
     #[test]
     fn test_embedded_datum_output() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -498,7 +498,7 @@ mod int_tests {
 
     #[test]
     fn test_register_drep() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,

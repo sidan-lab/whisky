@@ -21,7 +21,7 @@
 //!
 //! ```rust
 //! use whisky::{
-//!     builder::MeshTxBuilder,
+//!     builder::TxBuilder,
 //!     model::{Asset, UTxO},
 //! };
 //!
@@ -30,7 +30,7 @@
 //!     my_address: &str,
 //!     inputs: &[UTxO],
 //! ) -> String {
-//!     let mut mesh = MeshTxBuilder::new_core();
+//!     let mut mesh = TxBuilder::new_core();
 //!     mesh.tx_out(
 //!         &recipient_address,
 //!         &[Asset::new_from_str("lovelace", "1000000")],
@@ -45,7 +45,7 @@
 //!
 //! ## APIs
 //!
-//! All user facing APIs are documentation at the [builder interface](builder/struct.MeshTxBuilder.html).
+//! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
 pub mod builder;
 pub mod provider;

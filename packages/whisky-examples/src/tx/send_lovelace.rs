@@ -1,5 +1,5 @@
 use whisky::{
-    builder::MeshTxBuilder,
+    builder::TxBuilder,
     csl::JsError,
     model::{Asset, UTxO},
 };
@@ -9,7 +9,7 @@ pub fn send_lovelace(
     my_address: &str,
     inputs: &[UTxO],
 ) -> Result<String, JsError> {
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .tx_out(
             recipient_address,
