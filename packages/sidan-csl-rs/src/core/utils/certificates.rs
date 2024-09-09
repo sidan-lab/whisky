@@ -297,15 +297,25 @@ fn to_commitee_cold_resign_cert(
 fn to_drep_registration_cert(
     drep_registration: DRepRegistration,
 ) -> Result<csl::Certificate, JsError> {
-    // TODO: handle script hash case
-    Ok(csl::Certificate::new_drep_registration(
-        &csl::DRepRegistration::new(
-            &csl::Credential::from_keyhash(
-                &csl::Ed25519KeyHash::from_bech32(&drep_registration.drep_id).unwrap(),
+    match drep_registration.anchor {
+        Some(anchor) => Ok(csl::Certificate::new_drep_registration(
+            &csl::DRepRegistration::new_with_anchor(
+                &csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_bech32(&drep_registration.drep_id).unwrap(),
+                ),
+                &to_bignum(drep_registration.coin),
+                &to_csl_anchor(&anchor)?,
             ),
-            &to_bignum(drep_registration.coin),
-        ),
-    ))
+        )),
+        None => Ok(csl::Certificate::new_drep_registration(
+            &csl::DRepRegistration::new(
+                &csl::Credential::from_keyhash(
+                    &csl::Ed25519KeyHash::from_bech32(&drep_registration.drep_id).unwrap(),
+                ),
+                &to_bignum(drep_registration.coin),
+            ),
+        )),
+    }
 }
 
 fn to_drep_deregistration_cert(
