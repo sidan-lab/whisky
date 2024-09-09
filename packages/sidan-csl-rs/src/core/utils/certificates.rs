@@ -308,9 +308,18 @@ fn to_drep_registration_cert(
         ));
     };
 
-    Ok(csl::Certificate::new_drep_registration(
-        &csl::DRepRegistration::new(&drep_credential, &to_bignum(drep_registration.coin)),
-    ))
+    match drep_registration.anchor {
+        Some(anchor) => Ok(csl::Certificate::new_drep_registration(
+            &csl::DRepRegistration::new_with_anchor(
+                &drep_credential,
+                &to_bignum(drep_registration.coin),
+                &to_csl_anchor(&anchor)?,
+            ),
+        )),
+        None => Ok(csl::Certificate::new_drep_registration(
+            &csl::DRepRegistration::new(&drep_credential, &to_bignum(drep_registration.coin)),
+        )),
+    }
 }
 
 fn to_drep_deregistration_cert(
