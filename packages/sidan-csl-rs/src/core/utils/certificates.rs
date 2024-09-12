@@ -15,12 +15,7 @@ use super::to_bignum;
 
 pub fn to_csl_drep(drep: &DRep) -> Result<csl::DRep, JsError> {
     match drep {
-        DRep::KeyHash(key_hash) => Ok(csl::DRep::new_key_hash(&csl::Ed25519KeyHash::from_hex(
-            key_hash,
-        )?)),
-        DRep::ScriptHash(script_hash) => Ok(csl::DRep::new_script_hash(
-            &csl::ScriptHash::from_hex(script_hash)?,
-        )),
+        DRep::DRepId(drep_id) => Ok(csl::DRep::from_bech32(&drep_id)?),
         DRep::AlwaysAbstain => Ok(csl::DRep::new_always_abstain()),
         DRep::AlwaysNoConfidence => Ok(csl::DRep::new_always_no_confidence()),
     }
