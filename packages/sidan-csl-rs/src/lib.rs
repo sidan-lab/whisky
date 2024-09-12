@@ -17,7 +17,7 @@
 //!
 //! ## APIs
 //!
-//! - The serialization logic documentation at the [builder interface](builder/trait.IMeshTxBuilderCore.html).
+//! - The serialization logic documentation at the [builder interface](builder/trait.ITxBuilderCore.html).
 //! - The inline documentation of core json to transaction serialization function is served at [here](core/builder/fn.js_serialize_tx_body.html).
 
 pub mod core;

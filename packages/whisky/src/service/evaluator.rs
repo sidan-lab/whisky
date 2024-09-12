@@ -8,7 +8,7 @@ use sidan_csl_rs::{
     },
 };
 
-use crate::builder::MeshTxBuilder;
+use crate::builder::TxBuilder;
 
 #[async_trait]
 pub trait Evaluator: Send {
@@ -25,7 +25,7 @@ pub trait TxEvaluation {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self;
 }
 
-impl TxEvaluation for MeshTxBuilder {
+impl TxEvaluation for TxBuilder {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self {
         let multiplier = self.core.tx_evaluation_multiplier_percentage;
         for redeemer_evaluation in tx_evaluation {
@@ -70,6 +70,8 @@ impl TxEvaluation for MeshTxBuilder {
                             redeemer_evaluation.budget.steps * multiplier / 100;
                     }
                 }
+                RedeemerTag::Propose => todo!(),
+                RedeemerTag::Vote => todo!(),
             }
         }
         self

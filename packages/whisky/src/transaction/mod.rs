@@ -1,6 +1,6 @@
 use sidan_csl_rs::csl::JsError;
 
-use crate::builder::MeshTxBuilder;
+use crate::builder::TxBuilder;
 
 pub mod inputs;
 pub mod mints;
@@ -14,7 +14,7 @@ pub enum WhiskyScriptType {
 }
 
 pub struct WhiskyTx {
-    pub tx_builder: MeshTxBuilder,
+    pub tx_builder: TxBuilder,
     pub current_script_type: Option<WhiskyScriptType>,
 }
 
@@ -29,7 +29,7 @@ pub struct RefScriptInput {
 impl WhiskyTx {
     pub fn new() -> Self {
         Self {
-            tx_builder: MeshTxBuilder::default(),
+            tx_builder: TxBuilder::default(),
             current_script_type: None,
         }
     }

@@ -1,5 +1,5 @@
 use whisky::{
-    builder::{MeshTxBuilder, WData, WRedeemer},
+    builder::{TxBuilder, WData, WRedeemer},
     csl::JsError,
     model::{Asset, Budget, ProvidedScriptSource, UTxO},
 };
@@ -42,7 +42,7 @@ pub async fn complex_transaction(
         script: script_2,
     } = to_mint_2;
 
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .spending_plutus_script_v2()
         .tx_in(

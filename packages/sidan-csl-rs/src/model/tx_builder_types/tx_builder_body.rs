@@ -7,7 +7,7 @@ use super::{
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MeshTxBuilderBody {
+pub struct TxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
     pub collaterals: Vec<PubKeyTxIn>,

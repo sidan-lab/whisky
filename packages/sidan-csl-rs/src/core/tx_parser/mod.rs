@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use crate::csl;
 use crate::model::{
-    Asset, Datum, LanguageVersion, MeshTxBuilderBody, Output, OutputScriptSource,
+    Asset, Datum, LanguageVersion, TxBuilderBody, Output, OutputScriptSource,
     ProvidedScriptSource, UTxO, UtxoInput, UtxoOutput, ValidityRange,
 };
 
@@ -15,7 +15,7 @@ pub struct MeshTxParser {
     pub tx_hash: String,
     pub tx_hex: String,
     pub tx_fee_lovelace: u64,
-    pub tx_body: MeshTxBuilderBody,
+    pub tx_body: TxBuilderBody,
     pub csl_tx_body: csl::TransactionBody,
     pub csl_witness_set: csl::TransactionWitnessSet,
 }
@@ -24,7 +24,7 @@ impl MeshTxParser {
     // Constructor method
     pub fn new(s: &str) -> Result<MeshTxParser, JsError> {
         // TODO: Deserialized into the tx_body
-        let mut tx_body = MeshTxBuilderBody {
+        let mut tx_body = TxBuilderBody {
             inputs: vec![],
             outputs: vec![],
             collaterals: vec![],
@@ -68,7 +68,7 @@ impl MeshTxParser {
         Ok(tx_parser)
     }
 
-    pub fn get_tx_outs_utxo(&self) -> Vec<UTxO> {
+    pub fn get_tx_outs_utxo(&self) -> Result<Vec<UTxO>, JsError> {
         let tx_outs = self.tx_body.outputs.clone();
         let mut result = vec![];
         tx_outs.iter().enumerate().for_each(|(i, current_tx_out)| {
@@ -78,7 +78,11 @@ impl MeshTxParser {
                     (data_hash, None)
                 }
                 Some(Datum::Inline(data)) => {
-                    let plutus_data = Some(data);
+                    let datum_cbor =
+                        csl::PlutusData::from_json(&data, csl::PlutusDatumSchema::DetailedSchema)
+                            .unwrap() // TODO: error handling
+                            .to_hex();
+                    let plutus_data = Some(datum_cbor);
                     (None, plutus_data)
                 }
                 Some(Datum::Embedded(data)) => {
@@ -103,7 +107,7 @@ impl MeshTxParser {
             };
             result.push(tx_out_utxo);
         });
-        result
+        Ok(result)
     }
 
     pub fn get_tx_outs_cbor(&self) -> Vec<String> {

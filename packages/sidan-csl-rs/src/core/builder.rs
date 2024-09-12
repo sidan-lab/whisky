@@ -3,9 +3,9 @@ use crate::{csl, model::*};
 use cardano_serialization_lib::JsError;
 
 #[derive(Clone, Debug)]
-pub struct MeshTxBuilderCore {
+pub struct TxBuilderCore {
     pub mesh_csl: MeshCSL,
-    pub mesh_tx_builder_body: MeshTxBuilderBody,
+    pub mesh_tx_builder_body: TxBuilderBody,
     pub tx_evaluation_multiplier_percentage: u64,
 }
 
@@ -22,7 +22,7 @@ pub struct MeshTxBuilderCore {
 ///
 /// * `String` - the built transaction hex
 pub fn serialize_tx_body(
-    mesh_tx_builder_body: MeshTxBuilderBody,
+    mesh_tx_builder_body: TxBuilderBody,
     params: Option<Protocol>,
 ) -> Result<String, JsError> {
     if mesh_tx_builder_body.change_address.is_empty() {
@@ -30,30 +30,18 @@ pub fn serialize_tx_body(
     }
     let mut mesh_csl = MeshCSL::new(params);
 
-    MeshTxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
-    MeshTxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone())?;
-    MeshTxBuilderCore::add_all_collaterals(
-        &mut mesh_csl,
-        mesh_tx_builder_body.collaterals.clone(),
-    )?;
-    MeshTxBuilderCore::add_all_reference_inputs(
+    TxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
+    TxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone())?;
+    TxBuilderCore::add_all_collaterals(&mut mesh_csl, mesh_tx_builder_body.collaterals.clone())?;
+    TxBuilderCore::add_all_reference_inputs(
         &mut mesh_csl,
         mesh_tx_builder_body.reference_inputs.clone(),
     )?;
-    MeshTxBuilderCore::add_all_withdrawals(
-        &mut mesh_csl,
-        mesh_tx_builder_body.withdrawals.clone(),
-    )?;
-    MeshTxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
-    MeshTxBuilderCore::add_all_certificates(
-        &mut mesh_csl,
-        mesh_tx_builder_body.certificates.clone(),
-    )?;
-    MeshTxBuilderCore::add_validity_range(
-        &mut mesh_csl,
-        mesh_tx_builder_body.validity_range.clone(),
-    );
-    MeshTxBuilderCore::add_all_required_signature(
+    TxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone())?;
+    TxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
+    TxBuilderCore::add_all_certificates(&mut mesh_csl, mesh_tx_builder_body.certificates.clone())?;
+    TxBuilderCore::add_validity_range(&mut mesh_csl, mesh_tx_builder_body.validity_range.clone());
+    TxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
         &mesh_tx_builder_body
             .required_signatures
@@ -61,7 +49,7 @@ pub fn serialize_tx_body(
             .map(|s| s.as_str())
             .collect::<Vec<&str>>(),
     )?;
-    MeshTxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
+    TxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
 
     match mesh_tx_builder_body.network {
         Some(current_network) => mesh_csl.add_script_hash(current_network)?,
@@ -139,19 +127,19 @@ pub fn serialize_tx_body(
     mesh_csl.build_tx()
 }
 
-impl MeshTxBuilderCore {
+impl TxBuilderCore {
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance
+    /// Create a new TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - A new MeshTxBuilder instance
+    /// * `Self` - A new TxBuilder instance
     ///
     pub fn new_core(params: Option<Protocol>) -> Self {
         Self {
             mesh_csl: MeshCSL::new(params),
-            mesh_tx_builder_body: MeshTxBuilderBody {
+            mesh_tx_builder_body: TxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
                 collaterals: vec![],
@@ -194,7 +182,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple signing keys to the MeshTxBuilder instance
+    /// Add multiple signing keys to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -208,7 +196,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple inputs to the MeshTxBuilder instance
+    /// Add multiple inputs to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -230,7 +218,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple outputs to the MeshTxBuilder instance
+    /// Add multiple outputs to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -245,7 +233,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple collaterals to the MeshTxBuilder instance
+    /// Add multiple collaterals to the TxBuilder instance
     ///
     /// ## Arguments
     ///
@@ -265,7 +253,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple reference inputs to the MeshTxBuilder instance
+    /// Add multiple reference inputs to the TxBuilder instance
     ///
     /// ## Arguments
     ///
@@ -283,7 +271,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple withdrawals to the MeshTxBuilder instance
+    /// Add multiple withdrawals to the TxBuilder instance
     ///
     /// ## Arguments
     ///
@@ -314,7 +302,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple mints to the MeshTxBuilder instance
+    /// Add multiple mints to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -338,7 +326,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple certificates to the MeshTxBuilder instance
+    /// Add multiple certificates to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -358,7 +346,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add a validity range to the MeshTxBuilder instance
+    /// Add a validity range to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -375,7 +363,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple required signatures to the MeshTxBuilder instance
+    /// Add multiple required signatures to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -393,7 +381,7 @@ impl MeshTxBuilderCore {
 
     /// ## Internal method
     ///
-    /// Add multiple metadata to the MeshTxBuilder instance
+    /// Add multiple metadata to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -429,7 +417,7 @@ impl MeshTxBuilderCore {
     // }
 }
 
-impl Default for MeshTxBuilderCore {
+impl Default for TxBuilderCore {
     fn default() -> Self {
         Self::new_core(None)
     }

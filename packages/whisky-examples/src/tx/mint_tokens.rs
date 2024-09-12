@@ -1,5 +1,5 @@
 use whisky::{
-    builder::{MeshTxBuilder, WData, WRedeemer},
+    builder::{TxBuilder, WData, WRedeemer},
     csl::JsError,
     model::{Asset, Budget, ProvidedScriptSource, UTxO},
 };
@@ -12,7 +12,7 @@ pub async fn mint_tokens(
     inputs: &[UTxO],
     collateral: &UTxO,
 ) -> Result<String, JsError> {
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
 
     tx_builder
         // .mint_plutus_script_v1()

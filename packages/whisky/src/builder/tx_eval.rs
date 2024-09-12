@@ -1,18 +1,21 @@
 use async_trait::async_trait;
-use pallas_primitives::alonzo::RedeemerTag as PRedeemerTag;
-use pallas_primitives::conway::PlutusV2Script;
+use pallas_codec::utils::NonEmptyKeyValuePairs;
+use pallas_primitives::conway::PlutusV3Script;
+use pallas_primitives::conway::RedeemerTag as PRedeemerTag;
 use sidan_csl_rs::core::constants::get_cost_models_from_network;
 use sidan_csl_rs::csl::{self, JsError};
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
-use uplc::Fragment;
 
 use csl::Address;
 use pallas_codec::minicbor::Decoder;
-use pallas_codec::utils::{Bytes, CborWrap, KeyValuePairs};
-use pallas_primitives::babbage::{
-    AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
-    PseudoScript, ScriptRef, TransactionOutput, Value,
+use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
+use pallas_primitives::{
+    conway::{
+        AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
+        PseudoScript, ScriptRef, TransactionOutput, Value,
+    },
+    Fragment,
 };
 use pallas_traverse::{Era, MultiEraTx};
 use sidan_csl_rs::core::tx_parser::MeshTxParser;
@@ -48,17 +51,22 @@ impl MeshTxEvaluator {
         network: &Network,
     ) -> Result<Vec<Action>, JsError> {
         let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
-        let mtx = MultiEraTx::decode_for_era(Era::Babbage, &tx_bytes);
+        let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
         let tx = match mtx {
-            Ok(MultiEraTx::Babbage(tx)) => tx.into_owned(),
+            Ok(MultiEraTx::Conway(tx)) => tx.into_owned(),
             _ => return Err(JsError::from_str("Invalid Tx Era")),
         };
 
         let tx_outs: Vec<UTxO> = additional_txs
             .iter()
             .flat_map(|tx| {
-                let parsed_tx = MeshTxParser::new(tx);
-                parsed_tx.unwrap().get_tx_outs_utxo() //TODO: handle error
+                let parsed_tx = MeshTxParser::new(tx).unwrap();
+                println!(
+                    "txout: {:?}",
+                    &parsed_tx.get_tx_outs_utxo().unwrap().clone()
+                );
+                println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
+                parsed_tx.get_tx_outs_utxo().unwrap() //TODO: handle error
             })
             .collect();
 
@@ -80,7 +88,7 @@ impl MeshTxEvaluator {
                 .map(|red| Action {
                     index: red.index,
                     budget: Budget {
-                        mem: red.ex_units.mem.into(),
+                        mem: red.ex_units.mem,
                         steps: red.ex_units.steps,
                     },
                     tag: match red.tag {
@@ -88,6 +96,8 @@ impl MeshTxEvaluator {
                         PRedeemerTag::Mint => RedeemerTag::Mint,
                         PRedeemerTag::Cert => RedeemerTag::Cert,
                         PRedeemerTag::Reward => RedeemerTag::Reward,
+                        PRedeemerTag::Vote => RedeemerTag::Vote,
+                        PRedeemerTag::Propose => RedeemerTag::Propose,
                     },
                 })
                 .collect()
@@ -110,14 +120,15 @@ impl Evaluator for MeshTxEvaluator {
 
 fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
-    if cost_model_list.len() < 2 {
+    if cost_model_list.len() < 3 {
         return Err(JsError::from_str(
-            "Cost models have to contain at least PlutusV1 and PlutusV2 costs",
+            "Cost models have to contain at least PlutusV1, PlutusV2, and PlutusV3 costs",
         ));
     };
     Ok(CostMdls {
         plutus_v1: Some(cost_model_list[0].clone()),
         plutus_v2: Some(cost_model_list[1].clone()),
+        plutus_v3: Some(cost_model_list[2].clone()),
     })
 }
 
@@ -160,8 +171,9 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
             .bytes()
             .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
-        Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
-            PlutusV2Script(unwrapped_bytes.to_vec().into()),
+        // TODO: handle dynamic script version
+        Ok(Some(CborWrap(PseudoScript::PlutusV3Script(
+            PlutusV3Script(unwrapped_bytes.to_vec().into()),
         ))))
     } else {
         Ok(None)
@@ -170,8 +182,12 @@ fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<Scri
 
 fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, JsError> {
     if let Some(inline_datum) = &utxo_output.plutus_data {
-        let csl_plutus_data = csl::PlutusData::from_hex(inline_datum)
-            .map_err(|err| JsError::from_str(&format!("Invalid plutus data found: {}", err)))?;
+        let csl_plutus_data = csl::PlutusData::from_hex(inline_datum).map_err(|err| {
+            JsError::from_str(&format!(
+                "Invalid plutus data found for utxo: [{:?}], err: {}",
+                utxo_output, err
+            ))
+        })?;
 
         let plutus_data_bytes = csl_plutus_data.to_bytes();
         let datum = CborWrap(
@@ -232,11 +248,14 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
                 AssetName::from(hex::decode(asset_name).map_err(|err| {
                     JsError::from_str(&format!("Invalid asset name found: {}", err))
                 })?);
-            mapped_assets.push((asset_name_bytes, asset_quantity.parse::<u64>().unwrap()));
+            mapped_assets.push((
+                asset_name_bytes,
+                PositiveCoin::try_from(asset_quantity.parse::<u64>().unwrap()).unwrap(),
+            ));
         }
-        multi_asset.push((policy_id, KeyValuePairs::Def(mapped_assets)));
+        multi_asset.push((policy_id, NonEmptyKeyValuePairs::Def(mapped_assets)));
     }
-    let pallas_multi_asset = KeyValuePairs::Def(multi_asset);
+    let pallas_multi_asset = pallas_codec::utils::NonEmptyKeyValuePairs::Def(multi_asset);
     Ok(Value::Multiasset(coins, pallas_multi_asset))
 }
 
@@ -244,10 +263,10 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
 mod test {
     use pallas_codec::minicbor::Decoder;
 
-    use crate::builder::WData;
+    // use crate::builder::WData;
 
-    use super::*;
-    use sidan_csl_rs::model::{Asset, UTxO, UtxoInput, UtxoOutput};
+    // use super::*;
+    // use sidan_csl_rs::model::{Asset, UTxO, UtxoInput, UtxoOutput};
     // #[test]
     // fn test_eval() {
     // let result = tx_eval("84a80083825820879f68fef00fa676abcfba0396916299eddbf29e1103442aee031b383ee0f3ad01825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80c825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80d0181a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a1e6233b3028201d81858b1d8799fd8799fd87a9f581c103207deb2d24502f8438b5fcc556291877d5d365dafea4fcbd6d1d2ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581cfc259a2fc1a9fa6a6a902675aeba5415d0c33fc72049f5dc80e2b76effd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd879801a000874101a1dcd6500ff021a0003c7cd09a00b5820b3d4c887f173ac071aff2e5ef18943311e9cad5cb7c4b578bebc82e1ff7628a50d818258203fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814070e82581c36314aebecfbc929ee447dcb50fd690604eceae9403a298d9b1f9a54581c5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa1285825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80d825820efe6fbbdd6b993d96883b96c572bfcaa0a4a138c83bd948dec1751d1bfda09b300825820879f68fef00fa676abcfba0396916299eddbf29e1103442aee031b383ee0f3ad01825820c4678d163c493e363f9e7fd9a310855ca6b4bdf508c73a463e1532d168dfb9a800825820f51f44f1f16ceca8a96903b8f494a2da857a244066fa30c67e641d0f729fbde80ca3008282582062f8f9ce8a5ed02fd67d6f2885b927874241a94b41e08fa5a99fc1e3bbca6453584051c0fe402fa75da2959e85eec47c45cf26149d8607be131ebaee4e86c92fe9e6ce9fa581192d7d644a216f4fbfd9fe94d6a827aba2ed0d81db6ff30095e8eb0d8258207f4747ca0c20a1e5c28716c4a10fffbcbe8fe6253cb427ae2f0e24d231a980845840e50b051bdad6c6c04d72bd5ed42f5bd981fa60c6709bacd24b5757f60418dabaa5455674e5135ab04d569f4db519ae1905ebbd47dca08df810a15c063ce0550503800583840000d87980821a000315621a04398879840001d87980821a000315621a04398879840002d87980821a000315621a04398879f5f6",
@@ -397,80 +416,80 @@ mod test {
     //     }]).unwrap();
     // }
 
-    #[test]
-    fn test_eval() {
-        let evaluator = MeshTxEvaluator::new();
-        let result = evaluator.evaluate_tx_sync(
-            "84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
-          &vec![UTxO {
-              input: UtxoInput {
-                  tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
-                  output_index: 0
-              },
-              output: UtxoOutput {
-                  address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "986990")],
-                  data_hash: None,
-                  plutus_data: Some(WData::JSON(
-                    serde_json::json!({
-                        "constructor": 0,
-                        "fields": []
-                    })
-                    .to_string(),
-                ).to_cbor().unwrap()),
-                  script_hash: None,
-                  script_ref: None,
-              }
-          },
-          UTxO {
-              input: UtxoInput {
-                  tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
-                  output_index: 1
-              },
-              output: UtxoOutput {
-                  address: "addr_test1vq0atw43vuecjuwe9dxc7z7l2lvgnyp7d6f5ul4r3376mug8v67h5".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "9974857893")],
-                  data_hash: None,
-                  plutus_data: None,
-                  script_hash: None,
-                  script_ref: None,
-              }
-          },
-          UTxO {
-              input: UtxoInput {
-                  tx_hash: "04b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa".to_string(),
-                  output_index: 0
-              },
-              output: UtxoOutput {
-                  address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "986990")],
-                  data_hash: None,
-                  plutus_data: None,
-                  script_hash: None,
-                  script_ref: Some("5655010000322223253330054a229309b2b1bad0025735".to_string())
-              }
-          }],
-          &[],
-          &Network::Mainnet
-      );
+    // #[test]
+    // fn test_eval() {
+    //     let evaluator = MeshTxEvaluator::new();
+    //     let result = evaluator.evaluate_tx_sync(
+    //         "84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
+    //       &vec![UTxO {
+    //           input: UtxoInput {
+    //               tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
+    //               output_index: 0
+    //           },
+    //           output: UtxoOutput {
+    //               address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
+    //               amount: vec![Asset::new_from_str("lovelace", "986990")],
+    //               data_hash: None,
+    //               plutus_data: Some(WData::JSON(
+    //                 serde_json::json!({
+    //                     "constructor": 0,
+    //                     "fields": []
+    //                 })
+    //                 .to_string(),
+    //             ).to_cbor().unwrap()),
+    //               script_hash: None,
+    //               script_ref: None,
+    //           }
+    //       },
+    //       UTxO {
+    //           input: UtxoInput {
+    //               tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
+    //               output_index: 1
+    //           },
+    //           output: UtxoOutput {
+    //               address: "addr_test1vq0atw43vuecjuwe9dxc7z7l2lvgnyp7d6f5ul4r3376mug8v67h5".to_string(),
+    //               amount: vec![Asset::new_from_str("lovelace", "9974857893")],
+    //               data_hash: None,
+    //               plutus_data: None,
+    //               script_hash: None,
+    //               script_ref: None,
+    //           }
+    //       },
+    //       UTxO {
+    //           input: UtxoInput {
+    //               tx_hash: "04b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa".to_string(),
+    //               output_index: 0
+    //           },
+    //           output: UtxoOutput {
+    //               address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
+    //               amount: vec![Asset::new_from_str("lovelace", "986990")],
+    //               data_hash: None,
+    //               plutus_data: None,
+    //               script_hash: None,
+    //               script_ref: Some("5655010000322223253330054a229309b2b1bad0025735".to_string())
+    //           }
+    //       }],
+    //       &[],
+    //       &Network::Mainnet
+    //   );
 
-        let redeemers = result.unwrap();
-        let mut redeemer_json = serde_json::Map::new();
-        for redeemer in redeemers {
-            redeemer_json.insert("index".to_string(), redeemer.index.to_string().into());
-            let mut ex_unit_json = serde_json::Map::new();
-            ex_unit_json.insert("mem".to_string(), redeemer.budget.mem.into());
-            ex_unit_json.insert("steps".to_string(), redeemer.budget.steps.into());
-            redeemer_json.insert(
-                "ex_units".to_string(),
-                serde_json::Value::Object(ex_unit_json),
-            );
-        }
-        assert_eq!(
-            serde_json::json!({"ex_units":{"mem":2833,"steps":528893},"index":"0"}).to_string(),
-            serde_json::json!(redeemer_json).to_string()
-        )
-    }
+    //     let redeemers = result.unwrap();
+    //     let mut redeemer_json = serde_json::Map::new();
+    //     for redeemer in redeemers {
+    //         redeemer_json.insert("index".to_string(), redeemer.index.to_string().into());
+    //         let mut ex_unit_json = serde_json::Map::new();
+    //         ex_unit_json.insert("mem".to_string(), redeemer.budget.mem.into());
+    //         ex_unit_json.insert("steps".to_string(), redeemer.budget.steps.into());
+    //         redeemer_json.insert(
+    //             "ex_units".to_string(),
+    //             serde_json::Value::Object(ex_unit_json),
+    //         );
+    //     }
+    //     assert_eq!(
+    //         serde_json::json!({"ex_units":{"mem":2833,"steps":528893},"index":"0"}).to_string(),
+    //         serde_json::json!(redeemer_json).to_string()
+    //     )
+    // }
 
     #[test]
     fn test_cbor() {

@@ -3,13 +3,13 @@ mod mesh_tx_builder_core_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::model::{Asset, Budget};
     use whisky::{
-        builder::{MeshTxBuilder, MeshTxBuilderParam, WData::JSON, WRedeemer},
+        builder::{TxBuilder, TxBuilderParam, WData::JSON, WRedeemer},
         core::common::{builtin_byte_string, con_str0},
     };
 
     #[test]
     fn test_mesh_tx_builder_core() {
-        MeshTxBuilder::new(MeshTxBuilderParam {
+        TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -19,7 +19,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_tx_in() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -36,7 +36,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -69,7 +69,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_datum_value() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -102,7 +102,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_ref_script() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -141,7 +141,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_script_tx_in_with_script_value() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -176,7 +176,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_read_only_tx_in_reference() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -220,7 +220,7 @@ mod mesh_tx_builder_core_tests {
 
     #[test]
     fn test_mint() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,

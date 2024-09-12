@@ -1,4 +1,4 @@
-use whisky::{builder::MeshTxBuilder, csl::JsError, model::UTxO};
+use whisky::{builder::TxBuilder, csl::JsError, model::UTxO};
 
 pub fn delegate_stake(
     stake_key_hash: &str,
@@ -6,7 +6,7 @@ pub fn delegate_stake(
     my_address: &str,
     inputs: &[UTxO],
 ) -> Result<String, JsError> {
-    let mut tx_builder = MeshTxBuilder::new_core();
+    let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .register_stake_certificate(stake_key_hash)
         .delegate_stake_certificate(stake_key_hash, pool_id)
