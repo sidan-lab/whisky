@@ -2644,7 +2644,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3104,9 +3104,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "uplc"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "862220b9a50dfc342c18f57212f10ff50a94469c8ad4d47ea4f512eb1acd4d7b"
+checksum = "44f8851275d6f9485ececa08046ddeeac3c158dce0d3229cf8fe2a2d627440a3"
 dependencies = [
  "blst",
  "cryptoxide",
@@ -3258,7 +3258,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "actix-cors",
  "actix-web",
