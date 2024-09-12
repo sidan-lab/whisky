@@ -138,8 +138,7 @@ pub struct VoteDelegation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DRep {
-    KeyHash(String),
-    ScriptHash(String),
+    DRepId(String),
     AlwaysAbstain,
     AlwaysNoConfidence,
 }
