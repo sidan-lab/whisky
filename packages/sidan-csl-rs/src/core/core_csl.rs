@@ -3,7 +3,11 @@ use cardano_serialization_lib::{JsError, MintWitness};
 
 use super::{
     constants::build_csl_cost_models,
-    utils::{build_tx_builder, sign_transaction, to_bignum, to_csl_cert, to_value},
+    utils::{
+        build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_cert, to_csl_redeemer,
+        to_csl_script_source, to_csl_simple_script_source, to_csl_vote_kind, to_csl_voter,
+        to_value,
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -68,9 +72,7 @@ impl MeshCSL {
                     &to_value(&input.tx_in.amount.unwrap()),
                 );
                 Ok(())
-            } // Err(JsError::from_str(
-              //     "Reference Native scripts not implemented",
-              // )),
+            }
         }
     }
 
@@ -95,35 +97,7 @@ impl MeshCSL {
             }
         };
 
-        let csl_script: csl::PlutusScriptSource = match script_source {
-            ScriptSource::ProvidedScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
-                    &script.script_cbor,
-                    &language_version,
-                )?)
-            }
-            ScriptSource::InlineScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.script_hash)?,
-                    &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                        script.ref_tx_in.tx_index,
-                    ),
-                    &language_version,
-                    script.script_size,
-                )
-            }
-        };
+        let csl_script: csl::PlutusScriptSource = to_csl_script_source(script_source)?;
 
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
@@ -263,35 +237,7 @@ impl MeshCSL {
         let script_source = withdrawal.script_source.unwrap();
         let redeemer = withdrawal.redeemer.unwrap();
 
-        let csl_script: csl::PlutusScriptSource = match script_source {
-            ScriptSource::ProvidedScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
-                    &script.script_cbor,
-                    &language_version,
-                )?)
-            }
-            ScriptSource::InlineScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.script_hash)?,
-                    &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                        script.ref_tx_in.tx_index,
-                    ),
-                    &language_version,
-                    script.script_size,
-                )
-            }
-        };
+        let csl_script: csl::PlutusScriptSource = to_csl_script_source(script_source)?;
 
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
@@ -368,35 +314,7 @@ impl MeshCSL {
             ),
         );
         let script_source_info = script_mint.script_source.unwrap();
-        let mint_script = match script_source_info {
-            ScriptSource::InlineScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(script_mint.mint.policy_id.as_str())?,
-                    &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                        script.ref_tx_in.tx_index,
-                    ),
-                    &language_version,
-                    script.script_size,
-                )
-            }
-            ScriptSource::ProvidedScriptSource(script) => {
-                let language_version: csl::Language = match script.language_version {
-                    LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                    LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                    LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                };
-                csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
-                    script.script_cbor.as_str(),
-                    &language_version,
-                )?)
-            }
-        };
+        let mint_script = to_csl_script_source(script_source_info)?;
         mint_builder.add_asset(
             &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
             &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).unwrap())?,
@@ -447,35 +365,7 @@ impl MeshCSL {
             }
             Certificate::ScriptCertificate(script_cert) => {
                 let cert_script_source: csl::PlutusScriptSource = match script_cert.script_source {
-                    Some(script_source) => match script_source {
-                        ScriptSource::InlineScriptSource(script) => {
-                            let language_version: csl::Language = match script.language_version {
-                                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                            };
-                            csl::PlutusScriptSource::new_ref_input(
-                                &csl::ScriptHash::from_hex(&script.script_hash)?,
-                                &csl::TransactionInput::new(
-                                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                                    script.ref_tx_in.tx_index,
-                                ),
-                                &language_version,
-                                script.script_size,
-                            )
-                        }
-                        ScriptSource::ProvidedScriptSource(script) => {
-                            let language_version: csl::Language = match script.language_version {
-                                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
-                                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
-                                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
-                            };
-                            csl::PlutusScriptSource::new(&csl::PlutusScript::from_hex_with_version(
-                                script.script_cbor.as_str(),
-                                &language_version,
-                            )?)
-                        }
-                    },
+                    Some(script_source) => to_csl_script_source(script_source)?,
                     None => {
                         return Err(JsError::from_str(
                             "Missing Plutus Script Source in Plutus Cert",
@@ -483,15 +373,7 @@ impl MeshCSL {
                     }
                 };
                 let cert_redeemer = match script_cert.redeemer {
-                    Some(redeemer) => csl::Redeemer::new(
-                        &csl::RedeemerTag::new_cert(),
-                        &to_bignum(index),
-                        &csl::PlutusData::from_hex(&redeemer.data)?,
-                        &csl::ExUnits::new(
-                            &to_bignum(redeemer.ex_units.mem),
-                            &to_bignum(redeemer.ex_units.steps),
-                        ),
-                    ),
+                    Some(redeemer) => to_csl_redeemer(RedeemerTag::Cert, redeemer, index)?,
                     None => return Err(JsError::from_str("Missing Redeemer in Plutus Cert")),
                 };
                 let csl_plutus_witness: csl::PlutusWitness =
@@ -505,24 +387,9 @@ impl MeshCSL {
             Certificate::SimpleScriptCertificate(simple_script_cert) => {
                 let script_info = simple_script_cert.simple_script_source;
                 let script_source: csl::NativeScriptSource = match script_info {
-                    Some(script_source) => match script_source {
-                        SimpleScriptSource::ProvidedSimpleScriptSource(script) => {
-                            csl::NativeScriptSource::new(&csl::NativeScript::from_hex(
-                                &script.script_cbor,
-                            )?)
-                        }
-
-                        SimpleScriptSource::InlineSimpleScriptSource(script) => {
-                            csl::NativeScriptSource::new_ref_input(
-                                &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
-                                &csl::TransactionInput::new(
-                                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                                    script.ref_tx_in.tx_index,
-                                ),
-                                script.script_size,
-                            )
-                        }
-                    },
+                    Some(simple_script_source) => {
+                        to_csl_simple_script_source(simple_script_source)?
+                    }
                     None => {
                         return Err(JsError::from_str(
                             "Missing Native Script Source in Native Cert",
@@ -532,6 +399,99 @@ impl MeshCSL {
                 certificates_builder.add_with_native_script(
                     &to_csl_cert(simple_script_cert.cert)?,
                     &script_source,
+                )?
+            }
+        };
+        Ok(())
+    }
+
+    pub fn add_vote(
+        &mut self,
+        vote_builder: &mut csl::VotingBuilder,
+        vote: Vote,
+        index: u64,
+    ) -> Result<(), JsError> {
+        match vote {
+            Vote::BasicVote(vote_type) => {
+                let voter = to_csl_voter(vote_type.voter)?;
+                let vote_kind = to_csl_vote_kind(vote_type.voting_procedure.vote_kind);
+                let voting_procedure = match vote_type.voting_procedure.anchor {
+                    Some(anchor) => {
+                        csl::VotingProcedure::new_with_anchor(vote_kind, &to_csl_anchor(&anchor)?)
+                    }
+                    None => csl::VotingProcedure::new(vote_kind),
+                };
+                vote_builder.add(
+                    &voter,
+                    &csl::GovernanceActionId::new(
+                        &csl::TransactionHash::from_hex(&vote_type.gov_action_id.tx_hash)?,
+                        vote_type.gov_action_id.tx_index,
+                    ),
+                    &voting_procedure,
+                )?
+            }
+            Vote::ScriptVote(script_vote) => {
+                let voter = to_csl_voter(script_vote.vote.voter)?;
+                let vote_kind = to_csl_vote_kind(script_vote.vote.voting_procedure.vote_kind);
+                let voting_procedure = match script_vote.vote.voting_procedure.anchor {
+                    Some(anchor) => {
+                        csl::VotingProcedure::new_with_anchor(vote_kind, &to_csl_anchor(&anchor)?)
+                    }
+                    None => csl::VotingProcedure::new(vote_kind),
+                };
+                let vote_script_source: csl::PlutusScriptSource = match script_vote.script_source {
+                    Some(script_source) => to_csl_script_source(script_source)?,
+                    None => {
+                        return Err(JsError::from_str(
+                            "Missing Plutus Script Source in Plutus Vote",
+                        ))
+                    }
+                };
+                let vote_redeemer = match script_vote.redeemer {
+                    Some(redeemer) => to_csl_redeemer(RedeemerTag::Vote, redeemer, index)?,
+                    None => return Err(JsError::from_str("Missing Redeemer in Plutus Vote")),
+                };
+                let csl_plutus_witness: csl::PlutusWitness =
+                    csl::PlutusWitness::new_with_ref_without_datum(
+                        &vote_script_source,
+                        &vote_redeemer,
+                    );
+                vote_builder.add_with_plutus_witness(
+                    &voter,
+                    &csl::GovernanceActionId::new(
+                        &csl::TransactionHash::from_hex(&script_vote.vote.gov_action_id.tx_hash)?,
+                        script_vote.vote.gov_action_id.tx_index,
+                    ),
+                    &voting_procedure,
+                    &csl_plutus_witness,
+                )?
+            }
+            Vote::SimpleScriptVote(simple_script_vote) => {
+                let voter = to_csl_voter(simple_script_vote.vote.voter)?;
+                let vote_kind =
+                    to_csl_vote_kind(simple_script_vote.vote.voting_procedure.vote_kind);
+                let voting_procedure = match simple_script_vote.vote.voting_procedure.anchor {
+                    Some(anchor) => {
+                        csl::VotingProcedure::new_with_anchor(vote_kind, &to_csl_anchor(&anchor)?)
+                    }
+                    None => csl::VotingProcedure::new(vote_kind),
+                };
+                let csl_simple_script_source = match simple_script_vote.simple_script_source {
+                    Some(simple_script_source) => {
+                        to_csl_simple_script_source(simple_script_source)?
+                    }
+                    None => return Err(JsError::from_str("Missing ")),
+                };
+                vote_builder.add_with_native_script(
+                    &voter,
+                    &csl::GovernanceActionId::new(
+                        &csl::TransactionHash::from_hex(
+                            &simple_script_vote.vote.gov_action_id.tx_hash,
+                        )?,
+                        simple_script_vote.vote.gov_action_id.tx_index,
+                    ),
+                    &voting_procedure,
+                    &csl_simple_script_source,
                 )?
             }
         };

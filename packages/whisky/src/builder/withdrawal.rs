@@ -67,7 +67,6 @@ impl TxBuilder {
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
     /// * `withdrawal_script_hash` - The withdrawal script hash
-    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     /// * `script_size` - Size of the script
     ///
     /// ### Returns
@@ -166,7 +165,6 @@ impl TxBuilder {
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     ///
     /// ### Returns
     ///
@@ -186,7 +184,8 @@ impl TxBuilder {
                     ProvidedSimpleScriptSource {
                         script_cbor: script_cbor.to_string(),
                     },
-                ))
+                ));
+                self.withdrawal_item = Some(Withdrawal::SimpleScriptWithdrawal(withdraw));
             }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
                 withdraw.script_source =
