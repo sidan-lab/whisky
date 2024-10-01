@@ -35,6 +35,7 @@ impl MeshTxParser {
             change_address: "".to_string(),
             change_datum: None,
             certificates: vec![],
+            votes: vec![],
             metadata: vec![],
             validity_range: ValidityRange {
                 invalid_before: None,

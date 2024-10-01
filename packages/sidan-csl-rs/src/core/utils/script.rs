@@ -1,5 +1,5 @@
 use cardano_serialization_lib::JsError;
-use model::LanguageVersion;
+use model::{LanguageVersion, ScriptSource, SimpleScriptSource};
 
 use crate::*;
 
@@ -18,6 +18,63 @@ pub fn get_script_hash(script: &str, version: LanguageVersion) -> Result<String,
         .hash()
         .to_hex();
     Ok(script_hash)
+}
+
+pub fn to_csl_script_source(
+    script_source: ScriptSource,
+) -> Result<csl::PlutusScriptSource, JsError> {
+    match script_source {
+        ScriptSource::InlineScriptSource(script) => {
+            let language_version: csl::Language = match script.language_version {
+                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+            };
+            Ok(csl::PlutusScriptSource::new_ref_input(
+                &csl::ScriptHash::from_hex(&script.script_hash)?,
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                    script.ref_tx_in.tx_index,
+                ),
+                &language_version,
+                script.script_size,
+            ))
+        }
+        ScriptSource::ProvidedScriptSource(script) => {
+            let language_version: csl::Language = match script.language_version {
+                LanguageVersion::V1 => csl::Language::new_plutus_v1(),
+                LanguageVersion::V2 => csl::Language::new_plutus_v2(),
+                LanguageVersion::V3 => csl::Language::new_plutus_v3(),
+            };
+            Ok(csl::PlutusScriptSource::new(
+                &csl::PlutusScript::from_hex_with_version(
+                    script.script_cbor.as_str(),
+                    &language_version,
+                )?,
+            ))
+        }
+    }
+}
+
+pub fn to_csl_simple_script_source(
+    simple_script_source: SimpleScriptSource,
+) -> Result<csl::NativeScriptSource, JsError> {
+    match simple_script_source {
+        SimpleScriptSource::ProvidedSimpleScriptSource(script) => Ok(csl::NativeScriptSource::new(
+            &csl::NativeScript::from_hex(&script.script_cbor)?,
+        )),
+
+        SimpleScriptSource::InlineSimpleScriptSource(script) => {
+            Ok(csl::NativeScriptSource::new_ref_input(
+                &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                    script.ref_tx_in.tx_index,
+                ),
+                script.script_size,
+            ))
+        }
+    }
 }
 
 #[wasm_bindgen]

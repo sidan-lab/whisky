@@ -6,6 +6,7 @@ mod service;
 mod tx_eval;
 mod tx_in;
 mod tx_out;
+mod vote;
 mod withdrawal;
 
 use std::collections::HashMap;
@@ -25,12 +26,14 @@ pub struct TxBuilder {
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
     pub withdrawal_item: Option<Withdrawal>,
+    pub vote_item: Option<Vote>,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,
     pub adding_script_input: Option<LanguageVersion>,
     pub adding_plutus_mint: Option<LanguageVersion>,
     pub adding_plutus_withdrawal: Option<LanguageVersion>,
+    pub adding_plutus_vote: Option<LanguageVersion>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub submitter: Option<Box<dyn Submitter>>,
@@ -65,12 +68,14 @@ impl TxBuilder {
             protocol_params: param.params.clone(),
             tx_in_item: None,
             withdrawal_item: None,
+            vote_item: None,
             mint_item: None,
             collateral_item: None,
             tx_output: None,
             adding_script_input: None,
             adding_plutus_mint: None,
             adding_plutus_withdrawal: None,
+            adding_plutus_vote: None,
             fetcher: param.fetcher,
             evaluator: match param.evaluator {
                 Some(evaluator) => Some(evaluator),
@@ -401,6 +406,30 @@ impl TxBuilder {
 
     /// ## Internal method
     ///
+    /// Queue a vote in the TxBuilder instance
+    pub fn queue_vote(&mut self) {
+        let vote_item = self.vote_item.clone().unwrap();
+        match vote_item {
+            Vote::ScriptVote(script_vote) => {
+                match (script_vote.redeemer, script_vote.script_source) {
+                    (None, _) => panic!("Redeemer in script vote cannot be None"),
+                    (_, None) => panic!("Script source in script vote cannot be None"),
+                    _ => {}
+                }
+            }
+            Vote::SimpleScriptVote(simple_script_vote) => {
+                if simple_script_vote.simple_script_source.is_none() {
+                    panic!("Script source is missing from native script vote")
+                }
+            }
+            Vote::BasicVote(_) => {}
+        }
+        self.core.mesh_tx_builder_body.votes.push(self.vote_item.clone().unwrap());
+        self.vote_item = None;
+    }
+
+    /// ## Internal method
+    ///
     /// Queue a mint in the TxBuilder instance
     pub fn queue_mint(&mut self) {
         let mint_item = self.mint_item.take().unwrap();
@@ -450,6 +479,9 @@ impl TxBuilder {
         }
         if self.withdrawal_item.is_some() {
             self.queue_withdrawal();
+        }
+        if self.vote_item.is_some() {
+            self.queue_vote();
         }
         if self.mint_item.is_some() {
             self.queue_mint();

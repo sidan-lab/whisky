@@ -40,6 +40,7 @@ pub fn serialize_tx_body(
     TxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone())?;
     TxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
     TxBuilderCore::add_all_certificates(&mut mesh_csl, mesh_tx_builder_body.certificates.clone())?;
+    TxBuilderCore::add_all_votes(&mut mesh_csl, mesh_tx_builder_body.votes.clone())?;
     TxBuilderCore::add_validity_range(&mut mesh_csl, mesh_tx_builder_body.validity_range.clone());
     TxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
@@ -150,6 +151,7 @@ impl TxBuilderCore {
                 change_address: "".to_string(),
                 change_datum: None,
                 certificates: vec![],
+                votes: vec![],
                 metadata: vec![],
                 validity_range: ValidityRange {
                     invalid_before: None,
@@ -341,6 +343,23 @@ impl TxBuilderCore {
             mesh_csl.add_cert(&mut certificates_builder, cert, index as u64)?
         }
         mesh_csl.tx_builder.set_certs_builder(&certificates_builder);
+        Ok(())
+    }
+
+    /// ## Internal method
+    ///
+    /// Add multiple votes to the TxBuilder instance
+    ///
+    /// ### Arguments
+    ///
+    /// * `mesh_csl` - The MeshCSL instance
+    /// * `votes` - A vector of votes
+    fn add_all_votes(mesh_csl: &mut MeshCSL, votes: Vec<Vote>) -> Result<(), JsError> {
+        let mut vote_builder = csl::VotingBuilder::new();
+        for (index, vote) in votes.into_iter().enumerate() {
+            mesh_csl.add_vote(&mut vote_builder, vote, index as u64)?
+        }
+        mesh_csl.tx_builder.set_voting_builder(&vote_builder);
         Ok(())
     }
 
