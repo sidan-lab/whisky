@@ -1,16 +1,21 @@
 use cardano_serialization_lib::{self as csl, JsError};
 
-use crate::model::{VoteKind, Voter};
+use crate::model::{Credential, VoteKind, Voter};
 
 pub fn to_csl_voter(voter: Voter) -> Result<csl::Voter, JsError> {
     match voter {
-        Voter::ConstitutionalCommitteeHotAddress(reward_address) => {
-            Ok(csl::Voter::new_constitutional_committee_hot_credential(
-                &csl::RewardAddress::from_address(&csl::Address::from_bech32(&reward_address)?)
-                    .unwrap()
-                    .payment_cred(),
-            ))
-        }
+        Voter::ConstitutionalCommitteeHotCred(cred) => match cred {
+            Credential::KeyHash(key_hash) => {
+                Ok(csl::Voter::new_constitutional_committee_hot_credential(
+                    &csl::Credential::from_keyhash(&csl::Ed25519KeyHash::from_hex(&key_hash)?),
+                ))
+            }
+            Credential::ScriptHash(script_hash) => {
+                Ok(csl::Voter::new_constitutional_committee_hot_credential(
+                    &csl::Credential::from_scripthash(&csl::ScriptHash::from_hex(&script_hash)?),
+                ))
+            }
+        },
         Voter::DRepId(drep_id) => {
             let drep = csl::DRep::from_bech32(&drep_id).unwrap();
             let drep_credential = if drep.to_script_hash().is_some() {
