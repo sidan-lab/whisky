@@ -1,9 +1,18 @@
 use pallas_codec::utils::NonEmptyKeyValuePairs;
+use pallas_primitives::conway::NativeScript;
+use pallas_primitives::conway::PlutusV1Script;
+use pallas_primitives::conway::PlutusV2Script;
 use pallas_primitives::conway::PlutusV3Script;
 use pallas_primitives::conway::RedeemerTag as PRedeemerTag;
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 
+use crate::core::constants::get_cost_models_from_network;
+use crate::core::tx_parser::MeshTxParser;
+use crate::csl::{Address, JsError};
+use crate::model::{Action, Asset, Budget, JsVecString, Network, RedeemerTag, UTxO, UtxoOutput};
+use crate::wasm::WasmResult;
+use crate::*;
 use pallas_codec::minicbor::Decoder;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::{
@@ -18,12 +27,6 @@ use uplc::{
     tx::{eval_phase_two, ResolvedInput},
     Hash, TransactionInput,
 };
-use crate::model::{Action, Asset, Budget, JsVecString, Network, RedeemerTag, UTxO, UtxoOutput};
-use crate::core::constants::get_cost_models_from_network;
-use crate::core::tx_parser::MeshTxParser;
-use crate::csl::{Address, JsError};
-use crate::wasm::WasmResult;
-use crate::*;
 
 #[wasm_bindgen]
 pub fn evaluate_tx_scripts_js(
@@ -33,7 +36,7 @@ pub fn evaluate_tx_scripts_js(
     network: String,
 ) -> WasmResult {
     let mut deserialized_utxos: Vec<UTxO> = Vec::new();
-    for utxo_json  in resolved_utxos {
+    for utxo_json in resolved_utxos {
         match serde_json::from_str(utxo_json.as_str()) {
             Ok(utxo) => deserialized_utxos.push(utxo),
             Err(e) => {
@@ -49,76 +52,81 @@ pub fn evaluate_tx_scripts_js(
         }
     };
 
-    let eval_result = evaluate_tx_scripts(&tx_hex, &deserialized_utxos, &additional_txs.to_vec(), &deserialize_network);
+    let eval_result = evaluate_tx_scripts(
+        &tx_hex,
+        &deserialized_utxos,
+        &additional_txs.to_vec(),
+        &deserialize_network,
+    );
 
     match eval_result {
         Ok(actions) => {
             let actions_json = serde_json::to_string(&actions).unwrap();
             WasmResult::new("success".to_string(), actions_json)
-        },
-        Err(e) => WasmResult::new_error("failure".to_string(), format!("{:?}", e))
+        }
+        Err(e) => WasmResult::new_error("failure".to_string(), format!("{:?}", e)),
     }
 }
 
 pub fn evaluate_tx_scripts(
-        tx_hex: &str,
-        inputs: &[UTxO],
-        additional_txs: &[String],
-        network: &Network,
-    ) -> Result<Vec<Action>, JsError> {
-        let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
-        let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
-        let tx = match mtx {
-            Ok(MultiEraTx::Conway(tx)) => tx.into_owned(),
-            _ => return Err(JsError::from_str("Invalid Tx Era")),
-        };
+    tx_hex: &str,
+    inputs: &[UTxO],
+    additional_txs: &[String],
+    network: &Network,
+) -> Result<Vec<Action>, JsError> {
+    let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
+    let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
+    let tx = match mtx {
+        Ok(MultiEraTx::Conway(tx)) => tx.into_owned(),
+        _ => return Err(JsError::from_str("Invalid Tx Era")),
+    };
 
-        let tx_outs: Vec<UTxO> = additional_txs
-            .iter()
-            .flat_map(|tx| {
-                let parsed_tx = MeshTxParser::new(tx).unwrap();
-                println!(
-                    "txout: {:?}",
-                    &parsed_tx.get_tx_outs_utxo().unwrap().clone()
-                );
-                println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
-                parsed_tx.get_tx_outs_utxo().unwrap() //TODO: handle error
+    let tx_outs: Vec<UTxO> = additional_txs
+        .iter()
+        .flat_map(|tx| {
+            let parsed_tx = MeshTxParser::new(tx).unwrap();
+            println!(
+                "txout: {:?}",
+                &parsed_tx.get_tx_outs_utxo().unwrap().clone()
+            );
+            println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
+            parsed_tx.get_tx_outs_utxo().unwrap() //TODO: handle error
+        })
+        .collect();
+
+    // combine inputs and tx_outs
+    let all_inputs: Vec<UTxO> = inputs.iter().chain(tx_outs.iter()).cloned().collect();
+
+    eval_phase_two(
+        &tx,
+        &to_pallas_utxos(&all_inputs)?,
+        Some(&get_cost_mdls(network)?),
+        None,
+        &SlotConfig::default(),
+        false,
+        |_r| (),
+    )
+    .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
+    .map(|reds| {
+        reds.into_iter()
+            .map(|red| Action {
+                index: red.index,
+                budget: Budget {
+                    mem: red.ex_units.mem,
+                    steps: red.ex_units.steps,
+                },
+                tag: match red.tag {
+                    PRedeemerTag::Spend => RedeemerTag::Spend,
+                    PRedeemerTag::Mint => RedeemerTag::Mint,
+                    PRedeemerTag::Cert => RedeemerTag::Cert,
+                    PRedeemerTag::Reward => RedeemerTag::Reward,
+                    PRedeemerTag::Vote => RedeemerTag::Vote,
+                    PRedeemerTag::Propose => RedeemerTag::Propose,
+                },
             })
-            .collect();
-
-        // combine inputs and tx_outs
-        let all_inputs: Vec<UTxO> = inputs.iter().chain(tx_outs.iter()).cloned().collect();
-
-        eval_phase_two(
-            &tx,
-            &to_pallas_utxos(&all_inputs)?,
-            Some(&get_cost_mdls(network)?),
-            None,
-            &SlotConfig::default(),
-            false,
-            |_r| (),
-        )
-            .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
-            .map(|reds| {
-                reds.into_iter()
-                    .map(|red| Action {
-                        index: red.index,
-                        budget: Budget {
-                            mem: red.ex_units.mem,
-                            steps: red.ex_units.steps,
-                        },
-                        tag: match red.tag {
-                            PRedeemerTag::Spend => RedeemerTag::Spend,
-                            PRedeemerTag::Mint => RedeemerTag::Mint,
-                            PRedeemerTag::Cert => RedeemerTag::Cert,
-                            PRedeemerTag::Reward => RedeemerTag::Reward,
-                            PRedeemerTag::Vote => RedeemerTag::Vote,
-                            PRedeemerTag::Propose => RedeemerTag::Propose,
-                        },
-                    })
-                    .collect()
-            })
-    }
+            .collect()
+    })
+}
 
 fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
@@ -148,10 +156,7 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
                 index: utxo.input.output_index.into(),
             },
             output: TransactionOutput::PostAlonzo(PostAlonzoTransactionOutput {
-                address: Bytes::from(
-                    Address::from_bech32(&utxo.output.address)?
-                        .to_bytes(),
-                ),
+                address: Bytes::from(Address::from_bech32(&utxo.output.address)?.to_bytes()),
                 value: to_pallas_value(&utxo.output.amount)?,
                 datum_option: to_pallas_datum(&utxo.output)?,
                 script_ref: to_pallas_script_ref(&utxo.output)?,
@@ -162,20 +167,33 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
     Ok(resolved_inputs)
 }
 
-// TODO: handle native and plutusV1 scripts
 fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
-    if let Some(script) = &utxo_output.script_ref {
-        let script_bytes = hex::decode(script)
+    if let Some(script_ref) = &utxo_output.script_ref {
+        let script_bytes = hex::decode(script_ref.script_hex.clone())
             .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
         let unwrapped_bytes = Decoder::new(&script_bytes)
             .bytes()
             .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
-        // TODO: handle dynamic script version
-        Ok(Some(CborWrap(PseudoScript::PlutusV3Script(
-            PlutusV3Script(unwrapped_bytes.to_vec().into()),
-        ))))
+        match &script_ref.script_version {
+            Some(version) => match version {
+                model::LanguageVersion::V1 => Ok(Some(CborWrap(PseudoScript::PlutusV1Script(
+                    PlutusV1Script(unwrapped_bytes.to_vec().into()),
+                )))),
+                model::LanguageVersion::V2 => Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
+                    PlutusV2Script(unwrapped_bytes.to_vec().into()),
+                )))),
+                model::LanguageVersion::V3 => Ok(Some(CborWrap(PseudoScript::PlutusV3Script(
+                    PlutusV3Script(unwrapped_bytes.to_vec().into()),
+                )))),
+            },
+            None => Ok(Some(CborWrap(PseudoScript::NativeScript(
+                NativeScript::decode_fragment(unwrapped_bytes).map_err(|err| {
+                    JsError::from_str(&format!("Invalid native script found: {}", err))
+                })?,
+            )))),
+        }
     } else {
         Ok(None)
     }
