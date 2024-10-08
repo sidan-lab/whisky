@@ -55,7 +55,7 @@ pub fn evaluate_tx_scripts_js(
     let eval_result = evaluate_tx_scripts(
         &tx_hex,
         &deserialized_utxos,
-        &additional_txs.to_vec(),
+        &additional_txs.into_vec(),
         &deserialize_network,
     );
 
