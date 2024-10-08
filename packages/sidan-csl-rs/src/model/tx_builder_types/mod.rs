@@ -1,4 +1,5 @@
 mod certificate;
+mod credential;
 mod datum;
 mod metadata;
 mod mint;
@@ -14,6 +15,7 @@ mod vote;
 mod withdrawal;
 
 pub use certificate::*;
+pub use credential::*;
 pub use datum::*;
 pub use metadata::*;
 pub use mint::*;

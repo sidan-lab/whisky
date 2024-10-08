@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Anchor, Redeemer, RefTxIn, ScriptSource, SimpleScriptSource};
+use super::{Anchor, Credential, Redeemer, RefTxIn, ScriptSource, SimpleScriptSource};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,7 +36,7 @@ pub struct VoteType {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Voter {
-    ConstitutionalCommitteeHotAddress(String),
+    ConstitutionalCommitteeHotCred(Credential),
     DRepId(String),
     StakingPoolKeyHash(String),
 }
