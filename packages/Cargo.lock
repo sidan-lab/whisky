@@ -1766,9 +1766,9 @@ dependencies = [
 
 [[package]]
 name = "pallas-addresses"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38fac39e0da3b0fc4c859635c72e97584f01f3a0f4f1508b0851c02d6d52f15"
+checksum = "84460293bb3323066e9ce608702750c14f02bc36d41c469e44b3eef5ec0fdbf6"
 dependencies = [
  "base58",
  "bech32 0.9.1",
@@ -1782,9 +1782,9 @@ dependencies = [
 
 [[package]]
 name = "pallas-codec"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea8a4b87dbc8bcb8aeb865f7cca5e1eb29744330e23b307169fc30537648b264"
+checksum = "747279d1bc612986035619a3eaded8f9f4ceae29668aa7a5feae83681a0e93f4"
 dependencies = [
  "hex",
  "minicbor",
@@ -1795,9 +1795,9 @@ dependencies = [
 
 [[package]]
 name = "pallas-crypto"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b98c3f204299d47d9b581ab425043789caff1f491c078ee3d3f109d6556f725"
+checksum = "1b6f8b08e32c7dbb50302222701ae15ef9ac1a7cc39225ce29c253f6ddab2aa7"
 dependencies = [
  "cryptoxide",
  "hex",
@@ -1809,9 +1809,9 @@ dependencies = [
 
 [[package]]
 name = "pallas-primitives"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f64835dd9cbdd75a38961a190b983f02746c872340daf1a921eada8c525a4b6"
+checksum = "24929d461308626183d5bf15290e6315f4cc67fa38a1a66469425919683cceb2"
 dependencies = [
  "base58",
  "bech32 0.9.1",
@@ -1825,9 +1825,9 @@ dependencies = [
 
 [[package]]
 name = "pallas-traverse"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad516b05ba7d838ee84f9998d7b2b4ff7acc178cb052bcfd5fea9edc2ef6023f"
+checksum = "73ca94c2278a160c226d6f5bb1756ea5f355421158aaa697445f59f09477a6a4"
 dependencies = [
  "hex",
  "itertools 0.13.0",
@@ -2644,7 +2644,7 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.8.7"
+version = "0.9.0"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3104,9 +3104,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "uplc"
-version = "1.1.1"
+version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44f8851275d6f9485ececa08046ddeeac3c158dce0d3229cf8fe2a2d627440a3"
+checksum = "dcee5aac88875e74cf7a01655691e968e12529450d322604dc6f0852c293dad2"
 dependencies = [
  "blst",
  "cryptoxide",
@@ -3258,7 +3258,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.8.7"
+version = "0.9.0"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3283,7 +3283,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.8.7"
+version = "0.9.0"
 dependencies = [
  "actix-cors",
  "actix-web",

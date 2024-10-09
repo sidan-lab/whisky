@@ -26,6 +26,10 @@ impl JsVecString {
     pub fn add(&mut self, elem: String) {
         self.0.push(elem.clone());
     }
+
+    pub(crate) fn into_vec(self) -> Vec<String> {
+        self.0
+    }
 }
 
 impl IntoIterator for JsVecString {
