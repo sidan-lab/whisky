@@ -162,14 +162,15 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
     Ok(resolved_inputs)
 }
 
-fn to_pallas_script_ref(script_ref: &Option<String>) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
+fn to_pallas_script_ref(
+    script_ref: &Option<String>,
+) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
     if let Some(script_ref) = script_ref {
         let script_bytes = hex::decode(script_ref)
             .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
         let pallas_script = ScriptRef::decode_fragment(&script_bytes)
             .map_err(|err| JsError::from_str(&format!("Invalid script found: {}", err)))?;
-
 
         Ok(Some(CborWrap(pallas_script)))
     } else {
@@ -344,43 +345,51 @@ mod test {
 
     #[test]
     fn test_v1_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some("82015655010000322223253330054a229309b2b1bad0025735".to_string()))
-            .unwrap()
-            .unwrap();
+        let script_ref = to_pallas_script_ref(&Some(
+            "82015655010000322223253330054a229309b2b1bad0025735".to_string(),
+        ))
+        .unwrap()
+        .unwrap();
 
         match script_ref.0 {
             ScriptRef::PlutusV1Script(_) => {}
-            _ => assert!(false, "Invalid script ref"),
+            _ => panic!("Invalid script ref"),
         }
     }
 
     #[test]
     fn test_v2_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some("82025655010000322223253330054a229309b2b1bad0025735".to_string()))
-            .unwrap()
-            .unwrap();
+        let script_ref = to_pallas_script_ref(&Some(
+            "82025655010000322223253330054a229309b2b1bad0025735".to_string(),
+        ))
+        .unwrap()
+        .unwrap();
 
         match script_ref.0 {
             ScriptRef::PlutusV2Script(_) => {}
-            _ => assert!(false, "Invalid script ref"),
+            _ => panic!("Invalid script ref"),
         }
     }
 
     #[test]
     fn test_v3_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some("82035655010000322223253330054a229309b2b1bad0025735".to_string()))
-            .unwrap()
-            .unwrap();
+        let script_ref = to_pallas_script_ref(&Some(
+            "82035655010000322223253330054a229309b2b1bad0025735".to_string(),
+        ))
+        .unwrap()
+        .unwrap();
 
         match script_ref.0 {
             ScriptRef::PlutusV3Script(_) => {}
-            _ => assert!(false, "Invalid script ref"),
+            _ => panic!("Invalid script ref"),
         }
     }
 
     #[test]
     fn test_invalid_native_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some("82005655010000322223253330054a229309b2b1bad0025735".to_string()));
+        let script_ref = to_pallas_script_ref(&Some(
+            "82005655010000322223253330054a229309b2b1bad0025735".to_string(),
+        ));
         assert!(script_ref.is_err());
     }
 }
