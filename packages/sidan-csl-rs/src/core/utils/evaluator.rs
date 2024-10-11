@@ -1,8 +1,4 @@
 use pallas_codec::utils::NonEmptyKeyValuePairs;
-use pallas_primitives::conway::NativeScript;
-use pallas_primitives::conway::PlutusV1Script;
-use pallas_primitives::conway::PlutusV2Script;
-use pallas_primitives::conway::PlutusV3Script;
 use pallas_primitives::conway::RedeemerTag as PRedeemerTag;
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
@@ -13,12 +9,11 @@ use crate::csl::{Address, JsError};
 use crate::model::{Action, Asset, Budget, JsVecString, Network, RedeemerTag, UTxO, UtxoOutput};
 use crate::wasm::WasmResult;
 use crate::*;
-use pallas_codec::minicbor::Decoder;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::{
     conway::{
         AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
-        PseudoScript, ScriptRef, TransactionOutput, Value,
+        ScriptRef, TransactionOutput, Value,
     },
     Fragment,
 };
@@ -159,7 +154,7 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
                 address: Bytes::from(Address::from_bech32(&utxo.output.address)?.to_bytes()),
                 value: to_pallas_value(&utxo.output.amount)?,
                 datum_option: to_pallas_datum(&utxo.output)?,
-                script_ref: to_pallas_script_ref(&utxo.output)?,
+                script_ref: to_pallas_script_ref(&utxo.output.script_ref)?,
             }),
         };
         resolved_inputs.push(resolved_input);
@@ -167,33 +162,16 @@ fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, JsError> {
     Ok(resolved_inputs)
 }
 
-fn to_pallas_script_ref(utxo_output: &UtxoOutput) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
-    if let Some(script_ref) = &utxo_output.script_ref {
-        let script_bytes = hex::decode(script_ref.script_hex.clone())
+fn to_pallas_script_ref(script_ref: &Option<String>) -> Result<Option<CborWrap<ScriptRef>>, JsError> {
+    if let Some(script_ref) = script_ref {
+        let script_bytes = hex::decode(script_ref)
             .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
 
-        let unwrapped_bytes = Decoder::new(&script_bytes)
-            .bytes()
-            .map_err(|err| JsError::from_str(&format!("Invalid script hex found: {}", err)))?;
+        let pallas_script = ScriptRef::decode_fragment(&script_bytes)
+            .map_err(|err| JsError::from_str(&format!("Invalid script found: {}", err)))?;
 
-        match &script_ref.script_version {
-            Some(version) => match version {
-                model::LanguageVersion::V1 => Ok(Some(CborWrap(PseudoScript::PlutusV1Script(
-                    PlutusV1Script(unwrapped_bytes.to_vec().into()),
-                )))),
-                model::LanguageVersion::V2 => Ok(Some(CborWrap(PseudoScript::PlutusV2Script(
-                    PlutusV2Script(unwrapped_bytes.to_vec().into()),
-                )))),
-                model::LanguageVersion::V3 => Ok(Some(CborWrap(PseudoScript::PlutusV3Script(
-                    PlutusV3Script(unwrapped_bytes.to_vec().into()),
-                )))),
-            },
-            None => Ok(Some(CborWrap(PseudoScript::NativeScript(
-                NativeScript::decode_fragment(unwrapped_bytes).map_err(|err| {
-                    JsError::from_str(&format!("Invalid native script found: {}", err))
-                })?,
-            )))),
-        }
+
+        Ok(Some(CborWrap(pallas_script)))
     } else {
         Ok(None)
     }
@@ -277,7 +255,7 @@ fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, JsError> {
 mod test {
     use super::*;
     use crate::csl;
-    use model::{LanguageVersion, ScriptRef, UtxoInput};
+    use model::UtxoInput;
     use pallas_codec::minicbor::Decoder;
     use serde_json::json;
 
@@ -329,7 +307,7 @@ mod test {
                   data_hash: None,
                   plutus_data: None,
                   script_hash: None,
-                  script_ref: Some(ScriptRef { script_hex: "5655010000322223253330054a229309b2b1bad0025735".to_string(), script_version: Some(LanguageVersion::V2)})
+                  script_ref:  Some("82025655010000322223253330054a229309b2b1bad0025735".to_string())
               }
           }],
           &[],
@@ -362,5 +340,47 @@ mod test {
             hex::decode("55010000322223253330054a229309b2b1bad0025735").unwrap(),
             decoded_bytes
         );
+    }
+
+    #[test]
+    fn test_v1_script_ref() {
+        let script_ref = to_pallas_script_ref(&Some("82015655010000322223253330054a229309b2b1bad0025735".to_string()))
+            .unwrap()
+            .unwrap();
+
+        match script_ref.0 {
+            ScriptRef::PlutusV1Script(_) => {}
+            _ => assert!(false, "Invalid script ref"),
+        }
+    }
+
+    #[test]
+    fn test_v2_script_ref() {
+        let script_ref = to_pallas_script_ref(&Some("82025655010000322223253330054a229309b2b1bad0025735".to_string()))
+            .unwrap()
+            .unwrap();
+
+        match script_ref.0 {
+            ScriptRef::PlutusV2Script(_) => {}
+            _ => assert!(false, "Invalid script ref"),
+        }
+    }
+
+    #[test]
+    fn test_v3_script_ref() {
+        let script_ref = to_pallas_script_ref(&Some("82035655010000322223253330054a229309b2b1bad0025735".to_string()))
+            .unwrap()
+            .unwrap();
+
+        match script_ref.0 {
+            ScriptRef::PlutusV3Script(_) => {}
+            _ => assert!(false, "Invalid script ref"),
+        }
+    }
+
+    #[test]
+    fn test_invalid_native_script_ref() {
+        let script_ref = to_pallas_script_ref(&Some("82005655010000322223253330054a229309b2b1bad0025735".to_string()));
+        assert!(script_ref.is_err());
     }
 }
