@@ -10,9 +10,21 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 
 > Please mark the relevant option(s) for your pull request:
 
+### Feature Change
+
+> Type of feature change:
+>
+> 1. New feature - non-breaking change which adds functionality
+> 2. Breaking change - fix or feature that would cause existing functionality to not work as expected
+
+- [ ] Rust crate `whisky` - New feature
+- [ ] Rust crate `whisky` - Breaking change
+- [ ] WASM `sidan-csl-rs` - New feature
+- [ ] WASM `sidan-csl-rs` - Breaking change
+
+### Maintenance
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Code refactoring (improving code quality without changing its behavior)
 - [ ] Documentation update (adding or updating documentation related to the project)
 
