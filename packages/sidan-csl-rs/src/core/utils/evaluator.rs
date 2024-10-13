@@ -383,4 +383,19 @@ mod test {
         let script_ref = to_pallas_script_ref(&Some("82005655010000322223253330054a229309b2b1bad0025735".to_string()));
         assert!(script_ref.is_err());
     }
+
+    #[test]
+    fn test_network_type_decode() {
+        let network = Network::Mainnet;
+        let network_str = "Mainnet";
+        let network_type: Network = network_str.to_string().try_into().unwrap();
+        assert_eq!(network, network_type);
+    }
+
+    #[test]
+    fn test_network_type_decode_error() {
+        let network_str = "Invalid";
+        let network_type: Result<Network, _> = network_str.to_string().try_into();
+        assert!(network_type.is_err());
+    }
 }
