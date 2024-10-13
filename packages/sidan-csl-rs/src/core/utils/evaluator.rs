@@ -43,7 +43,7 @@ pub fn evaluate_tx_scripts_js(
     let deserialize_network = match serde_json::from_str(network.as_str()) {
         Ok(network) => network,
         Err(e) => {
-            return WasmResult::new_error("failure".to_string(), format!("{:?}", e));
+            return WasmResult::new_error("failure".to_string(), format!("Error in decoding network: {:?}", e));
         }
     };
 
