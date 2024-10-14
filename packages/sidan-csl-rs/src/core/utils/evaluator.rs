@@ -26,8 +26,8 @@ use uplc::{
 #[wasm_bindgen]
 pub fn evaluate_tx_scripts_js(
     tx_hex: String,
-    resolved_utxos: JsVecString,
-    additional_txs: JsVecString,
+    resolved_utxos: &JsVecString,
+    additional_txs: &JsVecString,
     network: String,
 ) -> WasmResult {
     let mut deserialized_utxos: Vec<UTxO> = Vec::new();
@@ -50,7 +50,7 @@ pub fn evaluate_tx_scripts_js(
     let eval_result = evaluate_tx_scripts(
         &tx_hex,
         &deserialized_utxos,
-        &additional_txs.into_vec(),
+        &additional_txs.as_ref_vec(),
         &deserialize_network,
     );
 
@@ -422,8 +422,8 @@ mod test {
 
         let result = evaluate_tx_scripts_js(
             tx_hex.to_string(),
-            resolved_utxos,
-            additional_txs,
+            &resolved_utxos,
+            &additional_txs,
             "preprod".to_string()
         );
 
