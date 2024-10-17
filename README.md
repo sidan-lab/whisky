@@ -56,8 +56,8 @@ async fn my_first_whisky_tx(
     my_address: &str,
     inputs: Vec<UTxO>,
 ) -> String {
-    let mut mesh = TxBuilder::new_core();
-    mesh.tx_out(
+    let mut tx_builder = TxBuilder::new_core();
+    tx_builder.tx_out(
         &recipient_address,
         vec![Asset::new_from_str("lovelace", "1000000")],
     )
@@ -66,7 +66,7 @@ async fn my_first_whisky_tx(
     .complete(None)
     .await;
 
-    mesh.tx_hex()
+    tx_builder.tx_hex()
 }
 ```
 
