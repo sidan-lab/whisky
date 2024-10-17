@@ -26,7 +26,7 @@ impl TxBuilder {
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
-                let network = match &self.core.mesh_tx_builder_body.network {
+                let network = match &self.core.tx_builder_body.network {
                     Some(builder_network) => builder_network,
                     None => &Network::Mainnet,
                 };
@@ -72,7 +72,7 @@ impl TxBuilder {
         customized_tx: Option<TxBuilderBody>,
     ) -> Result<&mut Self, JsError> {
         if customized_tx.is_some() {
-            self.core.mesh_tx_builder_body = customized_tx.unwrap();
+            self.core.tx_builder_body = customized_tx.unwrap();
         } else {
             self.queue_all_last_item();
             if !self.extra_inputs.is_empty() {
@@ -80,7 +80,7 @@ impl TxBuilder {
             }
         }
 
-        self.core.mesh_tx_builder_body.mints.sort_by(|a, b| {
+        self.core.tx_builder_body.mints.sort_by(|a, b| {
             let a_mint = match a {
                 MintItem::ScriptMint(a_script_mint) => &a_script_mint.mint,
                 MintItem::SimpleScriptMint(a_simple_script_mint) => &a_simple_script_mint.mint,
@@ -92,7 +92,7 @@ impl TxBuilder {
             a_mint.policy_id.cmp(&b_mint.policy_id)
         });
 
-        self.core.mesh_tx_builder_body.inputs.sort_by(|a, b| {
+        self.core.tx_builder_body.inputs.sort_by(|a, b| {
             let tx_in_data_a: &TxInParameter = match a {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in,
                 TxIn::SimpleScriptTxIn(simple_script_tx_in) => &simple_script_tx_in.tx_in,
@@ -112,7 +112,7 @@ impl TxBuilder {
         });
 
         let tx_hex = serialize_tx_body(
-            self.core.mesh_tx_builder_body.clone(),
+            self.core.tx_builder_body.clone(),
             self.protocol_params.clone(),
         )?;
         self.core.mesh_csl.tx_hex = tx_hex;

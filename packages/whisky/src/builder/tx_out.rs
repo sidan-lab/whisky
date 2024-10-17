@@ -19,7 +19,7 @@ impl TxBuilder {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .outputs
                 .push(tx_output.unwrap());
         }

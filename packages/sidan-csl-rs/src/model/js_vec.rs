@@ -27,7 +27,7 @@ impl JsVecString {
         self.0.push(elem.clone());
     }
 
-    pub(crate) fn into_vec(self) -> Vec<String> {
+    pub fn into_vec(self) -> Vec<String> {
         self.0
     }
 

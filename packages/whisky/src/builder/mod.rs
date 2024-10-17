@@ -118,7 +118,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn required_signer_hash(&mut self, pub_key_hash: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .required_signatures
             .push(pub_key_hash.to_string());
         self
@@ -136,7 +136,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn change_address(&mut self, address: &str) -> &mut Self {
-        self.core.mesh_tx_builder_body.change_address = address.to_string();
+        self.core.tx_builder_body.change_address = address.to_string();
         self
     }
 
@@ -154,7 +154,7 @@ impl TxBuilder {
     pub fn change_output_datum(&mut self, data: WData) -> &mut Self {
         match data.to_cbor() {
             Ok(raw_data) => {
-                self.core.mesh_tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
+                self.core.tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
             }
             Err(_) => {
                 panic!("Error converting datum to CBOR");
@@ -175,7 +175,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn invalid_before(&mut self, slot: u64) -> &mut Self {
-        self.core.mesh_tx_builder_body.validity_range.invalid_before = Some(slot);
+        self.core.tx_builder_body.validity_range.invalid_before = Some(slot);
         self
     }
 
@@ -192,7 +192,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn invalid_hereafter(&mut self, slot: u64) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .validity_range
             .invalid_hereafter = Some(slot);
         self
@@ -211,7 +211,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn metadata_value(&mut self, tag: &str, metadata: &str) -> &mut Self {
-        self.core.mesh_tx_builder_body.metadata.push(Metadata {
+        self.core.tx_builder_body.metadata.push(Metadata {
             tag: tag.to_string(),
             metadata: metadata.to_string(),
         });
@@ -231,7 +231,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn signing_key(&mut self, skey_hex: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .signing_key
             .push(skey_hex.to_string());
         self
@@ -346,7 +346,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn network(&mut self, network: Network) -> &mut Self {
-        self.core.mesh_tx_builder_body.network = Some(network);
+        self.core.tx_builder_body.network = Some(network);
         self
     }
 
@@ -373,7 +373,7 @@ impl TxBuilder {
         }
         let input = self.tx_in_item.clone().unwrap();
         self.input_for_evaluation(&input.to_utxo());
-        self.core.mesh_tx_builder_body.inputs.push(input);
+        self.core.tx_builder_body.inputs.push(input);
         self.tx_in_item = None
     }
 
@@ -398,7 +398,7 @@ impl TxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {}
         }
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .withdrawals
             .push(self.withdrawal_item.clone().unwrap());
         self.withdrawal_item = None;
@@ -424,7 +424,7 @@ impl TxBuilder {
             }
             Vote::BasicVote(_) => {}
         }
-        self.core.mesh_tx_builder_body.votes.push(self.vote_item.clone().unwrap());
+        self.core.tx_builder_body.votes.push(self.vote_item.clone().unwrap());
         self.vote_item = None;
     }
 
@@ -439,7 +439,7 @@ impl TxBuilder {
                     panic!("Missing mint script information");
                 }
                 self.core
-                    .mesh_tx_builder_body
+                    .tx_builder_body
                     .mints
                     .push(MintItem::ScriptMint(script_mint));
             }
@@ -448,7 +448,7 @@ impl TxBuilder {
                     panic!("Missing mint script information");
                 }
                 self.core
-                    .mesh_tx_builder_body
+                    .tx_builder_body
                     .mints
                     .push(MintItem::SimpleScriptMint(simple_script_mint));
             }
@@ -462,7 +462,7 @@ impl TxBuilder {
     pub fn queue_all_last_item(&mut self) {
         if self.tx_output.is_some() {
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .outputs
                 .push(self.tx_output.clone().unwrap());
             self.tx_output = None;
@@ -472,7 +472,7 @@ impl TxBuilder {
         }
         if self.collateral_item.is_some() {
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .collaterals
                 .push(self.collateral_item.clone().unwrap());
             self.collateral_item = None;
@@ -503,7 +503,7 @@ impl TxBuilder {
     ) -> Result<(), JsError> {
         let mut required_assets = Value::new();
 
-        for output in &self.core.mesh_tx_builder_body.outputs {
+        for output in &self.core.tx_builder_body.outputs {
             let mut output_value = Value::from_asset_vec(&output.amount);
             let pp = self.protocol_params.clone().unwrap_or_default();
             if output_value.get("lovelace") == 0 {
@@ -514,7 +514,7 @@ impl TxBuilder {
             }
             required_assets.merge(&output_value);
         }
-        for input in &self.core.mesh_tx_builder_body.inputs {
+        for input in &self.core.tx_builder_body.inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input_value =
@@ -534,7 +534,7 @@ impl TxBuilder {
             }
         }
 
-        for mint_item in &self.core.mesh_tx_builder_body.mints {
+        for mint_item in &self.core.tx_builder_body.mints {
             let mint = match mint_item {
                 MintItem::ScriptMint(script_mint) => &script_mint.mint,
                 MintItem::SimpleScriptMint(simple_script_mint) => &simple_script_mint.mint,
@@ -572,7 +572,7 @@ impl TxBuilder {
                 },
             });
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .inputs
                 .push(pub_key_input.clone());
             self.input_for_evaluation(&input);
