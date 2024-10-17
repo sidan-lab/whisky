@@ -16,7 +16,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn register_pool_certificate(&mut self, pool_params: &PoolParams) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterPool(RegisterPool {
@@ -39,7 +39,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn register_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
@@ -68,7 +68,7 @@ impl TxBuilder {
         pool_id: &str,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DelegateStake(DelegateStake {
@@ -92,7 +92,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DeregisterStake(DeregisterStake {
@@ -116,7 +116,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::RetirePool(
                 RetirePool {
@@ -145,7 +145,7 @@ impl TxBuilder {
         drep: &DRep,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteDelegation(VoteDelegation {
@@ -176,7 +176,7 @@ impl TxBuilder {
         drep: &DRep,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
@@ -208,7 +208,7 @@ impl TxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
@@ -240,7 +240,7 @@ impl TxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
@@ -274,7 +274,7 @@ impl TxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeVoteRegistrationAndDelegation(
@@ -307,7 +307,7 @@ impl TxBuilder {
         committee_hot_key_address: &str,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeHotAuth(CommitteeHotAuth {
@@ -336,7 +336,7 @@ impl TxBuilder {
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeColdResign(CommitteeColdResign {
@@ -367,7 +367,7 @@ impl TxBuilder {
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepRegistration(DRepRegistration {
@@ -393,7 +393,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn drep_deregistration(&mut self, drep_id: &str, coin: u64) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepDeregistration(DRepDeregistration {
@@ -418,7 +418,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn drep_update(&mut self, drep_id: &str, anchor: Option<Anchor>) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
                 DRepUpdate {
@@ -446,14 +446,14 @@ impl TxBuilder {
         script_cbor: &str,
         version: Option<LanguageVersion>,
     ) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: basic_cert,
                         redeemer: None,
@@ -465,7 +465,7 @@ impl TxBuilder {
                         )),
                     }),
                 ),
-                None => self.core.mesh_tx_builder_body.certificates.push(
+                None => self.core.tx_builder_body.certificates.push(
                     Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
                         cert: basic_cert,
                         simple_script_source: Some(SimpleScriptSource::ProvidedSimpleScriptSource(
@@ -477,7 +477,7 @@ impl TxBuilder {
                 ),
             },
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: script_cert.cert,
                         redeemer: script_cert.redeemer,
@@ -522,14 +522,14 @@ impl TxBuilder {
         version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: basic_cert,
                         redeemer: None,
@@ -544,7 +544,7 @@ impl TxBuilder {
                         })),
                     }),
                 ),
-                None => self.core.mesh_tx_builder_body.certificates.push(
+                None => self.core.tx_builder_body.certificates.push(
                     Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
                         cert: basic_cert,
                         simple_script_source: Some(SimpleScriptSource::InlineSimpleScriptSource(
@@ -561,7 +561,7 @@ impl TxBuilder {
                 ),
             },
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: script_cert.cert,
                         redeemer: script_cert.redeemer,
@@ -598,7 +598,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn certificate_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
@@ -615,7 +615,7 @@ impl TxBuilder {
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => self
                 .core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .certificates
                 .push(Certificate::ScriptCertificate(ScriptCertificate {
                     cert: basic_cert,
@@ -625,7 +625,7 @@ impl TxBuilder {
 
             Certificate::ScriptCertificate(script_cert) => self
                 .core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .certificates
                 .push(Certificate::ScriptCertificate(ScriptCertificate {
                     cert: script_cert.cert,

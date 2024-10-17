@@ -27,8 +27,12 @@ impl JsVecString {
         self.0.push(elem.clone());
     }
 
-    pub(crate) fn into_vec(self) -> Vec<String> {
+    pub fn into_vec(self) -> Vec<String> {
         self.0
+    }
+
+    pub(crate) fn as_ref_vec(&self) -> &Vec<String> {
+        &self.0
     }
 }
 
@@ -38,6 +42,15 @@ impl IntoIterator for JsVecString {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a JsVecString {
+    type Item = &'a String;
+    type IntoIter = std::slice::Iter<'a, String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 

@@ -5,7 +5,7 @@ use cardano_serialization_lib::JsError;
 #[derive(Clone, Debug)]
 pub struct TxBuilderCore {
     pub mesh_csl: MeshCSL,
-    pub mesh_tx_builder_body: TxBuilderBody,
+    pub tx_builder_body: TxBuilderBody,
     pub tx_evaluation_multiplier_percentage: u64,
 }
 
@@ -15,49 +15,49 @@ pub struct TxBuilderCore {
 ///
 /// ### Arguments
 ///
-/// * `mesh_tx_builder_body` - The transaction builder body information
+/// * `tx_builder_body` - The transaction builder body information
 /// * `params` - Optional protocol parameters, default as Cardano mainnet configuration
 ///
 /// ### Returns
 ///
 /// * `String` - the built transaction hex
 pub fn serialize_tx_body(
-    mesh_tx_builder_body: TxBuilderBody,
+    tx_builder_body: TxBuilderBody,
     params: Option<Protocol>,
 ) -> Result<String, JsError> {
-    if mesh_tx_builder_body.change_address.is_empty() {
+    if tx_builder_body.change_address.is_empty() {
         return Err(JsError::from_str("change address cannot be empty"));
     }
     let mut mesh_csl = MeshCSL::new(params);
 
-    TxBuilderCore::add_all_inputs(&mut mesh_csl, mesh_tx_builder_body.inputs.clone())?;
-    TxBuilderCore::add_all_outputs(&mut mesh_csl, mesh_tx_builder_body.outputs.clone())?;
-    TxBuilderCore::add_all_collaterals(&mut mesh_csl, mesh_tx_builder_body.collaterals.clone())?;
+    TxBuilderCore::add_all_inputs(&mut mesh_csl, tx_builder_body.inputs.clone())?;
+    TxBuilderCore::add_all_outputs(&mut mesh_csl, tx_builder_body.outputs.clone())?;
+    TxBuilderCore::add_all_collaterals(&mut mesh_csl, tx_builder_body.collaterals.clone())?;
     TxBuilderCore::add_all_reference_inputs(
         &mut mesh_csl,
-        mesh_tx_builder_body.reference_inputs.clone(),
+        tx_builder_body.reference_inputs.clone(),
     )?;
-    TxBuilderCore::add_all_withdrawals(&mut mesh_csl, mesh_tx_builder_body.withdrawals.clone())?;
-    TxBuilderCore::add_all_mints(&mut mesh_csl, mesh_tx_builder_body.mints.clone())?;
-    TxBuilderCore::add_all_certificates(&mut mesh_csl, mesh_tx_builder_body.certificates.clone())?;
-    TxBuilderCore::add_all_votes(&mut mesh_csl, mesh_tx_builder_body.votes.clone())?;
-    TxBuilderCore::add_validity_range(&mut mesh_csl, mesh_tx_builder_body.validity_range.clone());
+    TxBuilderCore::add_all_withdrawals(&mut mesh_csl, tx_builder_body.withdrawals.clone())?;
+    TxBuilderCore::add_all_mints(&mut mesh_csl, tx_builder_body.mints.clone())?;
+    TxBuilderCore::add_all_certificates(&mut mesh_csl, tx_builder_body.certificates.clone())?;
+    TxBuilderCore::add_all_votes(&mut mesh_csl, tx_builder_body.votes.clone())?;
+    TxBuilderCore::add_validity_range(&mut mesh_csl, tx_builder_body.validity_range.clone());
     TxBuilderCore::add_all_required_signature(
         &mut mesh_csl,
-        &mesh_tx_builder_body
+        &tx_builder_body
             .required_signatures
             .iter()
             .map(|s| s.as_str())
             .collect::<Vec<&str>>(),
     )?;
-    TxBuilderCore::add_all_metadata(&mut mesh_csl, mesh_tx_builder_body.metadata.clone())?;
+    TxBuilderCore::add_all_metadata(&mut mesh_csl, tx_builder_body.metadata.clone())?;
 
-    match mesh_tx_builder_body.network {
+    match tx_builder_body.network {
         Some(current_network) => mesh_csl.add_script_hash(current_network)?,
         None => mesh_csl.add_script_hash(Network::Mainnet)?,
     };
-    // if self.mesh_tx_builder_body.change_address != "" {
-    //     let collateral_inputs = self.mesh_tx_builder_body.collaterals.clone();
+    // if self.tx_builder_body.change_address != "" {
+    //     let collateral_inputs = self.tx_builder_body.collaterals.clone();
     //     let collateral_vec: Vec<u64> = collateral_inputs
     //         .into_iter()
     //         .map(|pub_key_tx_in| {
@@ -86,7 +86,7 @@ pub fn serialize_tx_body(
     //     let mut collateral_return_needed = false;
     // if (total_collateral - collateral_estimate) > 0 {
     // let collateral_estimate_output = csl::TransactionOutput::new(
-    //     &csl::address::Address::from_bech32(&self.mesh_tx_builder_body.change_address)
+    //     &csl::address::Address::from_bech32(&self.tx_builder_body.change_address)
     //         .unwrap(),
     //     &csl::utils::Value::new(&to_bignum(collateral_estimate)),
     // );
@@ -104,7 +104,7 @@ pub fn serialize_tx_body(
     //     self.tx_builder
     //         .set_collateral_return(&csl::TransactionOutput::new(
     //             &csl::address::Address::from_bech32(
-    //                 &self.mesh_tx_builder_body.change_address,
+    //                 &self.tx_builder_body.change_address,
     //             )
     //             .unwrap(),
     //             &csl::utils::Value::new(&to_bignum(total_collateral)),
@@ -116,14 +116,14 @@ pub fn serialize_tx_body(
     //     collateral_return_needed = true;
     // }
     // }
-    // self.add_change(self.mesh_tx_builder_body.change_address.clone());
+    // self.add_change(self.tx_builder_body.change_address.clone());
     // if collateral_return_needed {
-    //     self.add_collateral_return(self.mesh_tx_builder_body.change_address.clone());
+    //     self.add_collateral_return(self.tx_builder_body.change_address.clone());
     // }
     // }
     mesh_csl.add_change(
-        mesh_tx_builder_body.change_address.clone(),
-        mesh_tx_builder_body.change_datum.clone(),
+        tx_builder_body.change_address.clone(),
+        tx_builder_body.change_datum.clone(),
     )?;
     mesh_csl.build_tx()
 }
@@ -140,7 +140,7 @@ impl TxBuilderCore {
     pub fn new_core(params: Option<Protocol>) -> Self {
         Self {
             mesh_csl: MeshCSL::new(params),
-            mesh_tx_builder_body: TxBuilderBody {
+            tx_builder_body: TxBuilderBody {
                 inputs: vec![],
                 outputs: vec![],
                 collaterals: vec![],
@@ -172,7 +172,7 @@ impl TxBuilderCore {
     ///
     /// * `String` - The signed transaction in hex
     pub fn complete_signing(&mut self) -> Result<String, JsError> {
-        let signing_keys = self.mesh_tx_builder_body.signing_key.clone();
+        let signing_keys = self.tx_builder_body.signing_key.clone();
         self.add_all_signing_keys(
             &signing_keys
                 .iter()

@@ -364,7 +364,7 @@ impl TxBuilder {
     /// * `Self` - The TxBuilder instance
     pub fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .reference_inputs
             .push(RefTxIn {
                 tx_hash: tx_hash.to_string(),
@@ -397,7 +397,7 @@ impl TxBuilder {
         let collateral_item = self.collateral_item.take();
         if let Some(collateral_item) = collateral_item {
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .collaterals
                 .push(collateral_item);
         }

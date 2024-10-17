@@ -31,7 +31,7 @@ impl TxEvaluation for TxBuilder {
         for redeemer_evaluation in tx_evaluation {
             match redeemer_evaluation.tag {
                 RedeemerTag::Spend => {
-                    let input = &mut self.core.mesh_tx_builder_body.inputs
+                    let input = &mut self.core.tx_builder_body.inputs
                         [redeemer_evaluation.index as usize];
                     if let TxIn::ScriptTxIn(ScriptTxIn { script_tx_in, .. }) = input {
                         let redeemer: &mut Redeemer = script_tx_in.redeemer.as_mut().unwrap();
@@ -41,7 +41,7 @@ impl TxEvaluation for TxBuilder {
                     }
                 }
                 RedeemerTag::Mint => {
-                    let mint_item = &mut self.core.mesh_tx_builder_body.mints
+                    let mint_item = &mut self.core.tx_builder_body.mints
                         [redeemer_evaluation.index as usize];
                     if let MintItem::ScriptMint(mint) = mint_item {
                         let redeemer: &mut Redeemer = mint.redeemer.as_mut().unwrap();
@@ -51,7 +51,7 @@ impl TxEvaluation for TxBuilder {
                     }
                 }
                 RedeemerTag::Cert => {
-                    let cert_item = &mut self.core.mesh_tx_builder_body.certificates
+                    let cert_item = &mut self.core.tx_builder_body.certificates
                         [redeemer_evaluation.index as usize];
                     if let Certificate::ScriptCertificate(cert) = cert_item {
                         let redeemer: &mut Redeemer = cert.redeemer.as_mut().unwrap();
@@ -61,7 +61,7 @@ impl TxEvaluation for TxBuilder {
                     }
                 }
                 RedeemerTag::Reward => {
-                    let withdrawal_item = &mut self.core.mesh_tx_builder_body.withdrawals
+                    let withdrawal_item = &mut self.core.tx_builder_body.withdrawals
                         [redeemer_evaluation.index as usize];
                     if let Withdrawal::PlutusScriptWithdrawal(withdrawal) = withdrawal_item {
                         let redeemer: &mut Redeemer = withdrawal.redeemer.as_mut().unwrap();
