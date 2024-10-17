@@ -1,11 +1,11 @@
 use sidan_csl_rs::model::*;
 
-use super::{MeshTxBuilder, WRedeemer};
+use super::{TxBuilder, WRedeemer};
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///
-    /// Add a pool registration certificate to the MeshTxBuilder instance
+    /// Add a pool registration certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -13,10 +13,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn register_pool_certificate(&mut self, pool_params: &PoolParams) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterPool(RegisterPool {
@@ -28,7 +28,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake registration certificate to the MeshTxBuilder instance
+    /// Add a stake registration certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -36,10 +36,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn register_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
@@ -52,7 +52,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake delegation certificate to the MeshTxBuilder instance
+    /// Add a stake delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -61,14 +61,14 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn delegate_stake_certificate(
         &mut self,
         stake_key_address: &str,
         pool_id: &str,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DelegateStake(DelegateStake {
@@ -81,7 +81,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake deregistration certificate to the MeshTxBuilder instance
+    /// Add a stake deregistration certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -89,10 +89,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DeregisterStake(DeregisterStake {
@@ -104,7 +104,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a pool retire certificate to the MeshTxBuilder instance
+    /// Add a pool retire certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -113,10 +113,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::RetirePool(
                 RetirePool {
@@ -129,7 +129,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a vote delegation certificate to the MeshTxBuilder instance
+    /// Add a vote delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -138,14 +138,14 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn vote_delegation_certificate(
         &mut self,
         stake_key_address: &str,
         drep: &DRep,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteDelegation(VoteDelegation {
@@ -158,7 +158,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake and vote delegation certificate to the MeshTxBuilder instance
+    /// Add a stake and vote delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -168,7 +168,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn stake_and_vote_delegation_certificate(
         &mut self,
         stake_key_address: &str,
@@ -176,7 +176,7 @@ impl MeshTxBuilder {
         drep: &DRep,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
@@ -190,7 +190,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake registration and delegation certificate to the MeshTxBuilder instance
+    /// Add a stake registration and delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -200,7 +200,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn stake_registration_and_delegation(
         &mut self,
         stake_key_address: &str,
@@ -208,7 +208,7 @@ impl MeshTxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
@@ -222,7 +222,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a vote registration and delegation certificate to the MeshTxBuilder instance
+    /// Add a vote registration and delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -232,7 +232,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn vote_registration_and_delegation(
         &mut self,
         stake_key_address: &str,
@@ -240,7 +240,7 @@ impl MeshTxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
@@ -254,7 +254,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a stake vote registration and delegation certificate to the MeshTxBuilder instance
+    /// Add a stake vote registration and delegation certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -265,7 +265,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn stake_vote_registration_and_delegation(
         &mut self,
         stake_key_address: &str,
@@ -274,7 +274,7 @@ impl MeshTxBuilder {
         coin: u64,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeVoteRegistrationAndDelegation(
@@ -291,7 +291,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add commitee hot auth certificate to the MeshTxBuilder instance
+    /// Add commitee hot auth certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -300,14 +300,14 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn committee_hot_auth(
         &mut self,
         committee_cold_key_address: &str,
         committee_hot_key_address: &str,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeHotAuth(CommitteeHotAuth {
@@ -320,7 +320,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add commitee cold resign certificate to the MeshTxBuilder instance
+    /// Add commitee cold resign certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -329,14 +329,14 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn commitee_cold_resign(
         &mut self,
         committee_cold_key_address: &str,
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeColdResign(CommitteeColdResign {
@@ -349,7 +349,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add DRep registration certificate to the MeshTxBuilder instance
+    /// Add DRep registration certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -359,7 +359,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn drep_registration(
         &mut self,
         drep_id: &str,
@@ -367,7 +367,7 @@ impl MeshTxBuilder {
         anchor: Option<Anchor>,
     ) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepRegistration(DRepRegistration {
@@ -381,7 +381,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add DRep deregistration certificate to the MeshTxBuilder instance
+    /// Add DRep deregistration certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -390,10 +390,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn drep_deregistration(&mut self, drep_id: &str, coin: u64) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepDeregistration(DRepDeregistration {
@@ -406,7 +406,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add DRep update certificate to the MeshTxBuilder instance
+    /// Add DRep update certificate to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -415,10 +415,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn drep_update(&mut self, drep_id: &str, anchor: Option<Anchor>) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
                 DRepUpdate {
@@ -440,20 +440,20 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn certificate_script(
         &mut self,
         script_cbor: &str,
         version: Option<LanguageVersion>,
     ) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: basic_cert,
                         redeemer: None,
@@ -465,7 +465,7 @@ impl MeshTxBuilder {
                         )),
                     }),
                 ),
-                None => self.core.mesh_tx_builder_body.certificates.push(
+                None => self.core.tx_builder_body.certificates.push(
                     Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
                         cert: basic_cert,
                         simple_script_source: Some(SimpleScriptSource::ProvidedSimpleScriptSource(
@@ -477,7 +477,7 @@ impl MeshTxBuilder {
                 ),
             },
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: script_cert.cert,
                         redeemer: script_cert.redeemer,
@@ -501,7 +501,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a Certificate transaction input reference to the MeshTxBuilder instance
+    /// Add a Certificate transaction input reference to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -513,7 +513,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn certificate_tx_in_reference(
         &mut self,
         tx_hash: &str,
@@ -522,14 +522,14 @@ impl MeshTxBuilder {
         version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: basic_cert,
                         redeemer: None,
@@ -544,7 +544,7 @@ impl MeshTxBuilder {
                         })),
                     }),
                 ),
-                None => self.core.mesh_tx_builder_body.certificates.push(
+                None => self.core.tx_builder_body.certificates.push(
                     Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
                         cert: basic_cert,
                         simple_script_source: Some(SimpleScriptSource::InlineSimpleScriptSource(
@@ -561,7 +561,7 @@ impl MeshTxBuilder {
                 ),
             },
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.mesh_tx_builder_body.certificates.push(
+                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
                     Certificate::ScriptCertificate(ScriptCertificate {
                         cert: script_cert.cert,
                         redeemer: script_cert.redeemer,
@@ -588,7 +588,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a Certificate Redeemer to the MeshTxBuilder instance
+    /// Add a Certificate Redeemer to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -596,9 +596,9 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn certificate_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
-        let last_cert = self.core.mesh_tx_builder_body.certificates.pop();
+        let last_cert = self.core.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
@@ -615,7 +615,7 @@ impl MeshTxBuilder {
         match last_cert {
             Certificate::BasicCertificate(basic_cert) => self
                 .core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .certificates
                 .push(Certificate::ScriptCertificate(ScriptCertificate {
                     cert: basic_cert,
@@ -625,7 +625,7 @@ impl MeshTxBuilder {
 
             Certificate::ScriptCertificate(script_cert) => self
                 .core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .certificates
                 .push(Certificate::ScriptCertificate(ScriptCertificate {
                     cert: script_cert.cert,

@@ -5,8 +5,8 @@ mod int_tests {
         model::{Asset, Budget, LanguageVersion},
     };
     use whisky::{
-        builder::{ MeshTxBuilder, MeshTxBuilderParam, WData::{self, JSON}, WRedeemer},
-        core::utils::merge_vkey_witnesses_to_transaction, model::Anchor,
+        builder::{ TxBuilder, TxBuilderParam, WData::{self, JSON}, WRedeemer},
+        core::utils::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, RefTxIn, VoteKind, Voter, VotingProcedure},
     };
 
     #[test]
@@ -48,7 +48,7 @@ mod int_tests {
         let record_tx_hash = "aae2b8a5bf420c0d2fc785d54fe3eacc107145dee01b8c61beedcd13e6be9a71";
         let record_tx_id = 0;
 
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -181,7 +181,7 @@ mod int_tests {
 
     #[test]
     fn test_simple_spend() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -206,7 +206,7 @@ mod int_tests {
 
     #[test]
     fn test_simple_withdraw() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -236,7 +236,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_withdraw() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -279,7 +279,7 @@ mod int_tests {
 
     #[test]
     fn test_native_script_ref() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -308,7 +308,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_script_cert_registration() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -333,7 +333,7 @@ mod int_tests {
 
     #[test]
     fn test_plutus_script_cert_deregistration() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -365,7 +365,7 @@ mod int_tests {
 
     #[test]
     fn test_mint_two_tokens_with_same_policy() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -405,7 +405,7 @@ mod int_tests {
 
     #[test]
     fn test_spend_withdraw_and_unreg() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -468,7 +468,7 @@ mod int_tests {
 
     #[test]
     fn test_embedded_datum_output() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -498,7 +498,7 @@ mod int_tests {
 
     #[test]
     fn test_register_drep() {
-        let mut mesh = MeshTxBuilder::new(MeshTxBuilderParam {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -522,7 +522,107 @@ mod int_tests {
             .complete_signing()
             .unwrap();
 
-        println!("{:?}", json!(mesh.core.mesh_tx_builder_body).to_string());
         println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_vote_delegation() {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+
+        let unsigned_tx = mesh
+            .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .vote_delegation_certificate("stake_test1uzdx8vwxvz5wy45fwdrwk2l85ax7j5wtr4cee6a8xc632cc3p6psh", &DRep::DRepId("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7".to_string()))
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing()
+            .unwrap();
+
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_drep_vote() {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = mesh
+            .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .vote(&Voter::DRepId("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7".to_string()), &RefTxIn {
+                tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
+                tx_index: 2
+            }, &VotingProcedure {
+                vote_kind: VoteKind::Abstain,
+                anchor: Some(Anchor {
+                    anchor_url: "https://raw.githubusercontent.com/HinsonSIDAN/cardano-drep/main/HinsonSIDAN.jsonld".to_string(),
+                    anchor_data_hash: "2aef51273a566e529a2d5958d981d7f0b3c7224fc2853b6c4922e019657b5060".to_string()
+                })
+            })
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing()
+            .unwrap();
+
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_cc_vote() {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = mesh
+            .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .vote(&Voter::ConstitutionalCommitteeHotCred(Credential::KeyHash("e3a4c41d67592a1b8d87c62e5c5d73f7e8db836171945412d13f40f8".to_string())), &RefTxIn {
+                tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
+                tx_index: 2
+            }, &VotingProcedure {
+                vote_kind: VoteKind::Abstain,
+                anchor: Some(Anchor {
+                    anchor_url: "https://raw.githubusercontent.com/HinsonSIDAN/cardano-drep/main/HinsonSIDAN.jsonld".to_string(),
+                    anchor_data_hash: "2aef51273a566e529a2d5958d981d7f0b3c7224fc2853b6c4922e019657b5060".to_string()
+                })
+            })
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing()
+            .unwrap();
+
+        println!("{}", unsigned_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
 }

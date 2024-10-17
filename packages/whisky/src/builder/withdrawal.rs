@@ -1,11 +1,11 @@
 use sidan_csl_rs::model::*;
 
-use super::{MeshTxBuilder, WRedeemer};
+use super::{TxBuilder, WRedeemer};
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is withdrawing using a plutus staking script in the MeshTxBuilder instance
+    /// Indicate that the transaction is withdrawing using a plutus staking script in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -13,7 +13,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_plutus_script(&mut self, language_version: &LanguageVersion) -> &mut Self {
         match language_version {
             LanguageVersion::V1 => self.withdrawal_plutus_script_v1(),
@@ -24,11 +24,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is withdrawing using a plutus V1 staking script in the MeshTxBuilder instance
+    /// Indicate that the transaction is withdrawing using a plutus V1 staking script in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_plutus_script_v1(&mut self) -> &mut Self {
         self.adding_plutus_withdrawal = Some(LanguageVersion::V1);
         self
@@ -36,11 +36,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is withdrawing using a plutus V2 staking script in the MeshTxBuilder instance
+    /// Indicate that the transaction is withdrawing using a plutus V2 staking script in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_plutus_script_v2(&mut self) -> &mut Self {
         self.adding_plutus_withdrawal = Some(LanguageVersion::V2);
         self
@@ -48,11 +48,11 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Indicate that the transaction is withdrawing using a plutus V3 staking script in the MeshTxBuilder instance
+    /// Indicate that the transaction is withdrawing using a plutus V3 staking script in the TxBuilder instance
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_plutus_script_v3(&mut self) -> &mut Self {
         self.adding_plutus_withdrawal = Some(LanguageVersion::V3);
         self
@@ -60,19 +60,18 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a withdrawal reference to the MeshTxBuilder instance
+    /// Add a withdrawal reference to the TxBuilder instance
     ///
     /// ### Arguments
     ///
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
     /// * `withdrawal_script_hash` - The withdrawal script hash
-    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     /// * `script_size` - Size of the script
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_tx_in_reference(
         &mut self,
         tx_hash: &str,
@@ -123,7 +122,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Withdraw stake rewards in the MeshTxBuilder instance
+    /// Withdraw stake rewards in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -132,7 +131,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal(&mut self, stake_address: &str, coin: u64) -> &mut Self {
         if self.withdrawal_item.is_some() {
             self.queue_withdrawal();
@@ -161,16 +160,15 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a withdrawal script to the MeshTxBuilder instance
+    /// Add a withdrawal script to the TxBuilder instance
     ///
     /// ### Arguments
     ///
     /// * `script_cbor` - The script in CBOR format
-    /// * `version` - The language version, if the language version is None, the script is assumed to be a Native Script
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_script(&mut self, script_cbor: &str) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
@@ -186,7 +184,8 @@ impl MeshTxBuilder {
                     ProvidedSimpleScriptSource {
                         script_cbor: script_cbor.to_string(),
                     },
-                ))
+                ));
+                self.withdrawal_item = Some(Withdrawal::SimpleScriptWithdrawal(withdraw));
             }
             Withdrawal::PlutusScriptWithdrawal(mut withdraw) => {
                 withdraw.script_source =
@@ -206,7 +205,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the transaction withdrawal redeemer value in the MeshTxBuilder instance
+    /// Set the transaction withdrawal redeemer value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -214,7 +213,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         let withdrawal_item = self.withdrawal_item.take();
         if withdrawal_item.is_none() {
@@ -244,7 +243,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the withdrawal reference redeemer value in the MeshTxBuilder instance
+    /// Set the withdrawal reference redeemer value in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -252,7 +251,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn withdrawal_reference_tx_in_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
         self.withdrawal_redeemer_value(redeemer)
     }

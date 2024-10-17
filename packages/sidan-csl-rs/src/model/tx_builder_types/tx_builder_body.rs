@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     Certificate, Datum, Metadata, MintItem, Network, Output, PubKeyTxIn, RefTxIn, TxIn,
-    ValidityRange, Withdrawal,
+    ValidityRange, Vote, Withdrawal,
 };
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MeshTxBuilderBody {
+pub struct TxBuilderBody {
     pub inputs: Vec<TxIn>,
     pub outputs: Vec<Output>,
     pub collaterals: Vec<PubKeyTxIn>,
@@ -20,6 +20,7 @@ pub struct MeshTxBuilderBody {
     pub metadata: Vec<Metadata>,
     pub validity_range: ValidityRange,
     pub certificates: Vec<Certificate>,
+    pub votes: Vec<Vote>,
     pub signing_key: Vec<String>,
     pub network: Option<Network>,
 }

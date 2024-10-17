@@ -2,9 +2,11 @@ mod certificate;
 mod complete;
 mod data;
 mod mint;
+mod service;
 mod tx_eval;
 mod tx_in;
 mod tx_out;
+mod vote;
 mod withdrawal;
 
 use std::collections::HashMap;
@@ -19,17 +21,19 @@ pub use tx_eval::*;
 
 use crate::service::*;
 
-pub struct MeshTxBuilder {
-    pub core: MeshTxBuilderCore,
+pub struct TxBuilder {
+    pub core: TxBuilderCore,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
     pub withdrawal_item: Option<Withdrawal>,
+    pub vote_item: Option<Vote>,
     pub mint_item: Option<MintItem>,
     pub collateral_item: Option<PubKeyTxIn>,
     pub tx_output: Option<Output>,
     pub adding_script_input: Option<LanguageVersion>,
     pub adding_plutus_mint: Option<LanguageVersion>,
     pub adding_plutus_withdrawal: Option<LanguageVersion>,
+    pub adding_plutus_vote: Option<LanguageVersion>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub submitter: Option<Box<dyn Submitter>>,
@@ -39,37 +43,39 @@ pub struct MeshTxBuilder {
     pub inputs_for_evaluation: HashMap<String, UTxO>,
 }
 
-pub struct MeshTxBuilderParam {
+pub struct TxBuilderParam {
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub submitter: Option<Box<dyn Submitter>>,
     pub params: Option<Protocol>,
 }
 
-impl MeshTxBuilder {
+impl TxBuilder {
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance with option params
+    /// Create a new TxBuilder instance with option params
     ///
     /// ### Arguments
     ///
-    /// * `param` - Parameters for setting up the MeshTxBuilder instance, including evaluator, fetcher, submitter, and protocol parameters
+    /// * `param` - Parameters for setting up the TxBuilder instance, including evaluator, fetcher, submitter, and protocol parameters
     ///
     /// ### Returns
     ///
-    /// * `Self` - A new MeshTxBuilder instance
-    pub fn new(param: MeshTxBuilderParam) -> Self {
-        MeshTxBuilder {
-            core: MeshTxBuilderCore::new_core(param.params.clone()),
+    /// * `Self` - A new TxBuilder instance
+    pub fn new(param: TxBuilderParam) -> Self {
+        TxBuilder {
+            core: TxBuilderCore::new_core(param.params.clone()),
             protocol_params: param.params.clone(),
             tx_in_item: None,
             withdrawal_item: None,
+            vote_item: None,
             mint_item: None,
             collateral_item: None,
             tx_output: None,
             adding_script_input: None,
             adding_plutus_mint: None,
             adding_plutus_withdrawal: None,
+            adding_plutus_vote: None,
             fetcher: param.fetcher,
             evaluator: match param.evaluator {
                 Some(evaluator) => Some(evaluator),
@@ -85,13 +91,13 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Create a new MeshTxBuilder instance without option params
+    /// Create a new TxBuilder instance without option params
     ///
     /// ### Returns
     ///
-    /// * `Self` - A new MeshTxBuilder instance
+    /// * `Self` - A new TxBuilder instance
     pub fn new_core() -> Self {
-        Self::new(MeshTxBuilderParam {
+        Self::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -101,7 +107,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a required signer hash to the MeshTxBuilder instance
+    /// Add a required signer hash to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -109,10 +115,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn required_signer_hash(&mut self, pub_key_hash: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .required_signatures
             .push(pub_key_hash.to_string());
         self
@@ -120,7 +126,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Change the address in the MeshTxBuilder instance
+    /// Change the address in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -128,15 +134,15 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn change_address(&mut self, address: &str) -> &mut Self {
-        self.core.mesh_tx_builder_body.change_address = address.to_string();
+        self.core.tx_builder_body.change_address = address.to_string();
         self
     }
 
     /// ## Transaction building method
     ///
-    /// Change the output datum in the MeshTxBuilder instance
+    /// Change the output datum in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -144,11 +150,11 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn change_output_datum(&mut self, data: WData) -> &mut Self {
         match data.to_cbor() {
             Ok(raw_data) => {
-                self.core.mesh_tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
+                self.core.tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
             }
             Err(_) => {
                 panic!("Error converting datum to CBOR");
@@ -159,7 +165,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Set the invalid_before slot in the MeshTxBuilder instance
+    /// Set the invalid_before slot in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -167,15 +173,15 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn invalid_before(&mut self, slot: u64) -> &mut Self {
-        self.core.mesh_tx_builder_body.validity_range.invalid_before = Some(slot);
+        self.core.tx_builder_body.validity_range.invalid_before = Some(slot);
         self
     }
 
     /// ## Transaction building method
     ///
-    /// Set the invalid_hereafter slot in the MeshTxBuilder instance
+    /// Set the invalid_hereafter slot in the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -183,10 +189,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn invalid_hereafter(&mut self, slot: u64) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .validity_range
             .invalid_hereafter = Some(slot);
         self
@@ -194,7 +200,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a metadata value to the MeshTxBuilder instance
+    /// Add a metadata value to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -203,9 +209,9 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn metadata_value(&mut self, tag: &str, metadata: &str) -> &mut Self {
-        self.core.mesh_tx_builder_body.metadata.push(Metadata {
+        self.core.tx_builder_body.metadata.push(Metadata {
             tag: tag.to_string(),
             metadata: metadata.to_string(),
         });
@@ -214,7 +220,7 @@ impl MeshTxBuilder {
 
     /// ## Transaction building method
     ///
-    /// Add a cli signing key to the MeshTxBuilder instance
+    /// Add a cli signing key to the TxBuilder instance
     ///
     /// ### Arguments
     ///
@@ -222,10 +228,10 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn signing_key(&mut self, skey_hex: &str) -> &mut Self {
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .signing_key
             .push(skey_hex.to_string());
         self
@@ -241,7 +247,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn chain_tx(&mut self, tx_hex: &str) -> &mut Self {
         self.chained_txs.push(tx_hex.to_string());
         self
@@ -257,7 +263,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn input_for_evaluation(&mut self, input: &UTxO) -> &mut Self {
         let utxo_id = format!("{}{}", input.input.tx_hash, input.input.output_index);
         let current_utxo = self.inputs_for_evaluation.get(&utxo_id);
@@ -321,7 +327,7 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn select_utxos_from(&mut self, extra_inputs: &[UTxO], threshold: u64) -> &mut Self {
         self.selection_threshold = threshold;
         self.extra_inputs.extend(extra_inputs.to_vec());
@@ -338,15 +344,15 @@ impl MeshTxBuilder {
     ///
     /// ### Returns
     ///
-    /// * `Self` - The MeshTxBuilder instance
+    /// * `Self` - The TxBuilder instance
     pub fn network(&mut self, network: Network) -> &mut Self {
-        self.core.mesh_tx_builder_body.network = Some(network);
+        self.core.tx_builder_body.network = Some(network);
         self
     }
 
     /// ## Internal method
     ///
-    /// Queue an input in the MeshTxBuilder instance
+    /// Queue an input in the TxBuilder instance
     pub fn queue_input(&mut self) {
         let tx_in_item = self.tx_in_item.clone().unwrap();
         match tx_in_item {
@@ -365,16 +371,15 @@ impl MeshTxBuilder {
             TxIn::SimpleScriptTxIn(_) => {}
             TxIn::PubKeyTxIn(_) => {}
         }
-        self.core
-            .mesh_tx_builder_body
-            .inputs
-            .push(self.tx_in_item.clone().unwrap());
+        let input = self.tx_in_item.clone().unwrap();
+        self.input_for_evaluation(&input.to_utxo());
+        self.core.tx_builder_body.inputs.push(input);
         self.tx_in_item = None
     }
 
     /// ## Internal method
     ///
-    /// Queue a withdrawal in the MeshTxBuilder instance
+    /// Queue a withdrawal in the TxBuilder instance
     pub fn queue_withdrawal(&mut self) {
         let withdrawal_item = self.withdrawal_item.clone().unwrap();
         match withdrawal_item {
@@ -393,7 +398,7 @@ impl MeshTxBuilder {
             Withdrawal::PubKeyWithdrawal(_) => {}
         }
         self.core
-            .mesh_tx_builder_body
+            .tx_builder_body
             .withdrawals
             .push(self.withdrawal_item.clone().unwrap());
         self.withdrawal_item = None;
@@ -401,7 +406,31 @@ impl MeshTxBuilder {
 
     /// ## Internal method
     ///
-    /// Queue a mint in the MeshTxBuilder instance
+    /// Queue a vote in the TxBuilder instance
+    pub fn queue_vote(&mut self) {
+        let vote_item = self.vote_item.clone().unwrap();
+        match vote_item {
+            Vote::ScriptVote(script_vote) => {
+                match (script_vote.redeemer, script_vote.script_source) {
+                    (None, _) => panic!("Redeemer in script vote cannot be None"),
+                    (_, None) => panic!("Script source in script vote cannot be None"),
+                    _ => {}
+                }
+            }
+            Vote::SimpleScriptVote(simple_script_vote) => {
+                if simple_script_vote.simple_script_source.is_none() {
+                    panic!("Script source is missing from native script vote")
+                }
+            }
+            Vote::BasicVote(_) => {}
+        }
+        self.core.tx_builder_body.votes.push(self.vote_item.clone().unwrap());
+        self.vote_item = None;
+    }
+
+    /// ## Internal method
+    ///
+    /// Queue a mint in the TxBuilder instance
     pub fn queue_mint(&mut self) {
         let mint_item = self.mint_item.take().unwrap();
         match mint_item {
@@ -410,7 +439,7 @@ impl MeshTxBuilder {
                     panic!("Missing mint script information");
                 }
                 self.core
-                    .mesh_tx_builder_body
+                    .tx_builder_body
                     .mints
                     .push(MintItem::ScriptMint(script_mint));
             }
@@ -419,7 +448,7 @@ impl MeshTxBuilder {
                     panic!("Missing mint script information");
                 }
                 self.core
-                    .mesh_tx_builder_body
+                    .tx_builder_body
                     .mints
                     .push(MintItem::SimpleScriptMint(simple_script_mint));
             }
@@ -429,11 +458,11 @@ impl MeshTxBuilder {
 
     /// ## Internal method
     ///
-    /// Queue all last items in the MeshTxBuilder instance
+    /// Queue all last items in the TxBuilder instance
     pub fn queue_all_last_item(&mut self) {
         if self.tx_output.is_some() {
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .outputs
                 .push(self.tx_output.clone().unwrap());
             self.tx_output = None;
@@ -443,13 +472,16 @@ impl MeshTxBuilder {
         }
         if self.collateral_item.is_some() {
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .collaterals
                 .push(self.collateral_item.clone().unwrap());
             self.collateral_item = None;
         }
         if self.withdrawal_item.is_some() {
             self.queue_withdrawal();
+        }
+        if self.vote_item.is_some() {
+            self.queue_vote();
         }
         if self.mint_item.is_some() {
             self.queue_mint();
@@ -471,7 +503,7 @@ impl MeshTxBuilder {
     ) -> Result<(), JsError> {
         let mut required_assets = Value::new();
 
-        for output in &self.core.mesh_tx_builder_body.outputs {
+        for output in &self.core.tx_builder_body.outputs {
             let mut output_value = Value::from_asset_vec(&output.amount);
             let pp = self.protocol_params.clone().unwrap_or_default();
             if output_value.get("lovelace") == 0 {
@@ -482,7 +514,7 @@ impl MeshTxBuilder {
             }
             required_assets.merge(&output_value);
         }
-        for input in &self.core.mesh_tx_builder_body.inputs {
+        for input in &self.core.tx_builder_body.inputs {
             match input {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input_value =
@@ -502,7 +534,7 @@ impl MeshTxBuilder {
             }
         }
 
-        for mint_item in &self.core.mesh_tx_builder_body.mints {
+        for mint_item in &self.core.tx_builder_body.mints {
             let mint = match mint_item {
                 MintItem::ScriptMint(script_mint) => &script_mint.mint,
                 MintItem::SimpleScriptMint(simple_script_mint) => &simple_script_mint.mint,
@@ -540,7 +572,7 @@ impl MeshTxBuilder {
                 },
             });
             self.core
-                .mesh_tx_builder_body
+                .tx_builder_body
                 .inputs
                 .push(pub_key_input.clone());
             self.input_for_evaluation(&input);
@@ -549,7 +581,7 @@ impl MeshTxBuilder {
     }
 }
 
-impl Default for MeshTxBuilder {
+impl Default for TxBuilder {
     fn default() -> Self {
         Self::new_core()
     }
