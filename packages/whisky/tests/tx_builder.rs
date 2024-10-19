@@ -220,6 +220,7 @@ mod tx_builder_core_tests {
             .read_only_tx_in_reference(
                 "8b7ea04a142933b3d8005bf98be906bdba10978891593b383deac933497e2ea7",
                 1,
+                None,
             );
     }
 

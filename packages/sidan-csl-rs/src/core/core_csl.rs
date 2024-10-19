@@ -217,7 +217,12 @@ impl MeshCSL {
             &csl::TransactionHash::from_hex(&ref_input.tx_hash)?,
             ref_input.tx_index,
         );
-        self.tx_builder.add_reference_input(&csl_ref_input);
+        if ref_input.script_size.is_some() {
+            self.tx_builder
+                .add_script_reference_input(&csl_ref_input, ref_input.script_size.unwrap());
+        } else {
+            self.tx_builder.add_reference_input(&csl_ref_input);
+        }
         Ok(())
     }
 

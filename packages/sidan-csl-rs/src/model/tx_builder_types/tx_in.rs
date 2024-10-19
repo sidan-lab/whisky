@@ -20,6 +20,7 @@ pub enum TxIn {
 pub struct RefTxIn {
     pub tx_hash: String,
     pub tx_index: u32,
+    pub script_size: Option<usize>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

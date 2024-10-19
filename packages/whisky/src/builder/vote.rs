@@ -95,6 +95,8 @@ impl TxBuilder {
                         ref_tx_in: RefTxIn {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
+                            // Script size is already accounted for in script source
+                            script_size: None,
                         },
                         simple_script_hash: vote_script_hash.to_string(),
                         script_size,
@@ -107,6 +109,8 @@ impl TxBuilder {
                         ref_tx_in: RefTxIn {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
+                            // Script size is already accounted for in script source
+                            script_size: None,
                         },
                         script_hash: vote_script_hash.to_string(),
                         language_version: self

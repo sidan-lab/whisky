@@ -282,7 +282,7 @@ impl TxBuilder {
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
     /// * `script_hash` - The spending script hash
-    /// * `scrip_size` - Size of the script
+    /// * `script_size` - Size of the script
     ///
     /// ### Returns
     ///
@@ -310,6 +310,8 @@ impl TxBuilder {
                         ref_tx_in: RefTxIn {
                             tx_hash: tx_hash.to_string(),
                             tx_index,
+                            // Script size is already accounted for in script source
+                            script_size: None,
                         },
                         script_hash: script_hash.to_string(),
                         language_version: self
@@ -358,17 +360,24 @@ impl TxBuilder {
     ///
     /// * `tx_hash` - The transaction hash
     /// * `tx_index` - The transaction index
+    /// * `script_size` - The size of the script contained at the reference input (None if it doesn't contain a script)
     ///
     /// ### Returns
     ///
     /// * `Self` - The TxBuilder instance
-    pub fn read_only_tx_in_reference(&mut self, tx_hash: &str, tx_index: u32) -> &mut Self {
+    pub fn read_only_tx_in_reference(
+        &mut self,
+        tx_hash: &str,
+        tx_index: u32,
+        script_size: Option<usize>,
+    ) -> &mut Self {
         self.core
             .tx_builder_body
             .reference_inputs
             .push(RefTxIn {
                 tx_hash: tx_hash.to_string(),
                 tx_index,
+                script_size,
             });
         self
     }
