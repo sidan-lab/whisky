@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct  Protocol {
+pub struct Protocol {
     pub epoch: i32,
     pub min_fee_a: u64,
     pub min_fee_b: u64,
