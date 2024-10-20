@@ -65,6 +65,7 @@ mod int_tests {
             .read_only_tx_in_reference(
                 "8b7ea04a142933b3d8005bf98be906bdba10978891593b383deac933497e2ea7",
                 1,
+                None,
             )
             .mint_plutus_script_v2()
             .mint(1, cns_policy_id, domain_with_ext)
@@ -452,7 +453,7 @@ mod int_tests {
                 steps: 44400485
             }})
         .withdrawal_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 953)
-        .read_only_tx_in_reference("d3e7e43ec9c85cfdb90f98fb40bb4edd58fdd3d056e32f827739fe0b915c6eb7", 0)
+        .read_only_tx_in_reference("d3e7e43ec9c85cfdb90f98fb40bb4edd58fdd3d056e32f827739fe0b915c6eb7", 0, None)
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .tx_in_collateral("3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814", 7, &[Asset::new_from_str("lovelace", "10000000")], "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x")
         .required_signer_hash("258633d7e1be92e432054b2a968a0e447fd4441ef58ab8695317826e")
@@ -573,7 +574,8 @@ mod int_tests {
             )
             .vote(&Voter::DRepId("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7".to_string()), &RefTxIn {
                 tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
-                tx_index: 2
+                tx_index: 2,
+                script_size: None,
             }, &VotingProcedure {
                 vote_kind: VoteKind::Abstain,
                 anchor: Some(Anchor {
@@ -609,7 +611,8 @@ mod int_tests {
             )
             .vote(&Voter::ConstitutionalCommitteeHotCred(Credential::KeyHash("e3a4c41d67592a1b8d87c62e5c5d73f7e8db836171945412d13f40f8".to_string())), &RefTxIn {
                 tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
-                tx_index: 2
+                tx_index: 2,
+                script_size: None
             }, &VotingProcedure {
                 vote_kind: VoteKind::Abstain,
                 anchor: Some(Anchor {

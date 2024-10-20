@@ -553,10 +553,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "cardano-serialization-lib"
+version = "13.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a060cf6912878c0132ce9ac8577eb62f151ba8f00fe2e75a57f85260c696e421"
+dependencies = [
+ "bech32 0.7.3",
+ "cbor_event",
+ "cfg-if",
+ "clear_on_drop",
+ "cryptoxide",
+ "digest 0.9.0",
+ "ed25519-bip32",
+ "getrandom",
+ "hashlink",
+ "hex",
+ "itertools 0.10.5",
+ "js-sys",
+ "noop_proc_macro",
+ "num",
+ "num-bigint",
+ "num-derive",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "rand_os",
+ "schemars",
+ "serde",
+ "serde-wasm-bindgen 0.4.5",
+ "serde_json",
+ "sha2 0.9.9",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "cardano-serialization-lib-json-schema-gen"
 version = "0.0.1"
 dependencies = [
- "cardano-serialization-lib",
+ "cardano-serialization-lib 12.0.1",
  "schemars",
  "serde_json",
 ]
@@ -2644,9 +2678,9 @@ dependencies = [
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
- "cardano-serialization-lib",
+ "cardano-serialization-lib 13.1.0",
  "cryptoxide",
  "getrandom",
  "hex",
@@ -3258,7 +3292,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3283,7 +3317,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.9.3"
+version = "0.9.4"
 dependencies = [
  "actix-cors",
  "actix-web",
