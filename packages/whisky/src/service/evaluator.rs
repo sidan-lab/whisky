@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 
 use sidan_csl_rs::{
-    core::utils::evaluate_tx_scripts,
     csl::JsError,
     model::{
-        Action, Certificate, MintItem, Network, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO, UtxoInput, UtxoOutput, Withdrawal
+        Action, Certificate, MintItem, Network, Redeemer, RedeemerTag, ScriptTxIn, TxIn, UTxO, Withdrawal
     },
 };
 
