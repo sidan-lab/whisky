@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use sidan_csl_rs::csl::JsError;
-use sidan_csl_rs::model::{Action, Network, UTxO};
+use sidan_csl_rs::model::{Action, EvalResult, Network, UTxO};
 use sidan_csl_rs::core::utils::evaluate_tx_scripts;
 use crate::service::Evaluator;
 
@@ -27,7 +27,26 @@ impl MeshTxEvaluator {
         additional_txs: &[String],
         network: &Network,
     ) -> Result<Vec<Action>, JsError> {
-        evaluate_tx_scripts(tx_hex, inputs, additional_txs, network)
+        consolidate_errors(evaluate_tx_scripts(tx_hex, inputs, additional_txs, network)?)
+    }
+}
+
+fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, JsError> {
+    let mut actions = Vec::new();
+    let mut errors_texts = Vec::new();
+    for eval_result in eval_results {
+        match eval_result {
+            EvalResult::Success(action) => actions.push(action),
+            EvalResult::Error(error) => {
+                errors_texts.push(format!("Error at index: [ {} ] - Budget: [ {:?} ] - Tag: [ {:?} ] - Error message: [ {} ] - Logs: [ {:?} ]",
+                                          error.index, error.budget, error.tag, error.error_message, error.logs));
+            }
+        }
+    }
+    if errors_texts.is_empty() {
+        Ok(actions)
+    } else {
+        Err(JsError::from_str(&format!("Errors found during evaluation: [ {:?} ]", errors_texts)))
     }
 }
 
