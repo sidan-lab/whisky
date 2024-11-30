@@ -12,7 +12,7 @@ use crate::*;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::{
     conway::{
-        AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
+        AssetName, Coin, CostModels, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
         ScriptRef, TransactionOutput, Value,
     },
     Fragment,
@@ -193,14 +193,14 @@ fn map_redeemer_tag(tag: &PRedeemerTag) -> RedeemerTag {
     }
 }
 
-fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
+fn get_cost_mdls(network: &Network) -> Result<CostModels, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
     if cost_model_list.len() < 3 {
         return Err(JsError::from_str(
             "Cost models have to contain at least PlutusV1, PlutusV2, and PlutusV3 costs",
         ));
     };
-    Ok(CostMdls {
+    Ok(CostModels {
         plutus_v1: Some(cost_model_list[0].clone()),
         plutus_v2: Some(cost_model_list[1].clone()),
         plutus_v3: Some(cost_model_list[2].clone()),

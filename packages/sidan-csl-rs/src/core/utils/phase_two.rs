@@ -1,7 +1,7 @@
-use pallas_primitives::conway::{CostMdls, MintedTx, Redeemer};
+use pallas_primitives::conway::{CostModels, MintedTx, Redeemer};
 use uplc::machine::cost_model::ExBudget;
 use uplc::tx::error::Error;
-use uplc::tx::{eval, DataLookupTable, ResolvedInput, SlotConfig};
+use uplc::tx::{eval, iter_redeemers, DataLookupTable, ResolvedInput, SlotConfig};
 
 pub enum PhaseTwoEvalResult {
     Success(Redeemer),
@@ -11,7 +11,7 @@ pub enum PhaseTwoEvalResult {
 pub fn eval_phase_two(
     tx: &MintedTx,
     utxos: &[ResolvedInput],
-    cost_mdls: Option<&CostMdls>,
+    cost_mdls: Option<&CostModels>,
     initial_budget: Option<&ExBudget>,
     slot_config: &SlotConfig,
 ) -> Result<Vec<PhaseTwoEvalResult>, Error> {
@@ -27,12 +27,12 @@ pub fn eval_phase_two(
             let mut results = Vec::new();
             let mut remaining_budget = *initial_budget.unwrap_or(&ExBudget::default());
 
-            for (redeemer_key, redeemer_value) in rs.iter() {
+            for (key, data, ex_units) in iter_redeemers(rs) {
                 let redeemer = Redeemer {
-                    tag: redeemer_key.tag,
-                    index: redeemer_key.index,
-                    data: redeemer_value.data.clone(),
-                    ex_units: redeemer_value.ex_units,
+                    tag: key.tag,
+                    index: key.index,
+                    data: data.clone(),
+                    ex_units,
                 };
 
                 let eval_result = eval::eval_redeemer(
@@ -62,11 +62,11 @@ pub fn eval_phase_two(
     }
 }
 
-fn trim_cost_modes(cost_mdls: Option<&CostMdls>) -> Option<CostMdls> {
+fn trim_cost_modes(cost_mdls: Option<&CostModels>) -> Option<CostModels> {
     match cost_mdls {
         None => None,
         Some(mdls) => {
-            Some(CostMdls {
+            Some(CostModels {
                 plutus_v1: mdls.plutus_v1.clone(),
                 plutus_v2: mdls.plutus_v2.clone(),
                 plutus_v3: match &mdls.plutus_v3 {
