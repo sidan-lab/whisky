@@ -1,27 +1,29 @@
 use pallas_codec::utils::NonEmptyKeyValuePairs;
-use pallas_primitives::conway::RedeemerTag as PRedeemerTag;
+use pallas_primitives::conway::{Redeemer, RedeemerTag as PRedeemerTag};
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 
 use crate::core::constants::get_cost_models_from_network;
 use crate::core::tx_parser::MeshTxParser;
 use crate::csl::{Address, JsError};
-use crate::model::{Action, Asset, Budget, JsVecString, Network, RedeemerTag, UTxO, UtxoOutput};
+use crate::model::{Action, Asset, Budget, EvalError, EvalResult, JsVecString, Network, RedeemerTag, UTxO, UtxoOutput};
 use crate::wasm::WasmResult;
 use crate::*;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::{
     conway::{
-        AssetName, Coin, CostMdls, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
+        AssetName, Coin, CostModels, DatumOption, PlutusData, PolicyId, PostAlonzoTransactionOutput,
         ScriptRef, TransactionOutput, Value,
     },
     Fragment,
 };
 use pallas_traverse::{Era, MultiEraTx};
 use uplc::{
-    tx::{eval_phase_two, ResolvedInput},
+    tx::error::Error as UplcError,
+    tx::ResolvedInput,
     Hash, TransactionInput,
 };
+use crate::core::utils::phase_two::{eval_phase_two, PhaseTwoEvalResult};
 
 #[wasm_bindgen]
 pub fn evaluate_tx_scripts_js(
@@ -74,7 +76,7 @@ pub fn evaluate_tx_scripts(
     inputs: &[UTxO],
     additional_txs: &[String],
     network: &Network,
-) -> Result<Vec<Action>, JsError> {
+) -> Result<Vec<EvalResult>, JsError> {
     let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
     let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
     let tx = match mtx {
@@ -104,39 +106,101 @@ pub fn evaluate_tx_scripts(
         Some(&get_cost_mdls(network)?),
         None,
         &SlotConfig::default(),
-        false,
-        |_r| (),
     )
     .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
     .map(|reds| {
         reds.into_iter()
-            .map(|red| Action {
-                index: red.index,
-                budget: Budget {
-                    mem: red.ex_units.mem,
-                    steps: red.ex_units.steps,
-                },
-                tag: match red.tag {
-                    PRedeemerTag::Spend => RedeemerTag::Spend,
-                    PRedeemerTag::Mint => RedeemerTag::Mint,
-                    PRedeemerTag::Cert => RedeemerTag::Cert,
-                    PRedeemerTag::Reward => RedeemerTag::Reward,
-                    PRedeemerTag::Vote => RedeemerTag::Vote,
-                    PRedeemerTag::Propose => RedeemerTag::Propose,
-                },
-            })
+            .map(map_eval_result)
             .collect()
     })
 }
 
-fn get_cost_mdls(network: &Network) -> Result<CostMdls, JsError> {
+fn map_eval_result(result: PhaseTwoEvalResult) -> EvalResult {
+    match result {
+        PhaseTwoEvalResult::Success(redeemer) => EvalResult::Success(map_redeemer_to_action(redeemer)),
+        PhaseTwoEvalResult::Error(redeemer, err) => EvalResult::Error(map_error_to_eval_error(err, redeemer)),
+    }
+}
+
+fn map_error_to_eval_error(err: UplcError, original_redeemer: Redeemer) -> EvalError {
+    match err {
+        UplcError::Machine(err, budget, logs) => EvalError {
+            index: original_redeemer.index,
+            budget: Budget {
+                mem: budget.mem as u64,
+                steps: budget.cpu as u64,
+            },
+            tag: map_redeemer_tag(&original_redeemer.tag),
+            error_message: format!("{}", err),
+            logs,
+        },
+        UplcError::RedeemerError{err, .. } => {
+            match *err {
+                UplcError::Machine(err, budget, logs) => EvalError {
+                    index: original_redeemer.index,
+                    budget: Budget {
+                        mem: budget.mem as u64,
+                        steps: budget.cpu as u64,
+                    },
+                    tag: map_redeemer_tag(&original_redeemer.tag),
+                    error_message: format!("{}", err),
+                    logs,
+                },
+                _ => EvalError {
+                    index: original_redeemer.index,
+                    budget: Budget {
+                        mem: 0,
+                        steps: 0,
+                    },
+                    tag: map_redeemer_tag(&original_redeemer.tag),
+                    error_message: format!("{}", err),
+                    logs: vec![],
+                }
+            }
+        },
+        _ => EvalError {
+            index: original_redeemer.index,
+            budget: Budget {
+                mem: 0,
+                steps: 0,
+            },
+            tag: map_redeemer_tag(&original_redeemer.tag),
+            error_message: format!("{}", err),
+            logs: vec![],
+        },
+    }
+}
+
+fn map_redeemer_to_action(redeemer: Redeemer) -> Action {
+    Action {
+        index: redeemer.index,
+        budget: Budget {
+            mem: redeemer.ex_units.mem,
+            steps: redeemer.ex_units.steps,
+        },
+        tag: map_redeemer_tag(&redeemer.tag),
+    }
+}
+
+fn map_redeemer_tag(tag: &PRedeemerTag) -> RedeemerTag {
+    match tag {
+        PRedeemerTag::Spend => RedeemerTag::Spend,
+        PRedeemerTag::Mint => RedeemerTag::Mint,
+        PRedeemerTag::Cert => RedeemerTag::Cert,
+        PRedeemerTag::Reward => RedeemerTag::Reward,
+        PRedeemerTag::Vote => RedeemerTag::Vote,
+        PRedeemerTag::Propose => RedeemerTag::Propose,
+    }
+}
+
+fn get_cost_mdls(network: &Network) -> Result<CostModels, JsError> {
     let cost_model_list = get_cost_models_from_network(network);
     if cost_model_list.len() < 3 {
         return Err(JsError::from_str(
             "Cost models have to contain at least PlutusV1, PlutusV2, and PlutusV3 costs",
         ));
     };
-    Ok(CostMdls {
+    Ok(CostModels {
         plutus_v1: Some(cost_model_list[0].clone()),
         plutus_v2: Some(cost_model_list[1].clone()),
         plutus_v3: Some(cost_model_list[2].clone()),
@@ -270,69 +334,75 @@ mod test {
     fn test_eval() {
         let result = evaluate_tx_scripts(
             "84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
-          &vec![UTxO {
-              input: UtxoInput {
-                  tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
-                  output_index: 0
-              },
-              output: UtxoOutput {
-                  address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "986990")],
-                  data_hash: None,
-                  plutus_data: Some(csl::PlutusData::from_json(&
-                    json!({
-                        "constructor": 0,
-                        "fields": []
-                    })
-                    .to_string(), csl::PlutusDatumSchema::DetailedSchema).unwrap().to_hex()),
-                  script_hash: None,
-                  script_ref: None,
-              }
-          },
-          UTxO {
-              input: UtxoInput {
-                  tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
-                  output_index: 1
-              },
-              output: UtxoOutput {
-                  address: "addr_test1vq0atw43vuecjuwe9dxc7z7l2lvgnyp7d6f5ul4r3376mug8v67h5".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "9974857893")],
-                  data_hash: None,
-                  plutus_data: None,
-                  script_hash: None,
-                  script_ref: None,
-              }
-          },
-          UTxO {
-              input: UtxoInput {
-                  tx_hash: "04b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa".to_string(),
-                  output_index: 0
-              },
-              output: UtxoOutput {
-                  address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
-                  amount: vec![Asset::new_from_str("lovelace", "986990")],
-                  data_hash: None,
-                  plutus_data: None,
-                  script_hash: None,
-                  script_ref:  Some("82025655010000322223253330054a229309b2b1bad0025735".to_string())
-              }
-          }],
-          &[],
-          &Network::Mainnet
-      );
+            &vec![UTxO {
+                input: UtxoInput {
+                    tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
+                    output_index: 0
+                },
+                output: UtxoOutput {
+                    address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
+                    amount: vec![Asset::new_from_str("lovelace", "986990")],
+                    data_hash: None,
+                    plutus_data: Some(csl::PlutusData::from_json(&
+                                                                     json!({
+                                                                         "constructor": 0,
+                                                                         "fields": []
+                                                                     })
+                                                                         .to_string(), csl::PlutusDatumSchema::DetailedSchema).unwrap().to_hex()),
+                    script_hash: None,
+                    script_ref: None,
+                }
+            },
+                  UTxO {
+                      input: UtxoInput {
+                          tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
+                          output_index: 1
+                      },
+                      output: UtxoOutput {
+                          address: "addr_test1vq0atw43vuecjuwe9dxc7z7l2lvgnyp7d6f5ul4r3376mug8v67h5".to_string(),
+                          amount: vec![Asset::new_from_str("lovelace", "9974857893")],
+                          data_hash: None,
+                          plutus_data: None,
+                          script_hash: None,
+                          script_ref: None,
+                      }
+                  },
+                  UTxO {
+                      input: UtxoInput {
+                          tx_hash: "04b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa".to_string(),
+                          output_index: 0
+                      },
+                      output: UtxoOutput {
+                          address: "addr_test1wzlwsgq97vchypqzk8u8lz30w932tvx7akcj7csm02scl7qlghd97".to_string(),
+                          amount: vec![Asset::new_from_str("lovelace", "986990")],
+                          data_hash: None,
+                          plutus_data: None,
+                          script_hash: None,
+                          script_ref: Some("82025655010000322223253330054a229309b2b1bad0025735".to_string())
+                      }
+                  }],
+            &[],
+            &Network::Mainnet
+        );
 
         let redeemers = result.unwrap();
         let mut redeemer_json = serde_json::Map::new();
-        for redeemer in redeemers {
-            redeemer_json.insert("index".to_string(), redeemer.index.to_string().into());
-            let mut ex_unit_json = serde_json::Map::new();
-            ex_unit_json.insert("mem".to_string(), redeemer.budget.mem.into());
-            ex_unit_json.insert("steps".to_string(), redeemer.budget.steps.into());
-            redeemer_json.insert(
-                "ex_units".to_string(),
-                serde_json::Value::Object(ex_unit_json),
-            );
-        }
+
+        assert_eq!(redeemers.len(), 1);
+
+        let redeemer = match &redeemers[0] {
+            EvalResult::Success(redeemer) => Ok(redeemer),
+            EvalResult::Error(_) => Err("Unexpected error"),
+        }.unwrap();
+
+        redeemer_json.insert("index".to_string(), redeemer.index.to_string().into());
+        let mut ex_unit_json = serde_json::Map::new();
+        ex_unit_json.insert("mem".to_string(), redeemer.budget.mem.into());
+        ex_unit_json.insert("steps".to_string(), redeemer.budget.steps.into());
+        redeemer_json.insert(
+            "ex_units".to_string(),
+            serde_json::Value::Object(ex_unit_json),
+        );
         assert_eq!(
             serde_json::json!({"ex_units":{"mem":2833,"steps":528893},"index":"0"}).to_string(),
             serde_json::json!(redeemer_json).to_string()
@@ -444,13 +514,87 @@ mod test {
 
         assert_eq!(result.get_status(), "success");
 
-        let actions: Vec<Action> = serde_json::from_str(&result.get_data()).unwrap();
-        assert_eq!(actions.len(), 1);
+        let results: Vec<EvalResult> = serde_json::from_str(&result.get_data()).unwrap();
+        assert_eq!(results.len(), 1);
 
-        let action = &actions[0];
-        assert_eq!(action.budget.mem, 508703);
-        assert_eq!(action.budget.steps, 164980381);
-        assert_eq!(action.tag, RedeemerTag::Mint);
-        assert_eq!(action.index, 0);
+        let result = &results[0];
+        let redeemer = match result {
+            EvalResult::Success(redeemer) => redeemer,
+            EvalResult::Error(_) => panic!("Unexpected error"),
+        };
+
+        assert_eq!(redeemer.budget.mem, 508703);
+        assert_eq!(redeemer.budget.steps, 164980381);
+        assert_eq!(redeemer.tag, RedeemerTag::Mint);
+        assert_eq!(redeemer.index, 0);
+    }
+
+    #[test]
+    fn test_utxo_tx_evaluating_error() {
+        let tx_hex = "84a700d901028182582047ce1b14c0599bb377a3c73c20973e49adbd10e5090129879b068ca0aa4216c2000181825839003f1b5974f4f09f0974be655e4ce94f8a2d087df378b79ef3916c26b2b1f70b573b204c6695b8f66eb6e7c78c55ede9430024ebec6fd5f85d821b0000000252c63160a2581c0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f07a1446d65736801581cf1c9053e4e03414fc37092d0155682f96d20770afc13a07f00f057ffa14001021a000c6b250758207564366f82807a253ef1f25af3f04486ac49ecd7fb631da76a713b32580994d709a1581cf1c9053e4e03414fc37092d0155682f96d20770afc13a07f00f057ffa140010b582001208ac891cd1aefe984b233bb0f9c4ece236b172c279d14d4940a483d68ccb00dd90102818258206213898aa37d5e585721f4ebdd16da2ac6cd9cd0e81318906dfeea3ebdf9f15700a207d901028158a0589e01010032323232323225333002323232323253330073370e900018049baa00113253300949010f5468697320697320612074726163650016375c601660146ea800454cc02124010f5468697320697320612074726163650016300a300b003300900230080023008001300537540022930a99801a491856616c696461746f722072657475726e65642066616c736500136565734ae7155ceaab9e5742ae8905a182010082d8799f446d657368ff821a006acfc01ab2d05e00f5a11902d1a178386631633930353365346530333431346663333730393264303135353638326639366432303737306166633133613037663030663035376666a1646d657368a46b6465736372697074696f6e783254686973204e465420776173206d696e746564206279204d657368202868747470733a2f2f6d6573686a732e6465762f292e65696d6167657835697066733a2f2f516d527a6963705265757477436b4d36616f74754b6a4572464355443231334470775071364279757a4d4a617561696d656469615479706569696d6167652f6a7067646e616d656a4d65736820546f6b656e";
+        let utxos = vec![
+            UTxO {
+                input: UtxoInput {
+                    tx_hash: "47ce1b14c0599bb377a3c73c20973e49adbd10e5090129879b068ca0aa4216c2".to_string(),
+                    output_index: 0
+                },
+                output: UtxoOutput {
+                    address: "addr_test1qql3kkt57ncf7zt5hej4un8ff79z6zra7dut08hnj9kzdv437u94wweqf3nftw8kd6mw03uv2hk7jscqyn47cm74lpwsju87pd".to_string(),
+                    amount: vec![Asset::new_from_str("lovelace", "9979468933"), Asset::new_from_str("0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f076d657368", "1")],
+                    data_hash: None,
+                    plutus_data: None,
+                    script_hash: None,
+                    script_ref: None,
+                }
+            },
+            UTxO {
+                input: UtxoInput {
+                    tx_hash: "6213898aa37d5e585721f4ebdd16da2ac6cd9cd0e81318906dfeea3ebdf9f157".to_string(),
+                    output_index: 0
+                },
+                output: UtxoOutput {
+                    address: "addr_test1qql3kkt57ncf7zt5hej4un8ff79z6zra7dut08hnj9kzdv437u94wweqf3nftw8kd6mw03uv2hk7jscqyn47cm74lpwsju87pd".to_string(),
+                    amount: vec![Asset::new_from_str("lovelace", "20000000")],
+                    data_hash: None,
+                    plutus_data: None,
+                    script_hash: None,
+                    script_ref: None,
+                }
+                }
+            ];
+
+        let mut resolved_utxos = JsVecString::new();
+        for utxo in utxos {
+            let utxo_str = serde_json::to_string(&utxo).unwrap();
+            resolved_utxos.add(utxo_str);
+        }
+
+        let additional_txs = JsVecString::new();
+
+        let result = evaluate_tx_scripts_js(
+            tx_hex.to_string(),
+            &resolved_utxos,
+            &additional_txs,
+            "preprod".to_string(),
+        );
+
+        assert_eq!(result.get_status(), "success");
+        println!("{}", result.get_data());
+
+        let results: Vec<EvalResult> = serde_json::from_str(&result.get_data()).unwrap();
+        assert_eq!(results.len(), 1);
+
+        let result = &results[0];
+        let error_result = match result {
+            EvalResult::Success(_) => panic!("Unexpected error"),
+            EvalResult::Error(error) => error,
+        };
+
+        assert_eq!(error_result.budget.mem, 550);
+        assert_eq!(error_result.budget.steps, 1203691);
+        assert_eq!(error_result.tag, RedeemerTag::Mint);
+        assert_eq!(error_result.index, 0);
+        assert_eq!(error_result.error_message, "the validator crashed / exited prematurely");
+        assert_eq!(error_result.logs, ["This is a trace"]);
     }
 }
