@@ -42,6 +42,7 @@ impl MeshTxParser {
                 invalid_hereafter: None,
             },
             signing_key: vec![],
+            fee: None,
             network: None,
         };
         let csl_tx = csl::Transaction::from_hex(s).expect("Invalid transaction");
