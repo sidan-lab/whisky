@@ -122,7 +122,7 @@ pub fn serialize_tx_body(
     // }
     // }
     if tx_builder_body.fee.is_some() {
-        mesh_csl.set_fee(tx_builder_body.fee.unwrap());
+        TxBuilderCore::set_fee(&mut mesh_csl, tx_builder_body.fee.unwrap());
     }
     mesh_csl.add_change(
         tx_builder_body.change_address.clone(),
