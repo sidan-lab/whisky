@@ -513,6 +513,11 @@ impl MeshCSL {
             .set_ttl_bignum(&to_bignum(invalid_hereafter));
     }
 
+    pub fn set_fee(&mut self, fee: String) {
+        self.tx_builder
+            .set_fee(&csl::BigNum::from_str(&fee).expect("Error parsing fee amount"));
+    }
+
     pub fn add_change(
         &mut self,
         change_address: String,
