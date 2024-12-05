@@ -44,7 +44,7 @@ impl TxBuilder {
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
                     stake_key_address: stake_key_address.to_string(),
-                    coin: Protocol::default().key_deposit,
+                    coin: self.protocol_params.clone().unwrap_or_default().key_deposit,
                 }),
             ));
         self

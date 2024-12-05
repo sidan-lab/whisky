@@ -6,7 +6,7 @@ mod int_tests {
     };
     use whisky::{
         builder::{ TxBuilder, TxBuilderParam, WData::{self, JSON}, WRedeemer},
-        core::utils::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, RefTxIn, VoteKind, Voter, VotingProcedure},
+        core::utils::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, Protocol, RefTxIn, VoteKind, Voter, VotingProcedure},
     };
 
     #[test]
@@ -647,6 +647,53 @@ mod int_tests {
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .set_fee("500000")
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing().unwrap();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
+
+    #[test]
+    fn test_register_stake_with_custom_pp() {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: Some(Protocol {
+                epoch: 0,
+                min_fee_a: 44,
+                min_fee_b: 155381,
+                max_block_size: 98304,
+                max_tx_size: 16384,
+                max_block_header_size: 1100,
+                key_deposit: 0,
+                pool_deposit: 500000000,
+                min_pool_cost: "340000000".to_string(),
+                price_mem: 0.0577,
+                price_step: 0.0000721,
+                max_tx_ex_mem: "16000000".to_string(),
+                max_tx_ex_steps: "10000000000".to_string(),
+                max_block_ex_mem: "80000000".to_string(),
+                max_block_ex_steps: "40000000000".to_string(),
+                max_val_size: 5000,
+                collateral_percent: 150.0,
+                max_collateral_inputs: 3,
+                coins_per_utxo_size: 4310,
+                min_fee_ref_script_cost_per_byte: 15,
+                decentralisation: 0.0,
+            })
+        });
+        let signed_tx = mesh
+            .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
             .complete_sync(None)
             .unwrap()
             .complete_signing().unwrap();
