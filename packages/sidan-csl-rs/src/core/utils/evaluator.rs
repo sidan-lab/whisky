@@ -104,7 +104,6 @@ pub fn evaluate_tx_scripts(
         &tx,
         &to_pallas_utxos(&all_inputs)?,
         Some(&get_cost_mdls(network)?),
-        None,
         &SlotConfig::default(),
     )
     .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
