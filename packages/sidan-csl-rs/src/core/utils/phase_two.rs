@@ -25,7 +25,10 @@ pub fn eval_phase_two(
     match redeemers {
         Some(rs) => {
             let mut results = Vec::new();
-            let mut remaining_budget = *initial_budget.unwrap_or(&ExBudget::default());
+            let mut remaining_budget = *initial_budget.unwrap_or(&ExBudget {
+                cpu: i64::MAX,
+                mem: i64::MAX,
+            });
 
             for (key, data, ex_units) in iter_redeemers(rs) {
                 let redeemer = Redeemer {
