@@ -12,7 +12,6 @@ pub fn eval_phase_two(
     tx: &MintedTx,
     utxos: &[ResolvedInput],
     cost_mdls: Option<&CostModels>,
-    initial_budget: Option<&ExBudget>,
     slot_config: &SlotConfig,
 ) -> Result<Vec<PhaseTwoEvalResult>, Error> {
     let redeemers = tx.transaction_witness_set.redeemer.as_ref();
@@ -25,9 +24,11 @@ pub fn eval_phase_two(
     match redeemers {
         Some(rs) => {
             let mut results = Vec::new();
-            let mut remaining_budget = *initial_budget.unwrap_or(&ExBudget::default());
-
             for (key, data, ex_units) in iter_redeemers(rs) {
+                let remaining_budget = ExBudget {
+                    cpu: i64::MAX,
+                    mem: i64::MAX,
+                };
                 let redeemer = Redeemer {
                     tag: key.tag,
                     index: key.index,
@@ -44,11 +45,6 @@ pub fn eval_phase_two(
                     cost_mdls.as_ref(),
                     &remaining_budget,
                 );
-
-                // The subtraction is safe here as ex units counting is done during evaluation.
-                // Redeemer would fail already if budget was negative.
-                remaining_budget.cpu -= redeemer.ex_units.steps as i64;
-                remaining_budget.mem -= redeemer.ex_units.mem as i64;
 
                 match eval_result {
                     Ok(redeemer) => results.push(PhaseTwoEvalResult::Success(redeemer)),
