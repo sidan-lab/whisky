@@ -16,15 +16,17 @@ pub struct MeshCSL {
     pub tx_builder: csl::TransactionBuilder,
     pub tx_inputs_builder: csl::TxInputsBuilder,
     pub tx_withdrawals_builder: csl::WithdrawalsBuilder,
+    pub protocol_params: Protocol,
 }
 
 impl MeshCSL {
     pub fn new(params: Option<Protocol>) -> MeshCSL {
         MeshCSL {
             tx_hex: String::new(),
-            tx_builder: build_tx_builder(params),
+            tx_builder: build_tx_builder(params.clone()),
             tx_inputs_builder: csl::TxInputsBuilder::new(),
             tx_withdrawals_builder: csl::WithdrawalsBuilder::new(),
+            protocol_params: params.unwrap_or_default(),
         }
     }
 
@@ -181,7 +183,9 @@ impl MeshCSL {
                 amount_builder
                     .with_asset_and_min_required_coin_by_utxo_cost(
                         &tx_value.multiasset().unwrap(),
-                        &csl::DataCost::new_coins_per_byte(&to_bignum(4310)),
+                        &csl::DataCost::new_coins_per_byte(&to_bignum(
+                            self.protocol_params.coins_per_utxo_size,
+                        )),
                     )?
                     .build()?
             } else {
@@ -511,6 +515,11 @@ impl MeshCSL {
     pub fn add_invalid_hereafter(&mut self, invalid_hereafter: u64) {
         self.tx_builder
             .set_ttl_bignum(&to_bignum(invalid_hereafter));
+    }
+
+    pub fn set_fee(&mut self, fee: String) {
+        self.tx_builder
+            .set_fee(&csl::BigNum::from_str(&fee).expect("Error parsing fee amount"));
     }
 
     pub fn add_change(

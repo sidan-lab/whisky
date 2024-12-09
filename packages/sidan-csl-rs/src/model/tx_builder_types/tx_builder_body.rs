@@ -22,5 +22,6 @@ pub struct TxBuilderBody {
     pub certificates: Vec<Certificate>,
     pub votes: Vec<Vote>,
     pub signing_key: Vec<String>,
+    pub fee: Option<String>,
     pub network: Option<Network>,
 }

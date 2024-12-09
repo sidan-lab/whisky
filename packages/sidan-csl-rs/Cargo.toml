@@ -1,6 +1,6 @@
 [package]
 name = "sidan-csl-rs"
-version = "0.9.6"
+version = "0.9.7"
 edition = "2021"
 license = "Apache-2.0"
 description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-cardano-serialization-lib = "=13.1.0"
+cardano-serialization-lib = "=13.2.0"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

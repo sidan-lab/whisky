@@ -191,10 +191,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn invalid_hereafter(&mut self, slot: u64) -> &mut Self {
-        self.core
-            .tx_builder_body
-            .validity_range
-            .invalid_hereafter = Some(slot);
+        self.core.tx_builder_body.validity_range.invalid_hereafter = Some(slot);
         self
     }
 
@@ -336,6 +333,22 @@ impl TxBuilder {
 
     /// ## Transaction building method
     ///
+    /// Sets a specific fee amount, if the fee is insufficient, the transaction will fail to build
+    ///
+    /// ### Arguments
+    ///
+    /// * `fee` - The fee amount
+    ///
+    /// ### Returns
+    ///
+    /// * `Self` - The TxBuilder instance
+    pub fn set_fee(&mut self, fee: &str) -> &mut Self {
+        self.core.tx_builder_body.fee = Some(fee.to_string());
+        self
+    }
+
+    /// ## Transaction building method
+    ///
     /// Selects the network to use, primarily to decide which cost models to use for evaluation and calculating script integrity hash
     ///
     /// ### Arguments
@@ -424,7 +437,10 @@ impl TxBuilder {
             }
             Vote::BasicVote(_) => {}
         }
-        self.core.tx_builder_body.votes.push(self.vote_item.clone().unwrap());
+        self.core
+            .tx_builder_body
+            .votes
+            .push(self.vote_item.clone().unwrap());
         self.vote_item = None;
     }
 
@@ -571,10 +587,7 @@ impl TxBuilder {
                     address: Some(input.output.address.clone()),
                 },
             });
-            self.core
-                .tx_builder_body
-                .inputs
-                .push(pub_key_input.clone());
+            self.core.tx_builder_body.inputs.push(pub_key_input.clone());
             self.input_for_evaluation(&input);
         }
         Ok(())

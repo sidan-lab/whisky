@@ -121,6 +121,9 @@ pub fn serialize_tx_body(
     //     self.add_collateral_return(self.tx_builder_body.change_address.clone());
     // }
     // }
+    if tx_builder_body.fee.is_some() {
+        TxBuilderCore::set_fee(&mut mesh_csl, tx_builder_body.fee.unwrap());
+    }
     mesh_csl.add_change(
         tx_builder_body.change_address.clone(),
         tx_builder_body.change_datum.clone(),
@@ -158,6 +161,7 @@ impl TxBuilderCore {
                     invalid_hereafter: None,
                 },
                 signing_key: vec![],
+                fee: None,
                 network: None,
             },
             tx_evaluation_multiplier_percentage: 110,
@@ -434,6 +438,10 @@ impl TxBuilderCore {
     //         )
     //         .unwrap();
     // }
+
+    fn set_fee(mesh_csl: &mut MeshCSL, fee: String) {
+        mesh_csl.set_fee(fee);
+    }
 }
 
 impl Default for TxBuilderCore {
