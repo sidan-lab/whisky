@@ -16,9 +16,6 @@ pub fn eval_phase_two(
 ) -> Result<Vec<PhaseTwoEvalResult>, Error> {
     let redeemers = tx.transaction_witness_set.redeemer.as_ref();
 
-    //TODO: remove it after uplc will be updated to newer cost model
-    let cost_mdls = trim_cost_modes(cost_mdls);
-
     let lookup_table = DataLookupTable::from_transaction(tx, utxos);
 
     match redeemers {
@@ -42,7 +39,7 @@ pub fn eval_phase_two(
                     slot_config,
                     &redeemer,
                     &lookup_table,
-                    cost_mdls.as_ref(),
+                    cost_mdls,
                     &remaining_budget,
                 );
 
@@ -58,18 +55,18 @@ pub fn eval_phase_two(
     }
 }
 
-fn trim_cost_modes(cost_mdls: Option<&CostModels>) -> Option<CostModels> {
-    match cost_mdls {
-        None => None,
-        Some(mdls) => {
-            Some(CostModels {
-                plutus_v1: mdls.plutus_v1.clone(),
-                plutus_v2: mdls.plutus_v2.clone(),
-                plutus_v3: match &mdls.plutus_v3 {
-                    None => None,
-                    Some(mdls_vec) => Some(mdls_vec[0..251].to_vec())
-                }
-            })
-        }
-    }
-}
+// fn trim_cost_modes(cost_mdls: Option<&CostModels>) -> Option<CostModels> {
+//     match cost_mdls {
+//         None => None,
+//         Some(mdls) => {
+//             Some(CostModels {
+//                 plutus_v1: mdls.plutus_v1.clone(),
+//                 plutus_v2: mdls.plutus_v2.clone(),
+//                 plutus_v3: match &mdls.plutus_v3 {
+//                     None => None,
+//                     Some(mdls_vec) => Some(mdls_vec[0..251].to_vec())
+//                 }
+//             })
+//         }
+//     }
+// }
