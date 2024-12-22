@@ -1,5 +1,5 @@
 [workspace]
-version = "0.9.12"
+version = "0.9.13"
 resolver = "2"
 members = [
     "sidan-csl-rs",
