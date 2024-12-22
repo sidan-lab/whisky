@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use sidan_csl_rs::csl::JsError;
 use sidan_csl_rs::model::{Action, EvalResult, Network, UTxO};
 use sidan_csl_rs::core::utils::evaluate_tx_scripts;
+use uplc::tx::SlotConfig;
 use crate::service::Evaluator;
 
 #[derive(Clone, Debug)]
@@ -26,8 +27,9 @@ impl MeshTxEvaluator {
         inputs: &[UTxO],
         additional_txs: &[String],
         network: &Network,
+        slot_config: &SlotConfig
     ) -> Result<Vec<Action>, JsError> {
-        consolidate_errors(evaluate_tx_scripts(tx_hex, inputs, additional_txs, network)?)
+        consolidate_errors(evaluate_tx_scripts(tx_hex, inputs, additional_txs, network, slot_config)?)
     }
 }
 
@@ -58,7 +60,8 @@ impl Evaluator for MeshTxEvaluator {
         inputs: &[UTxO],
         additional_txs: &[String],
         network: &Network,
+        slot_config: &SlotConfig
     ) -> Result<Vec<Action>, JsError> {
-        self.evaluate_tx_sync(tx_hex, inputs, additional_txs, network)
+        self.evaluate_tx_sync(tx_hex, inputs, additional_txs, network, slot_config)
     }
 }

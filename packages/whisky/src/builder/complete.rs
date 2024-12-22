@@ -4,6 +4,7 @@ use sidan_csl_rs::{
     csl::{self, JsError},
     model::*,
 };
+use uplc::tx::SlotConfig;
 
 use super::{TxBuilder, TxEvaluation};
 
@@ -38,6 +39,7 @@ impl TxBuilder {
                         &inputs_for_evaluation,
                         &self.chained_txs.clone(),
                         network,
+                        &SlotConfig::default(), // TODO: accept slot config as argument for evaluator
                     )
                     .await;
                 match tx_evaluation_result {

@@ -24,12 +24,21 @@ use pallas_primitives::{
 use pallas_traverse::{Era, MultiEraTx};
 use uplc::{tx::error::Error as UplcError, tx::ResolvedInput, Hash, TransactionInput};
 
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JsonSlotConfig {
+    slot_length: u32,
+    zero_slot: u64,
+    zero_time: u64,
+}
+
 #[wasm_bindgen]
 pub fn evaluate_tx_scripts_js(
     tx_hex: String,
     resolved_utxos: &JsVecString,
     additional_txs: &JsVecString,
     network: String,
+    slot_config: String,
 ) -> WasmResult {
     let mut deserialized_utxos: Vec<UTxO> = Vec::new();
     for utxo_json in resolved_utxos {
@@ -54,11 +63,27 @@ pub fn evaluate_tx_scripts_js(
         }
     };
 
+    let deserialized_slot_config: SlotConfig =
+        match serde_json::from_str::<JsonSlotConfig>(slot_config.as_str()) {
+            Ok(slot_config) => SlotConfig {
+                slot_length: slot_config.slot_length,
+                zero_slot: slot_config.zero_slot,
+                zero_time: slot_config.zero_time,
+            },
+            Err(e) => {
+                return WasmResult::new_error(
+                    "failure".to_string(),
+                    format!("Error in decoding slot config: {:?}", e),
+                );
+            }
+        };
+
     let eval_result = evaluate_tx_scripts(
         &tx_hex,
         &deserialized_utxos,
         additional_txs.as_ref_vec(),
         &deserialize_network,
+        &deserialized_slot_config,
     );
 
     match eval_result {
@@ -75,6 +100,7 @@ pub fn evaluate_tx_scripts(
     inputs: &[UTxO],
     additional_txs: &[String],
     network: &Network,
+    slot_config: &SlotConfig,
 ) -> Result<Vec<EvalResult>, JsError> {
     let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
     let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
@@ -103,7 +129,7 @@ pub fn evaluate_tx_scripts(
         &tx,
         &to_pallas_utxos(&all_inputs)?,
         Some(&get_cost_mdls(network)?),
-        &SlotConfig::default(),
+        slot_config,
     )
     .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
     .map(|reds| reds.into_iter().map(map_eval_result).collect())
@@ -372,7 +398,8 @@ mod test {
                       }
                   }],
             &[],
-            &Network::Mainnet
+            &Network::Mainnet,
+            &SlotConfig::default()
         );
 
         let redeemers = result.unwrap();
@@ -419,7 +446,8 @@ mod test {
                 }
             }],
             &[],
-            &Network::Mainnet
+            &Network::Mainnet,
+            &SlotConfig::default()
         );
         assert_eq!(
             serde_json::json!([{"success": {"budget":{"mem":184912,"steps":61492185},"index": 0, "tag": "mint"}}]).to_string(),
@@ -528,6 +556,11 @@ mod test {
             &resolved_utxos,
             &additional_txs,
             "preprod".to_string(),
+            serde_json::to_string(&JsonSlotConfig {
+                slot_length: 1000,
+                zero_slot: 4492800,
+                zero_time: 1596059091000,
+            }).unwrap(),
         );
 
         assert_eq!(result.get_status(), "success");
@@ -594,6 +627,11 @@ mod test {
             &resolved_utxos,
             &additional_txs,
             "preprod".to_string(),
+            serde_json::to_string(&JsonSlotConfig {
+                slot_length: 1000,
+                zero_slot: 0,
+                zero_time: 1666656000000,
+            }).unwrap(),
         );
 
         assert_eq!(result.get_status(), "success");
@@ -617,5 +655,14 @@ mod test {
             "the validator crashed / exited prematurely"
         );
         assert_eq!(error_result.logs, ["This is a trace"]);
+    }
+
+    #[test]
+    fn config_test() {
+        println!("{:?}", serde_json::to_string(&JsonSlotConfig {
+            slot_length: 1000,
+            zero_slot: 0,
+            zero_time: 1666656000000,
+        }).unwrap());
     }
 }
