@@ -7,6 +7,7 @@ use sidan_csl_rs::{
         Withdrawal,
     },
 };
+use uplc::tx::SlotConfig;
 
 use crate::builder::TxBuilder;
 
@@ -18,6 +19,7 @@ pub trait Evaluator: Send {
         inputs: &[UTxO],
         additional_txs: &[String],
         network: &Network,
+        slot_config: &SlotConfig,
     ) -> Result<Vec<Action>, JsError>;
 }
 

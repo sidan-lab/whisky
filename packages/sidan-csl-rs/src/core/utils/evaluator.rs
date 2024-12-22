@@ -30,6 +30,7 @@ pub fn evaluate_tx_scripts_js(
     resolved_utxos: &JsVecString,
     additional_txs: &JsVecString,
     network: String,
+    slot_config: SlotConfig,
 ) -> WasmResult {
     let mut deserialized_utxos: Vec<UTxO> = Vec::new();
     for utxo_json in resolved_utxos {
@@ -59,6 +60,7 @@ pub fn evaluate_tx_scripts_js(
         &deserialized_utxos,
         additional_txs.as_ref_vec(),
         &deserialize_network,
+        &slot_config,
     );
 
     match eval_result {
@@ -75,6 +77,7 @@ pub fn evaluate_tx_scripts(
     inputs: &[UTxO],
     additional_txs: &[String],
     network: &Network,
+    slot_config: &SlotConfig,
 ) -> Result<Vec<EvalResult>, JsError> {
     let tx_bytes = hex::decode(tx_hex).expect("Invalid tx hex");
     let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
@@ -103,7 +106,7 @@ pub fn evaluate_tx_scripts(
         &tx,
         &to_pallas_utxos(&all_inputs)?,
         Some(&get_cost_mdls(network)?),
-        &SlotConfig::default(),
+        slot_config,
     )
     .map_err(|err| JsError::from_str(&format!("Error occurred during evaluation: {}", err)))
     .map(|reds| reds.into_iter().map(map_eval_result).collect())
@@ -372,7 +375,8 @@ mod test {
                       }
                   }],
             &[],
-            &Network::Mainnet
+            &Network::Mainnet,
+            &SlotConfig::default()
         );
 
         let redeemers = result.unwrap();
@@ -419,7 +423,8 @@ mod test {
                 }
             }],
             &[],
-            &Network::Mainnet
+            &Network::Mainnet,
+            &SlotConfig::default()
         );
         assert_eq!(
             serde_json::json!([{"success": {"budget":{"mem":184912,"steps":61492185},"index": 0, "tag": "mint"}}]).to_string(),
@@ -528,6 +533,7 @@ mod test {
             &resolved_utxos,
             &additional_txs,
             "preprod".to_string(),
+            SlotConfig::default(),
         );
 
         assert_eq!(result.get_status(), "success");
@@ -594,6 +600,7 @@ mod test {
             &resolved_utxos,
             &additional_txs,
             "preprod".to_string(),
+            SlotConfig::default(),
         );
 
         assert_eq!(result.get_status(), "success");

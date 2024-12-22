@@ -6,6 +6,7 @@ use sidan_csl_rs::{
     core::{tx_parser::MeshTxParser, utils::calculate_tx_hash},
     model::{Action, Budget, RedeemerTag},
 };
+use uplc::tx::SlotConfig;
 use std::error::Error;
 
 use crate::service::Evaluator;
@@ -134,6 +135,7 @@ impl Evaluator for MaestroProvider {
         _inputs: &[UTxO], // TODO: parse this also into additional_txs
         additional_txs: &[String],
         _network: &Network,
+        _slot_config: &SlotConfig,
     ) -> Result<Vec<Action>, JsError> {
         let tx_out_cbors: Vec<AdditionalUtxo> = additional_txs
             .iter()
