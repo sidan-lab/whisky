@@ -199,10 +199,20 @@ impl MeshCSL {
         match built_output.amount().multiasset() {
             Some(multiasset) => {
                 if multiasset.len() == 0 {
-                    built_output = csl::TransactionOutput::new(
+                    let mut new_built_output = csl::TransactionOutput::new(
                         &built_output.address(),
                         &csl::Value::new(&built_output.amount().coin()),
-                    )
+                    );
+                    if built_output.has_data_hash() {
+                        new_built_output.set_data_hash(&built_output.data_hash().unwrap());
+                    }
+                    if built_output.has_plutus_data() {
+                        new_built_output.set_plutus_data(&built_output.plutus_data().unwrap());
+                    }
+                    if built_output.has_script_ref() {
+                        new_built_output.set_script_ref(&built_output.script_ref().unwrap());
+                    }
+                    built_output = new_built_output;
                 }
             }
             None => {}
