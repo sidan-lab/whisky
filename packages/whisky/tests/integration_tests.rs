@@ -729,4 +729,32 @@ mod int_tests {
         println!("{}", signed_tx);
         assert!(mesh.core.mesh_csl.tx_hex != *"");
     }
+
+    #[test]
+    fn output_to_daedalus_address_test() {
+        let mut mesh = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+        let signed_tx = mesh
+            .tx_in(
+                "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
+                3,
+                &[Asset::new_from_str("lovelace", "9891607895")],
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+            )
+            .tx_out(
+                "DdzFFzCqrhswh7xiYG8RE1TtcvWamhbExTXfsCYaF9PrGWHRLCwCsBH5JkeApUagvo4FZE3DJD3rn5hw8vaMBib2StKMJ77rJHt51jPt",
+                &[Asset::new_from_str("lovelace", "2000000")]
+            )
+            .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
+            .complete_sync(None)
+            .unwrap()
+            .complete_signing().unwrap();
+
+        println!("{}", signed_tx);
+        assert!(mesh.core.mesh_csl.tx_hex != *"");
+    }
 }
