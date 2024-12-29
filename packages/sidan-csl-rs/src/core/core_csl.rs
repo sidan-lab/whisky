@@ -137,8 +137,8 @@ impl MeshCSL {
                     .map(|byron_addr| byron_addr.to_address());
             }
         };
-        let mut output_builder = csl::TransactionOutputBuilder::new()
-            .with_address(&output_address?);
+        let mut output_builder =
+            csl::TransactionOutputBuilder::new().with_address(&output_address?);
         if output.datum.is_some() {
             let datum = output.datum.unwrap();
 
@@ -554,14 +554,22 @@ impl MeshCSL {
         change_address: String,
         change_datum: Option<Datum>,
     ) -> Result<(), JsError> {
+        let mut output_address = csl::Address::from_bech32(&change_address);
+        // If the address is not in bech32 format, it might be a Byron address
+        match output_address {
+            Ok(_) => {}
+            Err(_) => {
+                output_address = csl::ByronAddress::from_base58(&change_address)
+                    .map(|byron_addr| byron_addr.to_address());
+            }
+        };
         if let Some(change_datum) = change_datum {
             self.tx_builder.add_change_if_needed_with_datum(
-                &csl::Address::from_bech32(&change_address)?,
+                &output_address?,
                 &csl::OutputDatum::new_data(&csl::PlutusData::from_hex(change_datum.get_inner())?),
             )?;
         } else {
-            self.tx_builder
-                .add_change_if_needed(&csl::Address::from_bech32(&change_address)?)?;
+            self.tx_builder.add_change_if_needed(&output_address?)?;
         }
         Ok(())
     }
