@@ -128,6 +128,14 @@ impl MeshCSL {
     }
 
     pub fn add_output(&mut self, output: Output) -> Result<(), JsError> {
+        let mut output_address = &csl::Address::from_bech32(&output.address);
+        match output_address {
+            Ok(_) => {}
+            Err(_) => {
+                output_address = &csl::ByronAddress::from_base58(&output.address)
+                    .map(|byron_addr| byron_addr.to_address());
+            }
+        };
         let mut output_builder = csl::TransactionOutputBuilder::new()
             .with_address(&csl::Address::from_bech32(&output.address)?);
         if output.datum.is_some() {
