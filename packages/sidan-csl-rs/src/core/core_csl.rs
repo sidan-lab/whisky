@@ -353,7 +353,9 @@ impl MeshCSL {
         let mint_script = to_csl_script_source(script_source_info)?;
         mint_builder.add_asset(
             &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-            &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).unwrap())?,
+            &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).map_err(|err| {
+                JsError::from_str(&format!("Invalid asset name found: {}", err))
+            })?)?,
             &csl::Int::from_str(&script_mint.mint.amount.to_string()).unwrap(),
         )?;
         Ok(())
@@ -370,7 +372,9 @@ impl MeshCSL {
                 &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
                     &csl::NativeScript::from_hex(&script.script_cbor)?,
                 )),
-                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
+                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(|err| {
+                    JsError::from_str(&format!("Invalid asset name found: {}", err))
+                })?)?,
                 &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
             )?,
             SimpleScriptSource::InlineSimpleScriptSource(script) => mint_builder.add_asset(
@@ -382,7 +386,9 @@ impl MeshCSL {
                     ),
                     script.script_size,
                 )),
-                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).unwrap())?,
+                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(|err| {
+                    JsError::from_str(&format!("Invalid asset name found: {}", err))
+                })?)?,
                 &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
             )?,
         };
