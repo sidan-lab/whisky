@@ -1,4 +1,5 @@
 use crate::csl;
+use cardano_serialization_lib::JsError;
 use hex::FromHex;
 
 use crate::model::*;
@@ -40,7 +41,7 @@ pub fn build_tx_builder(params: Option<Protocol>) -> csl::TransactionBuilder {
     csl::TransactionBuilder::new(&cfg)
 }
 
-pub fn to_value(assets: &Vec<Asset>) -> csl::Value {
+pub fn to_value(assets: &Vec<Asset>) -> Result<csl::Value, JsError> {
     let lovelace = assets.iter().find(|asset| asset.unit() == "lovelace");
     let mut multi_asset = csl::MultiAsset::new();
 
@@ -48,8 +49,8 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::Value {
         if asset.unit() == "lovelace" {
             continue;
         }
-        let name_bytes =
-            Vec::<u8>::from_hex(&asset.unit()[56..]).expect("Failed to parse hex asset name");
+        let name_bytes = Vec::<u8>::from_hex(&asset.unit()[56..])
+            .map_err(|err| JsError::from_str(&format!("Invalid hex string found: {}", err)))?;
 
         multi_asset.set_asset(
             &csl::ScriptHash::from_hex(&asset.unit()[0..56]).unwrap(),
@@ -68,5 +69,5 @@ pub fn to_value(assets: &Vec<Asset>) -> csl::Value {
     if assets.len() > 1 || lovelace.is_none() {
         value.set_multiasset(&multi_asset);
     }
-    value
+    Ok(value)
 }

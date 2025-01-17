@@ -37,7 +37,7 @@ impl MeshCSL {
                 &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                 input.tx_in.tx_index,
             ),
-            &to_value(&input.tx_in.amount.unwrap()),
+            &to_value(&input.tx_in.amount.unwrap())?,
         )?;
         Ok(())
     }
@@ -53,7 +53,7 @@ impl MeshCSL {
                         &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                         input.tx_in.tx_index,
                     ),
-                    &to_value(&input.tx_in.amount.unwrap()),
+                    &to_value(&input.tx_in.amount.unwrap())?,
                 );
                 Ok(())
             }
@@ -71,7 +71,7 @@ impl MeshCSL {
                         &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                         input.tx_in.tx_index,
                     ),
-                    &to_value(&input.tx_in.amount.unwrap()),
+                    &to_value(&input.tx_in.amount.unwrap())?,
                 );
                 Ok(())
             }
@@ -122,7 +122,7 @@ impl MeshCSL {
                 &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
                 input.tx_in.tx_index,
             ),
-            &to_value(&input.tx_in.amount.unwrap()),
+            &to_value(&input.tx_in.amount.unwrap())?,
         );
         Ok(())
     }
@@ -185,7 +185,7 @@ impl MeshCSL {
             }
         }
 
-        let tx_value = to_value(&output.amount);
+        let tx_value = to_value(&output.amount)?;
         let amount_builder = output_builder.next()?;
         let mut built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
             if tx_value.coin().is_zero() {
@@ -238,7 +238,7 @@ impl MeshCSL {
                 &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash)?,
                 collateral.tx_in.tx_index,
             ),
-            &to_value(&collateral.tx_in.amount.unwrap()),
+            &to_value(&collateral.tx_in.amount.unwrap())?,
         )?;
         Ok(())
     }

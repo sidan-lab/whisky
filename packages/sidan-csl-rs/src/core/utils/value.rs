@@ -46,7 +46,7 @@ pub fn get_min_utxo_value(output: &Output, coins_per_utxo_size: &u64) -> Result<
             }
         }
     }
-    let multi_asset = match to_value(&output.amount).multiasset() {
+    let multi_asset = match to_value(&output.amount)?.multiasset() {
         Some(multi_asset) => multi_asset,
         None => csl::MultiAsset::new(),
     };
