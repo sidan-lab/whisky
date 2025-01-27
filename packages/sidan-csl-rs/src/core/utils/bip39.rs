@@ -34,8 +34,8 @@ impl Bip32KeyGenerator {
         Ok(tx.to_hex())
     }
 
-    pub fn get_public_key(&self) -> PublicKey {
-        self.public_key.clone()
+    pub fn get_public_key(&self) -> String {
+        self.public_key.clone().to_hex()
     }
 }
 
