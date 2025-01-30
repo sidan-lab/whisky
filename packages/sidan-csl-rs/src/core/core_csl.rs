@@ -187,7 +187,7 @@ impl MeshCSL {
 
         let tx_value = to_value(&output.amount)?;
         let amount_builder = output_builder.next()?;
-        let mut built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
+        let built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
             if tx_value.coin().is_zero() {
                 amount_builder
                     .with_asset_and_min_required_coin_by_utxo_cost(
@@ -205,24 +205,6 @@ impl MeshCSL {
         } else {
             amount_builder.with_coin(&tx_value.coin()).build()?
         };
-        if let Some(multiasset) = built_output.amount().multiasset() {
-            if multiasset.len() == 0 {
-                let mut new_built_output = csl::TransactionOutput::new(
-                    &built_output.address(),
-                    &csl::Value::new(&built_output.amount().coin()),
-                );
-                if built_output.has_data_hash() {
-                    new_built_output.set_data_hash(&built_output.data_hash().unwrap());
-                }
-                if built_output.has_plutus_data() {
-                    new_built_output.set_plutus_data(&built_output.plutus_data().unwrap());
-                }
-                if built_output.has_script_ref() {
-                    new_built_output.set_script_ref(&built_output.script_ref().unwrap());
-                }
-                built_output = new_built_output;
-            }
-        }
         self.tx_builder.add_output(&built_output)?;
         Ok(())
     }
