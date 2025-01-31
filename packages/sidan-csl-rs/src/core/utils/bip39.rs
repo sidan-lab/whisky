@@ -12,13 +12,13 @@ impl Bip32KeyGenerator {
         let mnemonic = Mnemonic::from_phrase(mnemonic_phrase, Language::English)
             .expect("Invalid mnemonic phrase");
         let entropy = mnemonic.entropy();
-        let root_key = Bip32PrivateKey::from_bip39_entropy(&entropy, &[]);
+        let root_key = Bip32PrivateKey::from_bip39_entropy(entropy, &[]);
 
         let hardened_key_start = 2147483648;
         let account_key = root_key
             .derive(hardened_key_start + 1852)
             .derive(hardened_key_start + 1815)
-            .derive(hardened_key_start + 0);
+            .derive(hardened_key_start);
 
         let private_key = account_key.derive(0).derive(0).to_raw_key();
         let public_key = private_key.to_public();
