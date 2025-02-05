@@ -3,11 +3,11 @@ use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use sidan_csl_rs::csl::JsError;
 use sidan_csl_rs::model::{Network, UTxO};
 use sidan_csl_rs::{
-    core::{tx_parser::MeshTxParser, utils::calculate_tx_hash},
+    core::{tx_parser::TxParser, utils::calculate_tx_hash},
     model::{Action, Budget, RedeemerTag},
 };
-use uplc::tx::SlotConfig;
 use std::error::Error;
+use uplc::tx::SlotConfig;
 
 use crate::service::Evaluator;
 
@@ -140,7 +140,7 @@ impl Evaluator for MaestroProvider {
         let tx_out_cbors: Vec<AdditionalUtxo> = additional_txs
             .iter()
             .flat_map(|tx| {
-                let parsed_tx = MeshTxParser::new(tx);
+                let parsed_tx = TxParser::new(tx);
                 parsed_tx
                     .unwrap() //TODO: add error handling
                     .get_tx_outs_cbor()

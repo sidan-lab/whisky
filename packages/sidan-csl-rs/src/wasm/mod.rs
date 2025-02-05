@@ -1,9 +1,11 @@
 use crate::*;
 mod transaction;
 mod txbuilder;
+mod txparser;
 use cardano_serialization_lib::JsError;
 pub use transaction::*;
 pub use txbuilder::*;
+pub use txparser::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]

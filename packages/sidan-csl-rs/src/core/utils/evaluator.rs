@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 
 use crate::core::constants::get_cost_models_from_network;
-use crate::core::tx_parser::MeshTxParser;
+use crate::core::tx_parser::TxParser;
 use crate::core::utils::phase_two::{eval_phase_two, PhaseTwoEvalResult};
 use crate::csl::{Address, JsError};
 use crate::model::{
@@ -112,7 +112,7 @@ pub fn evaluate_tx_scripts(
     let tx_outs: Vec<UTxO> = additional_txs
         .iter()
         .flat_map(|tx| {
-            let parsed_tx = MeshTxParser::new(tx).unwrap();
+            let parsed_tx = TxParser::new(tx).unwrap();
             println!(
                 "txout: {:?}",
                 &parsed_tx.get_tx_outs_utxo().unwrap().clone()
