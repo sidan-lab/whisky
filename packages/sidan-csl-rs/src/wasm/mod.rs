@@ -1,10 +1,12 @@
 use crate::*;
 mod transaction;
 mod txbuilder;
+mod txevaluator;
 mod txparser;
 use cardano_serialization_lib::JsError;
 pub use transaction::*;
 pub use txbuilder::*;
+pub use txevaluator::*;
 pub use txparser::*;
 
 #[wasm_bindgen]

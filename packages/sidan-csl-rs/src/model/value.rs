@@ -113,7 +113,7 @@ impl Value {
             if self
                 .0
                 .get(&Value::sanitize_unit(key))
-                .map_or(false, |v| v < value)
+                .is_some_and(|v| v < value)
             {
                 return false;
             }
@@ -126,7 +126,7 @@ impl Value {
             if self
                 .0
                 .get(&Value::sanitize_unit(key))
-                .map_or(false, |v| v > value)
+                .is_some_and(|v| v > value)
             {
                 return false;
             }

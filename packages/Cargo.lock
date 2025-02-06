@@ -2812,7 +2812,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "sidan-csl-rs"
-version = "0.9.20"
+version = "0.9.21"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3469,7 +3469,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.9.20"
+version = "0.9.21"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3494,7 +3494,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "0.9.20"
+version = "0.9.21"
 dependencies = [
  "actix-cors",
  "actix-web",
