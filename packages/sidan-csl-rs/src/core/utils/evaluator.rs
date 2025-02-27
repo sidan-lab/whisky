@@ -389,6 +389,73 @@ mod test {
     }
 
     #[test]
+    fn test_eval_3() {
+        let result = evaluate_tx_scripts(
+            "84a700d90102828258206eb7aa11907c377653e41dfd995dae8e6d468cfea0a645cdb4f4341fb963e8780282582078071c027011b376f0decf5e48f204d229be66c5711269101a98de1e7d30f43c010183a300581d70cc8ecbc5fab3ff89558bd3f6fe9dee68b448d7fe0f9a4b33cd38005301821a001e8480a1581cd1b3c84126916e1be2595d030194926546009f712a5432d0e7a2f717a14001028201d8185854d8799f581cfdeb4bf0e8c077114a4553f1e05395e9fb7114db177f02f7b65c8de4a240a1401a1dcd6500581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a1dcd6500ff82581d7064a3f2ba1bb2084486728c9bb5f6c4b5c73598e2746f441593bda40f821a1daee080a1581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a1dcd650082583900fdeb4bf0e8c077114a4553f1e05395e9fb7114db177f02f7b65c8de44e660f79ce4221d52a2dc249da925112b3ea46bcaba9ce48174fa358821b00000001a49f62e3a2581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581b00000016d0f508c0581cb80aa257a376c9ae7aa0c7a323db88d236e11e0a5ed5e10142da9ea0a14b000de140626561636f6e3301021a000c8a6d09a1581cd1b3c84126916e1be2595d030194926546009f712a5432d0e7a2f717a140010b582011bb34b7d88c308fd3ef46f2d8d149921b47aa74ea9f9d2e6f9452323c94d4b60dd90102818258207ab42fa758f9d5772a212cda5f866a3e1ad9948ce89f916feafeef73cbbabdb4000ed9010281581cfa5136e9e9ecbc9071da73eeb6c9a4ff73cbf436105cf8380d1c525ca207d901028158b158af010100333232323232232225333005323232323232330010013758601c601e601e601e601e601e601e601e601e60186ea8c038c030dd50039129998070008a50132533300d3371e6eb8c04000802c52889980180180098080009806180680118058009805801180480098031baa00114984d958dd7000ab9a5573caae7d5d0aba24c011e581cfa5136e9e9ecbc9071da73eeb6c9a4ff73cbf436105cf8380d1c525c004c010746332d6d696e74000105a182010082d87980821a006acfc01ab2d05e00f5f6",
+            &[
+                UTxO {
+                    input: UtxoInput {
+                        tx_hash: "6eb7aa11907c377653e41dfd995dae8e6d468cfea0a645cdb4f4341fb963e878".to_string(),
+                        output_index: 2
+                    },
+                    output: UtxoOutput {
+                        address: "addr_test1qr77kjlsarq8wy22g4flrcznjh5lkug5mvth7qhhkewgmezwvc8hnnjzy82j5twzf8dfy5gjk04yd09t488ys9605dvq4ymc4x".to_string(),
+                        amount: vec![
+                            Asset::new_from_str("lovelace", "7507698128"), 
+                            Asset::new_from_str("5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04b55534458", "98430000000"),
+                            Asset::new_from_str("b80aa257a376c9ae7aa0c7a323db88d236e11e0a5ed5e10142da9ea0000de140626561636f6e33", "1"), 
+                        ],
+                        data_hash: None,
+                        plutus_data: None,
+                        script_hash: None,
+                        script_ref: None,
+                    }
+                },
+                UTxO {
+                    input: UtxoInput {
+                        tx_hash: "78071c027011b376f0decf5e48f204d229be66c5711269101a98de1e7d30f43c".to_string(),
+                        output_index: 1
+                    },
+                    output: UtxoOutput {
+                        address: "addr_test1qr77kjlsarq8wy22g4flrcznjh5lkug5mvth7qhhkewgmezwvc8hnnjzy82j5twzf8dfy5gjk04yd09t488ys9605dvq4ymc4x".to_string(),
+                        amount: vec![
+                            Asset::new_from_str("lovelace", "50000000"), 
+                            Asset::new_from_str("5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04b55534458", "65000000"),
+                        ],
+                        data_hash: None,
+                        plutus_data: None,
+                        script_hash: None,
+                        script_ref: None,
+                    }
+                },
+                UTxO {
+                    input: UtxoInput {
+                        tx_hash: "7ab42fa758f9d5772a212cda5f866a3e1ad9948ce89f916feafeef73cbbabdb4".to_string(),
+                        output_index: 0
+                    },
+                    output: UtxoOutput {
+                        address: "addr_test1qr77kjlsarq8wy22g4flrcznjh5lkug5mvth7qhhkewgmezwvc8hnnjzy82j5twzf8dfy5gjk04yd09t488ys9605dvq4ymc4x".to_string(),
+                        amount: vec![
+                            Asset::new_from_str("lovelace", "5000000"), 
+                        ],
+                        data_hash: None,
+                        plutus_data: None,
+                        script_hash: None,
+                        script_ref: None,
+                    }
+                },
+            ],
+            &[],
+            &Network::Mainnet,
+            &SlotConfig::default()
+        );
+        assert_eq!(
+            serde_json::json!([{"success": {"budget":{"mem":15167,"steps":4549992},"index": 0, "tag": "mint"}}]).to_string(),
+            serde_json::json!(result.unwrap()).to_string()
+        )
+    }
+
+    #[test]
     fn test_cbor() {
         let script_bytes = hex::decode("5655010000322223253330054a229309b2b1bad0025735").unwrap();
         let decoded_bytes = Decoder::new(&script_bytes).bytes().unwrap();
