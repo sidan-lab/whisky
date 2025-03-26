@@ -1,13 +1,23 @@
 use crate::*;
 use async_trait::async_trait;
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
+use sidan_csl_rs::core::utils::apply_double_cbor_encoding;
+use sidan_csl_rs::csl::{self, JsError, NativeScript, PlutusScript, ScriptRef};
+use sidan_csl_rs::model::{
+    AccountInfo, AssetMetadata, BlockInfo, GovernanceProposalInfo, Network, Protocol,
+    TransactionInfo, UTxO,
+};
+use sidan_csl_rs::{
+    core::{serializer::calculate_tx_hash, tx_parser::TxParser},
+    model::{Action, Budget, RedeemerTag},
+};
 use std::error::Error;
 use uplc::tx::SlotConfig;
 
-use crate::service::Evaluator;
+use crate::service::{Evaluator, Fetcher, FetcherOptions};
 
 use reqwest::RequestBuilder;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 pub struct EvaluateTx {
@@ -27,6 +37,79 @@ pub struct Maestro {
     api_key: String,
     http_client: reqwest::Client,
     pub base_url: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum MaestroDatumOptionType {
+    Hash,
+    Inline,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroDatumOption {
+    r#type: MaestroDatumOptionType,
+    hash: String,
+    bytes: Option<String>,
+    json: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum MaestroScriptType {
+    Native,
+    PlutusvOne,
+    PlutusvTwo,
+}
+
+#[derive(Debug, Clone)]
+pub enum Script {
+    Plutus(PlutusScript),
+    Native(NativeScript),
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroScript {
+    hash: String,
+    r#type: MaestroScriptType,
+    bytes: Option<String>,
+    json: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroAsset {
+    unit: String,
+    amount: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroUTxO {
+    tx_hash: String,
+    index: usize,
+    assets: Vec<MaestroAsset>,
+    address: String,
+    datum: Option<MaestroDatumOption>,
+    reference_script: Option<MaestroScript>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroAssetExtended {
+    asset_name: String,
+    asset_name_ascii: String,
+    fingerprint: String,
+    total_supply: String,
+    asset_standards: MaestroAssetStandards,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct MaestroAssetStandards {
+    cip25_metadata: Cip25Metadata,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Cip25Metadata {
+    data: Vec<String>,
+    idx: usize,
+    name: String,
+    uid: String,
 }
 
 impl Maestro {
@@ -107,6 +190,69 @@ impl Maestro {
         let redeemer_evaluations =
             serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(redeemer_evaluations)
+    }
+
+    fn resolve_script(&self, utxo: &MaestroUTxO) -> Result<String, JsError> {
+        if let Some(ref_script) = &utxo.reference_script {
+            match ref_script.r#type {
+                // MaestroScriptType::Native => {
+                //     let script: NativeScript = NativeScript::from_bytes(ref_script.json.clone().);
+                    Ok(self.to_script_ref(&Script::Native(script))
+                        .native_script()
+                        .unwrap()
+                        .to_hex())
+                }
+                MaestroScriptType::PlutusvOne => {
+                    if let Some(script_hex) = &ref_script.bytes {
+                        let normalized = self.normalize_plutus_script(&script_hex)?;
+                        let script: PlutusScript = PlutusScript::from_hex_with_version(
+                            &normalized,
+                            &csl::Language::new_plutus_v1(),
+                        )?;
+                        Ok(self
+                            .to_script_ref(&Script::Plutus(script))
+                            .plutus_script()
+                            .unwrap()
+                            .to_hex())
+                    } else {
+                        Err(JsError::from_str(
+                            "Expected plutusV1 script but received None",
+                        ))
+                    }
+                }
+                MaestroScriptType::PlutusvTwo => {
+                    if let Some(script_hex) = &ref_script.bytes {
+                        let normalized = self.normalize_plutus_script(&script_hex)?;
+                        let script: PlutusScript = PlutusScript::from_hex_with_version(
+                            &normalized,
+                            &csl::Language::new_plutus_v2(),
+                        )?;
+                        Ok(self
+                            .to_script_ref(&Script::Plutus(script))
+                            .plutus_script()
+                            .unwrap()
+                            .to_hex())
+                    } else {
+                        Err(JsError::from_str(
+                            "Expected plutusV2 script but received None",
+                        ))
+                    }
+                }
+            }
+        } else {
+            Err(JsError::from_str("TODO"))
+        }
+    }
+
+    fn normalize_plutus_script(&self, script_hex: &str) -> Result<String, JsError> {
+        apply_double_cbor_encoding(script_hex)
+    }
+
+    fn to_script_ref(&self, script: &Script) -> ScriptRef {
+        match script {
+            Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
+            Script::Native(native) => ScriptRef::new_native_script(native),
+        }
     }
 }
 
