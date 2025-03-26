@@ -3472,6 +3472,7 @@ dependencies = [
 name = "whisky-common"
 version = "1.0.0-alpha.1"
 dependencies = [
+ "async-trait",
  "hex",
  "schemars",
  "serde",
