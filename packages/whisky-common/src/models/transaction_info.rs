@@ -5,12 +5,12 @@ use super::UTxO;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionInfo {
-    pub index: usize,
+    pub index: u32,
     pub block: String,
     pub hash: String,
     pub slot: String,
     pub fees: String,
-    pub size: usize,
+    pub size: u32,
     pub deposit: String,
     pub invalid_before: String,
     pub invalid_after: String,

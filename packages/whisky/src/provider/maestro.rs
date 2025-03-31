@@ -3,7 +3,9 @@ use async_trait::async_trait;
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use serde_json::to_string;
 use sidan_csl_rs::core::utils::apply_double_cbor_encoding;
-use sidan_csl_rs::csl::{self, JsError, NativeScript, PlutusScript, ScriptRef};
+use sidan_csl_rs::csl::{
+    self, Address, BaseAddress, JsError, NativeScript, PlutusScript, RewardAddress, ScriptRef,
+};
 use sidan_csl_rs::model::{
     AccountInfo, Asset, AssetMetadata, BlockInfo, GovernanceProposalInfo, Network, Protocol,
     TransactionInfo, UTxO, UtxoInput, UtxoOutput,
@@ -40,13 +42,13 @@ pub struct Maestro {
     pub base_url: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum MaestroDatumOptionType {
     Hash,
     Inline,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MaestroDatumOption {
     datum_type: MaestroDatumOptionType,
     hash: String,
@@ -201,8 +203,8 @@ impl Maestro {
                     .iter()
                     .map(|asset| Asset::new(asset.unit.clone(), asset.amount.clone()))
                     .collect(),
-                data_hash: utxo.datum.as_ref().map(|datum| datum.hash.clone()),
-                plutus_data: utxo.datum.as_ref().and_then(|datum| datum.bytes.clone()),
+                data_hash: Some(utxo.datum.clone().unwrap().hash),
+                plutus_data: Some(utxo.datum.clone().unwrap().bytes.unwrap()),
                 script_ref: Some(self.resolve_script(utxo).unwrap()),
                 script_hash: utxo
                     .reference_script
@@ -281,6 +283,21 @@ impl Maestro {
         match script {
             Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
             Script::Native(native) => ScriptRef::new_native_script(native),
+        }
+    }
+
+    fn resolve_reward_address(bech32: &str) -> Result<String, JsError> {
+        let address = Address::from_bech32(bech32)?;
+
+        if let Some(base_address) = BaseAddress::from_address(&address) {
+            let stake_credential = BaseAddress::stake_cred(&base_address);
+
+            let reward_address = RewardAddress::new(address.network_id()?, &stake_credential)
+                .to_address()
+                .to_bech32(None);
+            Ok(reward_address?)
+        } else {
+            Err(JsError::from_str("TODO"))
         }
     }
 }
