@@ -1,11 +1,12 @@
 use crate::*;
 use async_trait::async_trait;
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
+use serde_json::to_string;
 use sidan_csl_rs::core::utils::apply_double_cbor_encoding;
 use sidan_csl_rs::csl::{self, JsError, NativeScript, PlutusScript, ScriptRef};
 use sidan_csl_rs::model::{
-    AccountInfo, AssetMetadata, BlockInfo, GovernanceProposalInfo, Network, Protocol,
-    TransactionInfo, UTxO,
+    AccountInfo, Asset, AssetMetadata, BlockInfo, GovernanceProposalInfo, Network, Protocol,
+    TransactionInfo, UTxO, UtxoInput, UtxoOutput,
 };
 use sidan_csl_rs::{
     core::{serializer::calculate_tx_hash, tx_parser::TxParser},
@@ -47,10 +48,10 @@ pub enum MaestroDatumOptionType {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaestroDatumOption {
-    r#type: MaestroDatumOptionType,
+    datum_type: MaestroDatumOptionType,
     hash: String,
     bytes: Option<String>,
-    json: Option<serde_json::Value>,
+    json: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -69,9 +70,9 @@ pub enum Script {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaestroScript {
     hash: String,
-    r#type: MaestroScriptType,
+    script_type: MaestroScriptType,
     bytes: Option<String>,
-    json: Option<serde_json::Value>,
+    json: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -83,7 +84,7 @@ pub struct MaestroAsset {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MaestroUTxO {
     tx_hash: String,
-    index: usize,
+    index: u32,
     assets: Vec<MaestroAsset>,
     address: String,
     datum: Option<MaestroDatumOption>,
@@ -96,18 +97,13 @@ pub struct MaestroAssetExtended {
     asset_name_ascii: String,
     fingerprint: String,
     total_supply: String,
-    asset_standards: MaestroAssetStandards,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct MaestroAssetStandards {
-    cip25_metadata: Cip25Metadata,
+    asset_standards: Cip25Metadata,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cip25Metadata {
     data: Vec<String>,
-    idx: usize,
+    idx: u32,
     name: String,
     uid: String,
 }
@@ -192,12 +188,45 @@ impl Maestro {
         Ok(redeemer_evaluations)
     }
 
+    fn to_utxo(&self, utxo: &MaestroUTxO) -> UTxO {
+        UTxO {
+            input: UtxoInput {
+                output_index: utxo.index,
+                tx_hash: utxo.tx_hash.clone(),
+            },
+            output: UtxoOutput {
+                address: utxo.address.clone(),
+                amount: utxo
+                    .assets
+                    .iter()
+                    .map(|asset| Asset::new(asset.unit.clone(), asset.amount.clone()))
+                    .collect(),
+                data_hash: utxo.datum.as_ref().map(|datum| datum.hash.clone()),
+                plutus_data: utxo.datum.as_ref().and_then(|datum| datum.bytes.clone()),
+                script_ref: Some(self.resolve_script(utxo).unwrap()),
+                script_hash: utxo
+                    .reference_script
+                    .as_ref()
+                    .map(|ref_script| ref_script.hash.clone()),
+            },
+        }
+    }
+
     fn resolve_script(&self, utxo: &MaestroUTxO) -> Result<String, JsError> {
         if let Some(ref_script) = &utxo.reference_script {
+<<<<<<< HEAD
             match ref_script.r#type {
                 // MaestroScriptType::Native => {
                 //     let script: NativeScript = NativeScript::from_bytes(ref_script.json.clone().);
                     Ok(self.to_script_ref(&Script::Native(script))
+=======
+            match ref_script.script_type {
+                MaestroScriptType::Native => {
+                    let script: NativeScript =
+                        NativeScript::from_json(&ref_script.json.clone().unwrap())?;
+                    Ok(self
+                        .to_script_ref(&Script::Native(script))
+>>>>>>> a84ad3a (added: to utxo)
                         .native_script()
                         .unwrap()
                         .to_hex())
