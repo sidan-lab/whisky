@@ -14,6 +14,7 @@ use sidan_csl_rs::{
     core::{serializer::calculate_tx_hash, tx_parser::TxParser},
     model::{Action, Budget, RedeemerTag},
 };
+use std::collections;
 use std::error::Error;
 use uplc::tx::SlotConfig;
 
@@ -190,7 +191,7 @@ impl Maestro {
         Ok(redeemer_evaluations)
     }
 
-    fn to_utxo(&self, utxo: &MaestroUTxO) -> UTxO {
+    pub fn to_utxo(&self, utxo: &MaestroUTxO) -> UTxO {
         UTxO {
             input: UtxoInput {
                 output_index: utxo.index,
@@ -214,7 +215,7 @@ impl Maestro {
         }
     }
 
-    fn resolve_script(&self, utxo: &MaestroUTxO) -> Result<String, JsError> {
+    pub fn resolve_script(&self, utxo: &MaestroUTxO) -> Result<String, JsError> {
         if let Some(ref_script) = &utxo.reference_script {
 <<<<<<< HEAD
             match ref_script.r#type {
@@ -275,18 +276,18 @@ impl Maestro {
         }
     }
 
-    fn normalize_plutus_script(&self, script_hex: &str) -> Result<String, JsError> {
+    pub fn normalize_plutus_script(&self, script_hex: &str) -> Result<String, JsError> {
         apply_double_cbor_encoding(script_hex)
     }
 
-    fn to_script_ref(&self, script: &Script) -> ScriptRef {
+    pub fn to_script_ref(&self, script: &Script) -> ScriptRef {
         match script {
             Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
             Script::Native(native) => ScriptRef::new_native_script(native),
         }
     }
 
-    fn resolve_reward_address(bech32: &str) -> Result<String, JsError> {
+    pub fn resolve_reward_address(&self, bech32: &str) -> Result<String, JsError> {
         let address = Address::from_bech32(bech32)?;
 
         if let Some(base_address) = BaseAddress::from_address(&address) {
@@ -297,7 +298,9 @@ impl Maestro {
                 .to_bech32(None);
             Ok(reward_address?)
         } else {
-            Err(JsError::from_str("TODO"))
+            Err(JsError::from_str(
+                "An error occurred during resolveRewardAddress",
+            ))
         }
     }
 }
