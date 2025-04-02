@@ -521,6 +521,8 @@ impl Fetcher for MaestroProvider {
 
         let metadata = asset_metadata.data;
         Ok(metadata)
+
+        // TODO: latest_mint_tx
     }
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, Box<dyn Error>> {
         let url = format!("/blocks/{}", hash);
