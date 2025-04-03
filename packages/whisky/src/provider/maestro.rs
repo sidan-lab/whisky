@@ -454,14 +454,13 @@ impl Fetcher for MaestroProvider {
 
     async fn fetch_address_txs(
         &self,
-        address: &str,
-        options: Option<FetcherOptions>,
+        _address: &str,
+        _options: Option<FetcherOptions>,
     ) -> Result<Vec<TransactionInfo>, Box<dyn Error>> {
-        let url = format!("/addresses/{}/transactions", address);
-        let resp = self.maestro_client.get(&url).await?;
-        let address_transactions =
-            serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
-        Ok(address_transactions)
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "Method not implemented",
+        )));
         // TODO: open for contribution, see blockfrost.ts for reference
     }
     async fn fetch_asset_addresses(
