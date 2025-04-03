@@ -3,7 +3,7 @@ mod utils;
 use async_trait::async_trait;
 use maestro_rust_sdk::client::block_info::BlockInfo as MBlockInfo;
 use maestro_rust_sdk::models::accounts::StakeAccountInformation;
-use maestro_rust_sdk::models::addresses::UtxosAtAddress;
+use maestro_rust_sdk::models::addresses::{Utxo, UtxosAtAddress};
 use maestro_rust_sdk::models::asset::{AddressesHoldingAsset, AssetInformations};
 use maestro_rust_sdk::models::general::ProtocolParameters;
 use maestro_rust_sdk::models::transactions::{RedeemerEvaluation, TransactionDetails};
@@ -26,7 +26,7 @@ use utils::asset_utils::CollectionAssets;
 use crate::service::{Evaluator, Fetcher, FetcherOptions};
 
 use reqwest::RequestBuilder;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct EvaluateTx {
@@ -48,72 +48,10 @@ pub struct Maestro {
     pub base_url: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum MaestroDatumOptionType {
-    Hash,
-    Inline,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MaestroDatumOption {
-    datum_type: MaestroDatumOptionType,
-    hash: String,
-    bytes: Option<String>,
-    json: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub enum MaestroScriptType {
-    Native,
-    PlutusvOne,
-    PlutusvTwo,
-}
-
 #[derive(Debug, Clone)]
 pub enum Script {
     Plutus(PlutusScript),
     Native(NativeScript),
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct MaestroScript {
-    hash: String,
-    script_type: MaestroScriptType,
-    bytes: Option<String>,
-    json: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct MaestroAsset {
-    unit: String,
-    amount: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct MaestroUTxO {
-    tx_hash: String,
-    index: u32,
-    assets: Vec<MaestroAsset>,
-    address: String,
-    datum: Option<MaestroDatumOption>,
-    reference_script: Option<MaestroScript>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct MaestroAssetExtended {
-    asset_name: String,
-    asset_name_ascii: String,
-    fingerprint: String,
-    total_supply: String,
-    asset_standards: Cip25Metadata,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Cip25Metadata {
-    data: Vec<String>,
-    idx: u32,
-    name: String,
-    uid: String,
 }
 
 impl Maestro {
@@ -196,10 +134,10 @@ impl Maestro {
         Ok(redeemer_evaluations)
     }
 
-    pub fn to_utxo(&self, utxo: &MaestroUTxO) -> UTxO {
+    pub fn to_utxo(&self, utxo: &Utxo) -> UTxO {
         UTxO {
             input: UtxoInput {
-                output_index: utxo.index,
+                output_index: utxo.index as u32,
                 tx_hash: utxo.tx_hash.clone(),
             },
             output: UtxoOutput {
@@ -207,74 +145,57 @@ impl Maestro {
                 amount: utxo
                     .assets
                     .iter()
-                    .map(|asset| Asset::new(asset.unit.clone(), asset.amount.clone()))
+                    .map(|asset| Asset::new(asset.unit.clone(), asset.amount.to_string()))
                     .collect(),
-                data_hash: Some(utxo.datum.clone().unwrap().hash),
-                plutus_data: Some(utxo.datum.clone().unwrap().bytes.unwrap()),
+                data_hash: utxo.datum.as_ref().and_then(|datum| {
+                    datum
+                        .get("hash")
+                        .and_then(|hash| hash.as_str().map(|s| s.to_string()))
+                }),
+                plutus_data: utxo.datum.as_ref().and_then(|datum| {
+                    datum
+                        .get("bytes")
+                        .and_then(|hash| hash.as_str().map(|s| s.to_string()))
+                }),
                 script_ref: Some(self.resolve_script(utxo).unwrap()),
                 script_hash: utxo
                     .reference_script
                     .as_ref()
-                    .map(|ref_script| ref_script.hash.clone()),
+                    .map(|script| script.hash.clone()),
             },
         }
     }
 
-    pub fn resolve_script(&self, utxo: &MaestroUTxO) -> Result<String, JsError> {
+    pub fn resolve_script(&self, utxo: &Utxo) -> Result<String, JsError> {
         if let Some(ref_script) = &utxo.reference_script {
-<<<<<<< HEAD
-            match ref_script.r#type {
-                // MaestroScriptType::Native => {
-                //     let script: NativeScript = NativeScript::from_bytes(ref_script.json.clone().);
-                    Ok(self.to_script_ref(&Script::Native(script))
-=======
-            match ref_script.script_type {
-                MaestroScriptType::Native => {
+            match ref_script.r#type.as_str() {
+                "native" => {
                     let script: NativeScript =
-                        NativeScript::from_json(&ref_script.json.clone().unwrap())?;
-                    Ok(self
-                        .to_script_ref(&Script::Native(script))
->>>>>>> a84ad3a (added: to utxo)
-                        .native_script()
-                        .unwrap()
-                        .to_hex())
+                        NativeScript::from_json(&serde_json::json!(&ref_script.json).to_string())?;
+                    let script_ref = self.to_script_ref(&Script::Native(script));
+                    Ok(script_ref.native_script().unwrap().to_hex())
                 }
-                MaestroScriptType::PlutusvOne => {
-                    if let Some(script_hex) = &ref_script.bytes {
-                        let normalized = self.normalize_plutus_script(script_hex)?;
-                        let script: PlutusScript = PlutusScript::from_hex_with_version(
-                            &normalized,
-                            &csl::Language::new_plutus_v1(),
-                        )?;
-                        Ok(self
-                            .to_script_ref(&Script::Plutus(script))
-                            .plutus_script()
-                            .unwrap()
-                            .to_hex())
-                    } else {
-                        Err(JsError::from_str(
-                            "Expected plutusV1 script but received None",
-                        ))
-                    }
+                "plutusv1" => {
+                    let script_hex = &ref_script.bytes;
+                    let normalized = self.normalize_plutus_script(script_hex)?;
+                    let script: PlutusScript = PlutusScript::from_hex_with_version(
+                        &normalized,
+                        &csl::Language::new_plutus_v1(),
+                    )?;
+                    let script_ref = self.to_script_ref(&Script::Plutus(script));
+                    Ok(script_ref.plutus_script().unwrap().to_hex())
                 }
-                MaestroScriptType::PlutusvTwo => {
-                    if let Some(script_hex) = &ref_script.bytes {
-                        let normalized = self.normalize_plutus_script(script_hex)?;
-                        let script: PlutusScript = PlutusScript::from_hex_with_version(
-                            &normalized,
-                            &csl::Language::new_plutus_v2(),
-                        )?;
-                        Ok(self
-                            .to_script_ref(&Script::Plutus(script))
-                            .plutus_script()
-                            .unwrap()
-                            .to_hex())
-                    } else {
-                        Err(JsError::from_str(
-                            "Expected plutusV2 script but received None",
-                        ))
-                    }
+                "plutusv2" => {
+                    let script_hex = &ref_script.bytes;
+                    let normalized = self.normalize_plutus_script(script_hex)?;
+                    let script: PlutusScript = PlutusScript::from_hex_with_version(
+                        &normalized,
+                        &csl::Language::new_plutus_v2(),
+                    )?;
+                    let script_ref = self.to_script_ref(&Script::Plutus(script));
+                    Ok(script_ref.plutus_script().unwrap().to_hex())
                 }
+                _ => Err(JsError::from_str("Unsupported script type")),
             }
         } else {
             Err(JsError::from_str("TODO"))
@@ -429,7 +350,7 @@ impl Fetcher for MaestroProvider {
         let mut added_utxos: Vec<UTxO> = utxos_at_address
             .data
             .iter()
-            .map(|utxo| utils::address_utils::maestro_utxo_to_utxo(utxo.clone()))
+            .map(|utxo| self.maestro_client.to_utxo(&utxo))
             .collect();
 
         while utxos_at_address.next_cursor.is_some() {
@@ -444,7 +365,7 @@ impl Fetcher for MaestroProvider {
             let uxtos: Vec<UTxO> = utxos_at_address
                 .data
                 .iter()
-                .map(|utxo| utils::address_utils::maestro_utxo_to_utxo(utxo.clone()))
+                .map(|utxo| self.maestro_client.to_utxo(&utxo))
                 .collect();
             added_utxos.extend(uxtos);
         }
@@ -620,7 +541,7 @@ impl Fetcher for MaestroProvider {
             .data
             .outputs
             .iter()
-            .map(|utxo| utils::address_utils::maestro_utxo_to_utxo(utxo.clone()))
+            .map(|utxo| self.maestro_client.to_utxo(&utxo))
             .collect();
 
         let utxos = match index {
