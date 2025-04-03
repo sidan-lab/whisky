@@ -14,7 +14,7 @@ pub enum FetchOrder {
     Asc,
     Desc,
 }
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 #[async_trait]
 pub trait Fetcher: Send + Sync {
@@ -33,7 +33,10 @@ pub trait Fetcher: Send + Sync {
         &self,
         asset: &str,
     ) -> Result<Vec<(String, String)>, Box<dyn Error>>;
-    async fn fetch_asset_metadata(&self, asset: &str) -> Result<serde_json::Value, Box<dyn Error>>;
+    async fn fetch_asset_metadata(
+        &self,
+        asset: &str,
+    ) -> Result<HashMap<String, serde_json::Value>, Box<dyn Error>>;
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, Box<dyn Error>>;
     async fn fetch_collection_assets(
         &self,

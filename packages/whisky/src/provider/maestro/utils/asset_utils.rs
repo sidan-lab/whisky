@@ -46,9 +46,3 @@ pub struct Cip25Core {
 pub struct Cip68Metadata {
     // Add fields for CIP-68 metadata here
 }
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct AssetMetadata {
-    pub data: serde_json::Value,
-    pub _last_updated: LastUpdated,
-}

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use maestro_rust_sdk::client::block_info::BlockInfo as MBlockInfo;
 use maestro_rust_sdk::models::accounts::StakeAccountInformation;
 use maestro_rust_sdk::models::addresses::UtxosAtAddress;
-use maestro_rust_sdk::models::asset::AddressesHoldingAsset;
+use maestro_rust_sdk::models::asset::{AddressesHoldingAsset, AssetInformations};
 use maestro_rust_sdk::models::general::ProtocolParameters;
 use maestro_rust_sdk::models::transactions::{RedeemerEvaluation, TransactionDetails};
 use sidan_csl_rs::core::utils::apply_double_cbor_encoding;
@@ -18,9 +18,10 @@ use sidan_csl_rs::{
     core::{serializer::calculate_tx_hash, tx_parser::TxParser},
     model::{Action, Budget, RedeemerTag},
 };
+use std::collections::HashMap;
 use std::error::Error;
 use uplc::tx::SlotConfig;
-use utils::asset_utils::{AssetMetadata, CollectionAssets};
+use utils::asset_utils::CollectionAssets;
 
 use crate::service::{Evaluator, Fetcher, FetcherOptions};
 
@@ -512,17 +513,18 @@ impl Fetcher for MaestroProvider {
 
         Ok(added_assets)
     }
-    async fn fetch_asset_metadata(&self, asset: &str) -> Result<serde_json::Value, Box<dyn Error>> {
+    async fn fetch_asset_metadata(
+        &self,
+        asset: &str,
+    ) -> Result<HashMap<String, serde_json::Value>, Box<dyn Error>> {
         let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
         let url = format!("/assets/{}{}", &policy_id, &asset_name);
         let resp = self.maestro_client.get(&url).await?;
-        let asset_metadata: AssetMetadata =
+        let asset_informations: AssetInformations =
             serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
 
-        let metadata = asset_metadata.data;
-        Ok(metadata)
-
-        // TODO: latest_mint_tx
+        let asset_metadata = asset_informations.data.latest_mint_tx_metadata;
+        Ok(asset_metadata)
     }
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, Box<dyn Error>> {
         let url = format!("/blocks/{}", hash);
