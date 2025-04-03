@@ -7,7 +7,7 @@ use maestro_rust_sdk::models::addresses::UtxosAtAddress;
 use maestro_rust_sdk::models::asset::{AddressesHoldingAsset, AssetInformations};
 use maestro_rust_sdk::models::general::ProtocolParameters;
 use maestro_rust_sdk::models::transactions::{RedeemerEvaluation, TransactionDetails};
-use sidan_csl_rs::core::utils::apply_double_cbor_encoding;
+use sidan_csl_rs::core::serializer::apply_double_cbor_encoding;
 use sidan_csl_rs::csl::{
     self, Address, BaseAddress, JsError, NativeScript, PlutusScript, RewardAddress, ScriptRef,
 };
@@ -241,7 +241,7 @@ impl Maestro {
                 }
                 MaestroScriptType::PlutusvOne => {
                     if let Some(script_hex) = &ref_script.bytes {
-                        let normalized = self.normalize_plutus_script(&script_hex)?;
+                        let normalized = self.normalize_plutus_script(script_hex)?;
                         let script: PlutusScript = PlutusScript::from_hex_with_version(
                             &normalized,
                             &csl::Language::new_plutus_v1(),
@@ -259,7 +259,7 @@ impl Maestro {
                 }
                 MaestroScriptType::PlutusvTwo => {
                     if let Some(script_hex) = &ref_script.bytes {
-                        let normalized = self.normalize_plutus_script(&script_hex)?;
+                        let normalized = self.normalize_plutus_script(script_hex)?;
                         let script: PlutusScript = PlutusScript::from_hex_with_version(
                             &normalized,
                             &csl::Language::new_plutus_v2(),
@@ -542,7 +542,7 @@ impl Fetcher for MaestroProvider {
         &self,
         policy_id: &str,
         cursor: Option<String>,
-    ) -> Result<(Vec<(String, String)>, Option<(String)>), Box<dyn Error>> {
+    ) -> Result<(Vec<(String, String)>, Option<String>), Box<dyn Error>> {
         let append_cursor_string = match cursor {
             Some(c) => format!("&cursor={}", c),
             None => "".to_string(),
@@ -581,9 +581,9 @@ impl Fetcher for MaestroProvider {
             )));
         }
 
-        let url = format!("/protocol-params");
+        let url = "/protocol-params";
 
-        let resp = self.maestro_client.get(&url).await?;
+        let resp = self.maestro_client.get(url).await?;
 
         let protocol_parameters: ProtocolParameters =
             serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
@@ -627,7 +627,7 @@ impl Fetcher for MaestroProvider {
             Some(i) => outputs
                 .iter()
                 .filter(|output| output.input.output_index == i)
-                .map(|output| output.clone())
+                .cloned()
                 .collect(),
             None => outputs,
         };
@@ -635,7 +635,7 @@ impl Fetcher for MaestroProvider {
         Ok(utxos)
     }
     async fn get(&self, url: &str) -> Result<serde_json::Value, Box<dyn Error>> {
-        let resp = self.maestro_client.get(&url).await?;
+        let resp = self.maestro_client.get(url).await?;
         let any = serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(any)
     }
