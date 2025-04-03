@@ -1,6 +1,8 @@
-use super::address_utils::maestro_utxo_to_utxo;
-use maestro_rust_sdk::models::transactions::TransactionDetail;
+use crate::provider::maestro::models::transaction::TransactionDetail;
+
 use sidan_csl_rs::model::TransactionInfo;
+
+use super::utxo_utils::to_utxo;
 
 pub fn transaction_detail_to_info(transaction_detail: TransactionDetail) -> TransactionInfo {
     TransactionInfo {
@@ -16,12 +18,12 @@ pub fn transaction_detail_to_info(transaction_detail: TransactionDetail) -> Tran
         inputs: transaction_detail
             .inputs
             .iter()
-            .map(|utxo| maestro_utxo_to_utxo(utxo.clone()))
+            .map(|utxo| to_utxo(utxo))
             .collect(),
         outputs: transaction_detail
             .outputs
             .iter()
-            .map(|utxo| maestro_utxo_to_utxo(utxo.clone()))
+            .map(|utxo| to_utxo(utxo))
             .collect(),
         block_height: Some(transaction_detail.block_height as u32),
         block_time: Some(transaction_detail.block_timestamp as u64),

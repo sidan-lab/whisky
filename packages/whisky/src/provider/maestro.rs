@@ -1,12 +1,15 @@
+mod models;
 mod utils;
 
 use async_trait::async_trait;
 use maestro_rust_sdk::client::block_info::BlockInfo as MBlockInfo;
-use maestro_rust_sdk::models::accounts::StakeAccountInformation;
-use maestro_rust_sdk::models::addresses::{Utxo, UtxosAtAddress};
 use maestro_rust_sdk::models::asset::{AddressesHoldingAsset, AssetInformations};
 use maestro_rust_sdk::models::general::ProtocolParameters;
-use maestro_rust_sdk::models::transactions::{RedeemerEvaluation, TransactionDetails};
+use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
+use models::account::StakeAccountInformation;
+use models::address::UtxosAtAddress;
+use models::transaction::TransactionDetails;
+use models::utxo::Utxo;
 use sidan_csl_rs::core::serializer::apply_double_cbor_encoding;
 use sidan_csl_rs::csl::{
     self, Address, BaseAddress, JsError, NativeScript, PlutusScript, RewardAddress, ScriptRef,
@@ -46,12 +49,6 @@ pub struct Maestro {
     api_key: String,
     http_client: reqwest::Client,
     pub base_url: String,
-}
-
-#[derive(Debug, Clone)]
-pub enum Script {
-    Plutus(PlutusScript),
-    Native(NativeScript),
 }
 
 impl Maestro {
@@ -133,102 +130,6 @@ impl Maestro {
             serde_json::from_str(&resp).map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(redeemer_evaluations)
     }
-
-    pub fn to_utxo(&self, utxo: &Utxo) -> UTxO {
-        UTxO {
-            input: UtxoInput {
-                output_index: utxo.index as u32,
-                tx_hash: utxo.tx_hash.clone(),
-            },
-            output: UtxoOutput {
-                address: utxo.address.clone(),
-                amount: utxo
-                    .assets
-                    .iter()
-                    .map(|asset| Asset::new(asset.unit.clone(), asset.amount.to_string()))
-                    .collect(),
-                data_hash: utxo.datum.as_ref().and_then(|datum| {
-                    datum
-                        .get("hash")
-                        .and_then(|hash| hash.as_str().map(|s| s.to_string()))
-                }),
-                plutus_data: utxo.datum.as_ref().and_then(|datum| {
-                    datum
-                        .get("bytes")
-                        .and_then(|hash| hash.as_str().map(|s| s.to_string()))
-                }),
-                script_ref: Some(self.resolve_script(utxo).unwrap()),
-                script_hash: utxo
-                    .reference_script
-                    .as_ref()
-                    .map(|script| script.hash.clone()),
-            },
-        }
-    }
-
-    pub fn resolve_script(&self, utxo: &Utxo) -> Result<String, JsError> {
-        if let Some(ref_script) = &utxo.reference_script {
-            match ref_script.r#type.as_str() {
-                "native" => {
-                    let script: NativeScript =
-                        NativeScript::from_json(&serde_json::json!(&ref_script.json).to_string())?;
-                    let script_ref = self.to_script_ref(&Script::Native(script));
-                    Ok(script_ref.native_script().unwrap().to_hex())
-                }
-                "plutusv1" => {
-                    let script_hex = &ref_script.bytes;
-                    let normalized = self.normalize_plutus_script(script_hex)?;
-                    let script: PlutusScript = PlutusScript::from_hex_with_version(
-                        &normalized,
-                        &csl::Language::new_plutus_v1(),
-                    )?;
-                    let script_ref = self.to_script_ref(&Script::Plutus(script));
-                    Ok(script_ref.plutus_script().unwrap().to_hex())
-                }
-                "plutusv2" => {
-                    let script_hex = &ref_script.bytes;
-                    let normalized = self.normalize_plutus_script(script_hex)?;
-                    let script: PlutusScript = PlutusScript::from_hex_with_version(
-                        &normalized,
-                        &csl::Language::new_plutus_v2(),
-                    )?;
-                    let script_ref = self.to_script_ref(&Script::Plutus(script));
-                    Ok(script_ref.plutus_script().unwrap().to_hex())
-                }
-                _ => Err(JsError::from_str("Unsupported script type")),
-            }
-        } else {
-            Err(JsError::from_str("TODO"))
-        }
-    }
-
-    pub fn normalize_plutus_script(&self, script_hex: &str) -> Result<String, JsError> {
-        apply_double_cbor_encoding(script_hex)
-    }
-
-    pub fn to_script_ref(&self, script: &Script) -> ScriptRef {
-        match script {
-            Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
-            Script::Native(native) => ScriptRef::new_native_script(native),
-        }
-    }
-
-    pub fn resolve_reward_address(&self, bech32: &str) -> Result<String, JsError> {
-        let address = Address::from_bech32(bech32)?;
-
-        if let Some(base_address) = BaseAddress::from_address(&address) {
-            let stake_credential = BaseAddress::stake_cred(&base_address);
-
-            let reward_address = RewardAddress::new(address.network_id()?, &stake_credential)
-                .to_address()
-                .to_bech32(None);
-            Ok(reward_address?)
-        } else {
-            Err(JsError::from_str(
-                "An error occurred during resolveRewardAddress",
-            ))
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -305,12 +206,12 @@ impl Evaluator for MaestroProvider {
 impl Fetcher for MaestroProvider {
     async fn fetch_account_info(&self, address: &str) -> Result<AccountInfo, Box<dyn Error>> {
         let reward_address = if address.starts_with("addr") {
-            self.maestro_client.resolve_reward_address(address)?
+            utils::address_utils::resolve_reward_address(address)?
         } else {
             address.to_string()
         };
 
-        let url = format!("accounts/{}", reward_address);
+        let url = format!("/accounts/{}", reward_address);
 
         let resp = self.maestro_client.get(&url).await?;
 
@@ -330,9 +231,9 @@ impl Fetcher for MaestroProvider {
     ) -> Result<Vec<UTxO>, Box<dyn Error>> {
         let query_predicate =
             if address.starts_with("addr_vkh") || address.starts_with("addr_shared_vkh") {
-                format!("addresses/cred/{}", address)
+                format!("/addresses/cred/{}", address)
             } else {
-                format!("addresses/{}", address)
+                format!("/addresses/{}", address)
             };
 
         let append_asset_string = match asset {
@@ -340,7 +241,7 @@ impl Fetcher for MaestroProvider {
             None => "".to_string(),
         };
 
-        let url = format!("{}utxos?count=100{}", query_predicate, append_asset_string,);
+        let url = format!("{}/utxos?count=100{}", query_predicate, append_asset_string,);
 
         let resp = self.maestro_client.get(&url).await?;
 
@@ -350,8 +251,9 @@ impl Fetcher for MaestroProvider {
         let mut added_utxos: Vec<UTxO> = utxos_at_address
             .data
             .iter()
-            .map(|utxo| self.maestro_client.to_utxo(&utxo))
+            .map(|utxo| utils::utxo_utils::to_utxo(utxo))
             .collect();
+        println!("uxtos: {:?}", added_utxos);
 
         while utxos_at_address.next_cursor.is_some() {
             let append_cursor_string = format!("&cursor={}", utxos_at_address.next_cursor.unwrap());
@@ -365,7 +267,7 @@ impl Fetcher for MaestroProvider {
             let uxtos: Vec<UTxO> = utxos_at_address
                 .data
                 .iter()
-                .map(|utxo| self.maestro_client.to_utxo(&utxo))
+                .map(|utxo| utils::utxo_utils::to_utxo(utxo))
                 .collect();
             added_utxos.extend(uxtos);
         }
@@ -541,7 +443,7 @@ impl Fetcher for MaestroProvider {
             .data
             .outputs
             .iter()
-            .map(|utxo| self.maestro_client.to_utxo(&utxo))
+            .map(|utxo| utils::utxo_utils::to_utxo(utxo))
             .collect();
 
         let utxos = match index {
@@ -565,6 +467,8 @@ impl Fetcher for MaestroProvider {
 mod tests {
     // use super::*;
 
+    use crate::{provider::maestro::MaestroProvider, service::Fetcher};
+
     #[tokio::test]
     async fn test_maestro_provider() {
         use dotenv::dotenv;
@@ -584,5 +488,50 @@ mod tests {
         //     }
         //     _ => panic!("Error evaluating tx"),
         // }
+    }
+
+    // #[tokio::test]
+    // async fn test_fetch_account_info() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let address: &str = "addr_test1qzhm3fg7v9t9e4nrlw0z49cysmvzfy3xpmvxuht80aa3rvnm5tz7rfnph9ntszp2fclw5m334udzq49777gkhwkztsks4c69rg";
+    //     let result = provider.fetch_account_info(address).await;
+    //     match result {
+    //         Ok(account_info) => {
+    //             println!("account_info: {:?}", account_info);
+    //             assert_eq!(account_info.active, false);
+    //         }
+    //         _ => panic!("Error fetching account info"),
+    //     }
+    // }
+
+    #[tokio::test]
+    async fn test_fetch_address_utxos() {
+        let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+        let address: &str = "addr_test1qq2rfkutnykch5tw6uw9y8gdaavpra3h6egfmr20vg9dq0hpqstx3elazm9jlkt7rx27zqtvxl6hvmecwveu8qv97e4slng4tz";
+        let result = provider.fetch_address_utxos(address, None).await;
+        println!("result: {:?}", result);
+        match result {
+            Ok(address_utxos) => {
+                // TODO: check ref script
+                // TODO: datum
+                println!("address_utxos: {:?}", address_utxos);
+                assert!(true);
+            }
+            _ => panic!("Error fetching address utxos"),
+        }
+    }
+    #[tokio::test]
+    async fn test_fetch_asset_addresses() {
+        let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+        let asset: &str = "TODO";
+        let result = provider.fetch_asset_addresses(asset).await;
+        println!("result: {:?}", result);
+        match result {
+            Ok(asset_addresses) => {
+                println!("asset_addresses: {:?}", asset_addresses);
+                assert!(true);
+            }
+            _ => panic!("Error fetching asset addresses"),
+        }
     }
 }

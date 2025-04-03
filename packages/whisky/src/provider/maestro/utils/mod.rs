@@ -5,3 +5,4 @@ pub mod block_utils;
 pub mod last_updated;
 pub mod protocol_utils;
 pub mod transaction_utils;
+pub mod utxo_utils;

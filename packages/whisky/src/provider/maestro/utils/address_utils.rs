@@ -1,5 +1,8 @@
 use maestro_rust_sdk::models::addresses::{Asset as MAsset, Utxo};
-use sidan_csl_rs::model::{Asset, UTxO, UtxoInput, UtxoOutput};
+use sidan_csl_rs::{
+    csl::{Address, BaseAddress, JsError, RewardAddress},
+    model::{Asset, UTxO, UtxoInput, UtxoOutput},
+};
 
 pub fn maestro_asset_to_asset(asset: MAsset) -> Asset {
     Asset::new(asset.unit.clone(), asset.amount.to_string())
@@ -37,5 +40,22 @@ pub fn maestro_utxo_to_utxo(utxo: Utxo) -> UTxO {
                 .as_ref()
                 .map(|script| script.hash.clone()),
         },
+    }
+}
+
+pub fn resolve_reward_address(bech32: &str) -> Result<String, JsError> {
+    let address = Address::from_bech32(bech32)?;
+
+    if let Some(base_address) = BaseAddress::from_address(&address) {
+        let stake_credential = BaseAddress::stake_cred(&base_address);
+
+        let reward_address = RewardAddress::new(address.network_id()?, &stake_credential)
+            .to_address()
+            .to_bech32(None);
+        Ok(reward_address?)
+    } else {
+        Err(JsError::from_str(
+            "An error occurred during resolveRewardAddress",
+        ))
     }
 }
