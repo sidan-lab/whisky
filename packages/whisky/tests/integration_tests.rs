@@ -1,12 +1,12 @@
 mod int_tests {
     use serde_json::{json, to_string};
     use sidan_csl_rs::{
-        core::common::con_str0,
+        core::data::con_str0,
         model::{Asset, Budget, LanguageVersion},
     };
     use whisky::{
         builder::{ TxBuilder, TxBuilderParam, WData::{self, JSON}, WRedeemer},
-        core::utils::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, Protocol, RefTxIn, VoteKind, Voter, VotingProcedure},
+        core::serializer::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, Protocol, RefTxIn, VoteKind, Voter, VotingProcedure},
     };
 
     #[test]

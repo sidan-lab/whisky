@@ -1,5 +1,5 @@
 use sidan_csl_rs::{
-    core::utils::get_script_hash,
+    core::serializer::get_script_hash,
     csl::JsError,
     model::{LanguageVersion, UTxO},
 };

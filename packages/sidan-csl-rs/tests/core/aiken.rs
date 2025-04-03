@@ -1,5 +1,6 @@
+#[cfg(test)]
 mod aiken_tests {
-    use sidan_csl_rs::{core::utils::apply_params_to_script, model::BuilderDataType};
+    use sidan_csl_rs::{core::serializer::apply_params_to_script, model::BuilderDataType};
 
     #[test]
     fn test_apply_params_to_script() {

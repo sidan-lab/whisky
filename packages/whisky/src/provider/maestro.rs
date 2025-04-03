@@ -3,7 +3,7 @@ use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use sidan_csl_rs::csl::JsError;
 use sidan_csl_rs::model::{Network, UTxO};
 use sidan_csl_rs::{
-    core::{tx_parser::TxParser, utils::calculate_tx_hash},
+    core::{serializer::calculate_tx_hash, tx_parser::TxParser},
     model::{Action, Budget, RedeemerTag},
 };
 use std::error::Error;

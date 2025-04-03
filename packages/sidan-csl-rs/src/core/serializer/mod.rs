@@ -1,6 +1,5 @@
 mod address;
 mod aiken;
-mod bip39;
 mod certificates;
 mod evaluator;
 mod phase_two;
@@ -14,7 +13,6 @@ mod vote;
 
 pub use address::*;
 pub use aiken::*;
-pub use bip39::*;
 pub use certificates::*;
 pub use evaluator::*;
 pub use redeemer::*;

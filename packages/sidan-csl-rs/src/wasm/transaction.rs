@@ -1,5 +1,5 @@
 use crate::{
-    core::utils::{calculate_tx_hash, sign_transaction},
+    core::serializer::{calculate_tx_hash, sign_transaction},
     *,
 };
 

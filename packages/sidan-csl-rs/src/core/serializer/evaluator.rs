@@ -3,9 +3,9 @@ use pallas_primitives::conway::{Redeemer, RedeemerTag as PRedeemerTag};
 use std::collections::HashMap;
 use uplc::tx::SlotConfig;
 
+use super::phase_two::{eval_phase_two, PhaseTwoEvalResult};
 use crate::core::constants::get_cost_models_from_network;
 use crate::core::tx_parser::TxParser;
-use crate::core::utils::phase_two::{eval_phase_two, PhaseTwoEvalResult};
 use crate::csl::{Address, JsError};
 use crate::model::{
     Action, Asset, Budget, EvalError, EvalResult, Network, RedeemerTag, UTxO, UtxoOutput,

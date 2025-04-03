@@ -1,6 +1,6 @@
 mod transaction_tests {
     use cardano_serialization_lib as csl;
-    use sidan_csl_rs::core::utils::{
+    use sidan_csl_rs::core::serializer::{
         build_tx_builder, calculate_tx_hash, remove_witness_set, sign_transaction, to_bignum,
     };
 

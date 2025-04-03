@@ -1,5 +1,5 @@
 mod script_tests {
-    use sidan_csl_rs::core::utils::get_v2_script_hash;
+    use sidan_csl_rs::core::serializer::get_v2_script_hash;
 
     #[test]
     fn test_get_v2_script_hash() {

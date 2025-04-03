@@ -1,6 +1,6 @@
 use super::{model::JsVecString, WasmResult};
 use crate::{
-    core::utils::{evaluate_tx_scripts, JsonSlotConfig},
+    core::serializer::{evaluate_tx_scripts, JsonSlotConfig},
     *,
 };
 use model::UTxO;

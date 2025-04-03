@@ -3,7 +3,7 @@ use cardano_serialization_lib::{JsError, MintWitness};
 
 use super::{
     constants::build_csl_cost_models,
-    utils::{
+    serializer::{
         build_tx_builder, sign_transaction, to_bignum, to_csl_anchor, to_csl_cert, to_csl_redeemer,
         to_csl_script_source, to_csl_simple_script_source, to_csl_vote_kind, to_csl_voter,
         to_value,

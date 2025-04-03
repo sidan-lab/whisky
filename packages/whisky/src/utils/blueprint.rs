@@ -1,5 +1,5 @@
 use sidan_csl_rs::{
-    core::utils::{
+    core::serializer::{
         apply_params_to_script, get_script_hash, script_hash_to_stake_address, script_to_address,
     },
     csl::JsError,

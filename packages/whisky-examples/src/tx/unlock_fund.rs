@@ -1,6 +1,6 @@
 use whisky::{
     builder::{TxBuilder, WData, WRedeemer},
-    core::utils::deserialize_bech32_address,
+    core::serializer::deserialize_bech32_address,
     csl::JsError,
     model::{Budget, ProvidedScriptSource, UTxO},
 };

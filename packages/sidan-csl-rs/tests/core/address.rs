@@ -1,6 +1,7 @@
+#[cfg(test)]
 mod address_tests {
     use sidan_csl_rs::{
-        core::utils::{
+        core::serializer::{
             deserialize_bech32_address, parse_native_script_address_to_bech32,
             parse_native_script_address_with_stake_key_to_bech32, script_to_address,
         },

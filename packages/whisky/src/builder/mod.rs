@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 pub use data::*;
 use sidan_csl_rs::{
-    core::{algo::select_utxos, builder::*, utils::get_min_utxo_value},
+    core::{algo::select_utxos, builder::*, serializer::get_min_utxo_value},
     csl::JsError,
     model::*,
 };

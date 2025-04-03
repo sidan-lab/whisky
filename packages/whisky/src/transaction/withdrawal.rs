@@ -25,7 +25,7 @@ impl WhiskyTx {
 mod tests {
     use serde_json::json;
     use sidan_csl_rs::{
-        core::common::con_str0,
+        core::data::con_str0,
         csl::JsError,
         model::{Budget, LanguageVersion},
     };

@@ -4,7 +4,7 @@ mod tx_builder_core_tests {
     use sidan_csl_rs::model::{Asset, Budget};
     use whisky::{
         builder::{TxBuilder, TxBuilderParam, WData::JSON, WRedeemer},
-        core::common::{builtin_byte_string, con_str0},
+        core::data::{builtin_byte_string, con_str0},
     };
 
     #[test]

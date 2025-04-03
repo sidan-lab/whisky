@@ -3,11 +3,13 @@ mod transaction;
 mod txbuilder;
 mod txevaluator;
 mod txparser;
+mod utils;
 use cardano_serialization_lib::JsError;
 pub use transaction::*;
 pub use txbuilder::*;
 pub use txevaluator::*;
 pub use txparser::*;
+pub use utils::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]

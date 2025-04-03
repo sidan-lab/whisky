@@ -87,8 +87,8 @@ pub fn get_v2_script_hash(script: &str) -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        core::utils::{apply_double_cbor_encoding, get_script_hash},
+    use super::{
+        core::serializer::{apply_double_cbor_encoding, get_script_hash},
         model::LanguageVersion,
     };
 

@@ -1,6 +1,6 @@
 use sidan_csl_rs::{
     core::builder::serialize_tx_body,
-    core::utils::build_tx_builder,
+    core::serializer::build_tx_builder,
     csl::{self, JsError},
     model::*,
 };

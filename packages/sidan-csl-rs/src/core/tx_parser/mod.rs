@@ -1,4 +1,4 @@
-use crate::core::utils::blake2b256;
+use crate::core::serializer::blake2b256;
 use cardano_serialization_lib::JsError;
 use csl::Vkeywitnesses;
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,7 @@ use crate::model::{
     UTxO, UtxoInput, UtxoOutput, ValidityRange,
 };
 
-use super::utils::calculate_tx_hash;
+use super::serializer::calculate_tx_hash;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

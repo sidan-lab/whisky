@@ -1,6 +1,6 @@
 mod parser_tests {
     use serde_json::json;
-    use sidan_csl_rs::core::common::*;
+    use sidan_csl_rs::core::data::*;
 
     #[test]
     fn test_con_str() {
