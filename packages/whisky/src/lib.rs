@@ -1,6 +1,6 @@
 //! # whisky
 //!
-//! `whisky` is built with the same pattern as [MeshJS's lower level APIs](https://meshjs.dev/apis/transaction/builderExample) where Rust Cardano developer can import directly for use, building on top of [`sidan-csl-rs`](../whisky_core/).
+//! `whisky` is built with the same pattern as [MeshJS's lower level APIs](https://meshjs.dev/apis/transaction/builderExample) where Rust Cardano developer can import directly for use.
 //!
 //! ## Install
 //!

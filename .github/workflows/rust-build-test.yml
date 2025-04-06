@@ -26,9 +26,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build whisky-core
+      - name: Build whisky-common
         run: >
-          cd packages/whisky-core &&
+          cd packages/whisky-common &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky-csl
+        run: >
+          cd packages/whisky-csl &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky-js
+        run: >
+          cd packages/whisky-js &&
           cargo build
           --locked
           --verbose
@@ -45,27 +63,9 @@ jobs:
       - name: Create .env file
         run: echo "MAESTRO_API_KEY=${MAESTRO_API_KEY}" > packages/whisky/.env
 
-      - name: Run core tests (without coverage)
+      - name: Run all tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
-          cd packages/whisky-core &&
+          cd packages &&
           cargo test
           --verbose
-
-      - name: Run csl tests (without coverage)
-        if: matrix.os != 'ubuntu-latest'
-        run: >
-          cd packages/whisky-csl &&
-          cargo test
-          --verbose
-
-      - name: Run rust tests (without coverage)
-        if: matrix.os != 'ubuntu-latest'
-        run: >
-          cd packages/whisky &&
-          cargo test
-          --verbose
-
-      - name: Upload coverage reports to Codecov
-        if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v3
