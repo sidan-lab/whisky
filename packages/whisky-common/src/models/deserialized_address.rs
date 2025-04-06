@@ -1,9 +1,9 @@
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct DeserializedAddress {
-    pub_key_hash: String,
-    script_hash: String,
-    stake_key_hash: String,
-    stake_key_script_hash: String,
+    pub pub_key_hash: String,
+    pub script_hash: String,
+    pub stake_key_hash: String,
+    pub stake_key_script_hash: String,
 }
 
 impl DeserializedAddress {
@@ -19,21 +19,5 @@ impl DeserializedAddress {
             stake_key_hash: stake_key_hash.to_string(),
             stake_key_script_hash: stake_key_script_hash.to_string(),
         }
-    }
-
-    pub fn get_pub_key_hash(&self) -> String {
-        self.pub_key_hash.clone()
-    }
-
-    pub fn get_script_hash(&self) -> String {
-        self.script_hash.clone()
-    }
-
-    pub fn get_stake_key_hash(&self) -> String {
-        self.stake_key_hash.clone()
-    }
-
-    pub fn get_stake_key_script_hash(&self) -> String {
-        self.stake_key_script_hash.clone()
     }
 }

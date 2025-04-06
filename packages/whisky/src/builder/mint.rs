@@ -1,4 +1,4 @@
-use whisky_core::model::*;
+use crate::*;
 
 use super::{TxBuilder, WRedeemer};
 

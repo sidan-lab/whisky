@@ -1,8 +1,24 @@
 use whisky_common::{TxBuildable, *};
 
-use super::WhiskyCSL;
+use super::{CoreCSL, WhiskyCSL};
 
 impl TxBuildable for WhiskyCSL {
+    fn reset_builder(&mut self) -> &mut Self {
+        let protocol_params = self.core.protocol_params.clone();
+        self.core = CoreCSL::new(Some(protocol_params)).unwrap();
+        self
+    }
+
+    fn set_protocol_params(&mut self, protocol_params: Protocol) -> &mut Self {
+        self.core.protocol_params = protocol_params.clone();
+        self
+    }
+
+    fn set_tx_builder_body(&mut self, tx_builder_body: TxBuilderBody) -> &mut Self {
+        self.tx_builder_body = tx_builder_body.clone();
+        self
+    }
+
     /// ## Transaction building method
     ///
     /// Serialize the transaction body
@@ -38,5 +54,27 @@ impl TxBuildable for WhiskyCSL {
             .add_change_utxo()?;
 
         self.core.build_tx()
+    }
+
+    /// ## Transaction building method
+    ///
+    /// Complete the signing process
+    ///
+    /// ### Returns
+    ///
+    /// * `String` - The signed transaction in hex
+    fn complete_signing(&mut self) -> Result<String, WError> {
+        let signing_keys = self.tx_builder_body.signing_key.clone();
+        self.add_all_signing_keys(
+            &signing_keys
+                .iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>(),
+        )?;
+        Ok(self.core.tx_hex.to_string())
+    }
+
+    fn tx_hex(&mut self) -> String {
+        self.core.tx_hex.clone()
     }
 }

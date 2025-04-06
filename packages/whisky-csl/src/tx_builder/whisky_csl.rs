@@ -21,50 +21,12 @@ impl WhiskyCSL {
     pub fn new(params: Option<Protocol>) -> Result<Self, WError> {
         let whisky = WhiskyCSL {
             core: CoreCSL::new(params)?,
-            tx_builder_body: TxBuilderBody {
-                inputs: vec![],
-                outputs: vec![],
-                collaterals: vec![],
-                required_signatures: vec![],
-                reference_inputs: vec![],
-                withdrawals: vec![],
-                mints: vec![],
-                change_address: "".to_string(),
-                change_datum: None,
-                certificates: vec![],
-                votes: vec![],
-                metadata: vec![],
-                validity_range: ValidityRange {
-                    invalid_before: None,
-                    invalid_hereafter: None,
-                },
-                signing_key: vec![],
-                fee: None,
-                network: None,
-            },
+            tx_builder_body: TxBuilderBody::new(),
             tx_evaluation_multiplier_percentage: 110,
             tx_hex: String::new(),
         };
 
         Ok(whisky)
-    }
-
-    /// ## Transaction building method
-    ///
-    /// Complete the signing process
-    ///
-    /// ### Returns
-    ///
-    /// * `String` - The signed transaction in hex
-    pub fn complete_signing(&mut self) -> Result<String, WError> {
-        let signing_keys = self.tx_builder_body.signing_key.clone();
-        self.add_all_signing_keys(
-            &signing_keys
-                .iter()
-                .map(|s| s.as_str())
-                .collect::<Vec<&str>>(),
-        )?;
-        Ok(self.core.tx_hex.to_string())
     }
 
     /// ## Internal method

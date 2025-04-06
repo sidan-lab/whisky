@@ -1,8 +1,4 @@
-use whisky::{
-    builder::{TxBuilder, WData},
-    csl::WError,
-    model::UTxO,
-};
+use whisky::*;
 
 pub fn lock_fund(
     script_address: &str,

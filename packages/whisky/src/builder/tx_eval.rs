@@ -1,9 +1,7 @@
 use crate::service::Evaluator;
+use crate::*;
 use async_trait::async_trait;
 use uplc::tx::SlotConfig;
-use whisky_core::core::serializer::evaluate_tx_scripts;
-use whisky_core::csl::WError;
-use whisky_core::model::{Action, EvalResult, Network, UTxO};
 
 #[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}
@@ -54,10 +52,10 @@ fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, WErr
     if errors_texts.is_empty() {
         Ok(actions)
     } else {
-        Err(WError::from_str(&format!(
-            "Errors found during evaluation: [ {:?} ]",
-            errors_texts
-        )))
+        Err(WError::new(
+            "consolidate_errors",
+            &format!("Errors found during evaluation: [ {:?} ]", errors_texts),
+        ))
     }
 }
 

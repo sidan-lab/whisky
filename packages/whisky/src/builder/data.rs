@@ -1,6 +1,4 @@
 use crate::*;
-use csl::WError;
-use model::Budget;
 
 #[derive(Clone, Debug)]
 pub enum WData {
@@ -14,7 +12,8 @@ impl WData {
             WData::CBOR(data) => Ok(data.clone()),
             WData::JSON(data) => {
                 let data_cbor =
-                    &csl::PlutusData::from_json(data, csl::PlutusDatumSchema::DetailedSchema)?
+                    &csl::PlutusData::from_json(data, csl::PlutusDatumSchema::DetailedSchema)
+                        .map_err(WError::from_err("WData - to_cbor"))?
                         .to_hex();
                 Ok(data_cbor.clone())
             }

@@ -1,10 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
-use whisky::{
-    csl::WError,
-    model::{ProvidedScriptSource, UTxO},
-};
+use whisky::*;
 use whisky_examples::tx;
 
 fn response(result: Result<String, WError>) -> HttpResponse {
@@ -86,7 +83,7 @@ async fn unlock_fund(req: web::Json<UnlockFundRequest>) -> impl Responder {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct MintTokensRequest {
-    pub to_mint_asset: whisky::model::Asset,
+    pub to_mint_asset: Asset,
     pub redeemer: String,
     pub script: ProvidedScriptSource,
     pub my_address: String,

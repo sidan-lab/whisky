@@ -25,3 +25,35 @@ pub struct TxBuilderBody {
     pub fee: Option<String>,
     pub network: Option<Network>,
 }
+
+impl TxBuilderBody {
+    pub fn new() -> Self {
+        Self {
+            inputs: vec![],
+            outputs: vec![],
+            collaterals: vec![],
+            required_signatures: vec![],
+            reference_inputs: vec![],
+            withdrawals: vec![],
+            mints: vec![],
+            change_address: "".to_string(),
+            change_datum: None,
+            certificates: vec![],
+            votes: vec![],
+            metadata: vec![],
+            validity_range: ValidityRange {
+                invalid_before: None,
+                invalid_hereafter: None,
+            },
+            signing_key: vec![],
+            fee: None,
+            network: None,
+        }
+    }
+}
+
+impl Default for TxBuilderBody {
+    fn default() -> Self {
+        Self::new()
+    }
+}
