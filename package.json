@@ -10,7 +10,6 @@
     "rust:publish": "cd packages/whisky && cargo publish && cd ../",
     "asm:build": "./binaryen/bin/wasm2js ./packages/whisky-js/pkg/whisky_js_bg.wasm --output ./packages/whisky-js/pkg/whisky_js.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
     "core:check-warnings": "(cd packages/whisky-js; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
-    "core:test": "(cd packages/whisky-js; cargo test)",
     "rust:test": "(cd packages; cargo test)",
     "js:flowgen": "flowgen ./packages/whisky-js/pkg/whisky_js.d.ts -o ./packages/whisky-js/pkg/whisky_js.js.flow --add-flow-header",
     "js:prepublish": "npm run core:test && rimraf ./publish && cp -r ./packages/whisky-js/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
@@ -26,7 +25,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run core:test && npm run rust:test"
+      "pre-commit": "npm run rust:test"
     }
   },
   "author": "SIDAN Lab",
