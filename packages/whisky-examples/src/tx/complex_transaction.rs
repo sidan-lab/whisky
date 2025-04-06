@@ -1,6 +1,6 @@
 use whisky::{
     builder::{TxBuilder, WData, WRedeemer},
-    csl::JsError,
+    csl::WError,
     model::{Asset, Budget, ProvidedScriptSource, UTxO},
 };
 
@@ -23,7 +23,7 @@ pub async fn complex_transaction(
     my_address: &str,
     inputs: &[UTxO],
     collateral: &UTxO,
-) -> Result<String, JsError> {
+) -> Result<String, WError> {
     let UnlockUtxo {
         script_utxo,
         redeemer,

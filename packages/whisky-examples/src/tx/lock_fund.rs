@@ -1,6 +1,6 @@
 use whisky::{
     builder::{TxBuilder, WData},
-    csl::JsError,
+    csl::WError,
     model::UTxO,
 };
 
@@ -9,7 +9,7 @@ pub fn lock_fund(
     datum: &str,
     my_address: &str,
     inputs: &[UTxO],
-) -> Result<String, JsError> {
+) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .tx_out(script_address, &[])

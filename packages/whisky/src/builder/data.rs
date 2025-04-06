@@ -1,5 +1,5 @@
 use crate::*;
-use csl::JsError;
+use csl::WError;
 use model::Budget;
 
 #[derive(Clone, Debug)]
@@ -9,7 +9,7 @@ pub enum WData {
 }
 
 impl WData {
-    pub fn to_cbor(&self) -> Result<String, JsError> {
+    pub fn to_cbor(&self) -> Result<String, WError> {
         match self {
             WData::CBOR(data) => Ok(data.clone()),
             WData::JSON(data) => {

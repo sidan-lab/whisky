@@ -1,8 +1,8 @@
-use sidan_csl_rs::{
+use whisky_core::{
     core::serializer::{
         apply_params_to_script, get_script_hash, script_hash_to_stake_address, script_to_address,
     },
-    csl::JsError,
+    csl::WError,
     model::{BuilderDataType, LanguageVersion},
 };
 
@@ -27,7 +27,7 @@ impl MintingBlueprint {
         compiled_code: &str,
         params: &[&str],
         params_type: BuilderDataType,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, params, params_type)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.hash = hash;
@@ -35,7 +35,7 @@ impl MintingBlueprint {
         Ok(self)
     }
 
-    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, JsError> {
+    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, &[], BuilderDataType::CBOR)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.hash = hash;
@@ -69,7 +69,7 @@ impl WithdrawalBlueprint {
         compiled_code: &str,
         params: &[&str],
         params_type: BuilderDataType,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, params, params_type).unwrap();
         let hash = get_script_hash(&cbor, self.version.clone()).unwrap();
         self.address = script_hash_to_stake_address(&hash, self.network_id)?;
@@ -78,7 +78,7 @@ impl WithdrawalBlueprint {
         Ok(self)
     }
 
-    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, JsError> {
+    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, &[], BuilderDataType::CBOR)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.address = script_hash_to_stake_address(&hash, self.network_id)?;
@@ -119,7 +119,7 @@ impl SpendingBlueprint {
         compiled_code: &str,
         params: &[&str],
         params_type: BuilderDataType,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, params, params_type)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         let stake_hash: Option<(&str, bool)> = self
@@ -134,7 +134,7 @@ impl SpendingBlueprint {
         Ok(self)
     }
 
-    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, JsError> {
+    pub fn no_param_script(&mut self, compiled_code: &str) -> Result<&mut Self, WError> {
         let cbor = apply_params_to_script(compiled_code, &[], BuilderDataType::CBOR)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         let stake_hash: Option<(&str, bool)> = self

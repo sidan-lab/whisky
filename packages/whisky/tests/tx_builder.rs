@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tx_builder_core_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::model::{Asset, Budget};
+    use whisky_core::model::{Asset, Budget};
     use whisky::{
         builder::{TxBuilder, TxBuilderParam, WData::JSON, WRedeemer},
         core::data::{builtin_byte_string, con_str0},

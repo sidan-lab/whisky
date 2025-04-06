@@ -1,6 +1,6 @@
 use super::{TxBuilder, WData, WRedeemer};
 
-use sidan_csl_rs::model::*;
+use whisky_core::model::*;
 
 impl TxBuilder {
     /// ## Transaction building method

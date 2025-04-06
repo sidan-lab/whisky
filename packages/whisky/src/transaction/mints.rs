@@ -1,5 +1,5 @@
-use sidan_csl_rs::{
-    csl::JsError,
+use whisky_core::{
+    csl::WError,
     model::{LanguageVersion, MintParameter},
 };
 
@@ -13,7 +13,7 @@ impl WhiskyTx {
         language_version: &LanguageVersion,
         mint_param: &MintParameter,
         redeemer: &WRedeemer,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         self.tx_builder
             .mint_plutus_script(language_version)
             .mint(

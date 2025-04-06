@@ -2,12 +2,12 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
 use whisky::{
-    csl::JsError,
+    csl::WError,
     model::{ProvidedScriptSource, UTxO},
 };
 use whisky_examples::tx;
 
-fn response(result: Result<String, JsError>) -> HttpResponse {
+fn response(result: Result<String, WError>) -> HttpResponse {
     match result {
         Ok(tx_hex) => HttpResponse::Ok().json(TxResponse { tx_hex }),
         Err(e) => HttpResponse::BadRequest().json(ErrorResponse {

@@ -1,6 +1,6 @@
 mod int_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::{
+    use whisky_core::{
         core::data::con_str0,
         model::{Asset, Budget, LanguageVersion},
     };
@@ -168,7 +168,7 @@ mod int_tests {
             Ok(_) => {
                 let signed_tx = mesh.complete_signing().unwrap();
                 println!("{}", signed_tx);
-                assert!(mesh.core.mesh_csl.tx_hex != *"");
+                assert!(mesh.core.whisky_csl.tx_hex != *"");
             }
             Err(e) => {
                 println!("error: {:?}", e);
@@ -176,8 +176,8 @@ mod int_tests {
                 panic!()
             }
         }
-        println!("{}", mesh.core.mesh_csl.tx_hex);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        println!("{}", mesh.core.whisky_csl.tx_hex);
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -202,7 +202,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -232,7 +232,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -275,7 +275,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -304,7 +304,7 @@ mod int_tests {
         let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -329,7 +329,7 @@ mod int_tests {
         .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -361,7 +361,7 @@ mod int_tests {
         .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -401,7 +401,7 @@ mod int_tests {
         .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -464,7 +464,7 @@ mod int_tests {
         .unwrap();    
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -494,7 +494,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -524,7 +524,7 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -554,7 +554,7 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -582,7 +582,7 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -619,7 +619,7 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -656,7 +656,7 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -682,7 +682,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -729,7 +729,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -757,7 +757,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -785,7 +785,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -813,7 +813,7 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 
     #[test]
@@ -846,6 +846,6 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(mesh.core.whisky_csl.tx_hex != *"");
     }
 }

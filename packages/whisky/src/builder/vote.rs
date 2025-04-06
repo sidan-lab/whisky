@@ -1,4 +1,4 @@
-use sidan_csl_rs::model::*;
+use whisky_core::model::*;
 
 use super::{TxBuilder, Vote, WRedeemer};
 

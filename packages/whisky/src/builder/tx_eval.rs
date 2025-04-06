@@ -1,9 +1,9 @@
 use crate::service::Evaluator;
 use async_trait::async_trait;
-use sidan_csl_rs::core::serializer::evaluate_tx_scripts;
-use sidan_csl_rs::csl::JsError;
-use sidan_csl_rs::model::{Action, EvalResult, Network, UTxO};
 use uplc::tx::SlotConfig;
+use whisky_core::core::serializer::evaluate_tx_scripts;
+use whisky_core::csl::WError;
+use whisky_core::model::{Action, EvalResult, Network, UTxO};
 
 #[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}
@@ -28,7 +28,7 @@ impl MeshTxEvaluator {
         additional_txs: &[String],
         network: &Network,
         slot_config: &SlotConfig,
-    ) -> Result<Vec<Action>, JsError> {
+    ) -> Result<Vec<Action>, WError> {
         consolidate_errors(evaluate_tx_scripts(
             tx_hex,
             inputs,
@@ -39,7 +39,7 @@ impl MeshTxEvaluator {
     }
 }
 
-fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, JsError> {
+fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, WError> {
     let mut actions = Vec::new();
     let mut errors_texts = Vec::new();
     for eval_result in eval_results {
@@ -54,7 +54,7 @@ fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, JsEr
     if errors_texts.is_empty() {
         Ok(actions)
     } else {
-        Err(JsError::from_str(&format!(
+        Err(WError::from_str(&format!(
             "Errors found during evaluation: [ {:?} ]",
             errors_texts
         )))
@@ -70,7 +70,7 @@ impl Evaluator for MeshTxEvaluator {
         additional_txs: &[String],
         network: &Network,
         slot_config: &SlotConfig,
-    ) -> Result<Vec<Action>, JsError> {
+    ) -> Result<Vec<Action>, WError> {
         self.evaluate_tx_sync(tx_hex, inputs, additional_txs, network, slot_config)
     }
 }

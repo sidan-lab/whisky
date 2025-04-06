@@ -2,8 +2,9 @@
 
 # Path to Cargo.toml
 CARGO_TOML="packages/Cargo.toml"
+WHISKY_CORE_CARGO_TOML="packages/whisky-core/Cargo.toml"
 WHISKY_CARGO_TOML="packages/whisky/Cargo.toml"
-SIDAN_CSL_RS_CARGO_TOML="packages/sidan-csl-rs/Cargo.toml"
+WHISKY_CSL_CARGO_TOML="packages/whisky-csl/Cargo.toml"
 EXAMPLES_CARGO_TOML="packages/whisky-examples/Cargo.toml"
 
 # Extract the current main version
@@ -28,10 +29,13 @@ sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$CARGO
 
 # Update the version in whisky Cargo.toml
 sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISKY_CARGO_TOML"
-sed -i '' "s/sidan-csl-rs = { version = \"=$current_version\"/sidan-csl-rs = { version = \"=$new_version\"/" "$WHISKY_CARGO_TOML"
+sed -i '' "s/whisky-core = { version = \"=$current_version\"/whisky-core = { version = \"=$new_version\"/" "$WHISKY_CARGO_TOML"
 
-# Update the version in sidan-csl-rs Cargo.toml
-sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$SIDAN_CSL_RS_CARGO_TOML"
+# Update the version in whisky-csl Cargo.toml
+sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISKY_CSL_CARGO_TOML"
+
+# Update the version in whisky-core Cargo.toml
+sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISKY_CORE_CARGO_TOML"
 
 # Update the version in examples Cargo.toml
 sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$EXAMPLES_CARGO_TOML"

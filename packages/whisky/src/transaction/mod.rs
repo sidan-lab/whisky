@@ -1,4 +1,4 @@
-use sidan_csl_rs::csl::JsError;
+use whisky_core::csl::WError;
 
 use crate::builder::TxBuilder;
 
@@ -34,12 +34,12 @@ impl WhiskyTx {
         }
     }
 
-    pub fn provide_script(&mut self, script_cbor: &str) -> Result<&mut Self, JsError> {
+    pub fn provide_script(&mut self, script_cbor: &str) -> Result<&mut Self, WError> {
         match self.current_script_type {
             Some(WhiskyScriptType::Spending) => self.tx_builder.tx_in_script(script_cbor),
             Some(WhiskyScriptType::Minting) => self.tx_builder.minting_script(script_cbor),
             Some(WhiskyScriptType::Withdrawal) => self.tx_builder.withdrawal_script(script_cbor),
-            None => return Err(JsError::from_str("No script type can be inferred, script must be provided after an indicating apis: unlock_from_script, mint_assets, withdraw_from_script")),
+            None => return Err(WError::from_str("No script type can be inferred, script must be provided after an indicating apis: unlock_from_script, mint_assets, withdraw_from_script")),
         };
         Ok(self)
     }
@@ -50,7 +50,7 @@ impl WhiskyTx {
         tx_index: u32,
         script_hash: &str,
         script_size: usize,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         match self.current_script_type {
             Some(WhiskyScriptType::Spending) => self.tx_builder.spending_tx_in_reference(
                 tx_hash,
@@ -68,12 +68,12 @@ impl WhiskyTx {
                 script_hash,
                 script_size,
             ),
-            None => return Err(JsError::from_str("No script type can be inferred, script must be provided after an indicating apis: unlock_from_script, mint_assets, withdraw_from_script")),
+            None => return Err(WError::from_str("No script type can be inferred, script must be provided after an indicating apis: unlock_from_script, mint_assets, withdraw_from_script")),
         };
         Ok(self)
     }
 
-    pub async fn build(&mut self) -> Result<String, JsError> {
+    pub async fn build(&mut self) -> Result<String, WError> {
         self.tx_builder.complete(None).await?;
         Ok(self.tx_builder.tx_hex())
     }

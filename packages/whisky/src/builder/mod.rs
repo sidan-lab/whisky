@@ -12,12 +12,12 @@ mod withdrawal;
 use std::collections::HashMap;
 
 pub use data::*;
-use sidan_csl_rs::{
-    core::{algo::select_utxos, builder::*, serializer::get_min_utxo_value},
-    csl::JsError,
+pub use tx_eval::*;
+use whisky_core::{
+    core::{algo::select_utxos, builder::*, serializer::get_min_utxo_value, Value},
+    csl::WError,
     model::*,
 };
-pub use tx_eval::*;
 
 use crate::service::*;
 
@@ -516,7 +516,7 @@ impl TxBuilder {
         &mut self,
         extra_inputs: Vec<UTxO>,
         threshold: u64,
-    ) -> Result<(), JsError> {
+    ) -> Result<(), WError> {
         let mut required_assets = Value::new();
 
         for output in &self.core.tx_builder_body.outputs {
@@ -566,12 +566,12 @@ impl TxBuilder {
             match select_utxos(&extra_inputs, required_assets, &threshold.to_string()) {
                 Ok(inputs) => inputs,
                 Err(_) => {
-                    return Err(JsError::from_str("Error selecting inputs"));
+                    return Err(WError::from_str("Error selecting inputs"));
                 }
             };
 
         for input in selected_inputs {
-            self.core.mesh_csl.add_tx_in(PubKeyTxIn {
+            self.core.whisky_csl.add_tx_in(PubKeyTxIn {
                 tx_in: TxInParameter {
                     tx_hash: input.input.tx_hash.clone(),
                     tx_index: input.input.output_index,

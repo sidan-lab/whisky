@@ -19,8 +19,10 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 
 - [ ] Rust crate `whisky` - New feature
 - [ ] Rust crate `whisky` - Breaking change
-- [ ] WASM `sidan-csl-rs` - New feature
-- [ ] WASM `sidan-csl-rs` - Breaking change
+- [ ] Rust crate `whisky-csl` - New feature
+- [ ] Rust crate `whisky-csl` - Breaking change
+- [ ] WASM `whisky-core` - New feature
+- [ ] WASM `whisky-core` - Breaking change
 
 ### Maintenance
 

@@ -26,9 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
-      - name: Build sidan-csl-rs
+      - name: Build whisky-core
         run: >
-          cd packages/sidan-csl-rs &&
+          cd packages/whisky-core &&
           cargo build
           --locked
           --verbose
@@ -48,7 +48,14 @@ jobs:
       - name: Run core tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
         run: >
-          cd packages/sidan-csl-rs &&
+          cd packages/whisky-core &&
+          cargo test
+          --verbose
+
+      - name: Run csl tests (without coverage)
+        if: matrix.os != 'ubuntu-latest'
+        run: >
+          cd packages/whisky-csl &&
           cargo test
           --verbose
 
@@ -58,28 +65,6 @@ jobs:
           cd packages/whisky &&
           cargo test
           --verbose
-
-      - name: Run core tests (with coverage)
-        if: matrix.os == 'ubuntu-latest'
-        run: >
-          cd packages/sidan-csl-rs &&
-          cargo install cargo-tarpaulin
-          && cargo tarpaulin
-          --verbose
-          --out Xml
-          --engine llvm
-          --skip-clean
-
-      - name: Run rust tests (with coverage)
-        if: matrix.os == 'ubuntu-latest'
-        run: >
-          cd packages/whisky &&
-          cargo install cargo-tarpaulin
-          && cargo tarpaulin
-          --verbose
-          --out Xml
-          --engine llvm
-          --skip-clean
 
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
@@ -100,7 +85,7 @@ jobs:
       - name: Get package version from master branch before merge
         id: pre-merge-version
         run: |
-          cd packages/sidan-csl-rs
+          cd packages/whisky-core
           CORE_PRE_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_pre_merge_version=$CORE_PRE_MERGE_VERSION" >> "$GITHUB_OUTPUT"
           cd ../whisky
@@ -115,7 +100,7 @@ jobs:
       - name: Get package version from master branch after merge
         id: post-merge-version
         run: |
-          cd packages/sidan-csl-rs
+          cd packages/whisky-core
           CORE_POST_MERGE_VERSION=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')
           echo "core_post_merge_version=$CORE_POST_MERGE_VERSION" >> "$GITHUB_OUTPUT"
           cd ../whisky
@@ -169,7 +154,7 @@ jobs:
           toolchain: stable
           override: true
 
-      - run: cd packages/sidan-csl-rs && cargo publish --token ${PUBLISH_KEY}
+      - run: cd packages/whisky-core && cargo publish --token ${PUBLISH_KEY}
         env:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 

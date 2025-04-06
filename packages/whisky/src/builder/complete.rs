@@ -1,10 +1,10 @@
-use sidan_csl_rs::{
+use uplc::tx::SlotConfig;
+use whisky_core::{
     core::builder::serialize_tx_body,
     core::serializer::build_tx_builder,
-    csl::{self, JsError},
+    csl::{self, WError},
     model::*,
 };
-use uplc::tx::SlotConfig;
 
 use super::{TxBuilder, TxEvaluation};
 
@@ -23,7 +23,7 @@ impl TxBuilder {
     pub async fn complete(
         &mut self,
         customized_tx: Option<TxBuilderBody>,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
@@ -35,7 +35,7 @@ impl TxBuilder {
                     self.inputs_for_evaluation.values().cloned().collect();
                 let tx_evaluation_result = evaluator
                     .evaluate_tx(
-                        &self.core.mesh_csl.tx_hex,
+                        &self.core.whisky_csl.tx_hex,
                         &inputs_for_evaluation,
                         &self.chained_txs.clone(),
                         network,
@@ -45,7 +45,7 @@ impl TxBuilder {
                 match tx_evaluation_result {
                     Ok(actions) => self.update_redeemer(actions),
                     Err(err) => {
-                        return Err(JsError::from_str(&format!(
+                        return Err(WError::from_str(&format!(
                         "Error evaluating transaction - tx_hex: [ {} ] , Error message: [ {:?} ]",
                         self.tx_hex(),
                         err
@@ -72,7 +72,7 @@ impl TxBuilder {
     pub fn complete_sync(
         &mut self,
         customized_tx: Option<TxBuilderBody>,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         if customized_tx.is_some() {
             self.core.tx_builder_body = customized_tx.unwrap();
         } else {
@@ -117,9 +117,9 @@ impl TxBuilder {
             self.core.tx_builder_body.clone(),
             self.protocol_params.clone(),
         )?;
-        self.core.mesh_csl.tx_hex = tx_hex;
-        self.core.mesh_csl.tx_builder = build_tx_builder(None);
-        self.core.mesh_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
+        self.core.whisky_csl.tx_hex = tx_hex;
+        self.core.whisky_csl.tx_builder = build_tx_builder(None);
+        self.core.whisky_csl.tx_inputs_builder = csl::TxInputsBuilder::new();
         Ok(self)
     }
 
@@ -130,7 +130,7 @@ impl TxBuilder {
     /// ### Returns
     ///
     /// * `String` - The signed transaction in hex
-    pub fn complete_signing(&mut self) -> Result<String, JsError> {
+    pub fn complete_signing(&mut self) -> Result<String, WError> {
         self.core.complete_signing()
     }
 
@@ -142,6 +142,6 @@ impl TxBuilder {
     ///
     /// * tx_hex - The current transaction hex from build
     pub fn tx_hex(&mut self) -> String {
-        self.core.mesh_csl.tx_hex.to_string()
+        self.core.whisky_csl.tx_hex.to_string()
     }
 }

@@ -1,4 +1,4 @@
-use sidan_csl_rs::{csl::JsError, model::LanguageVersion};
+use whisky_core::{csl::WError, model::LanguageVersion};
 
 use crate::builder::WRedeemer;
 
@@ -11,7 +11,7 @@ impl WhiskyTx {
         stake_address: &str,
         withdrawal_amount: u64,
         redeemer: &WRedeemer,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         self.tx_builder
             .withdrawal_plutus_script(language_version)
             .withdrawal(stake_address, withdrawal_amount)
@@ -24,9 +24,9 @@ impl WhiskyTx {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use sidan_csl_rs::{
+    use whisky_core::{
         core::data::con_str0,
-        csl::JsError,
+        csl::WError,
         model::{Budget, LanguageVersion},
     };
 
@@ -34,7 +34,7 @@ mod tests {
 
     use super::*;
 
-    fn test_fn(tx: &mut WhiskyTx) -> Result<&mut WhiskyTx, JsError> {
+    fn test_fn(tx: &mut WhiskyTx) -> Result<&mut WhiskyTx, WError> {
         let res = tx
             .withdraw_from_script(
                 &LanguageVersion::V2,

@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
-use sidan_csl_rs::csl::JsError;
-use sidan_csl_rs::model::{Network, UTxO};
-use sidan_csl_rs::{
+use whisky_core::csl::WError;
+use whisky_core::model::{Network, UTxO};
+use whisky_core::{
     core::{serializer::calculate_tx_hash, tx_parser::TxParser},
     model::{Action, Budget, RedeemerTag},
 };
@@ -136,7 +136,7 @@ impl Evaluator for MaestroProvider {
         additional_txs: &[String],
         _network: &Network,
         _slot_config: &SlotConfig,
-    ) -> Result<Vec<Action>, JsError> {
+    ) -> Result<Vec<Action>, WError> {
         let tx_out_cbors: Vec<AdditionalUtxo> = additional_txs
             .iter()
             .flat_map(|tx| {
@@ -179,7 +179,7 @@ impl Evaluator for MaestroProvider {
             }
             Err(e) => {
                 println!("fail maestro call");
-                Err(JsError::from_str(&format!("{}", e)))
+                Err(WError::from_str(&format!("{}", e)))
             }
         }
     }

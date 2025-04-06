@@ -2811,31 +2811,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "sidan-csl-rs"
-version = "0.9.21"
-dependencies = [
- "cardano-serialization-lib",
- "cryptoxide",
- "getrandom",
- "hex",
- "js-sys",
- "noop_proc_macro",
- "pallas-codec 0.31.0",
- "pallas-primitives",
- "pallas-traverse",
- "rand_os",
- "schemars",
- "serde",
- "serde-wasm-bindgen 0.4.5",
- "serde-wasm-bindgen 0.6.5",
- "serde_json",
- "tiny-bip39",
- "uplc",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3486,10 +3461,69 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
- "sidan-csl-rs",
  "tokio",
  "uplc",
  "wasm-bindgen",
+ "whisky-core",
+]
+
+[[package]]
+name = "whisky-common"
+version = "0.9.21"
+dependencies = [
+ "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "whisky-core"
+version = "0.9.21"
+dependencies = [
+ "cardano-serialization-lib",
+ "cryptoxide",
+ "getrandom",
+ "hex",
+ "noop_proc_macro",
+ "pallas-codec 0.31.0",
+ "pallas-primitives",
+ "pallas-traverse",
+ "rand_os",
+ "schemars",
+ "serde",
+ "serde-wasm-bindgen 0.6.5",
+ "serde_json",
+ "tiny-bip39",
+ "uplc",
+ "wasm-bindgen",
+ "whisky-common",
+ "whisky-csl",
+]
+
+[[package]]
+name = "whisky-csl"
+version = "0.9.21"
+dependencies = [
+ "cardano-serialization-lib",
+ "cryptoxide",
+ "getrandom",
+ "hex",
+ "js-sys",
+ "noop_proc_macro",
+ "pallas-codec 0.31.0",
+ "pallas-primitives",
+ "pallas-traverse",
+ "rand_os",
+ "schemars",
+ "serde",
+ "serde-wasm-bindgen 0.4.5",
+ "serde-wasm-bindgen 0.6.5",
+ "serde_json",
+ "tiny-bip39",
+ "uplc",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "whisky-common",
 ]
 
 [[package]]
