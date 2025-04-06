@@ -16,12 +16,7 @@ pub trait TxBuildable {
     ) -> Result<(), WError>;
     fn add_plutus_mint(&mut self, script_mint: ScriptMint, index: u64) -> Result<(), WError>;
     fn add_native_mint(&mut self, native_mint: SimpleScriptMint) -> Result<(), WError>;
-    fn add_cert(
-        &mut self,
-        // certificates_builder: &mut csl::CertificatesBuilder,
-        cert: Certificate,
-        index: u64,
-    ) -> Result<(), WError>;
+    fn add_cert(&mut self, cert: Certificate, index: u64) -> Result<(), WError>;
     fn add_vote(
         &mut self,
         // vote_builder: &mut csl::VotingBuilder,

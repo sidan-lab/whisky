@@ -9,6 +9,8 @@ pub struct WhiskyCSL {
     pub tx_inputs_builder: csl::TxInputsBuilder,
     pub collateral_builder: csl::TxInputsBuilder,
     pub mint_builder: csl::MintBuilder,
+    pub certificates_builder: csl::CertificatesBuilder,
+    pub vote_builder: csl::VotingBuilder,
     pub tx_withdrawals_builder: csl::WithdrawalsBuilder,
     pub protocol_params: Protocol,
 }
@@ -21,6 +23,8 @@ impl WhiskyCSL {
             tx_inputs_builder: csl::TxInputsBuilder::new(),
             collateral_builder: csl::TxInputsBuilder::new(),
             mint_builder: csl::MintBuilder::new(),
+            certificates_builder: csl::CertificatesBuilder::new(),
+            vote_builder: csl::VotingBuilder::new(),
             tx_withdrawals_builder: csl::WithdrawalsBuilder::new(),
             protocol_params: params.unwrap_or_default(),
         }
@@ -31,18 +35,16 @@ impl TxBuildable for WhiskyCSL {
     fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), WError> {
         self.tx_inputs_builder
             .add_regular_input(
-                &csl::Address::from_bech32(&input.tx_in.address.unwrap()).map_err(|err| {
-                    to_werror("WhiskyCSL - add_tx_in - invalid address", js_error)
-                })?,
+                &csl::Address::from_bech32(&input.tx_in.address.unwrap())
+                    .map_err(to_werror("WhiskyCSL - add_tx_in - invalid address"))?,
                 &csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).map_err(|err| {
-                        to_werror("WhiskyCSL - add_tx_in - invalid tx_hash", js_error)
-                    })?,
+                    &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)
+                        .map_err(to_werror("WhiskyCSL - add_tx_in - invalid tx_hash"))?,
                     input.tx_in.tx_index,
                 ),
                 &to_value(&input.tx_in.amount.unwrap())?,
             )
-            .map_err(|err| to_werror("WhiskyCSL - add_tx_in - invalid address", js_error))?;
+            .map_err(to_werror("WhiskyCSL - add_tx_in - invalid regular input"))?;
         Ok(())
     }
 
@@ -50,11 +52,15 @@ impl TxBuildable for WhiskyCSL {
         match input.simple_script_tx_in {
             SimpleScriptTxInParameter::ProvidedSimpleScriptSource(script) => {
                 self.tx_inputs_builder.add_native_script_input(
-                    &csl::NativeScriptSource::new(&csl::NativeScript::from_hex(
-                        &script.script_cbor,
-                    )?),
+                    &csl::NativeScriptSource::new(
+                        &csl::NativeScript::from_hex(&script.script_cbor).map_err(to_werror(
+                            "WhiskyCSL - add_simple_script_tx_in - invalid script_cbor",
+                        ))?,
+                    ),
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).map_err(
+                            to_werror("WhiskyCSL - add_simple_script_tx_in - invalid tx_hash (1)"),
+                        )?,
                         input.tx_in.tx_index,
                     ),
                     &to_value(&input.tx_in.amount.unwrap())?,
@@ -64,15 +70,25 @@ impl TxBuildable for WhiskyCSL {
             SimpleScriptTxInParameter::InlineSimpleScriptSource(script) => {
                 self.tx_inputs_builder.add_native_script_input(
                     &csl::NativeScriptSource::new_ref_input(
-                        &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
+                        &csl::ScriptHash::from_hex(&script.simple_script_hash).map_err(
+                            to_werror(
+                                "WhiskyCSL - add_simple_script_tx_in - invalid simple_script_hash",
+                            ),
+                        )?,
                         &csl::TransactionInput::new(
-                            &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
+                            &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash).map_err(
+                                to_werror(
+                                    "WhiskyCSL - add_simple_script_tx_in - invalid tx_hash (2)",
+                                ),
+                            )?,
                             script.ref_tx_in.tx_index,
                         ),
                         script.script_size,
                     ),
                     &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                        &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).map_err(
+                            to_werror("WhiskyCSL - add_simple_script_tx_in - invalid tx_hash (3)"),
+                        )?,
                         input.tx_in.tx_index,
                     ),
                     &to_value(&input.tx_in.amount.unwrap())?,
@@ -88,11 +104,14 @@ impl TxBuildable for WhiskyCSL {
         let redeemer = input.script_tx_in.redeemer.unwrap();
         let csl_datum: Option<csl::DatumSource> = match datum_source {
             DatumSource::ProvidedDatumSource(datum) => Some(csl::DatumSource::new(
-                &csl::PlutusData::from_hex(&datum.data)?,
+                &csl::PlutusData::from_hex(&datum.data).map_err(to_werror(
+                    "WhiskyCSL - add_script_tx_in - invalid datum.data",
+                ))?,
             )),
             DatumSource::InlineDatumSource(datum) => {
                 let ref_input = csl::TransactionInput::new(
-                    &csl::TransactionHash::from_hex(&datum.tx_hash)?,
+                    &csl::TransactionHash::from_hex(&datum.tx_hash)
+                        .map_err(to_werror("WhiskyCSL - add_script_tx_in - invalid tx_hash"))?,
                     datum.tx_index,
                 );
                 if input.tx_in.tx_hash == datum.tx_hash && input.tx_in.tx_index == datum.tx_index {
@@ -108,7 +127,9 @@ impl TxBuildable for WhiskyCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_hex(&redeemer.data)?,
+            &csl::PlutusData::from_hex(&redeemer.data).map_err(to_werror(
+                "WhiskyCSL - add_script_tx_in - invalid redeemer.data",
+            ))?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
@@ -123,7 +144,9 @@ impl TxBuildable for WhiskyCSL {
         self.tx_inputs_builder.add_plutus_script_input(
             &csl_plutus_witness,
             &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash)?,
+                &csl::TransactionHash::from_hex(&input.tx_in.tx_hash).map_err(to_werror(
+                    "WhiskyCSL - add_script_tx_in - invalid tx_hash (2)",
+                ))?,
                 input.tx_in.tx_index,
             ),
             &to_value(&input.tx_in.amount.unwrap())?,
@@ -141,22 +164,29 @@ impl TxBuildable for WhiskyCSL {
                     .map(|byron_addr| byron_addr.to_address());
             }
         };
-        let mut output_builder =
-            csl::TransactionOutputBuilder::new().with_address(&output_address?);
+        let mut output_builder = csl::TransactionOutputBuilder::new().with_address(
+            &output_address
+                .map_err(to_werror("WhiskyCSL - add_output - invalid output_address"))?,
+        );
         if output.datum.is_some() {
             let datum = output.datum.unwrap();
 
             match datum {
                 Datum::Hash(data) => {
-                    output_builder = output_builder
-                        .with_data_hash(&csl::hash_plutus_data(&csl::PlutusData::from_hex(&data)?));
+                    output_builder = output_builder.with_data_hash(&csl::hash_plutus_data(
+                        &csl::PlutusData::from_hex(&data)
+                            .map_err(to_werror("WhiskyCSL - add_output - invalid datum hash"))?,
+                    ));
                 }
                 Datum::Inline(data) => {
-                    output_builder =
-                        output_builder.with_plutus_data(&csl::PlutusData::from_hex(&data)?);
+                    output_builder = output_builder.with_plutus_data(
+                        &csl::PlutusData::from_hex(&data)
+                            .map_err(to_werror("WhiskyCSL - add_output - invalid inline datum"))?,
+                    );
                 }
                 Datum::Embedded(data) => {
-                    let datum = &csl::PlutusData::from_hex(&data)?;
+                    let datum = &csl::PlutusData::from_hex(&data)
+                        .map_err(to_werror("WhiskyCSL - add_output - invalid embedded datum"))?;
                     output_builder = output_builder.with_data_hash(&csl::hash_plutus_data(datum));
                     self.tx_builder.add_extra_witness_datum(datum);
                 }
@@ -177,20 +207,25 @@ impl TxBuildable for WhiskyCSL {
                             &csl::PlutusScript::from_hex_with_version(
                                 &script.script_cbor,
                                 &language_version,
-                            )?,
+                            )
+                            .map_err(to_werror("WhiskyCSL - add_output - invalid script_cbor"))?,
                         ))
                 }
                 OutputScriptSource::ProvidedSimpleScriptSource(script) => {
                     output_builder =
                         output_builder.with_script_ref(&csl::ScriptRef::new_native_script(
-                            &csl::NativeScript::from_hex(&script.script_cbor)?,
+                            &csl::NativeScript::from_hex(&script.script_cbor).map_err(
+                                to_werror("WhiskyCSL - add_output - invalid simple script_cbor"),
+                            )?,
                         ))
                 }
             }
         }
 
         let tx_value = to_value(&output.amount)?;
-        let amount_builder = output_builder.next()?;
+        let amount_builder = output_builder
+            .next()
+            .map_err(to_werror("WhiskyCSL - add_output - next output"))?;
         let built_output: csl::TransactionOutput = if tx_value.multiasset().is_some() {
             if tx_value.coin().is_zero() {
                 amount_builder
@@ -199,35 +234,51 @@ impl TxBuildable for WhiskyCSL {
                         &csl::DataCost::new_coins_per_byte(&to_bignum(
                             self.protocol_params.coins_per_utxo_size,
                         )),
-                    )?
-                    .build()?
+                    )
+                    .map_err(to_werror(
+                        "WhiskyCSL - add_output - with_asset_and_min_required_coin_by_utxo_cost",
+                    ))?
+                    .build()
+                    .map_err(to_werror("WhiskyCSL - add_output - build() (1)"))?
             } else {
                 amount_builder
                     .with_coin_and_asset(&tx_value.coin(), &tx_value.multiasset().unwrap())
-                    .build()?
+                    .build()
+                    .map_err(to_werror("WhiskyCSL - add_output - build() (2)"))?
             }
         } else {
-            amount_builder.with_coin(&tx_value.coin()).build()?
+            amount_builder
+                .with_coin(&tx_value.coin())
+                .build()
+                .map_err(to_werror("WhiskyCSL - add_output - build() (3)"))?
         };
-        self.tx_builder.add_output(&built_output)?;
+        self.tx_builder
+            .add_output(&built_output)
+            .map_err(to_werror("WhiskyCSL - add_output - add_output"))?;
         Ok(())
     }
 
     fn add_collateral(&mut self, collateral: PubKeyTxIn) -> Result<(), WError> {
-        self.collateral_builder.add_regular_input(
-            &csl::Address::from_bech32(&collateral.tx_in.address.unwrap())?,
-            &csl::TransactionInput::new(
-                &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash)?,
-                collateral.tx_in.tx_index,
-            ),
-            &to_value(&collateral.tx_in.amount.unwrap())?,
-        )?;
+        self.collateral_builder
+            .add_regular_input(
+                &csl::Address::from_bech32(&collateral.tx_in.address.unwrap())
+                    .map_err(to_werror("WhiskyCSL - add_collateral - invalid address"))?,
+                &csl::TransactionInput::new(
+                    &csl::TransactionHash::from_hex(&collateral.tx_in.tx_hash)
+                        .map_err(to_werror("WhiskyCSL - add_collateral - invalid tx_hash"))?,
+                    collateral.tx_in.tx_index,
+                ),
+                &to_value(&collateral.tx_in.amount.unwrap())?,
+            )
+            .map_err(to_werror("WhiskyCSL - add_collateral - add_regular_input"))?;
         Ok(())
     }
 
     fn add_reference_input(&mut self, ref_input: RefTxIn) -> Result<(), WError> {
         let csl_ref_input = csl::TransactionInput::new(
-            &csl::TransactionHash::from_hex(&ref_input.tx_hash)?,
+            &csl::TransactionHash::from_hex(&ref_input.tx_hash).map_err(to_werror(
+                "WhiskyCSL - add_reference_input - invalid_tx_hash",
+            ))?,
             ref_input.tx_index,
         );
         if ref_input.script_size.is_some() {
@@ -240,11 +291,19 @@ impl TxBuildable for WhiskyCSL {
     }
 
     fn add_pub_key_withdrawal(&mut self, withdrawal: PubKeyWithdrawal) -> Result<(), WError> {
-        self.tx_withdrawals_builder.add(
-            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
+        self.tx_withdrawals_builder
+            .add(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).map_err(to_werror(
+                        "WhiskyCSL - add_pub_key_withdrawal - invalid address",
+                    ))?,
+                )
                 .unwrap(),
-            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
-        )?;
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).map_err(to_werror(
+                    "WhiskyCSL - add_collateral - invalid coin as BigNum",
+                ))?,
+            )
+            .map_err(to_werror("WhiskyCSL - add_pub_key_withdrawal - add()"))?;
         Ok(())
     }
 
@@ -257,19 +316,31 @@ impl TxBuildable for WhiskyCSL {
         let csl_redeemer: csl::Redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_spend(),
             &to_bignum(0),
-            &csl::PlutusData::from_hex(&redeemer.data)?,
+            &csl::PlutusData::from_hex(&redeemer.data).map_err(to_werror(
+                "WhiskyCSL - add_plutus_withdrawal - invalid redeemer.data",
+            ))?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer.ex_units.mem),
                 &to_bignum(redeemer.ex_units.steps),
             ),
         );
 
-        self.tx_withdrawals_builder.add_with_plutus_witness(
-            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
+        self.tx_withdrawals_builder
+            .add_with_plutus_witness(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).map_err(to_werror(
+                        "WhiskyCSL - add_plutus_withdrawal - invalid address",
+                    ))?,
+                )
                 .unwrap(),
-            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
-            &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
-        )?;
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).map_err(to_werror(
+                    "WhiskyCSL - add_plutus_withdrawal - invalid coin as BigNum",
+                ))?,
+                &csl::PlutusWitness::new_with_ref_without_datum(&csl_script, &csl_redeemer),
+            )
+            .map_err(to_werror(
+                "WhiskyCSL - add_plutus_withdrawal - add_with_plutus_witness",
+            ))?;
         Ok(())
     }
 
@@ -298,18 +369,29 @@ impl TxBuildable for WhiskyCSL {
                 ),
             },
             None => {
-                return Err(WError::from_str(
+                return Err(WError::new(
+                    "add_simple_script_withdrawal",
                     "Missing script source for native script withdrawal",
                 ))
             }
         };
 
-        self.tx_withdrawals_builder.add_with_native_script(
-            &csl::RewardAddress::from_address(&csl::Address::from_bech32(&withdrawal.address)?)
+        self.tx_withdrawals_builder
+            .add_with_native_script(
+                &csl::RewardAddress::from_address(
+                    &csl::Address::from_bech32(&withdrawal.address).map_err(to_werror(
+                        "WhiskyCSL - add_simple_script_withdrawal - invalid reward address",
+                    ))?,
+                )
                 .unwrap(),
-            &csl::BigNum::from_str(&withdrawal.coin.to_string())?,
-            &csl_native_script_source,
-        )
+                &csl::BigNum::from_str(&withdrawal.coin.to_string()).map_err(to_werror(
+                    "WhiskyCSL - add_simple_script_withdrawal - invalid coin as BigNum",
+                ))?,
+                &csl_native_script_source,
+            )
+            .map_err(to_werror(
+                "WhiskyCSL - add_simple_script_withdrawal - add_with_native_script",
+            ))
     }
 
     fn add_plutus_mint(&mut self, script_mint: ScriptMint, index: u64) -> Result<(), WError> {
@@ -317,7 +399,9 @@ impl TxBuildable for WhiskyCSL {
         let mint_redeemer = csl::Redeemer::new(
             &csl::RedeemerTag::new_mint(),
             &to_bignum(index),
-            &csl::PlutusData::from_hex(&redeemer_info.data)?,
+            &csl::PlutusData::from_hex(&redeemer_info.data).map_err(to_werror(
+                "WhiskyCSL - add_plutus_mint - invalid redeemer_info.data",
+            ))?,
             &csl::ExUnits::new(
                 &to_bignum(redeemer_info.ex_units.mem),
                 &to_bignum(redeemer_info.ex_units.steps),
@@ -325,82 +409,104 @@ impl TxBuildable for WhiskyCSL {
         );
         let script_source_info = script_mint.script_source.unwrap();
         let mint_script = to_csl_script_source(script_source_info)?;
-        self.mint_builder.add_asset(
-            &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
-            &csl::AssetName::new(
-                hex::decode(script_mint.mint.asset_name).map_err(|err| {
-                    WError::from_str(&format!("Invalid asset name found: {}", err))
-                })?,
-            )?,
-            &csl::Int::from_str(&script_mint.mint.amount.to_string()).unwrap(),
-        )?;
+        self.mint_builder
+            .add_asset(
+                &csl::MintWitness::new_plutus_script(&mint_script, &mint_redeemer),
+                &csl::AssetName::new(hex::decode(script_mint.mint.asset_name).map_err(
+                    to_werror("WhiskyCSL - add_plutus_mint - Invalid asset name found"),
+                )?)
+                .map_err(to_werror(
+                    "WhiskyCSL - add_plutus_mint - invalid asset name",
+                ))?,
+                &csl::Int::from_str(&script_mint.mint.amount.to_string()).map_err(to_werror(
+                    "WhiskyCSL - add_plutus_mint - invalid mint amount ",
+                ))?,
+            )
+            .map_err(to_werror("WhiskyCSL - add_plutus_mint - add_asset"))?;
         Ok(())
     }
 
-    fn add_native_mint(
-        &mut self,
-        mint_builder: &mut csl::MintBuilder,
-        native_mint: SimpleScriptMint,
-    ) -> Result<(), WError> {
+    fn add_native_mint(&mut self, native_mint: SimpleScriptMint) -> Result<(), WError> {
         let script_info = native_mint.script_source.unwrap();
         match script_info {
-            SimpleScriptSource::ProvidedSimpleScriptSource(script) => mint_builder.add_asset(
-                &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
-                    &csl::NativeScript::from_hex(&script.script_cbor)?,
-                )),
-                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(|err| {
-                    WError::from_str(&format!("Invalid asset name found: {}", err))
-                })?)?,
-                &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
-            )?,
-            SimpleScriptSource::InlineSimpleScriptSource(script) => mint_builder.add_asset(
-                &MintWitness::new_native_script(&csl::NativeScriptSource::new_ref_input(
-                    &csl::ScriptHash::from_hex(&script.simple_script_hash)?,
-                    &csl::TransactionInput::new(
-                        &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash)?,
-                        script.ref_tx_in.tx_index,
-                    ),
-                    script.script_size,
-                )),
-                &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(|err| {
-                    WError::from_str(&format!("Invalid asset name found: {}", err))
-                })?)?,
-                &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
-            )?,
+            SimpleScriptSource::ProvidedSimpleScriptSource(script) => self
+                .mint_builder
+                .add_asset(
+                    &csl::MintWitness::new_native_script(&csl::NativeScriptSource::new(
+                        &csl::NativeScript::from_hex(&script.script_cbor).map_err(to_werror(
+                            "WhiskyCSL - add_native_mint - invalid script_cbor",
+                        ))?,
+                    )),
+                    &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(
+                        to_werror("WhiskyCSL - add_native_mint - Invalid asset name found (1)"),
+                    )?)
+                    .map_err(to_werror(
+                        "WhiskyCSL - add_native_mint - invalid asset name (1)",
+                    ))?,
+                    &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
+                )
+                .map_err(to_werror("WhiskyCSL - add_native_mint - add_asset (1)"))?,
+            SimpleScriptSource::InlineSimpleScriptSource(script) => self
+                .mint_builder
+                .add_asset(
+                    &MintWitness::new_native_script(&csl::NativeScriptSource::new_ref_input(
+                        &csl::ScriptHash::from_hex(&script.simple_script_hash).map_err(
+                            to_werror("WhiskyCSL - add_native_mint - invalid simple_script_hash"),
+                        )?,
+                        &csl::TransactionInput::new(
+                            &csl::TransactionHash::from_hex(&script.ref_tx_in.tx_hash).map_err(
+                                to_werror("WhiskyCSL - add_native_mint - invalid tx_hash"),
+                            )?,
+                            script.ref_tx_in.tx_index,
+                        ),
+                        script.script_size,
+                    )),
+                    &csl::AssetName::new(hex::decode(native_mint.mint.asset_name).map_err(
+                        to_werror("WhiskyCSL - add_native_mint - Invalid asset name found (2)"),
+                    )?)
+                    .map_err(to_werror(
+                        "WhiskyCSL - add_native_mint - invalid asset name (2)",
+                    ))?,
+                    &csl::Int::from_str(&native_mint.mint.amount.to_string()).unwrap(),
+                )
+                .map_err(to_werror("WhiskyCSL - add_native_mint - add_asset (2)"))?,
         };
         Ok(())
     }
 
-    fn add_cert(
-        &mut self,
-        certificates_builder: &mut csl::CertificatesBuilder,
-        cert: Certificate,
-        index: u64,
-    ) -> Result<(), WError> {
+    fn add_cert(&mut self, cert: Certificate, index: u64) -> Result<(), WError> {
         match cert {
-            Certificate::BasicCertificate(basic_cert) => {
-                certificates_builder.add(&to_csl_cert(basic_cert)?)?
-            }
+            Certificate::BasicCertificate(basic_cert) => self
+                .certificates_builder
+                .add(&to_csl_cert(basic_cert)?)
+                .map_err(to_werror("WhiskyCSL - add_cert - add (1)"))?,
             Certificate::ScriptCertificate(script_cert) => {
                 let cert_script_source: csl::PlutusScriptSource = match script_cert.script_source {
                     Some(script_source) => to_csl_script_source(script_source)?,
                     None => {
-                        return Err(WError::from_str(
+                        return Err(WError::new(
+                            "WhiskyCSL - add_cert",
                             "Missing Plutus Script Source in Plutus Cert",
                         ))
                     }
                 };
                 let cert_redeemer = match script_cert.redeemer {
                     Some(redeemer) => to_csl_redeemer(RedeemerTag::Cert, redeemer, index)?,
-                    None => return Err(WError::from_str("Missing Redeemer in Plutus Cert")),
+                    None => {
+                        return Err(WError::new(
+                            "WhiskyCSL - add_cert",
+                            "Missing Redeemer in Plutus Cert",
+                        ))
+                    }
                 };
                 let csl_plutus_witness: csl::PlutusWitness =
                     csl::PlutusWitness::new_with_ref_without_datum(
                         &cert_script_source,
                         &cert_redeemer,
                     );
-                certificates_builder
-                    .add_with_plutus_witness(&to_csl_cert(script_cert.cert)?, &csl_plutus_witness)?
+                self.certificates_builder
+                    .add_with_plutus_witness(&to_csl_cert(script_cert.cert)?, &csl_plutus_witness)
+                    .map_err(to_werror_with_origin("hello"))?
             }
             Certificate::SimpleScriptCertificate(simple_script_cert) => {
                 let script_info = simple_script_cert.simple_script_source;
@@ -409,29 +515,25 @@ impl TxBuildable for WhiskyCSL {
                         to_csl_simple_script_source(simple_script_source)?
                     }
                     None => {
-                        return Err(WError::from_str(
+                        return Err(WError::new(
+                            "WhiskyCSL - add_cert",
                             "Missing Native Script Source in Native Cert",
                         ))
                     }
                 };
-                certificates_builder.add_with_native_script(
-                    &to_csl_cert(simple_script_cert.cert)?,
-                    &script_source,
-                )?
+                self.certificates_builder
+                    .add_with_native_script(&to_csl_cert(simple_script_cert.cert)?, &script_source)
+                    .map_err(to_werror("WhiskyCSL - add_cert - add_with_native_script"))?
             }
         };
         Ok(())
     }
 
-    fn add_vote(
-        &mut self,
-        vote_builder: &mut csl::VotingBuilder,
-        vote: Vote,
-        index: u64,
-    ) -> Result<(), WError> {
+    fn add_vote(&mut self, vote: Vote, index: u64) -> Result<(), WError> {
         match vote {
             Vote::BasicVote(vote_type) => {
-                let voter = to_csl_voter(vote_type.voter)?;
+                let voter = to_csl_voter(vote_type.voter)
+                    .map_error(to_werror("WhiskyCSL - add_vote - invalid voter"))?;
                 let vote_kind = to_csl_vote_kind(vote_type.voting_procedure.vote_kind);
                 let voting_procedure = match vote_type.voting_procedure.anchor {
                     Some(anchor) => {
@@ -439,14 +541,17 @@ impl TxBuildable for WhiskyCSL {
                     }
                     None => csl::VotingProcedure::new(vote_kind),
                 };
-                vote_builder.add(
-                    &voter,
-                    &csl::GovernanceActionId::new(
-                        &csl::TransactionHash::from_hex(&vote_type.gov_action_id.tx_hash)?,
-                        vote_type.gov_action_id.tx_index,
-                    ),
-                    &voting_procedure,
-                )?
+                self.vote_builder
+                    .add(
+                        &voter,
+                        &csl::GovernanceActionId::new(
+                            &csl::TransactionHash::from_hex(&vote_type.gov_action_id.tx_hash)
+                                .map_err(to_werror("WhiskyCSL - add_vote - invalid tx_hash (1)"))?,
+                            vote_type.gov_action_id.tx_index,
+                        ),
+                        &voting_procedure,
+                    )
+                    .map_err(to_werror("WhiskyCSL - add_vote - add"))?;
             }
             Vote::ScriptVote(script_vote) => {
                 let voter = to_csl_voter(script_vote.vote.voter)?;
@@ -460,29 +565,40 @@ impl TxBuildable for WhiskyCSL {
                 let vote_script_source: csl::PlutusScriptSource = match script_vote.script_source {
                     Some(script_source) => to_csl_script_source(script_source)?,
                     None => {
-                        return Err(WError::from_str(
+                        return Err(WError::new(
+                            "WhiskyCSL - add_vote",
                             "Missing Plutus Script Source in Plutus Vote",
                         ))
                     }
                 };
                 let vote_redeemer = match script_vote.redeemer {
                     Some(redeemer) => to_csl_redeemer(RedeemerTag::Vote, redeemer, index)?,
-                    None => return Err(WError::from_str("Missing Redeemer in Plutus Vote")),
+                    None => {
+                        return Err(WError::new(
+                            "WhiskyCSL - add_vote",
+                            "Missing Redeemer in Plutus Vote",
+                        ))
+                    }
                 };
                 let csl_plutus_witness: csl::PlutusWitness =
                     csl::PlutusWitness::new_with_ref_without_datum(
                         &vote_script_source,
                         &vote_redeemer,
                     );
-                vote_builder.add_with_plutus_witness(
-                    &voter,
-                    &csl::GovernanceActionId::new(
-                        &csl::TransactionHash::from_hex(&script_vote.vote.gov_action_id.tx_hash)?,
-                        script_vote.vote.gov_action_id.tx_index,
-                    ),
-                    &voting_procedure,
-                    &csl_plutus_witness,
-                )?
+                self.vote_builder
+                    .add_with_plutus_witness(
+                        &voter,
+                        &csl::GovernanceActionId::new(
+                            &csl::TransactionHash::from_hex(
+                                &script_vote.vote.gov_action_id.tx_hash,
+                            )
+                            .map_err(to_werror("WhiskyCSL - add_vote - invalid tx_hash (2)"))?,
+                            script_vote.vote.gov_action_id.tx_index,
+                        ),
+                        &voting_procedure,
+                        &csl_plutus_witness,
+                    )
+                    .map_err(to_werror("WhiskyCSL - add_vote - add_with_plutus_witness"))?;
             }
             Vote::SimpleScriptVote(simple_script_vote) => {
                 let voter = to_csl_voter(simple_script_vote.vote.voter)?;
@@ -498,14 +614,20 @@ impl TxBuildable for WhiskyCSL {
                     Some(simple_script_source) => {
                         to_csl_simple_script_source(simple_script_source)?
                     }
-                    None => return Err(WError::from_str("Missing ")),
+                    None => {
+                        return Err(WError::new(
+                            "WhiskyCSL - add_vote",
+                            "Missing Native Script Source in Native Vote",
+                        ))
+                    }
                 };
                 vote_builder.add_with_native_script(
                     &voter,
                     &csl::GovernanceActionId::new(
                         &csl::TransactionHash::from_hex(
                             &simple_script_vote.vote.gov_action_id.tx_hash,
-                        )?,
+                        )
+                        .map_err(to_werror("WhiskyCSL - add_vote - invalid tx_hash (3)"))?,
                         simple_script_vote.vote.gov_action_id.tx_index,
                     ),
                     &voting_procedure,
@@ -546,12 +668,25 @@ impl TxBuildable for WhiskyCSL {
             }
         };
         if let Some(change_datum) = change_datum {
-            self.tx_builder.add_change_if_needed_with_datum(
-                &output_address?,
-                &csl::OutputDatum::new_data(&csl::PlutusData::from_hex(change_datum.get_inner())?),
-            )?;
+            self.tx_builder
+                .add_change_if_needed_with_datum(
+                    &output_address.map_err(to_werror(
+                        "WhiskyCSL - add_change - invalid change_address (1)",
+                    ))?,
+                    &csl::OutputDatum::new_data(
+                        &csl::PlutusData::from_hex(change_datum.get_inner())
+                            .map_err(to_werror("WhiskyCSL - add_change - invalid change_datum"))?,
+                    ),
+                )
+                .map_err(to_werror(
+                    "WhiskyCSL - add_change - add_change_if_needed_with_datum",
+                ))?;
         } else {
-            self.tx_builder.add_change_if_needed(&output_address?)?;
+            self.tx_builder
+                .add_change_if_needed(&output_address.map_err(to_werror(
+                    "WhiskyCSL - add_change - invalid change_address (2)",
+                ))?)
+                .map_err(to_werror("WhiskyCSL - add_change - add_change_if_needed"))?;
         }
         Ok(())
     }
@@ -563,24 +698,37 @@ impl TxBuildable for WhiskyCSL {
 
     fn add_required_signature(&mut self, pub_key_hash: &str) -> Result<(), WError> {
         self.tx_builder
-            .add_required_signer(&csl::Ed25519KeyHash::from_hex(pub_key_hash)?);
+            .add_required_signer(&csl::Ed25519KeyHash::from_hex(pub_key_hash).map_err(
+                to_werror("WhiskyCSL - add_required_signature - invalid pub_key_hash"),
+            )?);
         Ok(())
     }
 
     fn add_metadata(&mut self, metadata: Metadata) -> Result<(), WError> {
         self.tx_builder
-            .add_json_metadatum(&csl::BigNum::from_str(&metadata.tag)?, metadata.metadata)?;
+            .add_json_metadatum(
+                &csl::BigNum::from_str(&metadata.tag)
+                    .map_err(to_werror("WhiskyCSL - add_metadata - invalid metadata tag"))?,
+                metadata.metadata,
+            )
+            .map_err(to_werror("WhiskyCSL - add_metadata - add_json_metadatum"))?;
         Ok(())
     }
 
     fn add_script_hash(&mut self, network: Network) -> Result<(), WError> {
         self.tx_builder
-            .calc_script_data_hash(&build_csl_cost_models(&network))?;
+            .calc_script_data_hash(&build_csl_cost_models(&network))
+            .map_err(to_werror(
+                "WhiskyCSL - add_script_hash - calc_script_data_hash",
+            ))?;
         Ok(())
     }
 
     fn build_tx(&mut self) -> Result<String, WError> {
-        let tx = self.tx_builder.build_tx()?;
+        let tx = self
+            .tx_builder
+            .build_tx()
+            .map_err(to_werror("WhiskyCSL - build_tx - build_tx"))?;
         self.tx_hex = tx.to_hex();
         Ok(self.tx_hex.to_string())
     }
