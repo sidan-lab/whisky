@@ -20,10 +20,7 @@
 //! ## Getting Started
 //!
 //! ```rust
-//! use whisky::{
-//!     builder::TxBuilder,
-//!     model::{Asset, UTxO},
-//! };
+//! use whisky::*;
 //!
 //! async fn my_first_whisky_tx(
 //!     recipient_address: &str,

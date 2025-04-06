@@ -1,11 +1,10 @@
 use whisky_common::{TxBuildable, *};
 
-use super::{CoreCSL, WhiskyCSL};
+use super::WhiskyCSL;
 
 impl TxBuildable for WhiskyCSL {
     fn reset_builder(&mut self) -> &mut Self {
-        let protocol_params = self.core.protocol_params.clone();
-        self.core = CoreCSL::new(Some(protocol_params)).unwrap();
+        self.core.reset_after_build();
         self
     }
 

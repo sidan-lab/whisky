@@ -133,7 +133,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn change_address(&mut self, address: &str) -> &mut Self {
-        self.serializer.tx_builder_body.change_address = address.to_string();
+        self.tx_builder_body.change_address = address.to_string();
         self
     }
 
@@ -151,7 +151,7 @@ impl TxBuilder {
     pub fn change_output_datum(&mut self, data: WData) -> &mut Self {
         match data.to_cbor() {
             Ok(raw_data) => {
-                self.serializer.tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
+                self.tx_builder_body.change_datum = Some(Datum::Inline(raw_data));
             }
             Err(_) => {
                 panic!("Error converting datum to CBOR");

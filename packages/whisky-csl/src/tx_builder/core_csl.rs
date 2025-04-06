@@ -30,6 +30,16 @@ impl CoreCSL {
             protocol_params: params.unwrap_or_default(),
         })
     }
+
+    pub fn reset_after_build(&mut self) {
+        self.tx_builder = build_tx_builder(Some(self.protocol_params.clone())).unwrap();
+        self.tx_inputs_builder = csl::TxInputsBuilder::new();
+        self.collateral_builder = csl::TxInputsBuilder::new();
+        self.mint_builder = csl::MintBuilder::new();
+        self.certificates_builder = csl::CertificatesBuilder::new();
+        self.vote_builder = csl::VotingBuilder::new();
+        self.tx_withdrawals_builder = csl::WithdrawalsBuilder::new();
+    }
 }
 
 impl CoreCSL {
