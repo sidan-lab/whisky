@@ -1,6 +1,6 @@
 [package]
 name = "whisky-common"
-version = "0.9.21"
+version = "1.0.0-alpha.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
