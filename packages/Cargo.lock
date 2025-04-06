@@ -3464,40 +3464,18 @@ dependencies = [
  "tokio",
  "uplc",
  "wasm-bindgen",
- "whisky-core",
+ "whisky-common",
+ "whisky-csl",
 ]
 
 [[package]]
 name = "whisky-common"
 version = "0.9.21"
 dependencies = [
- "schemars",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "whisky-core"
-version = "0.9.21"
-dependencies = [
- "cardano-serialization-lib",
- "cryptoxide",
- "getrandom",
  "hex",
- "noop_proc_macro",
- "pallas-codec 0.31.0",
- "pallas-primitives",
- "pallas-traverse",
- "rand_os",
  "schemars",
  "serde",
- "serde-wasm-bindgen 0.6.5",
  "serde_json",
- "tiny-bip39",
- "uplc",
- "wasm-bindgen",
- "whisky-common",
- "whisky-csl",
 ]
 
 [[package]]
@@ -3534,6 +3512,23 @@ dependencies = [
  "actix-web",
  "serde",
  "whisky",
+]
+
+[[package]]
+name = "whisky-js"
+version = "0.9.21"
+dependencies = [
+ "js-sys",
+ "noop_proc_macro",
+ "rand_os",
+ "serde",
+ "serde-wasm-bindgen 0.4.5",
+ "serde_json",
+ "uplc",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "whisky-common",
+ "whisky-csl",
 ]
 
 [[package]]

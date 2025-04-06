@@ -3,9 +3,9 @@ version = "0.9.21"
 resolver = "2"
 members = [
     "whisky-common",
+    "whisky-js",
+    "whisky-js/json-gen",
     "whisky-csl",
-    "whisky-core",
-    "whisky-core/json-gen",
     "whisky",
     "whisky-examples"
 ]

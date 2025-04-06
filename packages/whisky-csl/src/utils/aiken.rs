@@ -1,52 +1,22 @@
-use crate::{
-    core::common::{bytes_to_hex, hex_to_bytes},
-    model::JsVecString,
-    *,
-};
-use cardano_serialization_lib::{self as csl, WError};
+use cardano_serialization_lib::{self as csl};
 
-use self::model::BuilderDataType;
+use whisky_common::*;
 
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, WError> {
     let bytes: Vec<u8> = hex_to_bytes(script).unwrap();
 
-    match csl::PlutusScript::from_bytes(bytes.clone()) {
-        Ok(single_encoded_script) => {
-            match csl::PlutusScript::from_bytes(single_encoded_script.bytes()) {
-                Ok(_) => Ok(script.to_string()),
-                Err(_) => {
-                    let bytes = csl::PlutusScript::new(bytes).to_bytes();
-                    let new_script = bytes_to_hex(&bytes);
-                    Ok(new_script)
-                }
-            }
+    let single_encoded_script = csl::PlutusScript::from_bytes(bytes.clone()).map_err(
+        WError::from_err("apply_double_cbor_encoding - invalid script bytes"),
+    )?;
+
+    match csl::PlutusScript::from_bytes(single_encoded_script.bytes()) {
+        Ok(_) => Ok(script.to_string()),
+        Err(_) => {
+            let bytes = csl::PlutusScript::new(bytes).to_bytes();
+            let new_script = bytes_to_hex(&bytes);
+            Ok(new_script)
         }
-        Err(err) => Err(WError::from(err)),
     }
-}
-
-#[test]
-fn test_apply_double_cbor_encoding() {
-    let script =
-      "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
-    assert_eq!(
-      apply_double_cbor_encoding(script).unwrap(),
-      "5847584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441"
-  );
-}
-
-#[wasm_bindgen]
-pub fn js_apply_params_to_script(
-    plutus_script: &str,
-    params: JsVecString,
-    param_type: BuilderDataType,
-) -> Result<String, WError> {
-    let mut params_to_apply: Vec<&str> = vec![];
-    for param in params.iter() {
-        params_to_apply.push(param);
-    }
-    let param_script = apply_params_to_script(plutus_script, &params_to_apply, param_type)?;
-    Ok(param_script)
 }
 
 pub fn apply_params_to_script(
@@ -80,8 +50,9 @@ pub fn apply_params_to_plutus_script(
     params: &csl::PlutusList,
     plutus_script: csl::PlutusScript,
 ) -> Result<csl::PlutusScript, WError> {
-    match uplc::tx::apply_params_to_script(&params.to_bytes(), &plutus_script.bytes()) {
-        Ok(res) => Ok(csl::PlutusScript::new(res)),
-        Err(err) => Err(WError::from_str(&err.to_string())),
-    }
+    let bytes = uplc::tx::apply_params_to_script(&params.to_bytes(), &plutus_script.bytes())
+        .map_err(WError::from_err(
+            "apply_params_to_plutus_script - invalid script bytes",
+        ))?;
+    Ok(csl::PlutusScript::new(bytes))
 }

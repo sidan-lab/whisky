@@ -1,14 +1,9 @@
-use cardano_serialization_lib::{self as csl, WError};
+use cardano_serialization_lib::{self as csl};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use whisky_common::*;
 
-use crate::{
-    csl::{blake2b256, calculate_tx_hash},
-    model::{
-        Asset, Datum, LanguageVersion, Output, OutputScriptSource, ProvidedScriptSource,
-        TxBuilderBody, UTxO, UtxoInput, UtxoOutput, ValidityRange,
-    },
-};
+use crate::utils::{blake2b256, calculate_tx_hash};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

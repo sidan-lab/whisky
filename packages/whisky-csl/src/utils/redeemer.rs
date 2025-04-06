@@ -1,7 +1,5 @@
-use cardano_serialization_lib::{self as csl, WError};
-use model::{Redeemer, RedeemerTag};
-
-use crate::*;
+use cardano_serialization_lib::{self as csl};
+use whisky_common::*;
 
 use super::to_bignum;
 
@@ -20,11 +18,18 @@ pub fn to_csl_redeemer(
     };
     Ok(csl::Redeemer::new(
         &csl_redeemer_tag,
-        &to_bignum(index),
-        &csl::PlutusData::from_hex(&redeemer.data)?,
+        &to_bignum(index).map_err(WError::add_err_trace(
+            "to_csl_redeemer - invalid redeemer index",
+        ))?,
+        &csl::PlutusData::from_hex(&redeemer.data)
+            .map_err(WError::from_err("to_csl_redeemer - invalid redeemer data"))?,
         &csl::ExUnits::new(
-            &to_bignum(redeemer.ex_units.mem),
-            &to_bignum(redeemer.ex_units.steps),
+            &to_bignum(redeemer.ex_units.mem).map_err(WError::add_err_trace(
+                "to_csl_redeemer - invalid redeemer memory",
+            ))?,
+            &to_bignum(redeemer.ex_units.steps).map_err(WError::add_err_trace(
+                "to_csl_redeemer - invalid redeemer steps",
+            ))?,
         ),
     ))
 }
