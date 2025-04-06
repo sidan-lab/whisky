@@ -86,7 +86,7 @@ jobs:
 
   publish-common-crate:
     needs: [build-test]
-    name: Publish core crate
+    name: Publish whisky-common crate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -105,7 +105,7 @@ jobs:
 
   publish-csl-crate:
     needs: [build-test, publish-common-crate]
-    name: Publish core crate
+    name: Publish whisky-csl crate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -124,7 +124,7 @@ jobs:
 
   publish-whisky-crate:
     needs: [build-test, publish-common-crate, publish-csl-crate]
-    name: Publish Whisky crate
+    name: Publish whisky crate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources

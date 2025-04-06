@@ -20,6 +20,8 @@
 //! - The serialization logic documentation at the [builder interface](builder/trait.ITxBuilderCore.html).
 //! - The inline documentation of core json to transaction serialization function is served at [here](core/builder/fn.js_serialize_tx_body.html).
 
+mod error;
+
 mod wasm;
 pub use wasm::*;
 
@@ -30,4 +32,4 @@ pub use models::*;
 use noop_proc_macro::wasm_bindgen;
 
 #[cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))]
-use wasm_bindgen::prelude::{wasm_bindgen, JsValue, WError};
+use wasm_bindgen::prelude::{wasm_bindgen, JsError, JsValue};

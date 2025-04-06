@@ -183,7 +183,7 @@ pub fn to_pallas_utxos(utxos: &Vec<UTxO>) -> Result<Vec<ResolvedInput>, WError> 
                         .map_err(|err| {
                             WError::new(
                                 "to_pallas_utxos",
-                                &format!("Invalid address found: {}", err),
+                                &format!("Invalid address found: {:?}", err),
                             )
                         })?
                         .to_bytes(),
