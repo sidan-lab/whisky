@@ -1,7 +1,10 @@
-use sidan_csl_rs::{
-    core::serializer::apply_double_cbor_encoding,
+use whisky_common::{
+    models::{Asset, UTxO, UtxoInput, UtxoOutput},
+    WError,
+};
+use whisky_csl::{
+    apply_double_cbor_encoding,
     csl::{self, JsError, NativeScript, PlutusScript, ScriptRef},
-    model::{Asset, UTxO, UtxoInput, UtxoOutput},
 };
 
 use crate::provider::maestro::models::utxo::Utxo;
@@ -55,7 +58,7 @@ pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
             }
             "plutusv1" => {
                 let script_hex = &ref_script.bytes;
-                let normalized = normalize_plutus_script(script_hex)?;
+                let normalized = normalize_plutus_script(script_hex).unwrap();
                 let script: PlutusScript = PlutusScript::from_hex_with_version(
                     &normalized,
                     &csl::Language::new_plutus_v1(),
@@ -65,7 +68,7 @@ pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
             }
             "plutusv2" => {
                 let script_hex = &ref_script.bytes;
-                let normalized = normalize_plutus_script(script_hex)?;
+                let normalized = normalize_plutus_script(script_hex).unwrap();
                 let script: PlutusScript = PlutusScript::from_hex_with_version(
                     &normalized,
                     &csl::Language::new_plutus_v2(),
@@ -81,7 +84,7 @@ pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
     }
 }
 
-pub fn normalize_plutus_script(script_hex: &str) -> Result<String, JsError> {
+pub fn normalize_plutus_script(script_hex: &str) -> Result<String, WError> {
     apply_double_cbor_encoding(script_hex)
 }
 

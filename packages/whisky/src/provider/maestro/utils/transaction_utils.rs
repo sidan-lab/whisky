@@ -1,6 +1,6 @@
 use crate::provider::maestro::models::transaction::TransactionDetail;
 
-use sidan_csl_rs::model::TransactionInfo;
+use whisky_common::models::TransactionInfo;
 
 use super::utxo_utils::to_utxo;
 

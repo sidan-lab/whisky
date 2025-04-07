@@ -1,5 +1,5 @@
 use maestro_rust_sdk::models::general::ProtocolParametersData;
-use sidan_csl_rs::model::Protocol;
+use whisky_common::models::Protocol;
 
 pub fn protocol_paras_data_to_protocol(protocol_paras_data: ProtocolParametersData) -> Protocol {
     Protocol {

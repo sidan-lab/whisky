@@ -1,19 +1,7 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use whisky_common::*;
-
-pub struct FetcherOptions {
-    pub max_page: Option<usize>,
-    pub order: Option<FetchOrder>,
-    pub additional_options: std::collections::HashMap<String, serde_json::Value>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum FetchOrder {
-    Asc,
-    Desc,
-}
-use std::{collections::HashMap, error::Error};
 
 #[async_trait]
 pub trait Fetcher: Send + Sync {
@@ -23,11 +11,7 @@ pub trait Fetcher: Send + Sync {
         address: &str,
         asset: Option<&str>,
     ) -> Result<Vec<UTxO>, WError>;
-    async fn fetch_address_txs(
-        &self,
-        address: &str,
-        options: Option<FetcherOptions>,
-    ) -> Result<Vec<TransactionInfo>, WError>;
+
     async fn fetch_asset_addresses(&self, asset: &str) -> Result<Vec<(String, String)>, WError>;
     async fn fetch_asset_metadata(
         &self,

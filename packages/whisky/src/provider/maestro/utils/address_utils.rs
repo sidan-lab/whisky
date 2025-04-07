@@ -1,8 +1,6 @@
 use maestro_rust_sdk::models::addresses::{Asset as MAsset, Utxo};
-use sidan_csl_rs::{
-    csl::{Address, BaseAddress, JsError, RewardAddress},
-    model::{Asset, UTxO, UtxoInput, UtxoOutput},
-};
+use whisky_common::models::{Asset, UTxO, UtxoInput, UtxoOutput};
+use whisky_csl::csl::{Address, BaseAddress, JsError, RewardAddress};
 
 pub fn maestro_asset_to_asset(asset: MAsset) -> Asset {
     Asset::new(asset.unit.clone(), asset.amount.to_string())

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use sidan_csl_rs::model::{Asset, UTxO};
+use whisky_common::models::{Asset, UTxO};
 
 pub fn utxos_to_assets(utxos: &[UTxO]) -> HashMap<String, String> {
     let mut balance: HashMap<String, String> = HashMap::new();

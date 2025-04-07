@@ -1,5 +1,5 @@
 use maestro_rust_sdk::client::block_info::BlockInfoData;
-use sidan_csl_rs::model::BlockInfo;
+use whisky_common::models::BlockInfo;
 
 pub fn block_info_data_to_block_info(block_info_data: BlockInfoData) -> BlockInfo {
     BlockInfo {
