@@ -22,18 +22,6 @@ pub fn output_reference(tx_hash: &str, index: i64) -> Value {
     con_str0(vec![byte_string(tx_hash), integer(index)])
 }
 
-pub fn payment_pub_key_hash(pub_key_hash: &str) -> Value {
-    byte_string(pub_key_hash)
-}
-
-pub fn pub_key_hash(pub_key_hash: &str) -> Value {
-    byte_string(pub_key_hash)
-}
-
 pub fn posix_time(posix_time: i64) -> Value {
     integer(posix_time)
-}
-
-pub fn tuple<K: Into<Value>, V: Into<Value>>(key: K, value: V) -> Value {
-    con_str0(vec![key.into(), value.into()])
 }

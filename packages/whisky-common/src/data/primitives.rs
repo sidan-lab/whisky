@@ -35,6 +35,10 @@ pub fn assoc_map<K: Into<Value>, V: Into<Value>>(items_map: Vec<(K, V)>) -> Valu
     json!({ "map": map })
 }
 
+pub fn tuple<K: Into<Value>, V: Into<Value>>(key: K, value: V) -> Value {
+    con_str0(vec![key.into(), value.into()])
+}
+
 pub fn pairs<K: Into<Value>, V: Into<Value>>(items_map: Vec<(K, V)>) -> Value {
     let map: Vec<Value> = items_map
         .into_iter()

@@ -2,6 +2,14 @@ use serde_json::{json, Value};
 
 use super::{byte_string, con_str0, con_str1};
 
+pub fn payment_pub_key_hash(pub_key_hash: &str) -> Value {
+    byte_string(pub_key_hash)
+}
+
+pub fn pub_key_hash(pub_key_hash: &str) -> Value {
+    byte_string(pub_key_hash)
+}
+
 pub fn maybe_staking_hash(stake_credential: &str, is_script_stake_key: bool) -> Value {
     if stake_credential.is_empty() {
         con_str1(json!([]))
