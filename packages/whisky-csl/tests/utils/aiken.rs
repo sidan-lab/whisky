@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod aiken {
     use whisky_csl::apply_double_cbor_encoding;
 
     #[test]

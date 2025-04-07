@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod transaction {
     use whisky_csl::calculate_tx_hash;
 
     #[test]

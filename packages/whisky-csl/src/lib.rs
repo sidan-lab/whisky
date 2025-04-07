@@ -21,13 +21,14 @@
 //! - The inline documentation of core json to transaction serialization function is served at [here](core/builder/fn.js_serialize_tx_body.html).
 
 mod constants;
-mod tx_builder;
-mod tx_parser;
-mod utils;
-mod wallet;
-pub use cardano_serialization_lib as csl;
+pub mod tx_builder;
+pub mod tx_parser;
+pub mod utils;
+pub mod wallet;
 pub use constants::*;
 pub use tx_builder::*;
 pub use tx_parser::*;
 pub use utils::*;
 pub use wallet::*;
+
+pub use cardano_serialization_lib as csl;

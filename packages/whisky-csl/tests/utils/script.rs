@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test {
+mod script {
     use whisky_common::*;
     use whisky_csl::{apply_double_cbor_encoding, get_script_hash};
 
