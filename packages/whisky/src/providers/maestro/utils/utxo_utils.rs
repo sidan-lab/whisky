@@ -7,7 +7,7 @@ use whisky_csl::{
     csl::{self, JsError, NativeScript, PlutusScript, ScriptRef},
 };
 
-use crate::provider::maestro::models::utxo::Utxo;
+use crate::providers::maestro::models::utxo::Utxo;
 
 #[derive(Debug, Clone)]
 pub enum Script {

@@ -1,7 +1,7 @@
 use maestro_rust_sdk::models::epochs::Epoch;
 use whisky_common::models::Protocol;
 
-use crate::provider::maestro::models::protocol_parameters::ProtocolParametersData;
+use crate::providers::maestro::models::protocol_parameters::ProtocolParametersData;
 
 pub fn protocol_paras_data_to_protocol(
     protocol_paras_data: ProtocolParametersData,

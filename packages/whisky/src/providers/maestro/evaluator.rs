@@ -6,8 +6,6 @@ use whisky_common::models::{Network, UTxO};
 
 use whisky_common::*;
 
-use crate::service::Evaluator;
-
 use super::*;
 
 #[async_trait]

@@ -1,6 +1,6 @@
 use whisky_common::models::AccountInfo;
 
-use crate::provider::maestro::models::account::AccountInformation;
+use crate::providers::maestro::models::account::AccountInformation;
 
 pub fn account_information_to_account_info(account_information: AccountInformation) -> AccountInfo {
     AccountInfo {

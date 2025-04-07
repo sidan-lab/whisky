@@ -3477,6 +3477,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "uplc",
 ]
 
 [[package]]

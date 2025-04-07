@@ -1,7 +1,7 @@
-use crate::service::Evaluator;
 use crate::*;
 use async_trait::async_trait;
 use uplc::tx::SlotConfig;
+use whisky_common::Evaluator;
 
 #[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}

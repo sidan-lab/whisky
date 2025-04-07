@@ -15,8 +15,6 @@ use whisky_common::models::{AccountInfo, Asset, BlockInfo, Protocol, Transaction
 
 use whisky_common::*;
 
-use crate::service::Fetcher;
-
 #[async_trait]
 impl Fetcher for MaestroProvider {
     async fn fetch_account_info(&self, address: &str) -> Result<AccountInfo, WError> {

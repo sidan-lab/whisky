@@ -1,4 +1,4 @@
-use crate::provider::maestro::models::transaction::TransactionDetail;
+use crate::providers::maestro::models::transaction::TransactionDetail;
 
 use whisky_common::models::TransactionInfo;
 

@@ -45,8 +45,8 @@
 //! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
 pub mod builder;
-pub mod provider;
-pub mod service;
+pub mod providers;
+pub mod services;
 pub mod transaction;
 pub mod utils;
 pub use builder::*;
