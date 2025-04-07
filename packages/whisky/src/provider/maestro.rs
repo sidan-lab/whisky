@@ -26,6 +26,8 @@ use std::error::Error;
 use uplc::tx::SlotConfig;
 use utils::asset_utils::CollectionAssets;
 
+use whisky_common::*;
+
 use crate::service::{Evaluator, Fetcher, FetcherOptions};
 
 use reqwest::RequestBuilder;
@@ -172,33 +174,28 @@ impl Evaluator for MaestroProvider {
             })
             .collect();
 
-        let result = self.maestro_client.evaluate_tx(tx, tx_out_cbors).await;
-        match result {
-            Ok(redeemer_evaluation) => {
-                println!("success maestro call");
-                Ok(redeemer_evaluation
-                    .iter()
-                    .map(|r: &RedeemerEvaluation| Action {
-                        index: r.redeemer_index as u32,
-                        budget: Budget {
-                            mem: r.ex_units.mem as u64,
-                            steps: r.ex_units.steps as u64,
-                        },
-                        tag: match r.redeemer_tag.as_str() {
-                            "spend" => RedeemerTag::Spend,
-                            "mint" => RedeemerTag::Mint,
-                            "cert" => RedeemerTag::Cert,
-                            "wdrl" => RedeemerTag::Reward,
-                            _ => panic!("Unknown redeemer tag from maestro service"),
-                        },
-                    })
-                    .collect())
-            }
-            Err(e) => {
-                println!("fail maestro call");
-                Err(JsError::from_str(&format!("{}", e)))
-            }
-        }
+        let result: Vec<Action> = self
+            .maestro_client
+            .evaluate_tx(tx, tx_out_cbors)
+            .await
+            .map_err(WError::from_err("evaluate_tx"))?
+            .iter()
+            .map(|r: &RedeemerEvaluation| Action {
+                index: r.redeemer_index as u32,
+                budget: Budget {
+                    mem: r.ex_units.mem as u64,
+                    steps: r.ex_units.steps as u64,
+                },
+                tag: match r.redeemer_tag.as_str() {
+                    "spend" => RedeemerTag::Spend,
+                    "mint" => RedeemerTag::Mint,
+                    "cert" => RedeemerTag::Cert,
+                    "wdrl" => RedeemerTag::Reward,
+                    _ => panic!("Unknown redeemer tag from maestro service"),
+                },
+            })
+            .collect();
+        Ok(result)
     }
 }
 

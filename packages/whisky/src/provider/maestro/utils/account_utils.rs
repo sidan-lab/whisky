@@ -1,4 +1,4 @@
-use sidan_csl_rs::model::AccountInfo;
+use whisky_common::models::AccountInfo;
 
 use crate::provider::maestro::models::account::AccountInformation;
 
