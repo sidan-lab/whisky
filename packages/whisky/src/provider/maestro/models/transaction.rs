@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Deserialize;
 
 use crate::provider::maestro::utils::last_updated::LastUpdated;
@@ -56,15 +58,15 @@ pub struct TransactionDetail {
     pub deposit: i64,
     pub fee: i64,
     pub inputs: Vec<Utxo>,
-    pub invalid_before: i64,
-    pub invalid_hereafter: i64,
+    pub invalid_before: Option<i64>,
+    pub invalid_hereafter: Option<i64>,
     pub metadata: serde_json::Value,
     pub mint: Vec<MintAsset>,
     pub outputs: Vec<Utxo>,
-    pub redeemers: Vec<Redeemers>,
+    pub redeemers: HashMap<String, serde_json::Value>,
     pub reference_inputs: Vec<serde_json::Value>,
     pub scripts_executed: Vec<Script>,
-    pub scripts_succesful: bool,
+    pub scripts_successful: bool,
     pub size: i64,
     pub tx_hash: String,
     pub withdrawals: Vec<serde_json::Value>,

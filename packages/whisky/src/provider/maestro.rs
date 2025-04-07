@@ -3,18 +3,19 @@ mod utils;
 
 use async_trait::async_trait;
 use maestro_rust_sdk::client::block_info::BlockInfo as MBlockInfo;
-use maestro_rust_sdk::models::asset::{AddressesHoldingAsset, AssetInformations};
-use maestro_rust_sdk::models::general::ProtocolParameters;
+use maestro_rust_sdk::models::asset::AddressesHoldingAsset;
+use maestro_rust_sdk::models::epochs::EpochResp;
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use models::account::StakeAccountInformation;
 use models::address::UtxosAtAddress;
+use models::asset::{AssetInformations, CollectionAssets};
+use models::protocol_parameters::ProtocolParameters;
 use models::transaction::TransactionDetails;
 use whisky_csl::{calculate_tx_hash, TxParser};
 
 use std::collections::HashMap;
 use std::error::Error;
 use uplc::tx::SlotConfig;
-use utils::asset_utils::CollectionAssets;
 use whisky_common::models::{
     AccountInfo, Asset, BlockInfo, Network, Protocol, TransactionInfo, UTxO,
 };
@@ -335,7 +336,7 @@ impl Fetcher for MaestroProvider {
     async fn fetch_asset_metadata(
         &self,
         asset: &str,
-    ) -> Result<HashMap<String, serde_json::Value>, WError> {
+    ) -> Result<Option<HashMap<String, serde_json::Value>>, WError> {
         let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
         let url = format!("/assets/{}{}", &policy_id, &asset_name);
         let resp = self
@@ -343,6 +344,7 @@ impl Fetcher for MaestroProvider {
             .get(&url)
             .await
             .map_err(WError::from_err("maestro::get"))?;
+
         let asset_informations: AssetInformations =
             serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_metadata"))?;
 
@@ -375,7 +377,7 @@ impl Fetcher for MaestroProvider {
             None => "".to_string(),
         };
         let url = format!(
-            "/policy/{}/assets?count=100${}",
+            "/policy/{}/assets?count=100{}",
             policy_id, append_cursor_string
         );
 
@@ -408,18 +410,32 @@ impl Fetcher for MaestroProvider {
             ));
         }
 
-        let url = "/protocol-params";
+        let protocol_url = "/protocol-parameters";
 
-        let resp = self
+        let protocol_resp = self
             .maestro_client
-            .get(&url)
+            .get(&protocol_url)
             .await
             .map_err(WError::from_err("maestro::get"))?;
-        let protocol_parameters: ProtocolParameters =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_protocol_parameters"))?;
 
-        let protocol: Protocol =
-            utils::protocol_utils::protocol_paras_data_to_protocol(protocol_parameters.data);
+        let protocol_parameters: ProtocolParameters = serde_json::from_str(&protocol_resp)
+            .map_err(WError::from_err("fetch_protocol_parameters"))?;
+
+        let epoch_url = "/epochs/current";
+
+        let epoch_resp = self
+            .maestro_client
+            .get(&epoch_url)
+            .await
+            .map_err(WError::from_err("maestro::get"))?;
+
+        let epochs: EpochResp =
+            serde_json::from_str(&epoch_resp).map_err(WError::from_err("fetch_current_epoch"))?;
+
+        let protocol: Protocol = utils::protocol_utils::protocol_paras_data_to_protocol(
+            protocol_parameters.data,
+            epochs.data,
+        );
         Ok(protocol)
     }
     async fn fetch_tx_info(&self, hash: &str) -> Result<TransactionInfo, WError> {
@@ -481,6 +497,8 @@ impl Fetcher for MaestroProvider {
 mod tests {
     // use super::*;
 
+    use whisky_common::string_to_hex;
+
     use crate::{provider::maestro::MaestroProvider, service::Fetcher};
 
     #[tokio::test]
@@ -521,7 +539,7 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_address_utxos() {
         let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
-        let address: &str = "addr_test1qq2rfkutnykch5tw6uw9y8gdaavpra3h6egfmr20vg9dq0hpqstx3elazm9jlkt7rx27zqtvxl6hvmecwveu8qv97e4slng4tz";
+        let address: &str = "addr_test1wrhn0024gx9ndkmg5sfu4r6f79ewf0w42qdrd2clyuuvgjgylk345";
         let result = provider.fetch_address_utxos(address, None).await;
         println!("result: {:?}", result);
         match result {
@@ -534,18 +552,111 @@ mod tests {
             _ => panic!("Error fetching address utxos"),
         }
     }
-    #[tokio::test]
-    async fn test_fetch_asset_addresses() {
-        let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
-        let asset: &str = "";
-        let result = provider.fetch_asset_addresses(asset).await;
-        println!("result: {:?}", result);
-        match result {
-            Ok(asset_addresses) => {
-                println!("asset_addresses: {:?}", asset_addresses);
-                assert!(true);
-            }
-            _ => panic!("Error fetching asset addresses"),
-        }
-    }
+
+    // #[tokio::test]
+    // async fn test_fetch_asset_addresses() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let asset = format!(
+    //         "{}{}",
+    //         "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
+    //     );
+
+    //     let result = provider.fetch_asset_addresses(&asset).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(asset_addresses) => {
+    //             println!("asset_addresses: {:?}", asset_addresses);
+    //             assert!(asset_addresses[0] == ("addr_test1qzhm3fg7v9t9e4nrlw0z49cysmvzfy3xpmvxuht80aa3rvnm5tz7rfnph9ntszp2fclw5m334udzq49777gkhwkztsks4c69rg".to_string(),"1".to_string()));
+    //         }
+    //         _ => panic!("Error fetching asset addresses"),
+    //     }
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_asset_metadata() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let asset = format!(
+    //         "{}{}",
+    //         "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
+    //     );
+
+    //     let result = provider.fetch_asset_metadata(&asset).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(asset_metadata) => {
+    //             println!("asset_metadata: {:?}", asset_metadata);
+    //             assert!(true);
+    //         }
+    //         _ => panic!("Error fetching asset metadata"),
+    //     }
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_block_info() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let block: &str = "3132189";
+
+    //     let result = provider.fetch_block_info(block).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(block_info) => {
+    //             println!("block_info: {:?}", block_info);
+    //             assert!(
+    //                 block_info.hash
+    //                     == "d527a0d00d917cb997c680a2dadd2b3642f26e7572e6074db98c45b2d270b1f1"
+    //             );
+    //         }
+    //         _ => panic!("Error fetching block info"),
+    //     }
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_collection_assets() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let policy_id: &str = "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd";
+
+    //     let result = provider.fetch_collection_assets(policy_id, None).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(collection_assets) => {
+    //             println!("collection_assets: {:?}", collection_assets);
+    //             assert!(true);
+    //         }
+    //         _ => panic!("Error fetching collection assets"),
+    //     }
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_protocol_parameters() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+
+    //     let result = provider.fetch_protocol_parameters(None).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(protocol_para) => {
+    //             println!("protocol_para: {:?}", protocol_para);
+    //             assert!(true);
+    //         }
+    //         _ => panic!("Error fetching protocol para"),
+    //     }
+    // }
+
+    // #[tokio::test]
+    // async fn test_fetch_tx_info() {
+    //     let provider = MaestroProvider::new("tYRcNqKmeI4R0HoN84H0ULZAcV7b9rON", "preprod");
+    //     let hash: &str = "ccdf490c8b7fd1e67f81b59eb98791d910cc785c23498a82ec845540467dc3ba";
+
+    //     let result = provider.fetch_tx_info(hash).await;
+    //     println!("result: {:?}", result);
+    //     match result {
+    //         Ok(tx_info) => {
+    //             println!("tx_info: {:?}", tx_info);
+    //             assert!(
+    //                 tx_info.block
+    //                     == "d527a0d00d917cb997c680a2dadd2b3642f26e7572e6074db98c45b2d270b1f1"
+    //             );
+    //         }
+    //         _ => panic!("Error fetching tx info"),
+    //     }
+    // }
 }

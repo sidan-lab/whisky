@@ -13,8 +13,11 @@ pub fn transaction_detail_to_info(transaction_detail: TransactionDetail) -> Tran
         fees: transaction_detail.fee.to_string(),
         size: transaction_detail.size as u32,
         deposit: transaction_detail.deposit.to_string(),
-        invalid_before: transaction_detail.invalid_before.to_string(),
-        invalid_after: transaction_detail.invalid_hereafter.to_string(),
+        invalid_before: transaction_detail.invalid_before.unwrap_or(0).to_string(),
+        invalid_after: transaction_detail
+            .invalid_hereafter
+            .unwrap_or(0)
+            .to_string(),
         inputs: transaction_detail
             .inputs
             .iter()

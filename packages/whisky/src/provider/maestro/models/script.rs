@@ -5,9 +5,9 @@ use crate::provider::maestro::utils::last_updated::LastUpdated;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ScriptVersion {
-    PlutusV1,
-    PlutusV2,
-    PlutusV3,
+    plutusv1,
+    plutusv2,
+    plutusv3,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -16,7 +16,7 @@ pub trait Fetcher: Send + Sync {
     async fn fetch_asset_metadata(
         &self,
         asset: &str,
-    ) -> Result<HashMap<String, serde_json::Value>, WError>;
+    ) -> Result<Option<HashMap<String, serde_json::Value>>, WError>;
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, WError>;
     async fn fetch_collection_assets(
         &self,

@@ -38,7 +38,7 @@ pub fn to_utxo(utxo: &Utxo) -> UTxO {
                     .get("bytes")
                     .and_then(|hash| hash.as_str().map(|s| s.to_string()))
             }),
-            script_ref: Some(resolve_script(utxo).unwrap()),
+            script_ref: resolve_script(utxo).unwrap(),
             script_hash: utxo
                 .reference_script
                 .as_ref()
@@ -47,14 +47,14 @@ pub fn to_utxo(utxo: &Utxo) -> UTxO {
     }
 }
 
-pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
+pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, JsError> {
     if let Some(ref_script) = &utxo.reference_script {
         match ref_script.r#type.as_str() {
             "native" => {
                 let script: NativeScript =
                     NativeScript::from_json(&serde_json::json!(&ref_script.json).to_string())?;
                 let script_ref = to_script_ref(&Script::Native(script));
-                Ok(script_ref.native_script().unwrap().to_hex())
+                Ok(Some(script_ref.native_script().unwrap().to_hex()))
             }
             "plutusv1" => {
                 let script_hex = &ref_script.bytes;
@@ -64,7 +64,7 @@ pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
                     &csl::Language::new_plutus_v1(),
                 )?;
                 let script_ref = to_script_ref(&Script::Plutus(script));
-                Ok(script_ref.plutus_script().unwrap().to_hex())
+                Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
             }
             "plutusv2" => {
                 let script_hex = &ref_script.bytes;
@@ -74,12 +74,12 @@ pub fn resolve_script(utxo: &Utxo) -> Result<String, JsError> {
                     &csl::Language::new_plutus_v2(),
                 )?;
                 let script_ref = to_script_ref(&Script::Plutus(script));
-                Ok(script_ref.plutus_script().unwrap().to_hex())
+                Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
             }
             _ => Err(JsError::from_str("Unsupported script type")),
         }
     } else {
-        Ok(("").to_string())
+        Ok(None)
         // TODO: handle none
     }
 }
