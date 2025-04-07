@@ -1,7 +1,6 @@
+use super::*;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::provider::maestro::utils::last_updated::LastUpdated;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ScriptVersion {

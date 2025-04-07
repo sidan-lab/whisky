@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
+use super::*;
 use serde::Deserialize;
-
-use crate::provider::maestro::utils::last_updated::LastUpdated;
+use std::collections::HashMap;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Bytes {
