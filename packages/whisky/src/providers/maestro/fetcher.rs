@@ -19,7 +19,9 @@ use whisky_common::*;
 impl Fetcher for MaestroProvider {
     async fn fetch_account_info(&self, address: &str) -> Result<AccountInfo, WError> {
         let reward_address = if address.starts_with("addr") {
-            resolve_reward_address(address).map_err(WError::from_err("resolve_reward_address"))?
+            resolve_reward_address(address).map_err(WError::from_err(
+                "maestro::fetch_account_info resolve reward address",
+            ))?
         } else {
             address.to_string()
         };
@@ -30,10 +32,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_account_info get"))?;
 
-        let stake_account_information: StakeAccountInformation =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_account_info"))?;
+        let stake_account_information: StakeAccountInformation = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_account_info type error"))?;
 
         let account_info: AccountInfo =
             account_information_to_account_info(stake_account_information.data);
@@ -63,10 +65,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_address_utxos get"))?;
 
-        let mut utxos_at_address: UtxosAtAddress =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_address_utxos"))?;
+        let mut utxos_at_address: UtxosAtAddress = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_address_utxos type error"))?;
 
         let mut added_utxos: Vec<UTxO> = utxos_at_address
             .data
@@ -85,9 +87,9 @@ impl Fetcher for MaestroProvider {
                 .maestro_client
                 .get(&url)
                 .await
-                .map_err(WError::from_err("maestro::get"))?;
-            utxos_at_address =
-                serde_json::from_str(&resp).map_err(WError::from_err("fetch_address_utxos"))?;
+                .map_err(WError::from_err("maestro::fetch_address_utxos get"))?;
+            utxos_at_address = serde_json::from_str(&resp)
+                .map_err(WError::from_err("maestro::fetch_address_utxos type error"))?;
             let uxtos: Vec<UTxO> = utxos_at_address
                 .data
                 .iter()
@@ -107,10 +109,12 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_asset_addresses get"))?;
 
-        let mut addresses_holding_asset: AddressesHoldingAsset =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_addresses"))?;
+        let mut addresses_holding_asset: AddressesHoldingAsset = serde_json::from_str(&resp)
+            .map_err(WError::from_err(
+                "maestro::fetch_asset_addresses type error",
+            ))?;
 
         let mut added_assets: Vec<(String, String)> = addresses_holding_asset
             .data
@@ -135,9 +139,10 @@ impl Fetcher for MaestroProvider {
                 .maestro_client
                 .get(&url)
                 .await
-                .map_err(WError::from_err("maestro::get"))?;
-            addresses_holding_asset =
-                serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_addresses"))?;
+                .map_err(WError::from_err("maestro::fetch_asset_addresses get"))?;
+            addresses_holding_asset = serde_json::from_str(&resp).map_err(WError::from_err(
+                "maestro::fetch_asset_addresses type error",
+            ))?;
             let assets: Vec<(String, String)> = addresses_holding_asset
                 .data
                 .iter()
@@ -164,10 +169,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_asset_metadata get"))?;
 
-        let asset_informations: AssetInformations =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_metadata"))?;
+        let asset_informations: AssetInformations = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_asset_metadata type error"))?;
 
         let asset_metadata = asset_informations.data.latest_mint_tx_metadata;
         Ok(asset_metadata)
@@ -180,9 +185,9 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
-        let m_block_info: MBlockInfo =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_block_info"))?;
+            .map_err(WError::from_err("maestro::fetch_block_info get"))?;
+        let m_block_info: MBlockInfo = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_block_info type error"))?;
 
         let block_info: BlockInfo = block_info_data_to_block_info(m_block_info.data);
 
@@ -207,9 +212,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
-        let collection_assets: CollectionAssets =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_collection_assets"))?;
+            .map_err(WError::from_err("maestro::fetch_collection_assets get"))?;
+        let collection_assets: CollectionAssets = serde_json::from_str(&resp).map_err(
+            WError::from_err("maestro::fetch_collection_assets type error"),
+        )?;
 
         let assets = collection_assets
             .data
@@ -239,10 +245,12 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&protocol_url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_protocol_parameters get"))?;
 
         let protocol_parameters: ProtocolParameters = serde_json::from_str(&protocol_resp)
-            .map_err(WError::from_err("fetch_protocol_parameters"))?;
+            .map_err(WError::from_err(
+                "maestro::fetch_protocol_parameters type error",
+            ))?;
 
         let epoch_url = "/epochs/current";
 
@@ -250,10 +258,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&epoch_url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_current_epoch get"))?;
 
-        let epochs: EpochResp =
-            serde_json::from_str(&epoch_resp).map_err(WError::from_err("fetch_current_epoch"))?;
+        let epochs: EpochResp = serde_json::from_str(&epoch_resp)
+            .map_err(WError::from_err("maestro::fetch_current_epoch type error"))?;
 
         let protocol: Protocol =
             protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data);
@@ -267,10 +275,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_tx_info get"))?;
 
-        let transaction_details: TransactionDetails =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_tx_info"))?;
+        let transaction_details: TransactionDetails = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_tx_info type error"))?;
 
         let transaction_info: TransactionInfo =
             transaction_detail_to_info(transaction_details.data);
@@ -284,10 +292,10 @@ impl Fetcher for MaestroProvider {
             .maestro_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("maestro::fetch_utxos get"))?;
 
-        let transaction_details: TransactionDetails =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_utxos"))?;
+        let transaction_details: TransactionDetails = serde_json::from_str(&resp)
+            .map_err(WError::from_err("maestro::fetch_utxos type error"))?;
 
         let outputs: Vec<UTxO> = transaction_details
             .data
