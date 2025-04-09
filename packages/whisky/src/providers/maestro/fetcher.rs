@@ -349,8 +349,6 @@ mod fetcher {
         println!("result: {:?}", result);
         match result {
             Ok(address_utxos) => {
-                // TODO: check ref script
-                // TODO: datum
                 println!("address_utxos: {:?}", address_utxos);
                 assert!(true);
             }
