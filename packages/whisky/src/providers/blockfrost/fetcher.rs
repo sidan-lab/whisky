@@ -1,5 +1,5 @@
 use super::models::account::BlockfrostAccountInfo;
-use super::models::asset::{AssetAddresses, BlockfrostAsset};
+use super::models::asset::{AssetAddresses, AssetPolicy, BlockfrostAsset};
 use super::models::block::BlockContent;
 use super::models::utxo::BlockfrostUtxo;
 use super::utils::*;
@@ -170,10 +170,34 @@ impl Fetcher for BlockfrostProvider {
         policy_id: &str,
         cursor: Option<String>,
     ) -> Result<(Vec<(String, String)>, Option<String>), WError> {
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let cursor = cursor.unwrap_or("1".to_string());
+
+        let append_page_string = format!("?page={}", cursor);
+
+        let url = format!("/assets/policy/{}{}", policy_id, append_page_string);
+
+        let resp = self
+            .blockfrost_client
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_collection_assets get"))?;
+
+        let asset_policies: Vec<AssetPolicy> = serde_json::from_str(&resp).map_err(
+            WError::from_err("blockfrost::fetch_collection_assets type error"),
+        )?;
+
+        let assets: Vec<(String, String)> = asset_policies
+            .iter()
+            .map(|asset| (asset.asset.clone(), asset.quantity.clone()))
+            .collect();
+
+        let updated_cursor: Option<String> = if asset_policies.len() == 100 {
+            Some((cursor.parse::<i32>().unwrap_or(1) + 1).to_string())
+        } else {
+            None
+        };
+
+        Ok((assets, updated_cursor))
     }
 
     async fn fetch_protocol_parameters(&self, epoch: Option<u32>) -> Result<Protocol, WError> {
@@ -311,7 +335,8 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_collection_assets() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider =
+            BlockfrostProvider::new("preprodV7dWeNmimVypuKDgsDCkEuRhKxsonOxk", "preprod");
         let policy_id: &str = "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd";
 
         let result = provider.fetch_collection_assets(policy_id, None).await;

@@ -85,3 +85,13 @@ pub struct AssetMetadata {
     #[serde(rename = "decimals", deserialize_with = "Option::deserialize")]
     pub decimals: Option<i32>,
 }
+
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AssetPolicy {
+    /// Concatenation of the policy_id and hex-encoded asset_name
+    #[serde(rename = "asset")]
+    pub asset: String,
+    /// Current asset quantity
+    #[serde(rename = "quantity")]
+    pub quantity: String,
+}
