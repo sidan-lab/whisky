@@ -285,6 +285,7 @@ impl Fetcher for MaestroProvider {
             .get(&url)
             .await
             .map_err(WError::from_err("maestro::get"))?;
+
         let transaction_details: TransactionDetails =
             serde_json::from_str(&resp).map_err(WError::from_err("fetch_utxos"))?;
 
@@ -467,6 +468,23 @@ mod fetcher {
                 );
             }
             _ => panic!("Error fetching tx info"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_utxo() {
+        dotenv().ok();
+        let provider = MaestroProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let hash: &str = "bda0866e2edc3778191960d4200a982af5530fee8e5c2efc75f6b35e5e546800";
+
+        let result = provider.fetch_utxos(hash, Some(1)).await;
+        println!("result: {:?}", result);
+        match result {
+            Ok(utxos) => {
+                println!("utxos: {:?}", utxos);
+                assert!(utxos[0].input.output_index == 1);
+            }
+            _ => panic!("Error fetching utxos"),
         }
     }
 }
