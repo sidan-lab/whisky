@@ -1,8 +1,7 @@
 use super::models::account::BlockfrostAccountInfo;
-
-use super::models::AssetAddresses;
-use super::models::BlockfrostAsset;
-use super::models::BlockfrostUtxo;
+use super::models::asset::{AssetAddresses, BlockfrostAsset};
+use super::models::block::BlockContent;
+use super::models::utxo::BlockfrostUtxo;
 use super::utils::*;
 use super::BlockfrostProvider;
 use async_trait::async_trait;
@@ -151,10 +150,19 @@ impl Fetcher for BlockfrostProvider {
     }
 
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, WError> {
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let url = format!("/blocks/{}", hash);
+
+        let resp = self
+            .blockfrost_client
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_block_info get"))?;
+        let block_content: BlockContent = serde_json::from_str(&resp)
+            .map_err(WError::from_err("blockfrost::fetch_block_info type error"))?;
+
+        let block_info: BlockInfo = block_content_to_block_info(block_content);
+
+        Ok(block_info)
     }
 
     async fn fetch_collection_assets(
