@@ -1,4 +1,4 @@
-use super::models::account::StakeAccountInformation;
+use super::models::account::BlockfrostAccountInfo;
 use super::models::address::UtxosAtAddress;
 use super::models::asset::{AssetInformations, CollectionAssets};
 use super::models::protocol_parameters::ProtocolParameters;
@@ -30,13 +30,14 @@ impl Fetcher for BlockfrostProvider {
             .blockfrost_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("blockfrost::fetch_account_info get"))?;
 
-        let stake_account_information: StakeAccountInformation =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_account_info"))?;
+        let blockfrost_account_info: BlockfrostAccountInfo = serde_json::from_str(&resp).map_err(
+            WError::from_err("blockfrost::fetch_account_info type error"),
+        )?;
 
         let account_info: AccountInfo =
-            account_information_to_account_info(stake_account_information.data);
+            blockfrost_account_info_to_account_info(blockfrost_account_info);
         Ok(account_info)
     }
 
@@ -328,7 +329,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_account_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let address: &str = "addr_test1qzhm3fg7v9t9e4nrlw0z49cysmvzfy3xpmvxuht80aa3rvnm5tz7rfnph9ntszp2fclw5m334udzq49777gkhwkztsks4c69rg";
         let result = provider.fetch_account_info(address).await;
         match result {
