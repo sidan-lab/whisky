@@ -1,4 +1,6 @@
 mod fetcher;
+pub mod models;
+pub mod utils;
 use whisky_common::*;
 
 use reqwest::RequestBuilder;
