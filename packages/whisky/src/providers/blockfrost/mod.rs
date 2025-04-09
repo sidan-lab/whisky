@@ -77,6 +77,53 @@ impl Blockfrost {
             .map_err(WError::from_err("Blockfrost - post - send_request"))?;
         Ok(response_body)
     }
+
+    async fn fetch_specific_script(&self, script_hash: &str) -> Result<models::Script, WError> {
+        let url = format!("/scripts/{}", script_hash);
+
+        let resp = self
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_specific_script"))?;
+
+        let script: models::Script = serde_json::from_str(&resp).map_err(WError::from_err(
+            "blockfrost::fetch_specific_script type error",
+        ))?;
+
+        Ok(script)
+    }
+    async fn fetch_plutus_script_cbor(&self, script_hash: &str) -> Result<Option<String>, WError> {
+        let url = format!("/scripts/{}/cbor", script_hash);
+
+        let resp = self
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_plutus_script_cbor"))?;
+
+        let script_cbor: Option<String> = serde_json::from_str(&resp).map_err(WError::from_err(
+            "blockfrost::fetch_plutus_script_cbor type error",
+        ))?;
+
+        Ok(script_cbor)
+    }
+
+    async fn fetch_native_script_json(
+        &self,
+        script_hash: &str,
+    ) -> Result<Option<serde_json::Value>, WError> {
+        let url = format!("/scripts/{}/json", script_hash);
+
+        let resp = self
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_native_script_json"))?;
+
+        let script_json: Option<serde_json::Value> = serde_json::from_str(&resp).map_err(
+            WError::from_err("blockfrost::fetch_native_script_json type error"),
+        )?;
+
+        Ok(script_json)
+    }
 }
 
 #[derive(Clone, Debug)]

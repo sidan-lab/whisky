@@ -7,97 +7,126 @@ use whisky_csl::{
     csl::{self, NativeScript, PlutusScript, ScriptRef},
 };
 
-use crate::providers::blockfrost::models::utxo::Utxo;
+use crate::providers::blockfrost::{
+    models::{utxo::BlockfrostUtxo, Script, Type},
+    BlockfrostProvider,
+};
 
 #[derive(Debug, Clone)]
-pub enum Script {
+pub enum ScriptType {
     Plutus(PlutusScript),
     Native(NativeScript),
 }
 
-pub fn to_utxo(utxo: &Utxo) -> UTxO {
-    UTxO {
-        input: UtxoInput {
-            output_index: utxo.index as u32,
-            tx_hash: utxo.tx_hash.clone(),
-        },
-        output: UtxoOutput {
-            address: utxo.address.clone(),
-            amount: utxo
-                .assets
-                .iter()
-                .map(|asset| Asset::new(asset.unit.clone(), asset.amount.to_string()))
-                .collect(),
-            data_hash: utxo.datum.as_ref().and_then(|datum| {
-                datum
-                    .get("hash")
-                    .and_then(|hash| hash.as_str().map(|s| s.to_string()))
-            }),
-            plutus_data: utxo.datum.as_ref().and_then(|datum| {
-                datum
-                    .get("bytes")
-                    .and_then(|hash| hash.as_str().map(|s| s.to_string()))
-            }),
-            script_ref: resolve_script(utxo).unwrap(),
-            script_hash: utxo
-                .reference_script
-                .as_ref()
-                .map(|script| script.hash.clone()),
-        },
+impl BlockfrostProvider {
+    pub async fn to_utxo(&self, utxo: &BlockfrostUtxo) -> UTxO {
+        UTxO {
+            input: UtxoInput {
+                output_index: utxo.output_index as u32,
+                tx_hash: utxo.tx_hash.clone(),
+            },
+            output: UtxoOutput {
+                address: utxo.address.clone(),
+                amount: utxo
+                    .amount
+                    .iter()
+                    .map(|asset| Asset::new(asset.unit.clone(), asset.quantity.to_string()))
+                    .collect(),
+                data_hash: utxo.data_hash.clone(),
+                plutus_data: utxo.inline_datum.clone(),
+                script_ref: match &utxo.reference_script_hash {
+                    Some(s) => self.resolve_script_ref(s).await.unwrap(),
+                    None => None,
+                },
+                script_hash: utxo.reference_script_hash.clone(),
+            },
+        }
     }
-}
 
-pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
-    if let Some(ref_script) = &utxo.reference_script {
-        match ref_script.r#type.as_str() {
-            "native" => {
+    pub async fn resolve_script_ref(&self, script_hash: &str) -> Result<Option<String>, WError> {
+        let script: Script = self
+            .blockfrost_client
+            .fetch_specific_script(script_hash)
+            .await?;
+        match script.r#type {
+            Type::Timelock => {
+                let script_json = self
+                    .blockfrost_client
+                    .fetch_native_script_json(script_hash)
+                    .await?;
                 let script: NativeScript =
-                    NativeScript::from_json(&serde_json::json!(&ref_script.json).to_string())
+                    NativeScript::from_json(&serde_json::json!(script_json).to_string())
                         .map_err(WError::from_err("json to string"))?;
-                let script_ref = to_script_ref(&Script::Native(script));
+                let script_ref = to_script_ref(&ScriptType::Native(script));
                 Ok(Some(script_ref.native_script().unwrap().to_hex()))
             }
-            "plutusv1" => {
-                let script_hex = &ref_script.bytes;
-                let normalized = normalize_plutus_script(script_hex)
-                    .map_err(WError::from_err("normalize_plutus_script"))?;
-                let script: PlutusScript = PlutusScript::from_hex_with_version(
-                    &normalized,
-                    &csl::Language::new_plutus_v1(),
-                )
-                .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
-                Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
+            Type::PlutusV1 => {
+                let script_cbor = self
+                    .blockfrost_client
+                    .fetch_plutus_script_cbor(script_hash)
+                    .await?;
+
+                let result = match &script_cbor {
+                    Some(s) => {
+                        let normalized = normalize_plutus_script(s)
+                            .map_err(WError::from_err("normalize_plutus_script"))?;
+                        let script: PlutusScript = PlutusScript::from_hex_with_version(
+                            &normalized,
+                            &csl::Language::new_plutus_v1(),
+                        )
+                        .map_err(WError::from_err("from_hex_with_version"))?;
+                        let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
+                        Some(script_ref.plutus_script().unwrap().to_hex())
+                    }
+                    None => None,
+                };
+                Ok(result)
             }
-            "plutusv2" => {
-                let script_hex = &ref_script.bytes;
-                let normalized = normalize_plutus_script(script_hex)
-                    .map_err(WError::from_err("normalize_plutus_script"))?;
-                let script: PlutusScript = PlutusScript::from_hex_with_version(
-                    &normalized,
-                    &csl::Language::new_plutus_v2(),
-                )
-                .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
-                Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
+            Type::PlutusV2 => {
+                let script_cbor = self
+                    .blockfrost_client
+                    .fetch_plutus_script_cbor(script_hash)
+                    .await?;
+
+                let result = match &script_cbor {
+                    Some(s) => {
+                        let normalized = normalize_plutus_script(s)
+                            .map_err(WError::from_err("normalize_plutus_script"))?;
+                        let script: PlutusScript = PlutusScript::from_hex_with_version(
+                            &normalized,
+                            &csl::Language::new_plutus_v2(),
+                        )
+                        .map_err(WError::from_err("from_hex_with_version"))?;
+                        let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
+                        Some(script_ref.plutus_script().unwrap().to_hex())
+                    }
+                    None => None,
+                };
+                Ok(result)
             }
-            "plutusv3" => {
-                let script_hex = &ref_script.bytes;
-                let normalized = normalize_plutus_script(script_hex)
-                    .map_err(WError::from_err("normalize_plutus_script"))?;
-                let script: PlutusScript = PlutusScript::from_hex_with_version(
-                    &normalized,
-                    &csl::Language::new_plutus_v3(),
-                )
-                .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
-                Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
+            Type::PlutusV3 => {
+                let script_cbor = self
+                    .blockfrost_client
+                    .fetch_plutus_script_cbor(script_hash)
+                    .await?;
+
+                let result = match &script_cbor {
+                    Some(s) => {
+                        let normalized = normalize_plutus_script(s)
+                            .map_err(WError::from_err("normalize_plutus_script"))?;
+                        let script: PlutusScript = PlutusScript::from_hex_with_version(
+                            &normalized,
+                            &csl::Language::new_plutus_v3(),
+                        )
+                        .map_err(WError::from_err("from_hex_with_version"))?;
+                        let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
+                        Some(script_ref.plutus_script().unwrap().to_hex())
+                    }
+                    None => None,
+                };
+                Ok(result)
             }
-            _ => Err(WError::new("", "Unsupported script type")),
         }
-    } else {
-        Ok(None)
-        // TODO: handle none
     }
 }
 
@@ -105,9 +134,9 @@ pub fn normalize_plutus_script(script_hex: &str) -> Result<String, WError> {
     apply_double_cbor_encoding(script_hex)
 }
 
-pub fn to_script_ref(script: &Script) -> ScriptRef {
+pub fn to_script_ref(script: &ScriptType) -> ScriptRef {
     match script {
-        Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
-        Script::Native(native) => ScriptRef::new_native_script(native),
+        ScriptType::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
+        ScriptType::Native(native) => ScriptRef::new_native_script(native),
     }
 }

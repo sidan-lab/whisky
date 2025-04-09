@@ -1,17 +1,13 @@
 use super::models::account::BlockfrostAccountInfo;
-use super::models::address::UtxosAtAddress;
-use super::models::asset::{AssetInformations, CollectionAssets};
-use super::models::protocol_parameters::ProtocolParameters;
-use super::models::transaction::TransactionDetails;
+
+use super::models::BlockfrostUtxo;
 use super::utils::*;
 use super::BlockfrostProvider;
 use async_trait::async_trait;
-use maestro_rust_sdk::client::block_info::BlockInfo as MBlockInfo;
-use maestro_rust_sdk::models::asset::AddressesHoldingAsset;
-use maestro_rust_sdk::models::epochs::EpochResp;
 
+use futures::future;
 use std::collections::HashMap;
-use whisky_common::models::{AccountInfo, Asset, BlockInfo, Protocol, TransactionInfo, UTxO};
+use whisky_common::models::{AccountInfo, BlockInfo, Protocol, TransactionInfo, UTxO};
 
 use whisky_common::*;
 
@@ -46,148 +42,65 @@ impl Fetcher for BlockfrostProvider {
         address: &str,
         asset: Option<&str>,
     ) -> Result<Vec<UTxO>, WError> {
-        let query_predicate =
-            if address.starts_with("addr_vkh") || address.starts_with("addr_shared_vkh") {
-                format!("/addresses/cred/{}", address)
-            } else {
-                format!("/addresses/{}", address)
-            };
+        let mut page = 1;
+        let mut added_utxos: Vec<UTxO> = Vec::new();
 
-        let append_asset_string = match asset {
-            Some(a) => format!("&asset={}", a),
-            None => "".to_string(),
-        };
+        loop {
+            let append_asset_string = asset.map_or_else(String::new, |a| format!("{}", a));
+            let append_page_string = format!("?page={}", page);
 
-        let url = format!("{}/utxos?count=100{}", query_predicate, append_asset_string,);
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let mut utxos_at_address: UtxosAtAddress =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_address_utxos"))?;
-
-        let mut added_utxos: Vec<UTxO> = utxos_at_address
-            .data
-            .iter()
-            .map(|utxo| to_utxo(utxo))
-            .collect();
-        println!("uxtos: {:?}", added_utxos);
-
-        while utxos_at_address.next_cursor.is_some() {
-            let append_cursor_string = format!("&cursor={}", utxos_at_address.next_cursor.unwrap());
             let url = format!(
-                "{}utxos?count=100{}{}",
-                query_predicate, append_asset_string, append_cursor_string
+                "/addresses/{}/utxos/{}{}",
+                address, append_asset_string, append_page_string
             );
+
             let resp = self
                 .blockfrost_client
                 .get(&url)
                 .await
-                .map_err(WError::from_err("maestro::get"))?;
-            utxos_at_address =
-                serde_json::from_str(&resp).map_err(WError::from_err("fetch_address_utxos"))?;
-            let uxtos: Vec<UTxO> = utxos_at_address
-                .data
-                .iter()
-                .map(|utxo| to_utxo(utxo))
-                .collect();
+                .map_err(WError::from_err("blockfrost::fetch_address_utxos get"))?;
+
+            let blockfrost_utxos: Vec<BlockfrostUtxo> = serde_json::from_str(&resp).map_err(
+                WError::from_err("blockfrost::fetch_address_utxos type error"),
+            )?;
+
+            let uxtos: Vec<UTxO> =
+                future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo))).await;
+
             added_utxos.extend(uxtos);
+
+            if blockfrost_utxos.len() < 100 {
+                break;
+            }
+
+            page += 1;
         }
 
         Ok(added_utxos)
     }
 
     async fn fetch_asset_addresses(&self, asset: &str) -> Result<Vec<(String, String)>, WError> {
-        let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
-        let url = format!("/assets/{}{}/addresses?count=100", &policy_id, &asset_name);
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let mut addresses_holding_asset: AddressesHoldingAsset =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_addresses"))?;
-
-        let mut added_assets: Vec<(String, String)> = addresses_holding_asset
-            .data
-            .iter()
-            .map(|address_holding_asset| {
-                (
-                    address_holding_asset.address.clone(),
-                    address_holding_asset.amount.to_string(),
-                )
-            })
-            .collect();
-
-        while addresses_holding_asset.next_cursor.is_some() {
-            let append_cursor_string =
-                format!("&cursor={}", addresses_holding_asset.next_cursor.unwrap());
-            let url = format!(
-                "/assets/{}{}/addresses?count=100{}",
-                &policy_id, &asset_name, append_cursor_string
-            );
-
-            let resp = self
-                .blockfrost_client
-                .get(&url)
-                .await
-                .map_err(WError::from_err("maestro::get"))?;
-            addresses_holding_asset =
-                serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_addresses"))?;
-            let assets: Vec<(String, String)> = addresses_holding_asset
-                .data
-                .iter()
-                .map(|address_holding_asset| {
-                    (
-                        address_holding_asset.address.clone(),
-                        address_holding_asset.amount.to_string(),
-                    )
-                })
-                .collect();
-            added_assets.extend(assets);
-        }
-
-        Ok(added_assets)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_asset_metadata(
         &self,
         asset: &str,
     ) -> Result<Option<HashMap<String, serde_json::Value>>, WError> {
-        let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
-        let url = format!("/assets/{}{}", &policy_id, &asset_name);
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let asset_informations: AssetInformations =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_asset_metadata"))?;
-
-        let asset_metadata = asset_informations.data.latest_mint_tx_metadata;
-        Ok(asset_metadata)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, WError> {
-        let url = format!("/blocks/{}", hash);
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-        let m_block_info: MBlockInfo =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_block_info"))?;
-
-        let block_info: BlockInfo = block_info_data_to_block_info(m_block_info.data);
-
-        Ok(block_info)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_collection_assets(
@@ -195,118 +108,31 @@ impl Fetcher for BlockfrostProvider {
         policy_id: &str,
         cursor: Option<String>,
     ) -> Result<(Vec<(String, String)>, Option<String>), WError> {
-        let append_cursor_string = match cursor {
-            Some(c) => format!("&cursor={}", c),
-            None => "".to_string(),
-        };
-        let url = format!(
-            "/policy/{}/assets?count=100{}",
-            policy_id, append_cursor_string
-        );
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-        let collection_assets: CollectionAssets =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_collection_assets"))?;
-
-        let assets = collection_assets
-            .data
-            .iter()
-            .map(|asset_data| {
-                (
-                    format!("{}{}", policy_id, asset_data.asset_name.clone()),
-                    asset_data.total_supply.clone(),
-                )
-            })
-            .collect();
-
-        Ok((assets, collection_assets.next_cursor))
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_protocol_parameters(&self, epoch: Option<u32>) -> Result<Protocol, WError> {
-        if let Some(_epoch) = epoch {
-            return Err(WError::new(
-                "",
-                "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-            ));
-        }
-
-        let protocol_url = "/protocol-parameters";
-
-        let protocol_resp = self
-            .blockfrost_client
-            .get(&protocol_url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let protocol_parameters: ProtocolParameters = serde_json::from_str(&protocol_resp)
-            .map_err(WError::from_err("fetch_protocol_parameters"))?;
-
-        let epoch_url = "/epochs/current";
-
-        let epoch_resp = self
-            .blockfrost_client
-            .get(&epoch_url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let epochs: EpochResp =
-            serde_json::from_str(&epoch_resp).map_err(WError::from_err("fetch_current_epoch"))?;
-
-        let protocol: Protocol =
-            protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data);
-        Ok(protocol)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_tx_info(&self, hash: &str) -> Result<TransactionInfo, WError> {
-        let url = format!("/transactions/{}", hash);
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let transaction_details: TransactionDetails =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_tx_info"))?;
-
-        let transaction_info: TransactionInfo =
-            transaction_detail_to_info(transaction_details.data);
-        Ok(transaction_info)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn fetch_utxos(&self, hash: &str, index: Option<u32>) -> Result<Vec<UTxO>, WError> {
-        let url = format!("/transactions/{}", hash);
-
-        let resp = self
-            .blockfrost_client
-            .get(&url)
-            .await
-            .map_err(WError::from_err("maestro::get"))?;
-
-        let transaction_details: TransactionDetails =
-            serde_json::from_str(&resp).map_err(WError::from_err("fetch_utxos"))?;
-
-        let outputs: Vec<UTxO> = transaction_details
-            .data
-            .outputs
-            .iter()
-            .map(|utxo| to_utxo(utxo))
-            .collect();
-
-        let utxos = match index {
-            Some(i) => outputs
-                .iter()
-                .filter(|output| output.input.output_index == i)
-                .cloned()
-                .collect(),
-            None => outputs,
-        };
-
-        Ok(utxos)
+        return Err(WError::new(
+            "",
+            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
+        ));
     }
 
     async fn get(&self, url: &str) -> Result<serde_json::Value, WError> {
@@ -314,8 +140,9 @@ impl Fetcher for BlockfrostProvider {
             .blockfrost_client
             .get(&url)
             .await
-            .map_err(WError::from_err("maestro::get"))?;
-        let any = serde_json::from_str(&resp).map_err(WError::from_err("maestro::get"))?;
+            .map_err(WError::from_err("blockfrost::get"))?;
+        let any =
+            serde_json::from_str(&resp).map_err(WError::from_err("blockfrost::get error type"))?;
         Ok(any)
     }
 }
