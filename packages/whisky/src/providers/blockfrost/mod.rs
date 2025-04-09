@@ -8,13 +8,13 @@ use serde::Serialize;
 
 #[derive(Debug, Clone)]
 pub struct Blockfrost {
-    api_key: String,
+    project_id: String,
     http_client: reqwest::Client,
     pub base_url: String,
 }
 
 impl Blockfrost {
-    pub fn new(api_key: String, network: String) -> Self {
+    pub fn new(project_id: String, network: String) -> Self {
         let base_url = format!("https://cardano-{}.blockfrost.io/api/v0", &network);
         let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(300))
@@ -22,7 +22,7 @@ impl Blockfrost {
             .expect("Failed to create HTTP client");
 
         Blockfrost {
-            api_key,
+            project_id,
             http_client,
             base_url,
         }
@@ -35,7 +35,7 @@ impl Blockfrost {
     ) -> Result<(), Box<dyn std::error::Error>> {
         let req = req
             .header("Accept", "application/json")
-            .header("api-key", &self.api_key)
+            .header("project_id", &self.project_id)
             .build()?;
 
         println!("req: {:?}", req);
