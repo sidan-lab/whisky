@@ -1,6 +1,18 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ScriptVersion {
+    #[serde(rename = "native")]
+    Native,
+    #[serde(rename = "plutusv1")]
+    Plutusv1,
+    #[serde(rename = "plutusv2")]
+    Plutusv2,
+    #[serde(rename = "plutusv3")]
+    Plutusv3,
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Asset {
@@ -24,5 +36,5 @@ pub struct ReferenceScript {
     pub bytes: String,
     pub hash: String,
     pub json: Option<HashMap<String, serde_json::Value>>,
-    pub r#type: String,
+    pub r#type: ScriptVersion,
 }

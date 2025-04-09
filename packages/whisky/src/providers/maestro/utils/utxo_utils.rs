@@ -7,10 +7,10 @@ use whisky_csl::{
     csl::{self, NativeScript, PlutusScript, ScriptRef},
 };
 
-use crate::providers::maestro::models::utxo::Utxo;
+use crate::providers::maestro::models::{utxo::Utxo, ScriptVersion};
 
 #[derive(Debug, Clone)]
-pub enum Script {
+pub enum ScriptType {
     Plutus(PlutusScript),
     Native(NativeScript),
 }
@@ -49,15 +49,15 @@ pub fn to_utxo(utxo: &Utxo) -> UTxO {
 
 pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
     if let Some(ref_script) = &utxo.reference_script {
-        match ref_script.r#type.as_str() {
-            "native" => {
+        match ref_script.r#type {
+            ScriptVersion::Native => {
                 let script: NativeScript =
                     NativeScript::from_json(&serde_json::json!(&ref_script.json).to_string())
                         .map_err(WError::from_err("json to string"))?;
-                let script_ref = to_script_ref(&Script::Native(script));
+                let script_ref = to_script_ref(&ScriptType::Native(script));
                 Ok(Some(script_ref.native_script().unwrap().to_hex()))
             }
-            "plutusv1" => {
+            ScriptVersion::Plutusv1 => {
                 let script_hex = &ref_script.bytes;
                 let normalized = normalize_plutus_script(script_hex)
                     .map_err(WError::from_err("normalize_plutus_script"))?;
@@ -66,10 +66,10 @@ pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
                     &csl::Language::new_plutus_v1(),
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
+                let script_ref = to_script_ref(&ScriptType::Plutus(script));
                 Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
             }
-            "plutusv2" => {
+            ScriptVersion::Plutusv2 => {
                 let script_hex = &ref_script.bytes;
                 let normalized = normalize_plutus_script(script_hex)
                     .map_err(WError::from_err("normalize_plutus_script"))?;
@@ -78,10 +78,10 @@ pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
                     &csl::Language::new_plutus_v2(),
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
+                let script_ref = to_script_ref(&ScriptType::Plutus(script));
                 Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
             }
-            "plutusv3" => {
+            ScriptVersion::Plutusv3 => {
                 let script_hex = &ref_script.bytes;
                 let normalized = normalize_plutus_script(script_hex)
                     .map_err(WError::from_err("normalize_plutus_script"))?;
@@ -90,10 +90,9 @@ pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
                     &csl::Language::new_plutus_v3(),
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
-                let script_ref = to_script_ref(&Script::Plutus(script));
+                let script_ref = to_script_ref(&ScriptType::Plutus(script));
                 Ok(Some(script_ref.plutus_script().unwrap().to_hex()))
             }
-            _ => Err(WError::new("", "Unsupported script type")),
         }
     } else {
         Ok(None)
@@ -105,9 +104,9 @@ pub fn normalize_plutus_script(script_hex: &str) -> Result<String, WError> {
     apply_double_cbor_encoding(script_hex)
 }
 
-pub fn to_script_ref(script: &Script) -> ScriptRef {
+pub fn to_script_ref(script: &ScriptType) -> ScriptRef {
     match script {
-        Script::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
-        Script::Native(native) => ScriptRef::new_native_script(native),
+        ScriptType::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
+        ScriptType::Native(native) => ScriptRef::new_native_script(native),
     }
 }
