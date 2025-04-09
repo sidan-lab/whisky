@@ -1,5 +1,6 @@
 use super::models::account::BlockfrostAccountInfo;
 
+use super::models::BlockfrostAsset;
 use super::models::BlockfrostUtxo;
 use super::utils::*;
 use super::BlockfrostProvider;
@@ -80,10 +81,42 @@ impl Fetcher for BlockfrostProvider {
     }
 
     async fn fetch_asset_addresses(&self, asset: &str) -> Result<Vec<(String, String)>, WError> {
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let mut page = 1;
+        let mut added_assets: Vec<(String, String)> = Vec::new();
+
+        loop {
+            let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
+            let append_page_string = format!("?page={}", page);
+
+            let url = format!(
+                "/assets/{}{}/addresses{}",
+                policy_id, asset_name, append_page_string
+            );
+
+            let resp = self
+                .blockfrost_client
+                .get(&url)
+                .await
+                .map_err(WError::from_err("blockfrost::fetch_asset_addresses get"))?;
+
+            let blockfrost_assets: Vec<BlockfrostAsset> = serde_json::from_str(&resp).map_err(
+                WError::from_err("blockfrost::fetch_asset_addresses type error"),
+            )?;
+
+            let assets: Vec<(String, String)> = blockfrost_assets
+                .iter()
+                .map(|asset| (asset.address.clone(), asset.quantity.to_string()))
+                .collect();
+
+            added_assets.extend(assets);
+
+            if blockfrost_assets.len() < 100 {
+                break;
+            }
+
+            page += 1;
+        }
+        Ok(added_assets)
     }
 
     async fn fetch_asset_metadata(
@@ -171,7 +204,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_address_utxos() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let address: &str = "addr_test1wrhn0024gx9ndkmg5sfu4r6f79ewf0w42qdrd2clyuuvgjgylk345";
         let result = provider.fetch_address_utxos(address, None).await;
         println!("result: {:?}", result);
@@ -187,7 +220,8 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_asset_addresses() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider: BlockfrostProvider =
+            BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let asset = format!(
             "{}{}",
             "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
@@ -207,7 +241,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_asset_metadata() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let asset = format!(
             "{}{}",
             "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
@@ -227,7 +261,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_block_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let block: &str = "3132189";
 
         let result = provider.fetch_block_info(block).await;
@@ -247,7 +281,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_collection_assets() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let policy_id: &str = "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd";
 
         let result = provider.fetch_collection_assets(policy_id, None).await;
@@ -264,7 +298,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_protocol_parameters() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
 
         let result = provider.fetch_protocol_parameters(None).await;
         println!("result: {:?}", result);
@@ -280,7 +314,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_tx_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let hash: &str = "ccdf490c8b7fd1e67f81b59eb98791d910cc785c23498a82ec845540467dc3ba";
 
         let result = provider.fetch_tx_info(hash).await;
@@ -300,7 +334,7 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_utxo() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("MAESTRO_API_KEY").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let hash: &str = "bda0866e2edc3778191960d4200a982af5530fee8e5c2efc75f6b35e5e546800";
 
         let result = provider.fetch_utxos(hash, Some(1)).await;
