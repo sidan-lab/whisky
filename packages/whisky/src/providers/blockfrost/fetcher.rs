@@ -1,5 +1,6 @@
 use super::models::account::BlockfrostAccountInfo;
 
+use super::models::AssetAddresses;
 use super::models::BlockfrostAsset;
 use super::models::BlockfrostUtxo;
 use super::utils::*;
@@ -99,7 +100,7 @@ impl Fetcher for BlockfrostProvider {
                 .await
                 .map_err(WError::from_err("blockfrost::fetch_asset_addresses get"))?;
 
-            let blockfrost_assets: Vec<BlockfrostAsset> = serde_json::from_str(&resp).map_err(
+            let blockfrost_assets: Vec<AssetAddresses> = serde_json::from_str(&resp).map_err(
                 WError::from_err("blockfrost::fetch_asset_addresses type error"),
             )?;
 
@@ -123,10 +124,30 @@ impl Fetcher for BlockfrostProvider {
         &self,
         asset: &str,
     ) -> Result<Option<HashMap<String, serde_json::Value>>, WError> {
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let (policy_id, asset_name) = Asset::unit_to_tuple(asset);
+        let url = format!("/assets/{}{}", &policy_id, &asset_name);
+        let resp = self
+            .blockfrost_client
+            .get(&url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_asset_metadata get"))?;
+
+        let blockfrost_asset: BlockfrostAsset = serde_json::from_str(&resp).map_err(
+            WError::from_err("blockfrost::fetch_asset_metadata type error"),
+        )?;
+
+        let asset_metadata: HashMap<String, serde_json::Value> =
+            serde_json::to_value(&blockfrost_asset)
+                .expect("Failed to convert object to JSON")
+                .as_object()
+                .map(|obj| {
+                    obj.iter()
+                        .map(|(k, v)| (k.to_string(), v.clone()))
+                        .collect()
+                })
+                .unwrap_or_default();
+
+        Ok(Some(asset_metadata))
     }
 
     async fn fetch_block_info(&self, hash: &str) -> Result<BlockInfo, WError> {
@@ -241,7 +262,8 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_asset_metadata() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider: BlockfrostProvider =
+            BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
         let asset = format!(
             "{}{}",
             "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
