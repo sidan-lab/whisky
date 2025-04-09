@@ -814,11 +814,14 @@ impl CoreCSL {
         Ok(())
     }
 
-    pub fn build_tx(&mut self) -> Result<String, WError> {
-        let tx = self
-            .tx_builder
-            .build_tx()
-            .map_err(WError::from_err("CoreCSL - build_tx - build_tx"))?;
+    pub fn build_tx(&mut self, safe_build: bool) -> Result<String, WError> {
+        let tx = if safe_build {
+            self.tx_builder.build_tx()
+        } else {
+            self.tx_builder.build_tx_unsafe()
+        }
+        .map_err(WError::from_err("CoreCSL - build_tx - build_tx"))?;
+
         self.tx_hex = tx.to_hex();
         Ok(self.tx_hex.to_string())
     }

@@ -37,7 +37,7 @@ pub fn js_serialize_tx_body(tx_builder_body_json: &str, params_json: &str) -> Wa
     let mut tx_builder = WhiskyCSL::new(params).unwrap();
     tx_builder.tx_builder_body = tx_builder_body;
 
-    match tx_builder.serialize_tx_body() {
+    match tx_builder.unbalanced_serialize_tx_body() {
         Ok(tx_hex) => WasmResult::new("success".to_string(), tx_hex.to_string()),
         Err(e) => WasmResult::new_error("failure".to_string(), format!("{:?}", e.to_string())),
     }

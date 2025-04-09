@@ -9,6 +9,7 @@ pub struct WasmDeserializedAddress {
     stake_key_script_hash: String,
 }
 
+#[wasm_bindgen]
 impl WasmDeserializedAddress {
     pub fn new(
         pub_key_hash: &str,
