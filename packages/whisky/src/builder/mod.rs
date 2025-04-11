@@ -15,7 +15,7 @@ use crate::*;
 pub use data::*;
 pub use tx_eval::*;
 
-use crate::service::*;
+use crate::services::*;
 
 pub struct TxBuilder {
     pub serializer: WhiskyCSL,

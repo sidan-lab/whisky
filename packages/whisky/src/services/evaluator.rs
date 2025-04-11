@@ -1,21 +1,6 @@
-use async_trait::async_trait;
-
 use crate::*;
-use uplc::tx::SlotConfig;
 
 use crate::builder::TxBuilder;
-
-#[async_trait]
-pub trait Evaluator: Send {
-    async fn evaluate_tx(
-        &self,
-        tx_hex: &str,
-        inputs: &[UTxO],
-        additional_txs: &[String],
-        network: &Network,
-        slot_config: &SlotConfig,
-    ) -> Result<Vec<Action>, WError>;
-}
 
 pub trait TxEvaluation {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self;

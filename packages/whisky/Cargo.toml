@@ -28,6 +28,7 @@ whisky-csl = { version = "1.0.0-alpha.2", path = "../whisky-csl" }
 whisky-common = { version = "1.0.0-alpha.2", path = "../whisky-common" }
 reqwest = "0.12.5"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
+futures = "0.3.31"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

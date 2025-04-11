@@ -48,7 +48,7 @@ pub fn evaluate_tx_scripts(
                 &parsed_tx.get_tx_outs_utxo().unwrap().clone()
             );
             println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
-            parsed_tx.get_tx_outs_utxo().unwrap() //TODO: handle error
+            parsed_tx.get_tx_outs_utxo().unwrap() // TODO: err handling
         })
         .collect();
 

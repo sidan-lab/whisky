@@ -78,7 +78,7 @@ impl TxParser {
                 Some(Datum::Inline(data)) => {
                     let datum_cbor =
                         csl::PlutusData::from_json(&data, csl::PlutusDatumSchema::DetailedSchema)
-                            .unwrap() // TODO: error handling
+                            .unwrap() // TODO: Handle unwrap
                             .to_hex();
                     let plutus_data = Some(datum_cbor);
                     (None, plutus_data)
