@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, PartialEq, Clone, Serialize)]
 pub struct Asset {
     pub unit: String,
     pub quantity: String,

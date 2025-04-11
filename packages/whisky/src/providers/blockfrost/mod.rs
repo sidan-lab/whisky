@@ -1,6 +1,10 @@
 mod fetcher;
 pub mod models;
 pub mod utils;
+use std::collections::HashMap;
+
+use futures::future::Map;
+use serde_json::map;
 use whisky_common::*;
 
 use reqwest::RequestBuilder;
@@ -92,7 +96,7 @@ impl Blockfrost {
 
         Ok(script)
     }
-    async fn fetch_plutus_script_cbor(&self, script_hash: &str) -> Result<Option<String>, WError> {
+    async fn fetch_plutus_script_cbor(&self, script_hash: &str) -> Result<String, WError> {
         let url = format!("/scripts/{}/cbor", script_hash);
 
         let resp = self
@@ -100,17 +104,18 @@ impl Blockfrost {
             .await
             .map_err(WError::from_err("blockfrost::fetch_plutus_script_cbor"))?;
 
-        let script_cbor: Option<String> = serde_json::from_str(&resp).map_err(WError::from_err(
-            "blockfrost::fetch_plutus_script_cbor type error",
-        ))?;
+        let script_cbor: HashMap<String, String> = serde_json::from_str(&resp).map_err(
+            WError::from_err("blockfrost::fetch_plutus_script_cbor type error"),
+        )?;
+        let cbor = script_cbor["cbor"].clone();
 
-        Ok(script_cbor)
+        Ok(cbor)
     }
 
     async fn fetch_native_script_json(
         &self,
         script_hash: &str,
-    ) -> Result<Option<serde_json::Value>, WError> {
+    ) -> Result<serde_json::Value, WError> {
         let url = format!("/scripts/{}/json", script_hash);
 
         let resp = self
@@ -118,11 +123,12 @@ impl Blockfrost {
             .await
             .map_err(WError::from_err("blockfrost::fetch_native_script_json"))?;
 
-        let script_json: Option<serde_json::Value> = serde_json::from_str(&resp).map_err(
+        let script_json: HashMap<String, serde_json::Value> = serde_json::from_str(&resp).map_err(
             WError::from_err("blockfrost::fetch_native_script_json type error"),
         )?;
+        let json = script_json["json"].clone();
 
-        Ok(script_json)
+        Ok(json)
     }
 }
 
