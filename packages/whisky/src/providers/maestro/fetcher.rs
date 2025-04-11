@@ -264,7 +264,11 @@ impl Fetcher for MaestroProvider {
             .map_err(WError::from_err("maestro::fetch_current_epoch type error"))?;
 
         let protocol: Protocol =
-            protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data);
+            protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data).map_err(
+                WError::from_err(
+                    "maestro::fetch_protocol_parameters protocol_paras_data_to_protocol",
+                ),
+            )?;
         Ok(protocol)
     }
 

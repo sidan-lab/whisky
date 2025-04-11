@@ -335,7 +335,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_account_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let address: &str = "addr_test1qzhm3fg7v9t9e4nrlw0z49cysmvzfy3xpmvxuht80aa3rvnm5tz7rfnph9ntszp2fclw5m334udzq49777gkhwkztsks4c69rg";
         let result = provider.fetch_account_info(address).await;
         match result {
@@ -350,7 +353,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_address_utxos() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let address: &str = "addr_test1wrhn0024gx9ndkmg5sfu4r6f79ewf0w42qdrd2clyuuvgjgylk345";
         let result = provider.fetch_address_utxos(address, None).await;
         println!("result: {:?}", result);
@@ -366,8 +372,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_asset_addresses() {
         dotenv().ok();
-        let provider: BlockfrostProvider =
-            BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider: BlockfrostProvider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let asset = format!(
             "{}{}",
             "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
@@ -387,8 +395,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_asset_metadata() {
         dotenv().ok();
-        let provider: BlockfrostProvider =
-            BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider: BlockfrostProvider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let asset = format!(
             "{}{}",
             "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd", "6d657368"
@@ -408,7 +418,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_block_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let block: &str = "3132189";
 
         let result = provider.fetch_block_info(block).await;
@@ -428,7 +441,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_collection_assets() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
 
         let policy_id: &str = "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd";
 
@@ -446,7 +462,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_protocol_parameters() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
 
         let result = provider.fetch_protocol_parameters(None).await;
         println!("result: {:?}", result);
@@ -462,7 +481,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_tx_info() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
         let hash: &str = "ccdf490c8b7fd1e67f81b59eb98791d910cc785c23498a82ec845540467dc3ba";
 
         let result = provider.fetch_tx_info(hash).await;
@@ -482,7 +504,10 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_utxo() {
         dotenv().ok();
-        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
 
         let hash: &str = "bda0866e2edc3778191960d4200a982af5530fee8e5c2efc75f6b35e5e546800";
 
