@@ -60,7 +60,9 @@ jobs:
           --verbose
 
       - name: Create .env file
-        run: echo "MAESTRO_API_KEY=${MAESTRO_API_KEY}" > packages/whisky/.env
+        run: >
+          echo "MAESTRO_API_KEY=${MAESTRO_API_KEY}" > packages/whisky/.env
+          echo "BLOCKFROST_PREPROD_PROJECT_ID=${BLOCKFROST_PREPROD_PROJECT_ID}" > packages/whisky/.env
 
       - name: Run all tests (without coverage)
         if: matrix.os != 'ubuntu-latest'
@@ -85,59 +87,59 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
-  publish-common-crate:
-    needs: [build-test]
-    name: Publish whisky-common crate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
+  # publish-common-crate:
+  #   needs: [build-test]
+  #   name: Publish whisky-common crate
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+  #     - name: Install stable toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
 
-      - run: cd packages/whisky-common && cargo publish --token ${PUBLISH_KEY}
-        env:
-          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+  #     - run: cd packages/whisky-common && cargo publish --token ${PUBLISH_KEY}
+  #       env:
+  #         PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
-  publish-csl-crate:
-    needs: [build-test, publish-common-crate]
-    name: Publish whisky-csl crate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
+  # publish-csl-crate:
+  #   needs: [build-test, publish-common-crate]
+  #   name: Publish whisky-csl crate
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+  #     - name: Install stable toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
 
-      - run: cd packages/whisky-csl && cargo publish --token ${PUBLISH_KEY}
-        env:
-          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+  #     - run: cd packages/whisky-csl && cargo publish --token ${PUBLISH_KEY}
+  #       env:
+  #         PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
-  publish-whisky-crate:
-    needs: [build-test, publish-common-crate, publish-csl-crate]
-    name: Publish whisky crate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
+  # publish-whisky-crate:
+  #   needs: [build-test, publish-common-crate, publish-csl-crate]
+  #   name: Publish whisky crate
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+  #     - name: Install stable toolchain
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
 
-      - run: cd packages/whisky && cargo publish --token ${PUBLISH_KEY}
-        env:
-          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+  #     - run: cd packages/whisky && cargo publish --token ${PUBLISH_KEY}
+  #       env:
+  #         PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}

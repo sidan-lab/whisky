@@ -16,15 +16,19 @@
 
 # whisky
 
-This is a library for building off-chain code on Cardano. It is a cardano-cli-like wrapper on cardano-serialization-lib (equivalent to MeshJS’s lower-level APIs), supporting serious DApps’ backend on the Rust codebase. It has an active [F11 proposal](https://cardano.ideascale.com/c/idea/112172) to support the development.
+Whisky is an open-source Cardano Rust SDK, containing following modules:
 
-whisky is composed of 2 layers - the root layer whisky-js and the user-facing layer whisky. whisky-js composed of the core serialization logic with JSON-to-transaction pattern, compilable to wasm. whisky is the user-facing package that Rust Cardano developers can import directly for use.
+- `whisky` - The core Rust crate supporting Cardano DApp development in Rust.
+- `whisky-common` - Serving universal types and utilities.
+- `whisky-csl` - The crate to implement most `cardano-serialization-lib` wrapper
+- `whisky-js` - An point of output for wasm package for `@meshsdk/core-csl`.
 
-## Features
+With whisky, you can
 
-- Same API patterns with [MeshJS](https://meshjs.dev/apis/transaction/builderExample) - lower learning curve for developers.
-- Integrated with TxPipe's `uplc` for off-node auto redeemer exUnits updates.
-- Full inline documentation hosted at [github](https://sidan-lab.github.io/whisky/whisky/index.html)
+- Builder transaction with cardano-cli-like APIs, supporting serious DApps’ backend on the Rust codebase.
+- Handling transaction signing in Rust
+- Interacting with blockchain with provider services like `Maestro` and `Blockfrost`
+- Off-node evaluation on transaction execution units, and updating the transaction accordingly with TxPipe's `uplc` integrated.
 
 ## Installation
 
@@ -46,27 +50,24 @@ yarn add @sidan-lab/whisky-js-browser
 ## Getting Started
 
 ```rust
-use whisky::{
-    builder::TxBuilder,
-    model::{Asset, UTxO},
-};
+use whisky::*;
 
-async fn my_first_whisky_tx(
+pub fn send_lovelace(
     recipient_address: &str,
     my_address: &str,
-    inputs: Vec<UTxO>,
-) -> String {
+    inputs: &[UTxO],
+) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
-    tx_builder.tx_out(
-        &recipient_address,
-        vec![Asset::new_from_str("lovelace", "1000000")],
-    )
-    .change_address(my_address)
-    .select_utxos_from(inputs.clone(), 5000000)
-    .complete(None)
-    .await;
+    tx_builder
+        .tx_out(
+            recipient_address,
+            &[Asset::new_from_str("lovelace", "1000000")],
+        )
+        .change_address(my_address)
+        .select_utxos_from(inputs, 5000000)
+        .complete_sync(None)?;
 
-    tx_builder.tx_hex()
+    Ok(tx_builder.tx_hex())
 }
 ```
 
