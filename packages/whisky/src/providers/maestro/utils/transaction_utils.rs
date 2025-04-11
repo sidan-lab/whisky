@@ -1,11 +1,13 @@
 use crate::providers::maestro::models::transaction::TransactionDetail;
 
-use whisky_common::models::TransactionInfo;
+use whisky_common::{models::TransactionInfo, WError};
 
 use super::utxo_utils::to_utxo;
 
-pub fn transaction_detail_to_info(transaction_detail: TransactionDetail) -> TransactionInfo {
-    TransactionInfo {
+pub fn transaction_detail_to_info(
+    transaction_detail: TransactionDetail,
+) -> Result<TransactionInfo, WError> {
+    let tx_info = TransactionInfo {
         index: transaction_detail.block_tx_index as u32,
         block: transaction_detail.block_hash,
         hash: transaction_detail.tx_hash,
@@ -25,13 +27,16 @@ pub fn transaction_detail_to_info(transaction_detail: TransactionDetail) -> Tran
             .inputs
             .iter()
             .map(|utxo| to_utxo(utxo))
-            .collect(),
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?,
         outputs: transaction_detail
             .outputs
             .iter()
             .map(|utxo| to_utxo(utxo))
-            .collect(),
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?,
         block_height: Some(transaction_detail.block_height as u32),
         block_time: Some(transaction_detail.block_timestamp as u64),
-    }
+    };
+    Ok(tx_info)
 }

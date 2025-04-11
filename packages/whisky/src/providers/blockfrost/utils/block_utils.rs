@@ -1,9 +1,9 @@
-use whisky_common::models::BlockInfo;
+use whisky_common::{models::BlockInfo, WError};
 
 use crate::providers::blockfrost::models::BlockContent;
 
-pub fn block_content_to_block_info(block_content: BlockContent) -> BlockInfo {
-    BlockInfo {
+pub fn block_content_to_block_info(block_content: BlockContent) -> Result<BlockInfo, WError> {
+    let block_info = BlockInfo {
         time: block_content.time as u64,
         hash: block_content.hash,
         slot: match block_content.slot {
@@ -28,5 +28,6 @@ pub fn block_content_to_block_info(block_content: BlockContent) -> BlockInfo {
         confirmations: block_content.confirmations as usize,
         operational_certificate: block_content.op_cert.unwrap_or("".to_string()),
         vrf_key: block_content.block_vrf.unwrap_or("".to_string()),
-    }
+    };
+    Ok(block_info)
 }

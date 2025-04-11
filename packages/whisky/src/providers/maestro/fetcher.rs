@@ -74,7 +74,9 @@ impl Fetcher for MaestroProvider {
             .data
             .iter()
             .map(|utxo| to_utxo(utxo))
-            .collect();
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(WError::from_err("maestro::fetch_address_utxos to_utxo"))?;
         println!("uxtos: {:?}", added_utxos);
 
         while utxos_at_address.next_cursor.is_some() {
@@ -100,7 +102,9 @@ impl Fetcher for MaestroProvider {
                 .data
                 .iter()
                 .map(|utxo| to_utxo(utxo))
-                .collect();
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(WError::from_err("maestro::fetch_address_utxos to_utxo"))?;
             added_utxos.extend(uxtos);
         }
 
@@ -298,7 +302,9 @@ impl Fetcher for MaestroProvider {
             .map_err(WError::from_err("maestro::fetch_tx_info type error"))?;
 
         let transaction_info: TransactionInfo =
-            transaction_detail_to_info(transaction_details.data);
+            transaction_detail_to_info(transaction_details.data).map_err(WError::from_err(
+                "maestro::fetch_tx_info transaction_detail_to_info",
+            ))?;
         Ok(transaction_info)
     }
 
@@ -319,7 +325,9 @@ impl Fetcher for MaestroProvider {
             .outputs
             .iter()
             .map(|utxo| to_utxo(utxo))
-            .collect();
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(WError::from_err("maestro::fetch_utxos  - to_utxo"))?;
 
         let utxos = match index {
             Some(i) => outputs

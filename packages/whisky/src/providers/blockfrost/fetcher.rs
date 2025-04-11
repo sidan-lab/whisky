@@ -68,7 +68,10 @@ impl Fetcher for BlockfrostProvider {
             )?;
 
             let uxtos: Vec<UTxO> =
-                future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo))).await;
+                future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo)))
+                    .await
+                    .into_iter()
+                    .collect::<Result<Vec<_>, _>>()?;
 
             added_utxos.extend(uxtos);
 
@@ -162,7 +165,8 @@ impl Fetcher for BlockfrostProvider {
         let block_content: BlockContent = serde_json::from_str(&resp)
             .map_err(WError::from_err("blockfrost::fetch_block_info type error"))?;
 
-        let block_info: BlockInfo = block_content_to_block_info(block_content);
+        let block_info: BlockInfo = block_content_to_block_info(block_content)
+            .map_err(WError::from_err("blockfrost::fetch_block_info"))?;
 
         Ok(block_info)
     }
@@ -260,7 +264,10 @@ impl Fetcher for BlockfrostProvider {
             .collect();
 
         let inputs: Vec<UTxO> =
-            future::join_all(blockfrost_inputs.iter().map(|utxo| self.to_utxo(utxo))).await;
+            future::join_all(blockfrost_inputs.iter().map(|utxo| self.to_utxo(utxo)))
+                .await
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()?;
 
         let blockfrost_outputs: Vec<BlockfrostUtxo> = blockfrost_tx_utxo
             .outputs
@@ -271,7 +278,10 @@ impl Fetcher for BlockfrostProvider {
             .collect();
 
         let outputs: Vec<UTxO> =
-            future::join_all(blockfrost_outputs.iter().map(|utxo| self.to_utxo(utxo))).await;
+            future::join_all(blockfrost_outputs.iter().map(|utxo| self.to_utxo(utxo)))
+                .await
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()?;
 
         let transaction_info: TransactionInfo =
             blockfrost_txinfo_to_txinfo(blockfrost_tx_info, inputs, outputs);
@@ -300,7 +310,10 @@ impl Fetcher for BlockfrostProvider {
             .collect();
 
         let outputs: Vec<UTxO> =
-            future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo))).await;
+            future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo)))
+                .await
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()?;
 
         let utxos = match index {
             Some(i) => outputs

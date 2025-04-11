@@ -19,8 +19,8 @@ pub enum ScriptType {
 }
 
 impl BlockfrostProvider {
-    pub async fn to_utxo(&self, utxo: &BlockfrostUtxo) -> UTxO {
-        UTxO {
+    pub async fn to_utxo(&self, utxo: &BlockfrostUtxo) -> Result<UTxO, WError> {
+        let utxo = UTxO {
             input: UtxoInput {
                 output_index: utxo.output_index as u32,
                 tx_hash: utxo.tx_hash.clone(),
@@ -38,12 +38,13 @@ impl BlockfrostProvider {
                     Some(s) => self
                         .resolve_script_ref(s)
                         .await
-                        .ok_or_else(WError::from_opt("to_utxo", "script_ref"))?,
+                        .map_err(WError::from_err("resolve_script_ref"))?,
                     None => None,
                 },
                 script_hash: utxo.reference_script_hash.clone(),
             },
-        }
+        };
+        Ok(utxo)
     }
 
     pub async fn resolve_script_ref(&self, script_hash: &str) -> Result<Option<String>, WError> {

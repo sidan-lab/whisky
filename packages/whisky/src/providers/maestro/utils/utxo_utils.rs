@@ -15,8 +15,8 @@ pub enum ScriptType {
     Native(NativeScript),
 }
 
-pub fn to_utxo(utxo: &Utxo) -> UTxO {
-    UTxO {
+pub fn to_utxo(utxo: &Utxo) -> Result<UTxO, WError> {
+    let utxo = UTxO {
         input: UtxoInput {
             output_index: utxo.index as u32,
             tx_hash: utxo.tx_hash.clone(),
@@ -38,14 +38,14 @@ pub fn to_utxo(utxo: &Utxo) -> UTxO {
                     .get("bytes")
                     .and_then(|hash| hash.as_str().map(|s| s.to_string()))
             }),
-            script_ref: resolve_script(utxo)
-                .ok_or_else(WError::from_opt("to_utxo", "script_ref"))?,
+            script_ref: resolve_script(utxo).map_err(WError::from_err("to_utxo - script_ref"))?,
             script_hash: utxo
                 .reference_script
                 .as_ref()
                 .map(|script| script.hash.clone()),
         },
-    }
+    };
+    Ok(utxo)
 }
 
 pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
