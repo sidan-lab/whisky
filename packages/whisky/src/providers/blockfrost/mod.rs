@@ -3,8 +3,6 @@ pub mod models;
 pub mod utils;
 use std::collections::HashMap;
 
-use futures::future::Map;
-use serde_json::map;
 use whisky_common::*;
 
 use reqwest::RequestBuilder;

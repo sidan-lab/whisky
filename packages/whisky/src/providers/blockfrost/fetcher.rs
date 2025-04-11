@@ -228,24 +228,54 @@ impl Fetcher for BlockfrostProvider {
     }
 
     async fn fetch_tx_info(&self, hash: &str) -> Result<TransactionInfo, WError> {
-        // let url = format!("/txs/{}", hash);
+        let tx_url = format!("/txs/{}", hash);
 
-        // let resp = self
-        //     .blockfrost_client
-        //     .get(&url)
-        //     .await
-        //     .map_err(WError::from_err("blockfrost::fetch_tx_info get"))?;
+        let tx_resp = self
+            .blockfrost_client
+            .get(&tx_url)
+            .await
+            .map_err(WError::from_err("blockfrost::fetch_tx_info get"))?;
 
-        // let blockfrost_tx_info: BlockfrostTxInfo = serde_json::from_str(&resp)
-        //     .map_err(WError::from_err("blockfrost::fetch_tx_info type error"))?;
+        let blockfrost_tx_info: BlockfrostTxInfo = serde_json::from_str(&tx_resp)
+            .map_err(WError::from_err("blockfrost::fetch_tx_info type error"))?;
 
-        // let protocol: Protocol = epoch_param_to_protocol(epoch_param);
+        let utxo_url = format!("/txs/{}/utxos", hash);
 
-        // Ok(protocol)
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let utxo_resp = self
+            .blockfrost_client
+            .get(&utxo_url)
+            .await
+            .map_err(WError::from_err("blockfrost_::fetch_utxos get"))?;
+
+        let blockfrost_tx_utxo: BlockfrostTxUtxo = serde_json::from_str(&utxo_resp)
+            .map_err(WError::from_err("blockfrost_::fetch_utxos type error"))?;
+
+        let blockfrost_inputs: Vec<BlockfrostUtxo> = blockfrost_tx_utxo
+            .outputs
+            .iter()
+            .map(|utxo| {
+                blockfrost_tx_output_utxo_to_blockfrost_utxo(utxo, &blockfrost_tx_utxo.hash)
+            })
+            .collect();
+
+        let inputs: Vec<UTxO> =
+            future::join_all(blockfrost_inputs.iter().map(|utxo| self.to_utxo(utxo))).await;
+
+        let blockfrost_outputs: Vec<BlockfrostUtxo> = blockfrost_tx_utxo
+            .outputs
+            .iter()
+            .map(|utxo| {
+                blockfrost_tx_output_utxo_to_blockfrost_utxo(utxo, &blockfrost_tx_utxo.hash)
+            })
+            .collect();
+
+        let outputs: Vec<UTxO> =
+            future::join_all(blockfrost_outputs.iter().map(|utxo| self.to_utxo(utxo))).await;
+
+        let transaction_info: TransactionInfo =
+            blockfrost_txinfo_to_txinfo(blockfrost_tx_info, inputs, outputs);
+
+        Ok(transaction_info)
     }
 
     async fn fetch_utxos(&self, hash: &str, index: Option<u32>) -> Result<Vec<UTxO>, WError> {
@@ -267,8 +297,6 @@ impl Fetcher for BlockfrostProvider {
                 blockfrost_tx_output_utxo_to_blockfrost_utxo(utxo, &blockfrost_tx_utxo.hash)
             })
             .collect();
-
-        println!("blockfrost_utxo: {:?}", blockfrost_utxos[1]);
 
         let outputs: Vec<UTxO> =
             future::join_all(blockfrost_utxos.iter().map(|utxo| self.to_utxo(utxo))).await;

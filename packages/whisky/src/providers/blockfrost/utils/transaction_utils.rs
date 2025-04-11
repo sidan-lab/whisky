@@ -4,29 +4,30 @@ use crate::providers::blockfrost::models::{
     BlockfrostTxInfo, BlockfrostTxUtxoOutputs, BlockfrostUtxo,
 };
 
-// pub fn blockfrost_txinfo_to_txinfo(blockfrost_tx_info: BlockfrostTxInfo) -> TransactionInfo {
-//     TransactionInfo {
-//         index: blockfrost_tx_info.index as u32,
-//         block: blockfrost_tx_info.block,
-//         hash: blockfrost_tx_info.hash,
-//         slot: blockfrost_tx_info.slot.to_string(),
-//         fees: blockfrost_tx_info.fees,
-//         size: blockfrost_tx_info.size as u32,
-//         deposit: blockfrost_tx_info.deposit,
-//         invalid_before: blockfrost_tx_info.invalid_before.unwrap_or("".to_string()),
-//         invalid_after: blockfrost_tx_info
-//             .invalid_hereafter
-//             .unwrap_or("".to_string()),
-//         inputs: blockfrost_tx_info.in
-//         outputs: blockfrost_tx_info
-//             .outputs
-//             .iter()
-//             .map(|utxo| to_utxo(utxo))
-//             .collect(),
-//         block_height: Some(blockfrost_tx_info.block_height as u32),
-//         block_time: Some(blockfrost_tx_info.block_timestamp as u64),
-//     }
-// }
+pub fn blockfrost_txinfo_to_txinfo(
+    blockfrost_tx_info: BlockfrostTxInfo,
+    inputs: Vec<UTxO>,
+    outputs: Vec<UTxO>,
+) -> TransactionInfo {
+    TransactionInfo {
+        index: blockfrost_tx_info.index as u32,
+        block: blockfrost_tx_info.block,
+        hash: blockfrost_tx_info.hash,
+        slot: blockfrost_tx_info.slot.to_string(),
+        fees: blockfrost_tx_info.fees,
+        size: blockfrost_tx_info.size as u32,
+        deposit: blockfrost_tx_info.deposit,
+        invalid_before: blockfrost_tx_info.invalid_before.unwrap_or("".to_string()),
+        invalid_after: blockfrost_tx_info
+            .invalid_hereafter
+            .unwrap_or("".to_string()),
+        inputs: inputs,
+        outputs: outputs,
+        block_height: Some(blockfrost_tx_info.block_height as u32),
+        block_time: Some(blockfrost_tx_info.block_time as u64),
+    }
+}
+
 pub fn blockfrost_tx_output_utxo_to_blockfrost_utxo(
     utxo: &BlockfrostTxUtxoOutputs,
     tx_hash: &str,
