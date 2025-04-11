@@ -78,7 +78,13 @@ impl Fetcher for MaestroProvider {
         println!("uxtos: {:?}", added_utxos);
 
         while utxos_at_address.next_cursor.is_some() {
-            let append_cursor_string = format!("&cursor={}", utxos_at_address.next_cursor.unwrap());
+            let append_cursor_string = format!(
+                "&cursor={}",
+                utxos_at_address.next_cursor.ok_or_else(WError::from_opt(
+                    "fetch_address_utxos",
+                    "append_cursor_string"
+                ))?
+            );
             let url = format!(
                 "{}utxos?count=100{}{}",
                 query_predicate, append_asset_string, append_cursor_string
@@ -128,8 +134,15 @@ impl Fetcher for MaestroProvider {
             .collect();
 
         while addresses_holding_asset.next_cursor.is_some() {
-            let append_cursor_string =
-                format!("&cursor={}", addresses_holding_asset.next_cursor.unwrap());
+            let append_cursor_string = format!(
+                "&cursor={}",
+                addresses_holding_asset
+                    .next_cursor
+                    .ok_or_else(WError::from_opt(
+                        "fetch_address_utxos",
+                        "append_cursor_string"
+                    ))?
+            );
             let url = format!(
                 "/assets/{}{}/addresses?count=100{}",
                 &policy_id, &asset_name, append_cursor_string
@@ -264,7 +277,11 @@ impl Fetcher for MaestroProvider {
             .map_err(WError::from_err("maestro::fetch_current_epoch type error"))?;
 
         let protocol: Protocol =
-            protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data);
+            protocol_paras_data_to_protocol(protocol_parameters.data, epochs.data).map_err(
+                WError::from_err(
+                    "maestro::fetch_protocol_parameters protocol_paras_data_to_protocol",
+                ),
+            )?;
         Ok(protocol)
     }
 
