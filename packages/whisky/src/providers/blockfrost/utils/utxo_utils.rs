@@ -35,7 +35,10 @@ impl BlockfrostProvider {
                 data_hash: utxo.data_hash.clone(),
                 plutus_data: utxo.inline_datum.clone(),
                 script_ref: match &utxo.reference_script_hash {
-                    Some(s) => self.resolve_script_ref(s).await.unwrap(),
+                    Some(s) => self
+                        .resolve_script_ref(s)
+                        .await
+                        .ok_or_else(WError::from_opt("to_utxo", "script_ref"))?,
                     None => None,
                 },
                 script_hash: utxo.reference_script_hash.clone(),
@@ -58,7 +61,12 @@ impl BlockfrostProvider {
                     NativeScript::from_json(&serde_json::json!(script_json).to_string())
                         .map_err(WError::from_err("json to string"))?;
                 let script_ref = to_script_ref(&ScriptType::Native(script));
-                Ok(Some(script_ref.native_script().unwrap().to_hex()))
+                Ok(Some(
+                    script_ref
+                        .native_script()
+                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
+                        .to_hex(),
+                ))
             }
             Type::PlutusV1 => {
                 let script_cbor = self
@@ -74,7 +82,12 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(script_ref.plutus_script().unwrap().to_hex());
+                let result = Some(
+                    script_ref
+                        .plutus_script()
+                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
+                        .to_hex(),
+                );
 
                 Ok(result)
             }
@@ -92,7 +105,12 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(script_ref.plutus_script().unwrap().to_hex());
+                let result = Some(
+                    script_ref
+                        .plutus_script()
+                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
+                        .to_hex(),
+                );
 
                 Ok(result)
             }
@@ -110,7 +128,12 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(script_ref.plutus_script().unwrap().to_hex());
+                let result = Some(
+                    script_ref
+                        .plutus_script()
+                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
+                        .to_hex(),
+                );
 
                 Ok(result)
             }

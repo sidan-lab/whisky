@@ -10,7 +10,10 @@ pub fn block_content_to_block_info(block_content: BlockContent) -> BlockInfo {
             Some(s) => s.to_string(),
             None => "".to_string(),
         },
-        epoch: block_content.epoch.unwrap() as u32,
+        epoch: block_content
+            .epoch
+            .ok_or_else(WError::from_opt("block_content_to_block_info", "epoch"))?
+            as u32,
         epoch_slot: match block_content.epoch_slot {
             Some(s) => s.to_string(),
             None => "".to_string(),
