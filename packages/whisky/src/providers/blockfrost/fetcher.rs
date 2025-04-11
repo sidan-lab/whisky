@@ -1,6 +1,7 @@
 use super::models::account::BlockfrostAccountInfo;
 use super::models::asset::{AssetAddresses, AssetPolicy, BlockfrostAsset};
 use super::models::block::BlockContent;
+use super::models::epoch::EpochParam;
 use super::models::utxo::BlockfrostUtxo;
 use super::utils::*;
 use super::BlockfrostProvider;
@@ -201,10 +202,28 @@ impl Fetcher for BlockfrostProvider {
     }
 
     async fn fetch_protocol_parameters(&self, epoch: Option<u32>) -> Result<Protocol, WError> {
-        return Err(WError::new(
-            "",
-            "Maestro only supports fetching Protocol parameters of the latest completed epoch.",
-        ));
+        let append_epoch_string = match epoch {
+            Some(c) => format!("{}", c),
+            None => "latest".to_string(),
+        };
+
+        let url = format!("/epochs/{}/parameters", append_epoch_string);
+
+        let resp = self
+            .blockfrost_client
+            .get(&url)
+            .await
+            .map_err(WError::from_err(
+                "blockfrost::fetch_protocol_parameters get",
+            ))?;
+
+        let epoch_param: EpochParam = serde_json::from_str(&resp).map_err(WError::from_err(
+            "blockfrost::fetch_protocol_parameters type error",
+        ))?;
+
+        let protocol: Protocol = epoch_param_to_protocol(epoch_param);
+
+        Ok(protocol)
     }
 
     async fn fetch_tx_info(&self, hash: &str) -> Result<TransactionInfo, WError> {
@@ -335,8 +354,8 @@ mod fetcher {
     #[tokio::test]
     async fn test_fetch_collection_assets() {
         dotenv().ok();
-        let provider =
-            BlockfrostProvider::new("preprodV7dWeNmimVypuKDgsDCkEuRhKxsonOxk", "preprod");
+        let provider = BlockfrostProvider::new(var("PROJECT_ID").unwrap().as_str(), "preprod");
+
         let policy_id: &str = "1c24687602c866101d41aa64e39685ee7092f26af15c5329104141fd";
 
         let result = provider.fetch_collection_assets(policy_id, None).await;
