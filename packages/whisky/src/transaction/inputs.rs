@@ -1,8 +1,4 @@
-use sidan_csl_rs::{
-    core::utils::get_script_hash,
-    csl::JsError,
-    model::{LanguageVersion, UTxO},
-};
+use crate::*;
 
 use crate::builder::{WData, WRedeemer};
 
@@ -26,7 +22,7 @@ impl WhiskyTx {
         redeemer: &WRedeemer,
         script_cbor: &str,
         ref_script_input: Option<UTxO>,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         for input in input.iter() {
             let utxo = &input.utxo;
             self.tx_builder
@@ -66,7 +62,7 @@ impl WhiskyTx {
         Ok(self)
     }
 
-    pub fn add_collateral(&mut self, collateral: &UTxO) -> Result<&mut Self, JsError> {
+    pub fn add_collateral(&mut self, collateral: &UTxO) -> Result<&mut Self, WError> {
         self.tx_builder.tx_in_collateral(
             &collateral.input.tx_hash,
             collateral.input.output_index,

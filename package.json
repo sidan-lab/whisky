@@ -1,23 +1,22 @@
 {
-  "name": "sidan-csl-rs",
+  "name": "whisky",
   "version": "0.0.0",
   "description": "(De)serialization functions for the Cardano blockchain along with related utility functions",
   "scripts": {
-    "core:build-nodejs": "(rimraf ./packages/sidan-csl-rs/pkg && cd packages/sidan-csl-rs; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=nodejs; cd ../..; npm run js:ts-json-gen; cd packages/sidan-csl-rs; wasm-pack pack) && npm run js:flowgen",
-    "core:build-browser": "(rimraf ./packages/sidan-csl-rs/pkg && cd packages/sidan-csl-rs; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=browser; cd ../..; npm run js:ts-json-gen; cd packages/sidan-csl-rs; wasm-pack pack) && npm run js:flowgen",
-    "core:build-web": "(rimraf ./packages/sidan-csl-rs/pkg && cd packages/sidan-csl-rs; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=web; cd ../..; npm run js:ts-json-gen; cd packages/sidan-csl-rs; wasm-pack pack) && npm run js:flowgen",
-    "core:build-asm": "(rimraf ./packages/sidan-csl-rs/pkg && cd packages/sidan-csl-rs; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=browser; cd ../..; npm run js:ts-json-gen; cd packages/sidan-csl-rs; wasm-pack pack) && npm run asm:build && npm run js:flowgen",
+    "core:build-nodejs": "(rimraf ./packages/whisky-js/pkg && cd packages/whisky-js; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=nodejs; cd ../..; npm run js:ts-json-gen; cd packages/whisky-js; wasm-pack pack) && npm run js:flowgen",
+    "core:build-browser": "(rimraf ./packages/whisky-js/pkg && cd packages/whisky-js; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=browser; cd ../..; npm run js:ts-json-gen; cd packages/whisky-js; wasm-pack pack) && npm run js:flowgen",
+    "core:build-web": "(rimraf ./packages/whisky-js/pkg && cd packages/whisky-js; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=web; cd ../..; npm run js:ts-json-gen; cd packages/whisky-js; wasm-pack pack) && npm run js:flowgen",
+    "core:build-asm": "(rimraf ./packages/whisky-js/pkg && cd packages/whisky-js; WASM_BINDGEN_WEAKREF=1 wasm-pack build --target=browser; cd ../..; npm run js:ts-json-gen; cd packages/whisky-js; wasm-pack pack) && npm run asm:build && npm run js:flowgen",
     "rust:publish": "cd packages/whisky && cargo publish && cd ../",
-    "asm:build": "./binaryen/bin/wasm2js ./packages/sidan-csl-rs/pkg/sidan_csl_rs_bg.wasm --output ./packages/sidan-csl-rs/pkg/sidan_csl_rs.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
-    "core:check-warnings": "(cd packages/sidan-csl-rs; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
-    "core:test": "(cd packages/sidan-csl-rs; cargo test)",
-    "rust:test": "(cd packages/whisky; cargo test)",
-    "js:flowgen": "flowgen ./packages/sidan-csl-rs/pkg/sidan_csl_rs.d.ts -o ./packages/sidan-csl-rs/pkg/sidan_csl_rs.js.flow --add-flow-header",
-    "js:prepublish": "npm run core:test && rimraf ./publish && cp -r ./packages/sidan-csl-rs/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
+    "asm:build": "./binaryen/bin/wasm2js ./packages/whisky-js/pkg/whisky_js_bg.wasm --output ./packages/whisky-js/pkg/whisky_js.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
+    "core:check-warnings": "(cd packages/whisky-js; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
+    "rust:test": "(cd packages; cargo test)",
+    "js:flowgen": "flowgen ./packages/whisky-js/pkg/whisky_js.d.ts -o ./packages/whisky-js/pkg/whisky_js.js.flow --add-flow-header",
+    "js:prepublish": "npm run rust:test && rimraf ./publish && cp -r ./packages/whisky-js/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
     "js:publish-nodejs": "npm run core:build-nodejs && npm run js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",
     "js:publish-browser": "npm run core:build-browser && npm run js:prepublish && node ./scripts/publish-helper -browser && cd publish && npm publish --access public",
     "js:publish-asm": "npm run core:build-asm && npm run js:prepublish && node ./scripts/publish-helper -asmjs && cd publish && npm publish --access public",
-    "js:ts-json-gen": "cd packages/sidan-csl-rs/json-gen && cargo +stable run && cd ../../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
+    "js:ts-json-gen": "cd packages/whisky-js/json-gen && cargo +stable run && cd ../../.. && node ./scripts/run-json2ts.js && node ./scripts/json-ts-types.js",
     "rust:doc-clear": "rm -rf ./docs && mkdir docs && echo '<meta http-equiv=\"refresh\" content=\"0; url=whisky\">' > docs/index.html",
     "rust:doc": "npm run rust:doc-clear && RUSTDOCFLAGS=\"--cfg docsrs\" cargo doc --workspace --manifest-path packages/Cargo.toml --no-deps && cp -r ./packages/target/doc/* ./docs",
     "start-doc": "npm run rust:doc && npx http-server ./docs",
@@ -26,14 +25,14 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run core:test && npm run rust:test"
+      "pre-commit": "npm run rust:test"
     }
   },
   "author": "SIDAN Lab",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sidan-lab/sidan-csl-rs.git"
+    "url": "git+https://github.com/sidan-lab/whisky.git"
   },
   "devDependencies": {
     "flowgen": "1.21.0",

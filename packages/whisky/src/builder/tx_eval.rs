@@ -1,9 +1,7 @@
+use crate::*;
 use async_trait::async_trait;
-use sidan_csl_rs::csl::JsError;
-use sidan_csl_rs::model::{Action, EvalResult, Network, UTxO};
-use sidan_csl_rs::core::utils::evaluate_tx_scripts;
 use uplc::tx::SlotConfig;
-use crate::service::Evaluator;
+use whisky_common::Evaluator;
 
 #[derive(Clone, Debug)]
 pub struct MeshTxEvaluator {}
@@ -27,13 +25,19 @@ impl MeshTxEvaluator {
         inputs: &[UTxO],
         additional_txs: &[String],
         network: &Network,
-        slot_config: &SlotConfig
-    ) -> Result<Vec<Action>, JsError> {
-        consolidate_errors(evaluate_tx_scripts(tx_hex, inputs, additional_txs, network, slot_config)?)
+        slot_config: &SlotConfig,
+    ) -> Result<Vec<Action>, WError> {
+        consolidate_errors(evaluate_tx_scripts(
+            tx_hex,
+            inputs,
+            additional_txs,
+            network,
+            slot_config,
+        )?)
     }
 }
 
-fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, JsError> {
+fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, WError> {
     let mut actions = Vec::new();
     let mut errors_texts = Vec::new();
     for eval_result in eval_results {
@@ -48,7 +52,10 @@ fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, JsEr
     if errors_texts.is_empty() {
         Ok(actions)
     } else {
-        Err(JsError::from_str(&format!("Errors found during evaluation: [ {:?} ]", errors_texts)))
+        Err(WError::new(
+            "consolidate_errors",
+            &format!("Errors found during evaluation: [ {:?} ]", errors_texts),
+        ))
     }
 }
 
@@ -60,8 +67,8 @@ impl Evaluator for MeshTxEvaluator {
         inputs: &[UTxO],
         additional_txs: &[String],
         network: &Network,
-        slot_config: &SlotConfig
-    ) -> Result<Vec<Action>, JsError> {
+        slot_config: &SlotConfig,
+    ) -> Result<Vec<Action>, WError> {
         self.evaluate_tx_sync(tx_hex, inputs, additional_txs, network, slot_config)
     }
 }

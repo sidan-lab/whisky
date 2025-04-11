@@ -1,9 +1,11 @@
 [workspace]
-version = "0.9.21"
+version = "1.0.0"
 resolver = "2"
 members = [
-    "sidan-csl-rs",
-    "sidan-csl-rs/json-gen",
+    "whisky-common",
+    "whisky-js",
+    "whisky-js/json-gen",
+    "whisky-csl",
     "whisky",
     "whisky-examples"
 ]

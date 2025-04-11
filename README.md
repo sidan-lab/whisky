@@ -9,7 +9,7 @@
 
 [![Twitter/X](https://img.shields.io/badge/Follow%20us-@sidan__lab-blue?logo=x&style=for-the-badge)](https://x.com/sidan_lab)
 [![Crates.io](https://img.shields.io/crates/v/whisky?style=for-the-badge)](https://crates.io/crates/whisky)
-[![NPM](https://img.shields.io/npm/v/%40sidan-lab%2Fsidan-csl-rs-nodejs?style=for-the-badge)](https://www.npmjs.com/package/@sidan-lab/sidan-csl-rs-nodejs)
+[![NPM](https://img.shields.io/npm/v/%40sidan-lab%2Fwhisky-js-nodejs?style=for-the-badge)](https://www.npmjs.com/package/@sidan-lab/whisky-js-nodejs)
 
   <hr/>
 </div>
@@ -18,7 +18,7 @@
 
 This is a library for building off-chain code on Cardano. It is a cardano-cli-like wrapper on cardano-serialization-lib (equivalent to MeshJS’s lower-level APIs), supporting serious DApps’ backend on the Rust codebase. It has an active [F11 proposal](https://cardano.ideascale.com/c/idea/112172) to support the development.
 
-whisky is composed of 2 layers - the root layer sidan-csl-rs and the user-facing layer whisky. sidan-csl-rs composed of the core serialization logic with JSON-to-transaction pattern, compilable to wasm. whisky is the user-facing package that Rust Cardano developers can import directly for use.
+whisky is composed of 2 layers - the root layer whisky-js and the user-facing layer whisky. whisky-js composed of the core serialization logic with JSON-to-transaction pattern, compilable to wasm. whisky is the user-facing package that Rust Cardano developers can import directly for use.
 
 ## Features
 
@@ -38,9 +38,9 @@ cargo add whisky
 
 ```sh
 # For nodejs package
-yarn add @sidan-lab/sidan-csl-rs-nodejs
+yarn add @sidan-lab/whisky-js-nodejs
 # For browser package
-yarn add @sidan-lab/sidan-csl-rs-browser
+yarn add @sidan-lab/whisky-js-browser
 ```
 
 ## Getting Started

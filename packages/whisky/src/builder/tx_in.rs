@@ -1,6 +1,6 @@
 use super::{TxBuilder, WData, WRedeemer};
 
-use sidan_csl_rs::model::*;
+use crate::*;
 
 impl TxBuilder {
     /// ## Transaction building method
@@ -371,14 +371,11 @@ impl TxBuilder {
         tx_index: u32,
         script_size: Option<usize>,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
-            .reference_inputs
-            .push(RefTxIn {
-                tx_hash: tx_hash.to_string(),
-                tx_index,
-                script_size,
-            });
+        self.tx_builder_body.reference_inputs.push(RefTxIn {
+            tx_hash: tx_hash.to_string(),
+            tx_index,
+            script_size,
+        });
         self
     }
 
@@ -405,10 +402,7 @@ impl TxBuilder {
     ) -> &mut Self {
         let collateral_item = self.collateral_item.take();
         if let Some(collateral_item) = collateral_item {
-            self.core
-                .tx_builder_body
-                .collaterals
-                .push(collateral_item);
+            self.tx_builder_body.collaterals.push(collateral_item);
         }
         self.collateral_item = Some(PubKeyTxIn {
             tx_in: TxInParameter {

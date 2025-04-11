@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const inputFile = fs.readFileSync('./packages/sidan-csl-rs/pkg/sidan_csl_rs.d.ts', 'utf8').split(/\r?\n/);
+const inputFile = fs.readFileSync('./packages/whisky-js/pkg/whisky_js.d.ts', 'utf8').split(/\r?\n/);
 //console.log(inputFile);
 let currentClass = null;
 for (let i = 0; i < inputFile.length; ++i) {
@@ -25,9 +25,9 @@ for (let i = 0; i < inputFile.length; ++i) {
   //const m = /(\s?\*\s?\@returns\s\{)(any)(\})/.exec(line);
   //console.log(`${m} | ${line}`);
 }
-const jsonDefs = fs.readFileSync('./packages/sidan-csl-rs/json-gen/output/json-types.d.ts', 'utf8');
+const jsonDefs = fs.readFileSync('./packages/whisky-js/json-gen/output/json-types.d.ts', 'utf8');
 fs.writeFile(
-  './packages/sidan-csl-rs/pkg/sidan-csl-rs.d.ts',
+  './packages/whisky-js/pkg/whisky-js.d.ts',
   `${inputFile.join('\n')}\n${jsonDefs}`,
   (err) => {
     if (err != null) {

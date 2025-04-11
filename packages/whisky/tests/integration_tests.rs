@@ -1,13 +1,6 @@
 mod int_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::{
-        core::common::con_str0,
-        model::{Asset, Budget, LanguageVersion},
-    };
-    use whisky::{
-        builder::{ TxBuilder, TxBuilderParam, WData::{self, JSON}, WRedeemer},
-        core::utils::merge_vkey_witnesses_to_transaction, model::{Anchor, Credential, DRep, Protocol, RefTxIn, VoteKind, Voter, VotingProcedure},
-    };
+    use whisky::*;
 
     #[test]
     fn test_complex_plutus_mint_spend_with_ref_tx() {
@@ -29,13 +22,13 @@ mod int_tests {
         let domain_with_ext = "6d65736874657374696e67342e6164610a";
         let metadata = json!({
           "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700": {
-            "meshtesting4.ada": {
+            "tx_buildertesting4.ada": {
               "cnsType": "Normal",
               "description": "CNS, the digital social identity on Cardano.",
               "expiry": "1731369600000",
               "image": "ipfs://QmVEr6bkAek9Fibo7qotxfUWyXup2Bmav3SL9vB7t68Ngd",
               "mediaType": "image/jpeg",
-              "name": "meshtesting4.ada",
+              "name": "tx_buildertesting4.ada",
               "origin": "Cardano Name Service",
               "virtualSubdomainEnabled": "Disabled",
               "virtualSubdomainLimits": 0,
@@ -48,14 +41,14 @@ mod int_tests {
         let record_tx_hash = "aae2b8a5bf420c0d2fc785d54fe3eacc107145dee01b8c61beedcd13e6be9a71";
         let record_tx_id = 0;
 
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let res = mesh
+        let res = tx_builder
             .tx_in(
                 "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
                 3,
@@ -76,7 +69,7 @@ mod int_tests {
                 100,
             )
             .mint_redeemer_value(&WRedeemer {
-                data: JSON(
+                data: WData::JSON(
                     to_string(&json!({
                         "constructor": 0,
                         "fields": [{ "bytes": domain }]
@@ -100,7 +93,7 @@ mod int_tests {
             )
             .spending_reference_tx_in_inline_datum_present()
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(
+                data: WData::JSON(
                     to_string(&json!({
                       "constructor": 0,
                       "fields": [{ "bytes": domain }],
@@ -139,7 +132,7 @@ mod int_tests {
                     ),
                 ],
             )
-            .tx_out_inline_datum_value(&JSON(
+            .tx_out_inline_datum_value(&WData::JSON(
                 to_string(&json!({
                   "constructor": 0,
                   "fields": [{ "bytes": domain }],
@@ -161,14 +154,14 @@ mod int_tests {
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
             )
             .change_address(wallet_address)
-            .change_output_datum(JSON(con_str0(json!([])).to_string()))
+            .change_output_datum(WData::JSON(con_str0(json!([])).to_string()))
             .complete_sync(None);
 
         match res {
             Ok(_) => {
-                let signed_tx = mesh.complete_signing().unwrap();
+                let signed_tx = tx_builder.complete_signing().unwrap();
                 println!("{}", signed_tx);
-                assert!(mesh.core.mesh_csl.tx_hex != *"");
+                assert!(tx_builder.serializer.tx_hex() != *"");
             }
             Err(e) => {
                 println!("error: {:?}", e);
@@ -176,19 +169,19 @@ mod int_tests {
                 panic!()
             }
         }
-        println!("{}", mesh.core.mesh_csl.tx_hex);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        println!("{}", tx_builder.serializer.tx_hex());
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_simple_spend() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -202,19 +195,19 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_simple_withdraw() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "fbd3e8091c9f0c5fb446be9e58d9235f548546a5a7d5f60ee56e389344db9c5e",
                 0,
@@ -232,19 +225,19 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_plutus_withdraw() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
                 0,
@@ -262,7 +255,7 @@ mod int_tests {
             .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
             .withdrawal_script("5251010000322253330034a229309b2b2b9a01")
             .withdrawal_redeemer_value(&WRedeemer {
-                data: JSON(con_str0(json!([])).to_string()),
+                data: WData::JSON(con_str0(json!([])).to_string()),
                 ex_units: Budget {
                     mem: 2501,
                     steps: 617656,
@@ -275,19 +268,19 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_native_script_ref() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let _unsigned_tx = tx_builder
             .tx_in(
                 "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052",
                 80,
@@ -301,22 +294,21 @@ mod int_tests {
             .unwrap()
             .complete_signing().unwrap();
 
-        let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
-
-        println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        // let signed_tx = merge_vkey_witnesses_to_transaction(unsigned_tx, "a10081825820096348a7a3640d8ecc89819abffc7ed89cde399346046d50444acbd6e467f9df5840111279e89d341c9ab51f9ee7d5bb3a8db068ca6d09b7d3d4aaa48940dc55162903fd8f194df5c048055c9ac869e95729273b4ebb752be8a998f3483fac5d6e05".to_string());
+        // println!("{}", signed_tx);
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_plutus_script_cert_registration() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
                 .tx_in("b3b05ac96e1eb4cd3b3cb8150cc48ee006d12683ed1b87ee57122d83235069df",
             0,
         &[Asset::new_from_str("lovelace", "1488554147")],
@@ -329,19 +321,19 @@ mod int_tests {
         .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_plutus_script_cert_deregistration() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
                 .tx_in("b3b05ac96e1eb4cd3b3cb8150cc48ee006d12683ed1b87ee57122d83235069df",
             0,
         &[Asset::new_from_str("lovelace", "1488554147")],
@@ -351,7 +343,7 @@ mod int_tests {
         .deregister_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
         .certificate_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
         .certificate_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -361,25 +353,25 @@ mod int_tests {
         .complete_signing().unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_mint_two_tokens_with_same_policy() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh.
+        let unsigned_tx = tx_builder.
         tx_in("b68d2e8340d9454c66b0530de8fdeca5bc829c577217b12f0c0beeb7f42b6b18", 0, &[Asset::new_from_str("lovelace", "100000000000")], "addr_test1qrfkkp5dwgj07fljdum677pglfm5707hd8nwj5wgfqdhfp0m7kq4cxp4nznl6v9yp2wxvwl2vsh0mk7eq7g97vczj6uqse4e3j")
         .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, &[Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4",  "7465737431")
         .mint_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -388,7 +380,7 @@ mod int_tests {
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737432")
         .mint_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -401,12 +393,12 @@ mod int_tests {
         .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_spend_withdraw_and_unreg() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -415,13 +407,13 @@ mod int_tests {
 
         let reward_address = "stake_test17q3hjj9svuvmmj5untsrclvlwzs8q528tzj0k3g5hgkzajc23t4fh";
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
         .spending_plutus_script_v2()
         .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, &[Asset::new_from_str("lovelace", "6904620")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
                 steps: 13042895
@@ -431,7 +423,7 @@ mod int_tests {
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
                 steps: 13042895
@@ -439,7 +431,7 @@ mod int_tests {
         .deregister_stake_certificate(reward_address)
         .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
         .certificate_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
                 steps: 44400485
@@ -447,7 +439,7 @@ mod int_tests {
         .withdrawal_plutus_script_v2()
         .withdrawal(reward_address, 0)
         .withdrawal_redeemer_value(&WRedeemer {            
-            data: JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(con_str0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
                 steps: 44400485
@@ -464,18 +456,18 @@ mod int_tests {
         .unwrap();    
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_embedded_datum_output() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -494,19 +486,19 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_register_drep() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -524,19 +516,19 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_register_drep_cip129() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -554,12 +546,12 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_vote_delegation() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -567,7 +559,7 @@ mod int_tests {
         });
 
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -582,19 +574,19 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_drep_vote() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -619,19 +611,19 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_cc_vote() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
 
-        let unsigned_tx = mesh
+        let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -656,18 +648,18 @@ mod int_tests {
             .unwrap();
 
         println!("{}", unsigned_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_simple_spend_with_set_fee() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -682,12 +674,12 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_register_stake_with_custom_pp() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -715,7 +707,7 @@ mod int_tests {
                 decentralisation: 0.0,
             })
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
@@ -729,18 +721,18 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_balance() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -757,18 +749,18 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn output_to_daedalus_address_test() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -785,18 +777,18 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn change_output_to_daedalus_address_test() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -813,18 +805,18 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
     #[test]
     fn test_min_output_with_datum() {
-        let mut mesh = TxBuilder::new(TxBuilderParam {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
             fetcher: None,
             submitter: None,
             params: None,
         });
-        let signed_tx = mesh
+        let signed_tx = tx_builder
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
@@ -846,6 +838,6 @@ mod int_tests {
             .complete_signing().unwrap();
 
         println!("{}", signed_tx);
-        assert!(mesh.core.mesh_csl.tx_hex != *"");
+        assert!(tx_builder.serializer.tx_hex() != *"");
     }
 }

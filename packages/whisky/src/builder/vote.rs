@@ -1,4 +1,4 @@
-use sidan_csl_rs::model::*;
+use crate::*;
 
 use super::{TxBuilder, Vote, WRedeemer};
 

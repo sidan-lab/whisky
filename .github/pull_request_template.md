@@ -6,6 +6,13 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 
 > Please provide a brief, concise summary of the changes in your pull request. Explain the problem you are trying to solve and the solution you have implemented.
 
+## Scope of Change
+
+- [ ] `whisky`
+- [ ] `whisky-csl`
+- [ ] `whisky-common`
+- [ ] `whisky-js`
+
 ## Type of Change
 
 > Please mark the relevant option(s) for your pull request:
@@ -16,11 +23,6 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 >
 > 1. New feature - non-breaking change which adds functionality
 > 2. Breaking change - fix or feature that would cause existing functionality to not work as expected
-
-- [ ] Rust crate `whisky` - New feature
-- [ ] Rust crate `whisky` - Breaking change
-- [ ] WASM `sidan-csl-rs` - New feature
-- [ ] WASM `sidan-csl-rs` - Breaking change
 
 ### Maintenance
 

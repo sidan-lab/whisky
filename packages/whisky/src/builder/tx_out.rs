@@ -1,4 +1,4 @@
-use sidan_csl_rs::model::*;
+use crate::*;
 
 use super::{TxBuilder, WData};
 
@@ -18,10 +18,7 @@ impl TxBuilder {
     pub fn tx_out(&mut self, address: &str, amount: &[Asset]) -> &mut Self {
         if self.tx_output.is_some() {
             let tx_output = self.tx_output.take();
-            self.core
-                .tx_builder_body
-                .outputs
-                .push(tx_output.unwrap());
+            self.tx_builder_body.outputs.push(tx_output.unwrap());
         }
         self.tx_output = Some(Output {
             address: address.to_string(),

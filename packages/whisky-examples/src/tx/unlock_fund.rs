@@ -1,9 +1,4 @@
-use whisky::{
-    builder::{TxBuilder, WData, WRedeemer},
-    core::utils::deserialize_bech32_address,
-    csl::JsError,
-    model::{Budget, ProvidedScriptSource, UTxO},
-};
+use whisky::*;
 
 pub async fn unlock_fund(
     script_utxo: &UTxO,
@@ -12,9 +7,9 @@ pub async fn unlock_fund(
     my_address: &str,
     inputs: &[UTxO],
     collateral: &UTxO,
-) -> Result<String, JsError> {
+) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
-    let pub_key_hash = deserialize_bech32_address(my_address).get_pub_key_hash();
+    let pub_key_hash = deserialize_address(my_address).pub_key_hash;
 
     tx_builder
         // .spending_plutus_script_v1()

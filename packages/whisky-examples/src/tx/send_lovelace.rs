@@ -1,14 +1,10 @@
-use whisky::{
-    builder::TxBuilder,
-    csl::JsError,
-    model::{Asset, UTxO},
-};
+use whisky::*;
 
 pub fn send_lovelace(
     recipient_address: &str,
     my_address: &str,
     inputs: &[UTxO],
-) -> Result<String, JsError> {
+) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .tx_out(

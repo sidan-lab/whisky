@@ -1,11 +1,11 @@
-use whisky::{builder::TxBuilder, csl::JsError, model::UTxO};
+use whisky::*;
 
 pub fn delegate_stake(
     stake_key_hash: &str,
     pool_id: &str, // In the form of 'poolxxxxxx'
     my_address: &str,
     inputs: &[UTxO],
-) -> Result<String, JsError> {
+) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
     tx_builder
         .register_stake_certificate(stake_key_hash)

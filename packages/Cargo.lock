@@ -946,12 +946,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
+name = "futures"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65bc07b1a8bc7c85c5f2e110c476c7389b4554ba72af57d8445ea63a576b0876"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dff15bf788c671c1934e366d07e30c1814a8ef514e1af724a602e8a2fbe1b10"
 dependencies = [
  "futures-core",
+ "futures-sink",
 ]
 
 [[package]]
@@ -959,6 +975,34 @@ name = "futures-core"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05f29059c0c2090612e8d742178b0580d2dc940c837851ad723096f87af6663e"
+
+[[package]]
+name = "futures-executor"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e28d1d997f585e54aebc3f97d39e72338912123a67330d723fdbb564d646c9f"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
+name = "futures-io"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e5c1b78ca4aae1ac06c48a526a655760685149f0d465d21f37abfe57ce075c6"
+
+[[package]]
+name = "futures-macro"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.90",
+]
 
 [[package]]
 name = "futures-sink"
@@ -978,8 +1022,13 @@ version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fa08315bb612088cc391249efdc3bc77536f16c91f6cf495e6fbe85b20a4a81"
 dependencies = [
+ "futures-channel",
  "futures-core",
+ "futures-io",
+ "futures-macro",
+ "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite",
  "pin-utils",
  "slab",
@@ -2811,31 +2860,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
-name = "sidan-csl-rs"
-version = "0.9.21"
-dependencies = [
- "cardano-serialization-lib",
- "cryptoxide",
- "getrandom",
- "hex",
- "js-sys",
- "noop_proc_macro",
- "pallas-codec 0.31.0",
- "pallas-primitives",
- "pallas-traverse",
- "rand_os",
- "schemars",
- "serde",
- "serde-wasm-bindgen 0.4.5",
- "serde-wasm-bindgen 0.6.5",
- "serde_json",
- "tiny-bip39",
- "uplc",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3469,11 +3493,12 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "0.9.21"
+version = "1.0.0"
 dependencies = [
  "async-trait",
  "cryptoxide",
  "dotenv",
+ "futures",
  "getrandom",
  "hex",
  "maestro-rust-sdk",
@@ -3486,20 +3511,76 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
- "sidan-csl-rs",
  "tokio",
  "uplc",
  "wasm-bindgen",
+ "whisky-common",
+ "whisky-csl",
+]
+
+[[package]]
+name = "whisky-common"
+version = "1.0.0"
+dependencies = [
+ "async-trait",
+ "hex",
+ "schemars",
+ "serde",
+ "serde_json",
+ "uplc",
+]
+
+[[package]]
+name = "whisky-csl"
+version = "1.0.0"
+dependencies = [
+ "cardano-serialization-lib",
+ "cryptoxide",
+ "getrandom",
+ "hex",
+ "js-sys",
+ "noop_proc_macro",
+ "pallas-codec 0.31.0",
+ "pallas-primitives",
+ "pallas-traverse",
+ "rand_os",
+ "schemars",
+ "serde",
+ "serde-wasm-bindgen 0.4.5",
+ "serde-wasm-bindgen 0.6.5",
+ "serde_json",
+ "tiny-bip39",
+ "uplc",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "whisky-common",
 ]
 
 [[package]]
 name = "whisky-examples"
-version = "0.9.21"
+version = "1.0.0"
 dependencies = [
  "actix-cors",
  "actix-web",
  "serde",
  "whisky",
+]
+
+[[package]]
+name = "whisky-js"
+version = "1.0.0"
+dependencies = [
+ "js-sys",
+ "noop_proc_macro",
+ "rand_os",
+ "serde",
+ "serde-wasm-bindgen 0.4.5",
+ "serde_json",
+ "uplc",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "whisky-common",
+ "whisky-csl",
 ]
 
 [[package]]

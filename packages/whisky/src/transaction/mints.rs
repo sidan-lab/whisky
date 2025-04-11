@@ -1,9 +1,5 @@
-use sidan_csl_rs::{
-    csl::JsError,
-    model::{LanguageVersion, MintParameter},
-};
-
 use crate::builder::WRedeemer;
+use crate::*;
 
 use super::{WhiskyScriptType, WhiskyTx};
 
@@ -13,7 +9,7 @@ impl WhiskyTx {
         language_version: &LanguageVersion,
         mint_param: &MintParameter,
         redeemer: &WRedeemer,
-    ) -> Result<&mut Self, JsError> {
+    ) -> Result<&mut Self, WError> {
         self.tx_builder
             .mint_plutus_script(language_version)
             .mint(

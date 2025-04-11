@@ -1,11 +1,7 @@
 #[cfg(test)]
 mod tx_builder_core_tests {
     use serde_json::{json, to_string};
-    use sidan_csl_rs::model::{Asset, Budget};
-    use whisky::{
-        builder::{TxBuilder, TxBuilderParam, WData::JSON, WRedeemer},
-        core::common::{builtin_byte_string, con_str0},
-    };
+    use whisky::*;
 
     #[test]
     fn test_tx_builder_tx_builder_core() {
@@ -60,7 +56,7 @@ mod tx_builder_core_tests {
             )
             .spending_reference_tx_in_inline_datum_present()
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(data),
+                data: WData::JSON(data),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -92,9 +88,9 @@ mod tx_builder_core_tests {
                 &[asset],
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
-            .tx_in_datum_value(&JSON(data.clone()))
+            .tx_in_datum_value(&WData::JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(data.clone()),
+                data: WData::JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -132,9 +128,9 @@ mod tx_builder_core_tests {
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 100,
             )
-            .tx_in_datum_value(&JSON(data.clone()))
+            .tx_in_datum_value(&WData::JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(data.clone()),
+                data: WData::JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -168,9 +164,9 @@ mod tx_builder_core_tests {
                 "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
             )
             .tx_in_script(script_cbor)
-            .tx_in_datum_value(&JSON(data.clone()))
+            .tx_in_datum_value(&WData::JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(data.clone()),
+                data: WData::JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -209,9 +205,9 @@ mod tx_builder_core_tests {
                 "8be60057c65fbae6d5c0673f899fea68868b16aeba6ff06f2d7f3161",
                 100,
             )
-            .tx_in_datum_value(&JSON(data.clone()))
+            .tx_in_datum_value(&WData::JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
-                data: JSON(data.clone()),
+                data: WData::JSON(data.clone()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,
@@ -253,7 +249,7 @@ mod tx_builder_core_tests {
                 100,
             )
             .mint_redeemer_value(&WRedeemer {
-                data: JSON(con_str0(json!([builtin_byte_string("1234abcd")])).to_string()),
+                data: WData::JSON(con_str0(json!([builtin_byte_string("1234abcd")])).to_string()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,

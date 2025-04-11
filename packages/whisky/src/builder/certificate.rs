@@ -1,4 +1,4 @@
-use sidan_csl_rs::model::*;
+use crate::*;
 
 use super::{TxBuilder, WRedeemer};
 
@@ -15,8 +15,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn register_pool_certificate(&mut self, pool_params: &PoolParams) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterPool(RegisterPool {
@@ -38,8 +37,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn register_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::RegisterStake(RegisterStake {
@@ -67,8 +65,7 @@ impl TxBuilder {
         stake_key_address: &str,
         pool_id: &str,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DelegateStake(DelegateStake {
@@ -91,8 +88,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn deregister_stake_certificate(&mut self, stake_key_address: &str) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DeregisterStake(DeregisterStake {
@@ -115,8 +111,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn retire_pool_certificate(&mut self, pool_id: &str, epoch: u32) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::RetirePool(
                 RetirePool {
@@ -144,8 +139,7 @@ impl TxBuilder {
         stake_key_address: &str,
         drep: &DRep,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteDelegation(VoteDelegation {
@@ -175,8 +169,7 @@ impl TxBuilder {
         pool_key_hash: &str,
         drep: &DRep,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeAndVoteDelegation(StakeAndVoteDelegation {
@@ -207,8 +200,7 @@ impl TxBuilder {
         pool_key_hash: &str,
         coin: u64,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeRegistrationAndDelegation(StakeRegistrationAndDelegation {
@@ -239,8 +231,7 @@ impl TxBuilder {
         drep: &DRep,
         coin: u64,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::VoteRegistrationAndDelegation(VoteRegistrationAndDelegation {
@@ -273,8 +264,7 @@ impl TxBuilder {
         drep: &DRep,
         coin: u64,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::StakeVoteRegistrationAndDelegation(
@@ -306,8 +296,7 @@ impl TxBuilder {
         committee_cold_key_address: &str,
         committee_hot_key_address: &str,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeHotAuth(CommitteeHotAuth {
@@ -335,8 +324,7 @@ impl TxBuilder {
         committee_cold_key_address: &str,
         anchor: Option<Anchor>,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::CommitteeColdResign(CommitteeColdResign {
@@ -366,8 +354,7 @@ impl TxBuilder {
         coin: u64,
         anchor: Option<Anchor>,
     ) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepRegistration(DRepRegistration {
@@ -392,8 +379,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn drep_deregistration(&mut self, drep_id: &str, coin: u64) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(
                 CertificateType::DRepDeregistration(DRepDeregistration {
@@ -417,8 +403,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn drep_update(&mut self, drep_id: &str, anchor: Option<Anchor>) -> &mut Self {
-        self.core
-            .tx_builder_body
+        self.tx_builder_body
             .certificates
             .push(Certificate::BasicCertificate(CertificateType::DRepUpdate(
                 DRepUpdate {
@@ -446,49 +431,57 @@ impl TxBuilder {
         script_cbor: &str,
         version: Option<LanguageVersion>,
     ) -> &mut Self {
-        let last_cert = self.core.tx_builder_body.certificates.pop();
+        let last_cert = self.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
-            Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
-                    Certificate::ScriptCertificate(ScriptCertificate {
-                        cert: basic_cert,
-                        redeemer: None,
-                        script_source: Some(ScriptSource::ProvidedScriptSource(
-                            ProvidedScriptSource {
-                                script_cbor: script_cbor.to_string(),
-                                language_version: lang_ver,
-                            },
-                        )),
-                    }),
-                ),
-                None => self.core.tx_builder_body.certificates.push(
-                    Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
-                        cert: basic_cert,
-                        simple_script_source: Some(SimpleScriptSource::ProvidedSimpleScriptSource(
-                            ProvidedSimpleScriptSource {
-                                script_cbor: script_cbor.to_string(),
-                            },
-                        )),
-                    }),
-                ),
-            },
+            Certificate::BasicCertificate(basic_cert) => {
+                match version {
+                    Some(lang_ver) => {
+                        self.tx_builder_body
+                            .certificates
+                            .push(Certificate::ScriptCertificate(ScriptCertificate {
+                                cert: basic_cert,
+                                redeemer: None,
+                                script_source: Some(ScriptSource::ProvidedScriptSource(
+                                    ProvidedScriptSource {
+                                        script_cbor: script_cbor.to_string(),
+                                        language_version: lang_ver,
+                                    },
+                                )),
+                            }))
+                    }
+                    None => self.tx_builder_body.certificates.push(
+                        Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
+                            cert: basic_cert,
+                            simple_script_source: Some(
+                                SimpleScriptSource::ProvidedSimpleScriptSource(
+                                    ProvidedSimpleScriptSource {
+                                        script_cbor: script_cbor.to_string(),
+                                    },
+                                ),
+                            ),
+                        }),
+                    ),
+                }
+            }
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
-                    Certificate::ScriptCertificate(ScriptCertificate {
-                        cert: script_cert.cert,
-                        redeemer: script_cert.redeemer,
-                        script_source: Some(ScriptSource::ProvidedScriptSource(
-                            ProvidedScriptSource {
-                                script_cbor: script_cbor.to_string(),
-                                language_version: lang_ver,
-                            },
-                        )),
-                    }),
-                ),
+                Some(lang_ver) => {
+                    self.tx_builder_body
+                        .certificates
+                        .push(Certificate::ScriptCertificate(ScriptCertificate {
+                            cert: script_cert.cert,
+                            redeemer: script_cert.redeemer,
+                            script_source: Some(ScriptSource::ProvidedScriptSource(
+                                ProvidedScriptSource {
+                                    script_cbor: script_cbor.to_string(),
+                                    language_version: lang_ver,
+                                },
+                            )),
+                        }))
+                }
                 None => panic!("Language version has to be defined for plutus certificates"),
             },
             Certificate::SimpleScriptCertificate(_) => {
@@ -522,66 +515,78 @@ impl TxBuilder {
         version: Option<LanguageVersion>,
         script_size: usize,
     ) -> &mut Self {
-        let last_cert = self.core.tx_builder_body.certificates.pop();
+        let last_cert = self.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
         let last_cert = last_cert.unwrap();
         match last_cert {
-            Certificate::BasicCertificate(basic_cert) => match version {
-                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
-                    Certificate::ScriptCertificate(ScriptCertificate {
-                        cert: basic_cert,
-                        redeemer: None,
-                        script_source: Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-                            ref_tx_in: RefTxIn {
-                                tx_hash: tx_hash.to_string(),
-                                tx_index,
-                                // Script size is already accounted for in script source
-                                script_size: None,
-                            },
-                            script_hash: script_hash.to_string(),
-                            language_version: lang_ver,
-                            script_size,
-                        })),
-                    }),
-                ),
-                None => self.core.tx_builder_body.certificates.push(
-                    Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
-                        cert: basic_cert,
-                        simple_script_source: Some(SimpleScriptSource::InlineSimpleScriptSource(
-                            InlineSimpleScriptSource {
-                                ref_tx_in: RefTxIn {
-                                    tx_hash: tx_hash.to_string(),
-                                    tx_index,
-                                    // Script size is already accounted for in script source
-                                    script_size: None,
-                                },
-                                simple_script_hash: script_hash.to_string(),
-                                script_size,
-                            },
-                        )),
-                    }),
-                ),
-            },
+            Certificate::BasicCertificate(basic_cert) => {
+                match version {
+                    Some(lang_ver) => {
+                        self.tx_builder_body
+                            .certificates
+                            .push(Certificate::ScriptCertificate(ScriptCertificate {
+                                cert: basic_cert,
+                                redeemer: None,
+                                script_source: Some(ScriptSource::InlineScriptSource(
+                                    InlineScriptSource {
+                                        ref_tx_in: RefTxIn {
+                                            tx_hash: tx_hash.to_string(),
+                                            tx_index,
+                                            // Script size is already accounted for in script source
+                                            script_size: None,
+                                        },
+                                        script_hash: script_hash.to_string(),
+                                        language_version: lang_ver,
+                                        script_size,
+                                    },
+                                )),
+                            }))
+                    }
+                    None => self.tx_builder_body.certificates.push(
+                        Certificate::SimpleScriptCertificate(SimpleScriptCertificate {
+                            cert: basic_cert,
+                            simple_script_source: Some(
+                                SimpleScriptSource::InlineSimpleScriptSource(
+                                    InlineSimpleScriptSource {
+                                        ref_tx_in: RefTxIn {
+                                            tx_hash: tx_hash.to_string(),
+                                            tx_index,
+                                            // Script size is already accounted for in script source
+                                            script_size: None,
+                                        },
+                                        simple_script_hash: script_hash.to_string(),
+                                        script_size,
+                                    },
+                                ),
+                            ),
+                        }),
+                    ),
+                }
+            }
             Certificate::ScriptCertificate(script_cert) => match version {
-                Some(lang_ver) => self.core.tx_builder_body.certificates.push(
-                    Certificate::ScriptCertificate(ScriptCertificate {
-                        cert: script_cert.cert,
-                        redeemer: script_cert.redeemer,
-                        script_source: Some(ScriptSource::InlineScriptSource(InlineScriptSource {
-                            ref_tx_in: RefTxIn {
-                                tx_hash: tx_hash.to_string(),
-                                tx_index,
-                                // Script size is already accounted for in script source
-                                script_size: None,
-                            },
-                            script_hash: script_hash.to_string(),
-                            language_version: lang_ver,
-                            script_size,
-                        })),
-                    }),
-                ),
+                Some(lang_ver) => {
+                    self.tx_builder_body
+                        .certificates
+                        .push(Certificate::ScriptCertificate(ScriptCertificate {
+                            cert: script_cert.cert,
+                            redeemer: script_cert.redeemer,
+                            script_source: Some(ScriptSource::InlineScriptSource(
+                                InlineScriptSource {
+                                    ref_tx_in: RefTxIn {
+                                        tx_hash: tx_hash.to_string(),
+                                        tx_index,
+                                        // Script size is already accounted for in script source
+                                        script_size: None,
+                                    },
+                                    script_hash: script_hash.to_string(),
+                                    language_version: lang_ver,
+                                    script_size,
+                                },
+                            )),
+                        }))
+                }
                 None => panic!("Language version has to be defined for plutus certificates"),
             },
             Certificate::SimpleScriptCertificate(_) => {
@@ -604,7 +609,7 @@ impl TxBuilder {
     ///
     /// * `Self` - The TxBuilder instance
     pub fn certificate_redeemer_value(&mut self, redeemer: &WRedeemer) -> &mut Self {
-        let last_cert = self.core.tx_builder_body.certificates.pop();
+        let last_cert = self.tx_builder_body.certificates.pop();
         if last_cert.is_none() {
             panic!("Undefined certificate");
         }
@@ -619,25 +624,25 @@ impl TxBuilder {
             }
         };
         match last_cert {
-            Certificate::BasicCertificate(basic_cert) => self
-                .core
-                .tx_builder_body
-                .certificates
-                .push(Certificate::ScriptCertificate(ScriptCertificate {
-                    cert: basic_cert,
-                    redeemer: current_redeemer,
-                    script_source: None,
-                })),
+            Certificate::BasicCertificate(basic_cert) => {
+                self.tx_builder_body
+                    .certificates
+                    .push(Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: basic_cert,
+                        redeemer: current_redeemer,
+                        script_source: None,
+                    }))
+            }
 
-            Certificate::ScriptCertificate(script_cert) => self
-                .core
-                .tx_builder_body
-                .certificates
-                .push(Certificate::ScriptCertificate(ScriptCertificate {
-                    cert: script_cert.cert,
-                    redeemer: current_redeemer,
-                    script_source: script_cert.script_source,
-                })),
+            Certificate::ScriptCertificate(script_cert) => {
+                self.tx_builder_body
+                    .certificates
+                    .push(Certificate::ScriptCertificate(ScriptCertificate {
+                        cert: script_cert.cert,
+                        redeemer: current_redeemer,
+                        script_source: script_cert.script_source,
+                    }))
+            }
 
             Certificate::SimpleScriptCertificate(_) => {
                 panic!("Native script cert cannot use redeemers")
