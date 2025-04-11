@@ -222,7 +222,8 @@ impl Fetcher for BlockfrostProvider {
             "blockfrost::fetch_protocol_parameters type error",
         ))?;
 
-        let protocol: Protocol = epoch_param_to_protocol(epoch_param);
+        let protocol: Protocol = epoch_param_to_protocol(epoch_param)
+            .map_err(WError::from_err("blockfrost::fetch_protocol_parameters"))?;
 
         Ok(protocol)
     }
