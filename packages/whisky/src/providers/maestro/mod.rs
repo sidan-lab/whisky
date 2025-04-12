@@ -1,25 +1,13 @@
 mod evaluator;
 mod fetcher;
 pub mod models;
+mod submitter;
 pub mod utils;
 use whisky_common::*;
 
 use maestro_rust_sdk::models::transactions::RedeemerEvaluation;
 use reqwest::RequestBuilder;
 use serde::Serialize;
-
-#[derive(Serialize)]
-pub struct EvaluateTx {
-    cbor: String,
-    additional_utxos: Vec<AdditionalUtxo>,
-}
-
-#[derive(Serialize)]
-pub struct AdditionalUtxo {
-    pub tx_hash: String,
-    pub index: u32,
-    pub txout_cbor: String,
-}
 
 #[derive(Debug, Clone)]
 pub struct Maestro {
@@ -52,8 +40,6 @@ impl Maestro {
             .header("Accept", "application/json")
             .header("api-key", &self.api_key)
             .build()?;
-
-        println!("req: {:?}", req);
 
         let response = self.http_client.execute(req).await?;
 
@@ -91,25 +77,6 @@ impl Maestro {
             .await
             .map_err(WError::from_err("Maestro - post - send_request"))?;
         Ok(response_body)
-    }
-
-    pub async fn evaluate_tx(
-        &self,
-        tx_cbor: &str,
-        additional_utxos: Vec<AdditionalUtxo>,
-    ) -> Result<Vec<RedeemerEvaluation>, WError> {
-        let url = "/transactions/evaluate";
-        let body = EvaluateTx {
-            cbor: tx_cbor.to_string(),
-            additional_utxos,
-        };
-        let resp = self
-            .post(url, &body)
-            .await
-            .map_err(WError::from_err("Maestro - evaluate_tx - post"))?;
-        let redeemer_evaluations =
-            serde_json::from_str(&resp).map_err(WError::from_err("Maestro - evaluate_tx"))?;
-        Ok(redeemer_evaluations)
     }
 }
 

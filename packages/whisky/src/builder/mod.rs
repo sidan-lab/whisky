@@ -77,7 +77,7 @@ impl TxBuilder {
             fetcher: param.fetcher,
             evaluator: match param.evaluator {
                 Some(evaluator) => Some(evaluator),
-                None => Some(Box::new(MeshTxEvaluator::new())),
+                None => Some(Box::new(OfflineTxEvaluator::new())),
             },
             submitter: param.submitter,
             extra_inputs: vec![],

@@ -4,21 +4,21 @@ use uplc::tx::SlotConfig;
 use whisky_common::Evaluator;
 
 #[derive(Clone, Debug)]
-pub struct MeshTxEvaluator {}
+pub struct OfflineTxEvaluator {}
 
-impl MeshTxEvaluator {
+impl OfflineTxEvaluator {
     pub fn new() -> Self {
-        MeshTxEvaluator {}
+        OfflineTxEvaluator {}
     }
 }
 
-impl Default for MeshTxEvaluator {
+impl Default for OfflineTxEvaluator {
     fn default() -> Self {
-        MeshTxEvaluator::new()
+        OfflineTxEvaluator::new()
     }
 }
 
-impl MeshTxEvaluator {
+impl OfflineTxEvaluator {
     fn evaluate_tx_sync(
         &self,
         tx_hex: &str,
@@ -60,7 +60,7 @@ fn consolidate_errors(eval_results: Vec<EvalResult>) -> Result<Vec<Action>, WErr
 }
 
 #[async_trait]
-impl Evaluator for MeshTxEvaluator {
+impl Evaluator for OfflineTxEvaluator {
     async fn evaluate_tx(
         &self,
         tx_hex: &str,

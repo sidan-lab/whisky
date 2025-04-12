@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tx_parser {
+mod tests {
     use whisky_csl::TxParser;
     #[test]
     fn test_getting_output_cbor() {

@@ -2,22 +2,18 @@ import { Inter } from "next/font/google";
 import Head from "next/head";
 import { CardanoWallet, MeshBadge, useWallet } from "@meshsdk/react";
 import axios from "axios";
-import { applyCborEncoding } from "@meshsdk/core-csl";
 import {
-  ByteString,
+  applyCborEncoding,
   byteString,
-  ConStr0,
   conStr0,
   deserializeAddress,
+  deserializeDatum,
   MaestroProvider,
-  PubKeyHash,
   pubKeyHash,
   resolveScriptHash,
-  serializePlutusScript,
   stringToHex,
-  UTxO,
 } from "@meshsdk/core";
-import { parseDatumCbor } from "@meshsdk/core-csl";
+import { HelloWorldSpendBlueprint } from "../components/blueprint";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,22 +22,18 @@ const provider = new MaestroProvider({
   apiKey: process.env.NEXT_PUBLIC_MAESTRO_API_KEY!,
 });
 
-const helloWorldScriptRawCompiledCode =
-  "59012f010000323232323232322323223232253330083232533300a3371e6eb8c008c030dd5002a4410d48656c6c6f2c20576f726c642100100114a06644646600200200644a66602000229404c94ccc038cdc79bae301200200414a226600600600260240026eb0c034c038c038c038c038c038c038c038c038c02cdd5180098059baa002375c600260166ea801c8c0340045261365653330063370e900018039baa001132533300a00116132533300b300d002149858c94cccccc038004585858584dd7000980580098041baa00116533333300b00110011616161653330033370e900018021baa0011325333007001161325333008300a002149858c94cccccc02c004585858584dd7000980400098029baa0011653333330080011001161616165734aae7555cf2ab9f5742ae895d201";
+const blueprint = new HelloWorldSpendBlueprint();
 
-const helloWorldScriptCbor = applyCborEncoding(helloWorldScriptRawCompiledCode);
-const helloWorldScriptAddress = serializePlutusScript({
-  code: helloWorldScriptCbor,
-  version: "V2",
-}).address;
+const helloWorldScriptCbor = blueprint.cbor;
+const helloWorldScriptAddress = blueprint.address;
 
 const alwaysSucceedScriptRawCompiledCode =
-  "5834010000323232323222533300353330033370e900018021baa3006300730053754002294458526136565734aae7555cf2ba157441";
+  "58340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd01";
 
 const alwaysSucceedScriptCbor = applyCborEncoding(
   alwaysSucceedScriptRawCompiledCode
 );
-const alwaysSucceedPolicyId = resolveScriptHash(alwaysSucceedScriptCbor, "V2");
+const alwaysSucceedPolicyId = resolveScriptHash(alwaysSucceedScriptCbor, "V3");
 
 const whisky = axios.create({
   baseURL: "http://127.0.0.1:8080",
@@ -96,8 +88,8 @@ export default function Home() {
       await provider.fetchAddressUTxOs(helloWorldScriptAddress)
     ).find((input) => {
       if (input.output.plutusData) {
-        const datum: ConStr0<[PubKeyHash]> = parseDatumCbor(
-          input.output.plutusData
+        const datum = blueprint.datum(
+          deserializeDatum(input.output.plutusData)
         );
         if (datum && datum.fields && datum.fields.length > 0) {
           return datum.fields[0].bytes === ownPubKey;
@@ -109,11 +101,11 @@ export default function Home() {
     const response = await whisky.post("/unlock_fund", {
       scriptUtxo: scriptInput,
       redeemer: JSON.stringify(
-        conStr0([byteString(stringToHex("Hello, World!"))])
+        blueprint.redeemer(conStr0([byteString(stringToHex("Hello, World!"))]))
       ),
       script: {
         scriptCbor: helloWorldScriptCbor,
-        languageVersion: "v2",
+        languageVersion: "v3",
       },
       myAddress: address,
       inputs,
@@ -121,8 +113,10 @@ export default function Home() {
     });
     const txHex = response.data.txHex;
     const signedTx = await wallet.signTx(txHex);
-    const txHash = await wallet.submitTx(signedTx);
-    console.log("txHash", txHash);
+    console.log("signedTx", signedTx);
+
+    // const txHash = await wallet.submitTx(signedTx);
+    // console.log("txHash", txHash);
   };
   const mintTokens = async () => {
     const inputs = await wallet.getUtxos();
@@ -132,7 +126,7 @@ export default function Home() {
     const response = await whisky.post("/mint_tokens", {
       toMintAsset: { unit: alwaysSucceedPolicyId, quantity: "1" },
       redeemer: JSON.stringify(byteString("")),
-      script: { scriptCbor: alwaysSucceedScriptCbor, languageVersion: "v2" },
+      script: { scriptCbor: alwaysSucceedScriptCbor, languageVersion: "v3" },
       myAddress: address,
       inputs,
       collateral,

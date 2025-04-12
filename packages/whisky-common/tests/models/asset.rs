@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod asset {
+mod tests {
     use whisky_common::models::*;
 
     #[test]

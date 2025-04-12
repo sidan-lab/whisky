@@ -1,5 +1,7 @@
+mod evaluator;
 mod fetcher;
 pub mod models;
+mod submitter;
 pub mod utils;
 use std::collections::HashMap;
 
@@ -40,11 +42,7 @@ impl Blockfrost {
             .header("project_id", &self.project_id)
             .build()?;
 
-        println!("req: {:?}", req);
-
         let response = self.http_client.execute(req).await?;
-
-        println!("response: {:?}", response);
 
         if response.status().is_success() {
             *response_body = response.text().await?;

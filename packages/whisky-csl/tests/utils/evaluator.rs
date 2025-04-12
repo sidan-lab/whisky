@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod evaluator {
+mod tests {
     use cardano_serialization_lib::{self as csl};
     use pallas_codec::minicbor::Decoder;
     use pallas_primitives::conway::ScriptRef;
@@ -180,6 +180,48 @@ mod evaluator {
         );
         assert_eq!(
             serde_json::json!([{"success": {"budget":{"mem":15167,"steps":4549992},"index": 0, "tag": "mint"}}]).to_string(),
+            serde_json::json!(result.unwrap()).to_string()
+        )
+    }
+
+    #[test]
+    fn test_eval_4() {
+        let result = evaluate_tx_scripts(
+            "84a600d90102828258201e126e978ffbc3cd396fb2b69ce3368abb353443292e0ae56f6acf6f3c97022800825820e0b92c29cad3b1c8c8c192eae238f8f21748673b6ce296ec8c2fd7f1935bb3e902018182583900d161d64eef0eeb59f9124f520f8c8f3b717ed04198d54c8b17e604aea63c153fb3ea8a4ea4f165574ea91173756de0bf30222ca0e95a649a1a06b9f40a021a0002d5610b5820582d077fcb0ea39e9c803a5f09cc543c3777ee3fbc8295b4cedb6617e1242b5b0dd9010281825820e0b92c29cad3b1c8c8c192eae238f8f21748673b6ce296ec8c2fd7f1935bb3e9050ed9010281581cd161d64eef0eeb59f9124f520f8c8f3b717ed04198d54c8b17e604aea207d901028159011659011301010032323232323225980099191919192cc004cdc3a400460106ea80062646464b30013370e900018059baa005899192cc004c04400a2b30013370e900018069baa003899192cc004cdc79bae30023010375401291010d48656c6c6f2c20576f726c6421008800c528201c332232330010010032259800800c52844c96600266e3cdd7180b0010024528c4cc00c00c005012180b000a0283758602260246024602460246024602460246024601e6ea8028dd7180098079baa3011300f37540084602200316403116403c6eb8c03c004c030dd5002c5900a18069807001180600098049baa0018b200e300a300b00230090013009002300700130043754003149a26cac80115cd2ab9d5573caae7d5d0aba2105a182000082d8799f4d48656c6c6f2c20576f726c6421ff820000f5f6",
+            &[UTxO {
+                input: UtxoInput {
+                    tx_hash: "1e126e978ffbc3cd396fb2b69ce3368abb353443292e0ae56f6acf6f3c970228".to_string(),
+                    output_index: 0
+                },
+                output: UtxoOutput {
+                    address: "addr_test1wq8fgm5nunfyc0u3qxhl79me0zzzl85u6ujjn67c9zw98hgxz0k3a".to_string(),
+                    amount: vec![Asset::new_from_str("lovelace", "1155080")],
+                    data_hash: Some("0d124e70a7b3ee10e29ef38042c675927f5fa12af0a9a2084a630dffd366982c".to_string()),
+                    plutus_data: Some("d8799f581cd161d64eef0eeb59f9124f520f8c8f3b717ed04198d54c8b17e604aeff".to_string()),
+                    script_hash: None,
+                    script_ref: None,
+                }
+            },
+            UTxO {
+                input: UtxoInput {
+                    tx_hash: "e0b92c29cad3b1c8c8c192eae238f8f21748673b6ce296ec8c2fd7f1935bb3e9".to_string(),
+                    output_index: 2
+                },
+                output: UtxoOutput {
+                    address: "addr_test1wq8fgm5nunfyc0u3qxhl79me0zzzl85u6ujjn67c9zw98hgxz0k3a".to_string(),
+                    amount: vec![Asset::new_from_str("lovelace", "111880547")],
+                    data_hash: None,
+                    plutus_data: None,
+                    script_hash: None,
+                    script_ref: None,
+                }
+            }],
+            &[],
+            &Network::Mainnet,
+            &SlotConfig::default()
+        );
+        assert_eq!(
+            serde_json::json!([{"success": {"budget":{"mem":28243,"steps":8926884},"index": 0, "tag": "spend"}}]).to_string(),
             serde_json::json!(result.unwrap()).to_string()
         )
     }
