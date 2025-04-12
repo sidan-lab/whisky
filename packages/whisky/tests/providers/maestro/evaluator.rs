@@ -7,7 +7,7 @@ mod tests {
     // use whisky_common::Evaluator;
 
     #[tokio::test]
-    async fn test_maestro_provider() {
+    async fn test_evaluate_tx() {
         use dotenv::dotenv;
         // use std::env::var;
         dotenv().ok();

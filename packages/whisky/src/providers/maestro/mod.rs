@@ -1,6 +1,7 @@
 mod evaluator;
 mod fetcher;
 pub mod models;
+mod submitter;
 pub mod utils;
 use whisky_common::*;
 
@@ -39,8 +40,6 @@ impl Maestro {
             .header("Accept", "application/json")
             .header("api-key", &self.api_key)
             .build()?;
-
-        println!("req: {:?}", req);
 
         let response = self.http_client.execute(req).await?;
 
