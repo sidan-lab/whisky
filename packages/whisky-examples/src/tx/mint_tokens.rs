@@ -12,8 +12,8 @@ pub async fn mint_tokens(
 
     tx_builder
         // .mint_plutus_script_v1()
-        .mint_plutus_script_v2()
-        // .mint_plutus_script_v3()
+        // .mint_plutus_script_v2()
+        .mint_plutus_script_v3()
         .mint(
             to_mint_asset.quantity_i128(),
             &to_mint_asset.policy(),

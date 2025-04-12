@@ -50,6 +50,7 @@ pub mod services;
 pub mod transaction;
 pub mod utils;
 pub use builder::*;
+pub use providers::*;
 pub use transaction::*;
 pub use whisky_common::*;
 pub use whisky_csl::*;

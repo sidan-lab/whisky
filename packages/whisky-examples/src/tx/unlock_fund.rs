@@ -13,8 +13,8 @@ pub async fn unlock_fund(
 
     tx_builder
         // .spending_plutus_script_v1()
-        .spending_plutus_script_v2()
-        // .spending_plutus_script_v3()
+        // .spending_plutus_script_v2()
+        .spending_plutus_script_v3()
         .tx_in(
             &script_utxo.input.tx_hash,
             script_utxo.input.output_index,

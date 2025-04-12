@@ -36,7 +36,18 @@ pub fn evaluate_tx_scripts(
     let mtx = MultiEraTx::decode_for_era(Era::Conway, &tx_bytes);
     let tx = match mtx {
         Ok(MultiEraTx::Conway(tx)) => tx.into_owned(),
-        _ => return Err(WError::new("evaluate_tx_scripts", "Invalid Tx Era")),
+        Ok(_) => {
+            return Err(WError::new(
+                "evaluate_tx_scripts - Invalid Tx Era",
+                "Expected Conway era transaction",
+            ))
+        }
+        Err(err) => {
+            return Err(WError::new(
+                "evaluate_tx_scripts - decode_for_era",
+                &format!("{:?}", err),
+            ))
+        }
     };
 
     let tx_outs: Vec<UTxO> = additional_txs

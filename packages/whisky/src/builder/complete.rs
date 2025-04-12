@@ -111,11 +111,13 @@ impl TxBuilder {
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
 
-        self.serializer
+        let tx_hex = self
+            .serializer
             .set_protocol_params(self.protocol_params.clone().unwrap_or_default())
             .set_tx_builder_body(self.tx_builder_body.clone())
             .serialize_tx_body()?;
         self.serializer.reset_builder();
+        self.serializer.tx_hex = tx_hex;
         Ok(self)
     }
 

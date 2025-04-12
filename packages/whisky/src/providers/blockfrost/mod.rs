@@ -1,3 +1,4 @@
+mod evaluator;
 mod fetcher;
 pub mod models;
 pub mod utils;
