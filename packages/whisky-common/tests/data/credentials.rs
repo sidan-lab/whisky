@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod credentials {
+mod tests {
     use whisky_common::data::*;
 
     #[test]

@@ -3493,7 +3493,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3520,7 +3520,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-common"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "async-trait",
  "hex",
@@ -3532,7 +3532,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-csl"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3558,7 +3558,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3568,7 +3568,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-js"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "js-sys",
  "noop_proc_macro",

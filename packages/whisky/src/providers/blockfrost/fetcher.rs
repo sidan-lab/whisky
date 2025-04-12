@@ -49,7 +49,7 @@ impl Fetcher for BlockfrostProvider {
         let mut added_utxos: Vec<UTxO> = Vec::new();
 
         loop {
-            let append_asset_string = asset.map_or_else(String::new, |a| format!("{}", a));
+            let append_asset_string = asset.map_or_else(String::new, |a| a.to_string());
             let append_page_string = format!("?page={}", page);
 
             let url = format!(
@@ -330,7 +330,7 @@ impl Fetcher for BlockfrostProvider {
     async fn get(&self, url: &str) -> Result<serde_json::Value, WError> {
         let resp = self
             .blockfrost_client
-            .get(&url)
+            .get(url)
             .await
             .map_err(WError::from_err("blockfrost::get"))?;
         let any =

@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod value {
+mod tests {
     use whisky_common::*;
     // Operator tests
     #[test]

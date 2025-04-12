@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod evaluator {
+mod tests {
     use cardano_serialization_lib::{self as csl};
     use pallas_codec::minicbor::Decoder;
     use pallas_primitives::conway::ScriptRef;

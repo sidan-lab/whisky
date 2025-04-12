@@ -21,8 +21,8 @@ pub fn blockfrost_txinfo_to_txinfo(
         invalid_after: blockfrost_tx_info
             .invalid_hereafter
             .unwrap_or("".to_string()),
-        inputs: inputs,
-        outputs: outputs,
+        inputs,
+        outputs,
         block_height: Some(blockfrost_tx_info.block_height as u32),
         block_time: Some(blockfrost_tx_info.block_time as u64),
     }

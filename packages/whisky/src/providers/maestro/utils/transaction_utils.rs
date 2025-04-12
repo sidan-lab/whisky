@@ -26,14 +26,12 @@ pub fn transaction_detail_to_info(
         inputs: transaction_detail
             .inputs
             .iter()
-            .map(|utxo| to_utxo(utxo))
-            .into_iter()
+            .map(to_utxo)
             .collect::<Result<Vec<_>, _>>()?,
         outputs: transaction_detail
             .outputs
             .iter()
-            .map(|utxo| to_utxo(utxo))
-            .into_iter()
+            .map(to_utxo)
             .collect::<Result<Vec<_>, _>>()?,
         block_height: Some(transaction_detail.block_height as u32),
         block_time: Some(transaction_detail.block_timestamp as u64),

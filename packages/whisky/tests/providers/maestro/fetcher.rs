@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod fetcher {
+mod tests {
     use dotenv::dotenv;
     use std::env::var;
     use whisky::{Fetcher, MaestroProvider};
@@ -13,7 +13,7 @@ mod fetcher {
         match result {
             Ok(account_info) => {
                 println!("account_info: {:?}", account_info);
-                assert_eq!(account_info.active, false);
+                assert!(!account_info.active);
             }
             _ => panic!("Error fetching account info"),
         }
@@ -29,7 +29,6 @@ mod fetcher {
         match result {
             Ok(address_utxos) => {
                 println!("address_utxos: {:?}", address_utxos);
-                assert!(true);
             }
             _ => panic!("Error fetching address utxos"),
         }
@@ -69,7 +68,6 @@ mod fetcher {
         match result {
             Ok(asset_metadata) => {
                 println!("asset_metadata: {:?}", asset_metadata);
-                assert!(true);
             }
             _ => panic!("Error fetching asset metadata"),
         }
@@ -106,7 +104,6 @@ mod fetcher {
         match result {
             Ok(collection_assets) => {
                 println!("collection_assets: {:?}", collection_assets);
-                assert!(true);
             }
             _ => panic!("Error fetching collection assets"),
         }
@@ -122,7 +119,6 @@ mod fetcher {
         match result {
             Ok(protocol_para) => {
                 println!("protocol_para: {:?}", protocol_para);
-                assert!(true);
             }
             _ => panic!("Error fetching protocol para"),
         }

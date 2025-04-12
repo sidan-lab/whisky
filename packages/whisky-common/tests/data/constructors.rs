@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod constructors {
+mod tests {
     use serde_json::json;
     use whisky_common::data::*;
 

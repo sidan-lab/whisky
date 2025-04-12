@@ -73,8 +73,7 @@ impl Fetcher for MaestroProvider {
         let mut added_utxos: Vec<UTxO> = utxos_at_address
             .data
             .iter()
-            .map(|utxo| to_utxo(utxo))
-            .into_iter()
+            .map(to_utxo)
             .collect::<Result<Vec<_>, _>>()
             .map_err(WError::from_err("maestro::fetch_address_utxos to_utxo"))?;
         println!("uxtos: {:?}", added_utxos);
@@ -101,9 +100,8 @@ impl Fetcher for MaestroProvider {
             let uxtos: Vec<UTxO> = utxos_at_address
                 .data
                 .iter()
-                .map(|utxo| to_utxo(utxo))
-                .into_iter()
-                .collect::<Result<Vec<_>, _>>()
+                .map(to_utxo)
+                .collect::<Result<Vec<UTxO>, _>>()
                 .map_err(WError::from_err("maestro::fetch_address_utxos to_utxo"))?;
             added_utxos.extend(uxtos);
         }
@@ -260,7 +258,7 @@ impl Fetcher for MaestroProvider {
 
         let protocol_resp = self
             .maestro_client
-            .get(&protocol_url)
+            .get(protocol_url)
             .await
             .map_err(WError::from_err("maestro::fetch_protocol_parameters get"))?;
 
@@ -273,7 +271,7 @@ impl Fetcher for MaestroProvider {
 
         let epoch_resp = self
             .maestro_client
-            .get(&epoch_url)
+            .get(epoch_url)
             .await
             .map_err(WError::from_err("maestro::fetch_current_epoch get"))?;
 
@@ -324,9 +322,8 @@ impl Fetcher for MaestroProvider {
             .data
             .outputs
             .iter()
-            .map(|utxo| to_utxo(utxo))
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
+            .map(to_utxo)
+            .collect::<Result<Vec<UTxO>, _>>()
             .map_err(WError::from_err("maestro::fetch_utxos  - to_utxo"))?;
 
         let utxos = match index {
@@ -344,7 +341,7 @@ impl Fetcher for MaestroProvider {
     async fn get(&self, url: &str) -> Result<serde_json::Value, WError> {
         let resp = self
             .maestro_client
-            .get(&url)
+            .get(url)
             .await
             .map_err(WError::from_err("maestro::get"))?;
         let any = serde_json::from_str(&resp).map_err(WError::from_err("maestro::get"))?;
