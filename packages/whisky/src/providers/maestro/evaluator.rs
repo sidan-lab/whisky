@@ -6,9 +6,14 @@ use whisky_common::models::{Network, UTxO};
 
 use whisky_common::*;
 
-use crate::AdditionalUtxo;
-
 use super::*;
+
+#[derive(Serialize)]
+pub struct AdditionalUtxo {
+    pub tx_hash: String,
+    pub index: u32,
+    pub txout_cbor: String,
+}
 
 #[derive(Serialize)]
 pub struct EvaluateTx {

@@ -1,2 +1,2 @@
-mod provider;
+mod providers;
 mod transaction;
