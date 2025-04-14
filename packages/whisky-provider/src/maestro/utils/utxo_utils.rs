@@ -7,7 +7,7 @@ use whisky_csl::{
     csl::{self, NativeScript, PlutusScript, ScriptRef},
 };
 
-use crate::providers::maestro::models::{utxo::Utxo, ScriptVersion};
+use crate::maestro::models::{utxo::Utxo, ScriptVersion};
 
 #[derive(Debug, Clone)]
 pub enum ScriptType {

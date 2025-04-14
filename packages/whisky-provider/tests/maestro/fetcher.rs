@@ -2,7 +2,8 @@
 mod tests {
     use dotenv::dotenv;
     use std::env::var;
-    use whisky::{Fetcher, MaestroProvider};
+    use whisky_common::Fetcher;
+    use whisky_provider::MaestroProvider;
 
     #[tokio::test]
     async fn test_fetch_account_info() {

@@ -1,8 +1,6 @@
 use whisky_common::{TransactionInfo, UTxO};
 
-use crate::providers::blockfrost::models::{
-    BlockfrostTxInfo, BlockfrostTxUtxoOutputs, BlockfrostUtxo,
-};
+use crate::blockfrost::models::{BlockfrostTxInfo, BlockfrostTxUtxoOutputs, BlockfrostUtxo};
 
 pub fn blockfrost_txinfo_to_txinfo(
     blockfrost_tx_info: BlockfrostTxInfo,

@@ -7,7 +7,7 @@ use whisky_csl::{
     csl::{self, NativeScript, PlutusScript, ScriptRef},
 };
 
-use crate::providers::blockfrost::{
+use crate::blockfrost::{
     models::{utxo::BlockfrostUtxo, Script, Type},
     BlockfrostProvider,
 };

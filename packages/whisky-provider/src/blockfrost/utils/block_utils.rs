@@ -1,6 +1,6 @@
 use whisky_common::{models::BlockInfo, WError};
 
-use crate::providers::blockfrost::models::BlockContent;
+use crate::blockfrost::models::BlockContent;
 
 pub fn block_content_to_block_info(block_content: BlockContent) -> Result<BlockInfo, WError> {
     let block_info = BlockInfo {

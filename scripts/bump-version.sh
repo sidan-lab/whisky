@@ -5,6 +5,7 @@ CARGO_TOML="packages/Cargo.toml"
 WHISKY_COMMON_CARGO_TOML="packages/whisky-common/Cargo.toml"
 WHISKY_CSL_CARGO_TOML="packages/whisky-csl/Cargo.toml"
 WHISKY_JS_CARGO_TOML="packages/whisky-js/Cargo.toml"
+WHISKY_PROVIDER_CARGO_TOML="packages/whisky-provider/Cargo.toml"
 WHISKY_CARGO_TOML="packages/whisky/Cargo.toml"
 EXAMPLES_CARGO_TOML="packages/whisky-examples/Cargo.toml"
 
@@ -40,9 +41,15 @@ sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISK
 sed -i '' "s/whisky-common = { version = \"=$current_version\"/whisky-common = { version = \"=$new_version\"/" "$WHISKY_JS_CARGO_TOML"
 sed -i '' "s/whisky-csl = { version = \"=$current_version\"/whisky-csl = { version = \"=$new_version\"/" "$WHISKY_JS_CARGO_TOML"
 
+# Update the version in whisky-provider Cargo.toml
+sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISKY_PROVIDER_CARGO_TOML"
+sed -i '' "s/whisky-csl = { version = \"=$current_version\"/whisky-csl = { version = \"=$new_version\"/" "$WHISKY_PROVIDER_CARGO_TOML"
+sed -i '' "s/whisky-common = { version = \"=$current_version\"/whisky-common = { version = \"=$new_version\"/" "$WHISKY_PROVIDER_CARGO_TOML"
+
 # Update the version in whisky Cargo.toml
 sed -i '' "s/version = \"$current_version\"/version = \"$new_version\"/" "$WHISKY_CARGO_TOML"
 sed -i '' "s/whisky-csl = { version = \"=$current_version\"/whisky-csl = { version = \"=$new_version\"/" "$WHISKY_CARGO_TOML"
+sed -i '' "s/whisky-provider = { version = \"=$current_version\"/whisky-provider = { version = \"=$new_version\"/" "$WHISKY_CARGO_TOML"
 sed -i '' "s/whisky-common = { version = \"=$current_version\"/whisky-common = { version = \"=$new_version\"/" "$WHISKY_CARGO_TOML"
 
 # Update the version in examples Cargo.toml

@@ -1,6 +1,6 @@
 use whisky_common::{Protocol, WError};
 
-use crate::providers::blockfrost::models::EpochParam;
+use crate::blockfrost::models::EpochParam;
 
 pub fn epoch_param_to_protocol(epoch_param: EpochParam) -> Result<Protocol, WError> {
     let protocol =

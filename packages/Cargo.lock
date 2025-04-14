@@ -3516,6 +3516,7 @@ dependencies = [
  "wasm-bindgen",
  "whisky-common",
  "whisky-csl",
+ "whisky-provider",
 ]
 
 [[package]]
@@ -3579,6 +3580,24 @@ dependencies = [
  "uplc",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "whisky-common",
+ "whisky-csl",
+]
+
+[[package]]
+name = "whisky-provider"
+version = "1.0.1"
+dependencies = [
+ "async-trait",
+ "dotenv",
+ "futures",
+ "hex",
+ "maestro-rust-sdk",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uplc",
  "whisky-common",
  "whisky-csl",
 ]

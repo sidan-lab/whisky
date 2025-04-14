@@ -1,6 +1,6 @@
 use whisky_common::models::AccountInfo;
 
-use crate::providers::blockfrost::models::account::BlockfrostAccountInfo;
+use crate::blockfrost::models::account::BlockfrostAccountInfo;
 
 pub fn blockfrost_account_info_to_account_info(
     blockfrost_account_info: BlockfrostAccountInfo,
