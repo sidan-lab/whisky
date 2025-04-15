@@ -53,3 +53,4 @@ pub use transaction::*;
 pub use whisky_common::*;
 pub use whisky_csl::*;
 pub use whisky_provider::*;
+pub use whisky_wallet::*;

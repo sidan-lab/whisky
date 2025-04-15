@@ -24,11 +24,9 @@ mod constants;
 pub mod tx_builder;
 pub mod tx_parser;
 pub mod utils;
-pub mod wallet;
 pub use constants::*;
 pub use tx_builder::*;
 pub use tx_parser::*;
 pub use utils::*;
-pub use wallet::*;
 
 pub use cardano_serialization_lib as csl;

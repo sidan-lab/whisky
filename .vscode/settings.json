@@ -3,7 +3,9 @@
     "./packages/whisky/Cargo.toml",
     "./packages/whisky-js/Cargo.toml",
     "./packages/whisky-common/Cargo.toml",
-    "./packages/whisky-csl/Cargo.toml"
+    "./packages/whisky-csl/Cargo.toml",
+    "./packages/whisky-wallet/Cargo.toml",
+    "./packages/whisky-provider/Cargo.toml"
   ],
   "rust-analyzer.showUnlinkedFileNotification": false
 }
