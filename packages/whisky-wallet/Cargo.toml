@@ -16,10 +16,11 @@ uplc = "=1.1.9"
 whisky-csl = { version = "1.0.1", path = "../whisky-csl" }
 whisky-common = { version = "1.0.1", path = "../whisky-common" }
 tiny-bip39 = "2.0.0"
-aes = "0.8"
-rsa = "0.9"
 rand = "0.8"
-base64 = "0.21"
+aes-gcm = "0.10.3"
+pbkdf2 = "0.12.2"
+sha2 = "0.10.8"
+base64 = "0.22.1"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
