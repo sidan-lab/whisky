@@ -52,6 +52,24 @@ jobs:
 
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
+      - name: Build whisky-provider
+        run: >
+          cd packages/whisky-provider &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky-wallet
+        run: >
+          cd packages/whisky-wallet &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
       - name: Build whisky
         run: >
           cd packages/whisky &&
@@ -124,6 +142,44 @@ jobs:
           override: true
 
       - run: cd packages/whisky-csl && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  publish-wallet-crate:
+    needs: [build-test, publish-common-crate]
+    name: Publish whisky-wallet crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky-wallet && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
+  publish-provider-crate:
+    needs: [build-test, publish-common-crate]
+    name: Publish whisky-provider crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky-provider && cargo publish --token ${PUBLISH_KEY}
         env:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
