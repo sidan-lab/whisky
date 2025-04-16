@@ -4,8 +4,10 @@ resolver = "2"
 members = [
     "whisky-common",
     "whisky-js",
+    "whisky-provider",
     "whisky-js/json-gen",
     "whisky-csl",
+    "whisky-wallet",
     "whisky",
     "whisky-examples"
 ]

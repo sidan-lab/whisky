@@ -28,7 +28,6 @@ noop_proc_macro = "0.3.0"
 pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
 pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
-tiny-bip39 = "2.0.0"
 
 # wasm
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
@@ -41,7 +40,6 @@ wasm-bindgen-futures = "=0.4.34"
 pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
 pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
-tiny-bip39 = "2.0.0"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

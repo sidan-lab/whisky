@@ -45,12 +45,12 @@
 //! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
 pub mod builder;
-pub mod providers;
 pub mod services;
 pub mod transaction;
 pub mod utils;
 pub use builder::*;
-pub use providers::*;
 pub use transaction::*;
 pub use whisky_common::*;
 pub use whisky_csl::*;
+pub use whisky_provider::*;
+pub use whisky_wallet::*;

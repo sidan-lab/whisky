@@ -54,6 +54,24 @@ jobs:
 
       - uses: actions/checkout@v3
       - uses: swatinem/rust-cache@v2
+      - name: Build whisky-provider
+        run: >
+          cd packages/whisky-provider &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky-wallet
+        run: >
+          cd packages/whisky-wallet &&
+          cargo build
+          --locked
+          --verbose
+
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
       - name: Build whisky
         run: >
           cd packages/whisky &&

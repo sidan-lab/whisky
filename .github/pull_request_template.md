@@ -9,6 +9,8 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 ## Scope of Change
 
 - [ ] `whisky`
+- [ ] `whisky-provider`
+- [ ] `whisky-wallet`
 - [ ] `whisky-csl`
 - [ ] `whisky-common`
 - [ ] `whisky-js`
