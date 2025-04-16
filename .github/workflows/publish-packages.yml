@@ -146,7 +146,7 @@ jobs:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
   publish-wallet-crate:
-    needs: [build-test, publish-common-crate]
+    needs: [build-test, publish-common-crate, publish-csl-crate]
     name: Publish whisky-wallet crate
     runs-on: ubuntu-latest
     steps:
@@ -165,7 +165,7 @@ jobs:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
   publish-provider-crate:
-    needs: [build-test, publish-common-crate]
+    needs: [build-test, publish-common-crate, publish-csl-crate]
     name: Publish whisky-provider crate
     runs-on: ubuntu-latest
     steps:
@@ -184,7 +184,14 @@ jobs:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
   publish-whisky-crate:
-    needs: [build-test, publish-common-crate, publish-csl-crate]
+    needs:
+      [
+        build-test,
+        publish-common-crate,
+        publish-csl-crate,
+        publish-provider-crate,
+        publish-wallet-crate,
+      ]
     name: Publish whisky crate
     runs-on: ubuntu-latest
     steps:
