@@ -1,0 +1,1 @@
+pub(crate) const HARDENED_KEY_START: u32 = 2147483648;
