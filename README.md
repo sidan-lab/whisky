@@ -20,7 +20,9 @@ Whisky is an open-source Cardano Rust SDK, containing following modules:
 
 - `whisky` - The core Rust crate supporting Cardano DApp development in Rust.
 - `whisky-common` - Serving universal types and utilities.
-- `whisky-csl` - The crate to implement most `cardano-serialization-lib` wrapper
+- `whisky-csl` - The crate to implement most `cardano-serialization-lib` wrapper.
+- `whisky-provider` - The crate to connect external services like blockfrost or maestro.
+- `whisky-wallet` - The crate to handle wallet signing and provide key encryption utility.
 - `whisky-js` - An point of output for wasm package for `@meshsdk/core-csl`.
 
 With whisky, you can

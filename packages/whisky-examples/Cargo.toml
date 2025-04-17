@@ -4,6 +4,8 @@ version = "1.0.2"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
+readme = "../../README.md"
+authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltadefi.io>"]
 
 [[bin]] # Bin to run the server
 name = "whisky-examples"

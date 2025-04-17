@@ -1,14 +1,11 @@
 #[cfg(test)]
 mod test {
-    use whisky_wallet::{DerivationIndices, MnemonicWallet, RootKeyWallet, Wallet, WalletType};
+    use whisky_wallet::Wallet;
 
     #[test]
     fn test_mnemonic_sign_tx() {
         let mnemonic_phrase = "summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer";
-        let wallet = Wallet::new(WalletType::MnemonicWallet(MnemonicWallet {
-            mnemonic_phrase: mnemonic_phrase.to_string(),
-            derivation_indices: DerivationIndices::default(),
-        }));
+        let wallet = Wallet::new_mnemonic(mnemonic_phrase);
         let tx_hex = "84a4008182582004509185eb98edd8e2420c1ceea914d6a7a3142041039b2f12b4d4f03162d56f04018282581d605867c3b8e27840f556ac268b781578b14c5661fc63ee720dbeab663f1a000f42408258390004845038ee499ee8bc0afe56f688f27b2dd76f230d3698a9afcc1b66e0464447c1f51adaefe1ebfb0dd485a349a70479ced1d198cbdf7fe71a15d35396021a0002917d075820bdaa99eb158414dea0a91d6c727e2268574b23efe6e08ab3b841abe8059a030ca0f5d90103a0";
         let signed_tx = wallet.sign_tx(tx_hex).unwrap();
 
@@ -21,10 +18,7 @@ mod test {
     #[test]
     fn test_root_sign_tx() {
         let root_prv_key = "xprv1cqa46gk29plgkg98upclnjv5t425fcpl4rgf9mq2txdxuga7jfq5shk7np6l55nj00sl3m4syzna3uwgrwppdm0azgy9d8zahyf32s62klfyhe0ayyxkc7x92nv4s77fa0v25tufk9tnv7x6dgexe9kdz5gpeqgu";
-        let wallet = Wallet::new(WalletType::RootKeyWallet(RootKeyWallet {
-            root_key: root_prv_key.to_string(),
-            derivation_indices: DerivationIndices::default(),
-        }));
+        let wallet = Wallet::new_root_key(root_prv_key);
         let tx_hex = "84a4008182582004509185eb98edd8e2420c1ceea914d6a7a3142041039b2f12b4d4f03162d56f04018282581d605867c3b8e27840f556ac268b781578b14c5661fc63ee720dbeab663f1a000f42408258390004845038ee499ee8bc0afe56f688f27b2dd76f230d3698a9afcc1b66e0464447c1f51adaefe1ebfb0dd485a349a70479ced1d198cbdf7fe71a15d35396021a0002917d075820bdaa99eb158414dea0a91d6c727e2268574b23efe6e08ab3b841abe8059a030ca0f5d90103a0";
         let signed_tx = wallet.sign_tx(tx_hex).unwrap();
 

@@ -1,7 +1,15 @@
-use super::wallet_constants::HARDENED_KEY_START;
+pub mod derivation_indices;
+pub mod mnemonic;
+pub mod root_key;
 use bip39::{Language, Mnemonic};
+use derivation_indices::DerivationIndices;
+pub use mnemonic::MnemonicWallet;
+pub use root_key::RootKeyWallet;
 use whisky_common::WError;
-use whisky_csl::csl::{Bip32PrivateKey, FixedTransaction, PrivateKey, PublicKey};
+use whisky_csl::{
+    csl::{Bip32PrivateKey, FixedTransaction, PrivateKey, PublicKey},
+    sign_transaction,
+};
 
 pub enum WalletType {
     MnemonicWallet(MnemonicWallet),
@@ -9,29 +17,6 @@ pub enum WalletType {
     Cli(String),
 }
 
-pub struct MnemonicWallet {
-    pub mnemonic_phrase: String,
-    pub derivation_indices: DerivationIndices,
-}
-
-pub struct RootKeyWallet {
-    pub root_key: String,
-    pub derivation_indices: DerivationIndices,
-}
-
-pub struct DerivationIndices(pub Vec<u32>);
-
-impl Default for DerivationIndices {
-    fn default() -> Self {
-        DerivationIndices(vec![
-            HARDENED_KEY_START + 1852, // purpose
-            HARDENED_KEY_START + 1815, // coin type
-            HARDENED_KEY_START,        // account
-            0,                         // payment
-            0,                         // key index
-        ])
-    }
-}
 pub struct Wallet {
     pub wallet_type: WalletType,
 }
@@ -56,14 +41,86 @@ impl Wallet {
         Self { wallet_type }
     }
 
+    pub fn new_cli(cli_skey: &str) -> Self {
+        Self {
+            wallet_type: WalletType::Cli(cli_skey.to_string()),
+        }
+    }
+
+    pub fn new_mnemonic(mnemonic_phrase: &str) -> Self {
+        Self {
+            wallet_type: WalletType::MnemonicWallet(MnemonicWallet {
+                mnemonic_phrase: mnemonic_phrase.to_string(),
+                derivation_indices: DerivationIndices::default(),
+            }),
+        }
+    }
+
+    pub fn new_root_key(root_key: &str) -> Self {
+        Self {
+            wallet_type: WalletType::RootKeyWallet(RootKeyWallet {
+                root_key: root_key.to_string(),
+                derivation_indices: DerivationIndices::default(),
+            }),
+        }
+    }
+
+    pub fn payment_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+        match &mut self.wallet_type {
+            WalletType::MnemonicWallet(mnemonic_wallet) => {
+                mnemonic_wallet.payment_account(account_index, key_index);
+            }
+            WalletType::RootKeyWallet(root_key_wallet) => {
+                root_key_wallet.payment_account(account_index, key_index);
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn stake_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+        match &mut self.wallet_type {
+            WalletType::MnemonicWallet(mnemonic_wallet) => {
+                mnemonic_wallet.stake_account(account_index, key_index);
+            }
+            WalletType::RootKeyWallet(root_key_wallet) => {
+                root_key_wallet.stake_account(account_index, key_index);
+            }
+            _ => {}
+        }
+        self
+    }
+
+    pub fn drep_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+        match &mut self.wallet_type {
+            WalletType::MnemonicWallet(mnemonic_wallet) => {
+                mnemonic_wallet.drep_account(account_index, key_index);
+            }
+            WalletType::RootKeyWallet(root_key_wallet) => {
+                root_key_wallet.drep_account(account_index, key_index);
+            }
+            _ => {}
+        }
+        self
+    }
+
     pub fn sign_tx(&self, tx_hex: &str) -> Result<String, WError> {
-        let account = self
-            .get_account()
-            .map_err(WError::from_err("Wallet - sign_tx"))?;
-        let signed_tx = account
-            .sign_transaction(tx_hex)
-            .map_err(WError::from_err("Wallet - sign_tx"))?;
-        Ok(signed_tx.to_string())
+        match &self.wallet_type {
+            WalletType::Cli(cli_skey) => {
+                let signed_tx = sign_transaction(tx_hex, &[cli_skey])
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                Ok(signed_tx)
+            }
+            _ => {
+                let account = self
+                    .get_account()
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                let signed_tx = account
+                    .sign_transaction(tx_hex)
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                Ok(signed_tx.to_string())
+            }
+        }
     }
 
     pub fn get_account(&self) -> Result<Account, WError> {
