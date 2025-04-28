@@ -78,7 +78,6 @@ export default function Home() {
   };
 
   const unlockFund = async () => {
-    // "8fb75f27f60e8149a091c749f9712ad59c9d114c457aed1c1acc8d9225d5c662"
     const inputs = await wallet.getUtxos();
     const address = await wallet.getChangeAddress();
     const collateral = (await wallet.getCollateral())[0];
@@ -115,8 +114,8 @@ export default function Home() {
     const signedTx = await wallet.signTx(txHex);
     console.log("signedTx", signedTx);
 
-    // const txHash = await wallet.submitTx(signedTx);
-    // console.log("txHash", txHash);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log("txHash", txHash);
   };
   const mintTokens = async () => {
     const inputs = await wallet.getUtxos();

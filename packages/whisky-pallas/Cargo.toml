@@ -1,0 +1,28 @@
+[package]
+name = "whisky-csl"
+version = "1.0.3"
+edition = "2021"
+license = "Apache-2.0"
+description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
+readme = "../../README.md"
+authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltadefi.io>"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+uplc = "=1.1.9"
+pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
+pallas-primitives = "0.31.0"
+pallas-traverse = "0.31.0"
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+whisky-common = { version = "1.0.3", path = "../whisky-common" }
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+codegen-units = 1
+opt-level = "s"
+incremental = true
+lto = true
