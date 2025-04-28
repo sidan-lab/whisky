@@ -78,6 +78,7 @@ impl TxBuilder {
             if !self.extra_inputs.is_empty() {
                 self.add_utxos_from(self.extra_inputs.clone(), self.selection_threshold)?;
             }
+            self.queue_all_last_item();
         }
 
         self.tx_builder_body.mints.sort_by(|a, b| {

@@ -18,7 +18,7 @@ pub use tx_eval::*;
 use crate::services::*;
 
 pub struct TxBuilder {
-    pub serializer: WhiskyCSL,
+    pub serializer: Box<dyn TxBuildable>,
     pub tx_builder_body: TxBuilderBody,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
@@ -554,23 +554,29 @@ impl TxBuilder {
             .map_err(WError::from_err("add_txos_from - select_utxos"))?;
 
         for input in selected_inputs {
-            self.serializer.core.add_tx_in(PubKeyTxIn {
-                tx_in: TxInParameter {
-                    tx_hash: input.input.tx_hash.clone(),
-                    tx_index: input.input.output_index,
-                    amount: Some(input.output.amount.clone()),
-                    address: Some(input.output.address.clone()),
-                },
-            })?;
-            let pub_key_input = TxIn::PubKeyTxIn(PubKeyTxIn {
-                tx_in: TxInParameter {
-                    tx_hash: input.input.tx_hash.clone(),
-                    tx_index: input.input.output_index,
-                    amount: Some(input.output.amount.clone()),
-                    address: Some(input.output.address.clone()),
-                },
-            });
-            self.tx_builder_body.inputs.push(pub_key_input.clone());
+            self.tx_in(
+                &input.input.tx_hash,
+                input.input.output_index,
+                input.output.amount.as_vec(),
+                &input.output.address,
+            );
+            // self.serializer.core.add_tx_in(PubKeyTxIn {
+            //     tx_in: TxInParameter {
+            //         tx_hash: input.input.tx_hash.clone(),
+            //         tx_index: input.input.output_index,
+            //         amount: Some(input.output.amount.clone()),
+            //         address: Some(input.output.address.clone()),
+            //     },
+            // })?;
+            // let pub_key_input = TxIn::PubKeyTxIn(PubKeyTxIn {
+            //     tx_in: TxInParameter {
+            //         tx_hash: input.input.tx_hash.clone(),
+            //         tx_index: input.input.output_index,
+            //         amount: Some(input.output.amount.clone()),
+            //         address: Some(input.output.address.clone()),
+            //     },
+            // });
+            // self.tx_builder_body.inputs.push(pub_key_input.clone());
             self.input_for_evaluation(&input);
         }
         Ok(())

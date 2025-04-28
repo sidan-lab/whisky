@@ -10,7 +10,7 @@ use pallas_primitives::{
     Fragment,
 };
 use pallas_traverse::{Era, MultiEraTx};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use uplc::tx::SlotConfig;
 use uplc::{tx::error::Error as UplcError, tx::ResolvedInput, Hash, TransactionInput};
 use whisky_common::*;
@@ -165,6 +165,7 @@ pub fn get_cost_mdls(network: &Network) -> Result<CostModels, WError> {
         plutus_v1: Some(cost_model_list[0].clone()),
         plutus_v2: Some(cost_model_list[1].clone()),
         plutus_v3: Some(cost_model_list[2].clone()),
+        unknown: BTreeMap::new(),
     })
 }
 
