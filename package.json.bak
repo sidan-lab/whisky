@@ -23,6 +23,11 @@
     "sh:bump-version": "./scripts/bump-version.sh",
     "sh:run-example": "./scripts/run-example.sh"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run rust:test"
+    }
+  },
   "author": "SIDAN Lab",
   "license": "Apache-2.0",
   "repository": {
