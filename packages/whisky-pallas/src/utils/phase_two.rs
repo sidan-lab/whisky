@@ -1,4 +1,4 @@
-use pallas_primitives::conway::{CostModels, MintedTx, Redeemer};
+use pallas_primitives::conway::{CostModels, Redeemer, Tx};
 use uplc::machine::cost_model::ExBudget;
 use uplc::tx::error::Error;
 use uplc::tx::{eval, iter_redeemers, DataLookupTable, ResolvedInput, SlotConfig};
@@ -9,7 +9,7 @@ pub enum PhaseTwoEvalResult {
 }
 
 pub fn eval_phase_two(
-    tx: &MintedTx,
+    tx: &Tx,
     utxos: &[ResolvedInput],
     cost_mdls: Option<&CostModels>,
     slot_config: &SlotConfig,

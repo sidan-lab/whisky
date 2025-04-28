@@ -1,6 +1,4 @@
 use super::phase_two::{eval_phase_two, PhaseTwoEvalResult};
-use crate::*;
-use cardano_serialization_lib::{self as csl};
 use pallas_codec::utils::NonEmptyKeyValuePairs;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::conway::{Redeemer, RedeemerTag as PRedeemerTag};

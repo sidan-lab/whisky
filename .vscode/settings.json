@@ -4,6 +4,7 @@
     "./packages/whisky-js/Cargo.toml",
     "./packages/whisky-common/Cargo.toml",
     "./packages/whisky-csl/Cargo.toml",
+    "./packages/whisky-pallas/Cargo.toml",
     "./packages/whisky-wallet/Cargo.toml",
     "./packages/whisky-provider/Cargo.toml"
   ],
