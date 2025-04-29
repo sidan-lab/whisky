@@ -1,2 +1,15 @@
-[dependencies]
-hex = "0.4" 
+[workspace]
+version = "1.0.3"
+resolver = "2"
+members = [
+    "packages/whisky-common",
+    "packages/whisky-js",
+    "packages/whisky-provider",
+    "packages/whisky-js/json-gen",
+    "packages/whisky-csl",
+    "packages/whisky-uplc",
+    "packages/whisky-pallas",
+    "packages/whisky-wallet",
+    "packages/whisky",
+    "packages/whisky-examples"
+]

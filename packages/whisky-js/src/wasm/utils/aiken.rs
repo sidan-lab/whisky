@@ -1,7 +1,7 @@
 use crate::{error::from_werror, *};
 use whisky_common::BuilderDataType;
-use whisky_csl::apply_params_to_script;
 use whisky_csl::csl::JsError;
+use whisky_pallas::apply_params_to_script;
 
 #[wasm_bindgen]
 pub fn js_apply_params_to_script(

@@ -1,5 +1,4 @@
-use cardano_serialization_lib::{self as csl};
-
+use pallas_primitives::PlutusScript;
 use whisky_common::*;
 
 pub fn apply_double_cbor_encoding(script: &str) -> Result<String, WError> {
@@ -8,6 +7,8 @@ pub fn apply_double_cbor_encoding(script: &str) -> Result<String, WError> {
     let single_encoded_script = csl::PlutusScript::from_bytes(bytes.clone()).map_err(
         WError::from_err("apply_double_cbor_encoding - invalid script bytes"),
     )?;
+
+    let single_encoded_script = PlutusScript::from(bytes);
 
     match csl::PlutusScript::from_bytes(single_encoded_script.bytes()) {
         Ok(_) => Ok(script.to_string()),

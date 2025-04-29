@@ -1,7 +1,7 @@
 use crate::*;
 use uplc::tx::SlotConfig;
 use whisky_common::*;
-use whisky_csl::*;
+use whisky_uplc::evaluate_tx_scripts;
 
 #[wasm_bindgen]
 pub fn js_evaluate_tx_scripts(

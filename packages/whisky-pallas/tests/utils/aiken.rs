@@ -1,0 +1,14 @@
+// #[cfg(test)]
+// mod tests {
+//     use whisky_pallas::apply_double_cbor_encoding;
+
+//     #[test]
+//     fn test_apply_double_cbor_encoding() {
+//         let script =
+//         "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441";
+//         assert_eq!(
+//         apply_double_cbor_encoding(script).unwrap(),
+//         "5847584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441"
+//     );
+//     }
+// }

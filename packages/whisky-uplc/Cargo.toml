@@ -1,5 +1,5 @@
 [package]
-name = "whisky-pallas"
+name = "whisky-uplc"
 version = "1.0.3"
 edition = "2021"
 license = "Apache-2.0"
@@ -11,18 +11,14 @@ authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltade
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pallas-codec = { version = "1.0.0-alpha.1", features = ["num-bigint"] }
-pallas-primitives = "1.0.0-alpha.1"
-pallas-traverse = "1.0.0-alpha.1"
-pallas-addresses = "1.0.0-alpha.1"
+uplc = "=1.1.16"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+pallas-codec = { version = "0.32.0", features = ["num-bigint"] }
+pallas-primitives = "0.32.0"
+pallas-traverse = "0.32.0"
+pallas-addresses = "0.32.0"
 whisky-common = { version = "1.0.3", path = "../whisky-common" }
-
-[profile.release]
-# Tell `rustc` to optimize for small code size.
-codegen-units = 1
-opt-level = "s"
-incremental = true
-lto = true
+whisky-pallas = { version = "1.0.3", path = "../whisky-pallas" }
+whisky-csl = { version = "1.0.3", path = "../whisky-csl" }

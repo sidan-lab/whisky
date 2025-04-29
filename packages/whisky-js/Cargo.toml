@@ -11,15 +11,16 @@ authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltade
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+uplc = "=1.1.16"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 whisky-csl = { version = "1.0.3", path = "../whisky-csl" }
 whisky-common = { version = "1.0.3", path = "../whisky-common" }
 whisky-pallas = { version = "1.0.3", path = "../whisky-pallas" }
+whisky-uplc = { version = "1.0.3", path = "../whisky-uplc" }
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
-uplc = "=1.1.9"
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
@@ -27,8 +28,6 @@ noop_proc_macro = "0.3.0"
 # wasm
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
 serde-wasm-bindgen = "0.4.5"
-# uplc = { version = "=1.0.26-alpha", default-features = false, features = ["native-secp256k1"] }
-uplc = "=1.1.9"
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = { version = "0.1", features = ["wasm-bindgen"] }
 js-sys = "=0.3.61"
