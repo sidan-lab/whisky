@@ -10,7 +10,7 @@
     "rust:publish": "cd packages/whisky && cargo publish && cd ../",
     "asm:build": "./binaryen/bin/wasm2js ./packages/whisky-js/pkg/whisky_js_bg.wasm --output ./packages/whisky-js/pkg/whisky_js.asm.js && node ./scripts/wasm-to-asm && node ./scripts/fix-buffer-ref.js",
     "core:check-warnings": "(cd packages/whisky-js; RUSTFLAGS=\"-D warnings\" cargo +stable build)",
-    "rust:test": "(cd packages; cargo test)",
+    "rust:test": "cargo test",
     "js:flowgen": "flowgen ./packages/whisky-js/pkg/whisky_js.d.ts -o ./packages/whisky-js/pkg/whisky_js.js.flow --add-flow-header",
     "js:prepublish": "npm run rust:test && rimraf ./publish && cp -r ./packages/whisky-js/pkg ./publish && cp README.md publish/ && cp LICENSE publish/",
     "js:publish-nodejs": "npm run core:build-nodejs && npm run js:prepublish && node ./scripts/publish-helper -nodejs && cd publish && npm publish --access public",

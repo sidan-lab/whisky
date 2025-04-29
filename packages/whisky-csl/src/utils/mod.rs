@@ -1,5 +1,4 @@
 mod address;
-mod aiken;
 mod certificates;
 mod redeemer;
 mod script;
@@ -10,7 +9,6 @@ mod value;
 mod vote;
 
 pub use address::*;
-pub use aiken::*;
 pub use certificates::*;
 pub use redeemer::*;
 pub use script::*;

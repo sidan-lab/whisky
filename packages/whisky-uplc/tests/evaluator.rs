@@ -1,18 +1,18 @@
 #[cfg(test)]
 mod tests {
-    use cardano_serialization_lib::{self as csl};
     use pallas_codec::minicbor::Decoder;
     use pallas_primitives::conway::ScriptRef;
     use serde_json::json;
     use uplc::tx::SlotConfig;
     use whisky_common::*;
-    use whisky_csl::{evaluate_tx_scripts, to_pallas_script_ref, JsonSlotConfig};
+    use whisky_csl::csl;
+    use whisky_uplc::{evaluate_tx_scripts, models::to_uplc_script_ref};
 
     #[test]
     fn test_eval() {
         let result = evaluate_tx_scripts(
             "84a80082825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9800825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98010d81825820604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad9801128182582004b9070a30bd63abaaf59a3c48a1575c4127bb0edb00ecd5141fd18a85c721aa000181a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b00000002529898c810a200581d601fd5bab167338971d92b4d8f0bdf57d889903e6e934e7ea38c7dadf1011b0000000252882db4111a000412f1021a0002b74b0b5820775d0cf3c95993f6210e4410e92f72ebc3942ce9c1433694749aa239e5d13387a200818258201557f444f3ae6e61dfed593ae15ec8dbd57b8138972bf16fde5b4c559f41549b5840729f1f14ef05b7cf9b0d7583e6777674f80ae64a35bbd6820cc3c82ddf0412ca1d751b7d886eece3c6e219e1c5cc9ef3d387a8d2078f47125d54b474fbdfbd0105818400000182190b111a000b5e35f5f6",
-            &vec![UTxO {
+            &[UTxO {
                 input: UtxoInput {
                     tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),
                     output_index: 0
@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn test_v1_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some(
+        let script_ref = to_uplc_script_ref(&Some(
             "82015655010000322223253330054a229309b2b1bad0025735".to_string(),
         ))
         .unwrap()
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_v2_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some(
+        let script_ref = to_uplc_script_ref(&Some(
             "82025655010000322223253330054a229309b2b1bad0025735".to_string(),
         ))
         .unwrap()
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_v3_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some(
+        let script_ref = to_uplc_script_ref(&Some(
             "82035655010000322223253330054a229309b2b1bad0025735".to_string(),
         ))
         .unwrap()
@@ -280,7 +280,7 @@ mod tests {
 
     #[test]
     fn test_invalid_native_script_ref() {
-        let script_ref = to_pallas_script_ref(&Some(
+        let script_ref = to_uplc_script_ref(&Some(
             "82005655010000322223253330054a229309b2b1bad0025735".to_string(),
         ));
         assert!(script_ref.is_err());
