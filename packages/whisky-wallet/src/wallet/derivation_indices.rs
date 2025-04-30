@@ -44,4 +44,23 @@ impl DerivationIndices {
             key_index,                          // key index
         ])
     }
+
+    pub fn from_str(derivation_path_str: &str) -> Self {
+        let derivation_path_vec: Vec<&str> = derivation_path_str.split('/').collect();
+        let derivation_path_vec_u32: Vec<u32> = derivation_path_vec
+            .iter()
+            .skip(1)
+            .filter_map(|&s| {
+                if s.ends_with("'") {
+                    // Remove the last character (')
+                    let path_str = s.strip_suffix("'").unwrap();
+                    // Parse the string to u32 and add 0x80000000 for hardening
+                    Some(path_str.parse::<u32>().unwrap() + 0x80000000)
+                } else {
+                    s.parse::<u32>().ok()
+                }
+            })
+            .collect();
+        DerivationIndices(derivation_path_vec_u32)
+    }
 }
