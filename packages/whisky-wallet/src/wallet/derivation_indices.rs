@@ -50,14 +50,14 @@ impl DerivationIndices {
         let derivation_path_vec_u32: Vec<u32> = derivation_path_vec
             .iter()
             .skip(1)
-            .filter_map(|&s| {
+            .map(|&s| {
                 if s.ends_with("'") {
                     // Remove the last character (')
                     let path_str = s.strip_suffix("'").unwrap();
                     // Parse the string to u32 and add 0x80000000 for hardening
-                    Some(path_str.parse::<u32>().unwrap() + 0x80000000)
+                    path_str.parse::<u32>().unwrap() + 0x80000000
                 } else {
-                    s.parse::<u32>().ok()
+                    s.parse::<u32>().unwrap()
                 }
             })
             .collect();
