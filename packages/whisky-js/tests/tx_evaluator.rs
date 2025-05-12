@@ -1,8 +1,10 @@
 #[cfg(test)]
 mod tx_evaluator {
 
-    use whisky_common::*;
-    use whisky_csl::JsonSlotConfig;
+    use whisky_common::{
+        models::{Asset, UTxO, UtxoInput, UtxoOutput},
+        EvalResult, JsonSlotConfig, RedeemerTag,
+    };
     use whisky_js::*;
 
     #[test]

@@ -2,10 +2,8 @@ use whisky_common::{
     models::{Asset, UTxO, UtxoInput, UtxoOutput},
     WError,
 };
-use whisky_csl::{
-    apply_double_cbor_encoding,
-    csl::{self, NativeScript, PlutusScript, ScriptRef},
-};
+use whisky_csl::csl::{self, NativeScript, PlutusScript, ScriptRef};
+use whisky_pallas::apply_double_cbor_encoding;
 
 use crate::maestro::models::{utxo::Utxo, ScriptVersion};
 
