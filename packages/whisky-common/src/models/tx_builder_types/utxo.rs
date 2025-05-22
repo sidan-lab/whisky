@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::Asset;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Hash, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UtxoInput {
     pub output_index: u32,
