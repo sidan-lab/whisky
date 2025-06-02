@@ -1,8 +1,4 @@
-use whisky_common::{
-    DatumSource, ProvidedDatumSource, PubKeyTxIn, RefTxIn, ScriptSource, ScriptTxIn,
-    ScriptTxInParameter, SimpleScriptTxIn, SimpleScriptTxInParameter, TxIn, TxInParameter, UTxO,
-    WError,
-};
+use whisky_common::{DatumSource, InlineDatumSource, ProvidedDatumSource, PubKeyTxIn, RefTxIn, ScriptSource, ScriptTxIn, ScriptTxInParameter, SimpleScriptTxIn, SimpleScriptTxInParameter, TxIn, TxInParameter, UTxO, WError};
 
 use cardano_serialization_lib as csl;
 
@@ -152,9 +148,10 @@ pub fn utxo_to_tx_in(
 }
 
 fn get_datum_for_output(utxo: &UTxO, context: &ParserContext) -> Option<DatumSource> {
-    if let Some(datum) = &utxo.output.plutus_data {
-        Some(DatumSource::ProvidedDatumSource(ProvidedDatumSource {
-            data: datum.clone(),
+    if let Some(_) = &utxo.output.plutus_data {
+        Some(DatumSource::InlineDatumSource(InlineDatumSource {
+            tx_hash: utxo.input.tx_hash.clone(),
+            tx_index: utxo.input.output_index,
         }))
     } else if let Some(datum_hash) = &utxo.output.data_hash {
         context.script_witness.datums.get(datum_hash).cloned()

@@ -159,15 +159,7 @@ fn csl_outputs_to_outputs(outputs: &csl::TransactionOutputs) -> Result<Vec<Outpu
         }
 
         let datum: Option<Datum> = if let Some(csl_datum) = output.plutus_data() {
-            match csl_datum.to_json(csl::PlutusDatumSchema::DetailedSchema) {
-                Ok(json) => Some(Datum::Inline(json)),
-                Err(e) => {
-                    return Err(WError::new(
-                        "csl_outputs_to_outputs",
-                        &format!("Failed to convert datum to JSON: {}", e),
-                    ))
-                }
-            }
+            Some(Datum::Inline(csl_datum.to_hex()))
         } else {
             output
                 .data_hash()
