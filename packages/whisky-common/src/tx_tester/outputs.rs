@@ -3,11 +3,17 @@ use crate::{Datum, Value};
 use super::TxTester;
 
 impl TxTester {
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Not apply filter to outputs
     pub fn all_outputs(&mut self) -> &mut Self {
         self.outputs_evaluating = self.tx_body.outputs.clone();
         self
     }
 
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Filter outputs by address
     pub fn outputs_at(&mut self, address: &str) -> &mut Self {
         self.outputs_evaluating = self
             .tx_body
@@ -19,6 +25,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Filter outputs by unit
     pub fn outputs_with(&mut self, unit: &str) -> &mut Self {
         self.outputs_evaluating = self
             .tx_body
@@ -34,6 +43,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Filter outputs by policy ID
     pub fn outputs_with_policy(&mut self, policy_id: &str) -> &mut Self {
         self.outputs_evaluating = self
             .tx_body
@@ -49,6 +61,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Filter outputs by address and policy ID
     pub fn outputs_at_with_policy(&mut self, address: &str, policy_id: &str) -> &mut Self {
         self.outputs_evaluating = self
             .tx_body
@@ -64,6 +79,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing outputs
+    ///
+    /// Filter outputs by address and unit
     pub fn outputs_at_with(&mut self, address: &str, unit: &str) -> &mut Self {
         self.outputs_evaluating = self
             .tx_body
@@ -79,6 +97,11 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for outputs
+    ///
+    /// *Reminder - It must be called after filtering methods for outputs*
+    ///
+    /// Check if outputs contain the expected value.
     pub fn outputs_value(&mut self, expected_value: Value) -> &mut Self {
         let mut value = Value::new();
         self.outputs_evaluating.iter().for_each(|output| {
@@ -97,6 +120,11 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for outputs
+    ///
+    /// *Reminder - It must be called after filtering methods for outputs*
+    ///
+    /// Check if outputs contain a specific inline datum.
     pub fn outputs_inline_datum_exist(&mut self, datum_cbor: &str) -> &mut Self {
         let outputs_with_inline_datum: Vec<_> = self
             .outputs_evaluating

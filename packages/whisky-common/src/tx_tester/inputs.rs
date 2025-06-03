@@ -3,11 +3,17 @@ use crate::Value;
 use super::TxTester;
 
 impl TxTester {
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Not apply filter to inputs
     pub fn all_inputs(&mut self) -> &mut Self {
         self.inputs_evaluating = self.tx_body.inputs.clone();
         self
     }
 
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Filter inputs by address
     pub fn inputs_at(&mut self, address: &str) -> &mut Self {
         self.inputs_evaluating = self
             .tx_body
@@ -19,6 +25,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Filter inputs by unit
     pub fn inputs_with(&mut self, unit: &str) -> &mut Self {
         self.inputs_evaluating = self
             .tx_body
@@ -34,6 +43,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Filter inputs by policy ID
     pub fn inputs_with_policy(&mut self, policy_id: &str) -> &mut Self {
         self.inputs_evaluating = self
             .tx_body
@@ -49,6 +61,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Filter inputs by address and policy ID
     pub fn inputs_at_with_policy(&mut self, address: &str, policy_id: &str) -> &mut Self {
         self.inputs_evaluating = self
             .tx_body
@@ -65,6 +80,9 @@ impl TxTester {
         self
     }
 
+    /// ## Filtering methods for testing inputs
+    ///
+    /// Filter inputs by address and unit
     pub fn inputs_at_with(&mut self, address: &str, unit: &str) -> &mut Self {
         self.inputs_evaluating = self
             .tx_body
@@ -81,6 +99,11 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for inputs
+    ///
+    /// *Reminder - It must be called after filtering methods for inputs*
+    ///
+    /// Check if inputs contain the expected value.
     pub fn inputs_value(&mut self, expected_value: Value) -> &mut Self {
         let mut value = Value::new();
         self.inputs_evaluating.iter().for_each(|input| {
@@ -101,6 +124,11 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for inputs
+    ///
+    /// *Reminder - It must be called after filtering methods for inputs*
+    ///
+    /// Check if inputs contain a specific inline datum.
     pub fn inputs_inline_datum_exist(&mut self, datum_cbor: &str) -> &mut Self {
         let inputs_with_inline_datum: Vec<_> = self
             .inputs_evaluating

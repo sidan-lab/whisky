@@ -27,9 +27,10 @@ mod tx_tester_tests {
           .outputs_value(Value::from_asset(&Asset::new_from_str("lovelace", "8000000")))
           .outputs_at_with("addr_test1wpgxy3dc6yzzs4y5n8k0e5zrt4dqhx364sk9hnxgy3zp5usfh3tau", "eab3a1d125a3bf4cd941a6a0b5d7752af96fae7f5bcc641e8a0b6762")
           .outputs_inline_datum_exist(WData::JSON(output_datum.to_string()).to_cbor().unwrap().as_str())
+          // .token_minted("eab3a1d125a3bf4cd941a6a0b5d7752af96fae7f5bcc641e8a0b6762", "", 1)
           .key_signed("fa5136e9e9ecbc9071da73eeb6c9a4ff73cbf436105cf8380d1c525c");
 
-        println!("Traces: {:?}", tx_tester.traces);
-        assert!(tx_tester.traces.iter().len() == 0);
+        println!("Errors: {:?}", tx_tester.errors());
+        assert!(tx_tester.success());
     }
 }

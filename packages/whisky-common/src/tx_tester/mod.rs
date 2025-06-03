@@ -32,4 +32,16 @@ impl TxTester {
             self.traces = Some(WError::new(func_name, message));
         }
     }
+
+    pub fn success(&self) -> bool {
+        self.traces.is_none()
+    }
+
+    pub fn errors(&self) -> String {
+        if let Some(traces) = &self.traces {
+            format!("{:?}", traces)
+        } else {
+            "No errors".to_string()
+        }
+    }
 }

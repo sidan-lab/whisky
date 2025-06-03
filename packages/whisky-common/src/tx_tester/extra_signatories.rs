@@ -1,6 +1,9 @@
 use super::TxTester;
 
 impl TxTester {
+    /// ## Testing methods for required signers
+    ///
+    /// Checks if a specific key is signed in the transaction.
     pub fn key_signed(&mut self, key_hash: &str) -> &mut Self {
         let is_key_signed = self.key_signed_logic(key_hash);
         if !is_key_signed {
@@ -12,6 +15,9 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for required signers
+    ///
+    /// Checks if any one of the specified keys is signed in the transaction.
     pub fn one_of_keys_signed(&mut self, key_hashes: &[String]) -> &mut Self {
         let is_one_of_keys_signed = key_hashes
             .iter()
@@ -29,6 +35,9 @@ impl TxTester {
         self
     }
 
+    /// ## Testing methods for required signers
+    ///
+    /// Checks if all specified keys are signed in the transaction.
     pub fn all_keys_signed(&mut self, key_hashes: &[String]) -> &mut Self {
         let mut missing_keys: Vec<String> = vec![];
         let is_all_keys_signed = key_hashes.iter().all(|key_hash| {
