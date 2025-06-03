@@ -1,7 +1,7 @@
 use super::TxTester;
 
 impl TxTester {
-    pub fn key_signed(&mut self, key_hash: &str) -> &Self {
+    pub fn key_signed(&mut self, key_hash: &str) -> &mut Self {
         let is_key_signed = self.key_signed_logic(key_hash);
         if !is_key_signed {
             self.add_trace(
@@ -12,7 +12,7 @@ impl TxTester {
         self
     }
 
-    pub fn one_of_keys_signed(&mut self, key_hashes: &[String]) -> &Self {
+    pub fn one_of_keys_signed(&mut self, key_hashes: &[String]) -> &mut Self {
         let is_one_of_keys_signed = key_hashes
             .iter()
             .any(|key_hash| self.key_signed_logic(key_hash));
@@ -29,7 +29,7 @@ impl TxTester {
         self
     }
 
-    pub fn all_keys_signed(&mut self, key_hashes: &[String]) -> &Self {
+    pub fn all_keys_signed(&mut self, key_hashes: &[String]) -> &mut Self {
         let mut missing_keys: Vec<String> = vec![];
         let is_all_keys_signed = key_hashes.iter().all(|key_hash| {
             let is_key_signed = self.key_signed_logic(key_hash);

@@ -1,7 +1,7 @@
 use super::TxTester;
 
 impl TxTester {
-    pub fn valid_after(&mut self, required_timestamp: u64) -> &Self {
+    pub fn valid_after(&mut self, required_timestamp: u64) -> &mut Self {
         let invalid_before =
             if let Some(validity_range) = &self.tx_body.validity_range.invalid_hereafter {
                 *validity_range
@@ -28,7 +28,7 @@ impl TxTester {
         self
     }
 
-    pub fn valid_before(&mut self, required_timestamp: u64) -> &Self {
+    pub fn valid_before(&mut self, required_timestamp: u64) -> &mut Self {
         let invalid_hereafter =
             if let Some(validity_range) = &self.tx_body.validity_range.invalid_before {
                 *validity_range

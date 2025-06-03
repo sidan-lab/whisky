@@ -1,7 +1,7 @@
 use super::TxTester;
 
 impl TxTester {
-    pub fn token_minted(&mut self, policy_id: &str, asset_name: &str, quantity: i128) -> &Self {
+    pub fn token_minted(&mut self, policy_id: &str, asset_name: &str, quantity: i128) -> &mut Self {
         let is_token_minted = self.token_minted_logic(policy_id, asset_name, quantity);
 
         if !is_token_minted {
@@ -22,7 +22,7 @@ impl TxTester {
         policy_id: &str,
         asset_name: &str,
         quantity: i128,
-    ) -> &Self {
+    ) -> &mut Self {
         let is_token_minted = self.token_minted_logic(policy_id, asset_name, quantity);
         let is_only_one_mint = self.tx_body.mints.len() == 1;
 
@@ -52,7 +52,7 @@ impl TxTester {
         policy_id: &str,
         asset_name: &str,
         quantity: i128,
-    ) -> &Self {
+    ) -> &mut Self {
         let filtered_mints: Vec<_> = self
             .tx_body
             .mints

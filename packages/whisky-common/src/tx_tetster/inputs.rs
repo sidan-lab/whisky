@@ -3,7 +3,7 @@ use crate::Value;
 use super::TxTester;
 
 impl TxTester {
-    pub fn check_all_value_from(&mut self, address: &str, expected_value: Value) -> &Self {
+    pub fn check_all_value_from(&mut self, address: &str, expected_value: Value) -> &mut Self {
         let mut value = Value::new();
         self.tx_body.inputs.iter().for_each(|input| {
             let utxo = input.to_utxo();
