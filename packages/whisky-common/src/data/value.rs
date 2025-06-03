@@ -99,6 +99,16 @@ impl Value {
         }
     }
 
+    pub fn get_policy_assets(&self, policy_id: &str) -> Vec<Asset> {
+        let mut assets = vec![];
+        for (unit, quantity) in &self.0 {
+            if unit.starts_with(policy_id) {
+                assets.push(Asset::new(unit.clone(), quantity.to_string()));
+            }
+        }
+        assets
+    }
+
     pub fn keys(&self) -> Vec<String> {
         self.0.keys().cloned().collect()
     }

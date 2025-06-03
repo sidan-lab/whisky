@@ -1,4 +1,4 @@
-use crate::{TxBuilderBody, WError};
+use crate::{Output, TxBuilderBody, TxIn, WError};
 
 mod extra_signatories;
 mod inputs;
@@ -9,6 +9,8 @@ mod validity_range;
 #[derive(Clone)]
 pub struct TxTester {
     pub tx_body: TxBuilderBody,
+    pub inputs_evaluating: Vec<TxIn>,
+    pub outputs_evaluating: Vec<Output>,
     pub traces: Option<WError>,
 }
 
@@ -16,6 +18,8 @@ impl TxTester {
     pub fn new(tx_body: &TxBuilderBody) -> Self {
         TxTester {
             tx_body: tx_body.clone(),
+            inputs_evaluating: vec![],
+            outputs_evaluating: vec![],
             traces: None,
         }
     }
