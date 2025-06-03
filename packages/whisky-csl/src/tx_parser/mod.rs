@@ -9,7 +9,6 @@ mod mints;
 mod outputs;
 mod reference_inputs;
 mod required_signatures;
-mod unit_tetster;
 mod utxo_converter;
 mod validity_range;
 mod votes;
@@ -129,7 +128,7 @@ impl TxParser {
         &self.tx_body
     }
 
-    pub fn to_tester(&self) -> unit_tetster::TxTester {
-        unit_tetster::TxTester::new(&self.tx_body)
+    pub fn to_tester(&self) -> TxTester {
+        TxTester::new(&self.tx_body)
     }
 }

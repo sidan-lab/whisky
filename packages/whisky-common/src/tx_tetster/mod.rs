@@ -1,4 +1,4 @@
-use whisky_common::{TxBuilderBody, WError};
+use crate::{TxBuilderBody, WError};
 
 mod extra_signatories;
 mod inputs;
