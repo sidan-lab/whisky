@@ -128,6 +128,16 @@ impl TxParser {
         &self.tx_body
     }
 
+    pub fn get_builder_body_without_change(&self) -> TxBuilderBody {
+        let mut tx_body = self.tx_body.clone();
+        let outputs = self.csl_tx_body.outputs();
+        let outputs_len = outputs.len();
+        if outputs_len > 0 {
+            tx_body.outputs.pop();
+        }
+        tx_body
+    }
+
     pub fn to_tester(&self) -> TxTester {
         TxTester::new(&self.tx_body)
     }
