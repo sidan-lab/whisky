@@ -19,6 +19,6 @@ pallas-codec = { version = "0.32.0", features = ["num-bigint"] }
 pallas-primitives = "0.32.0"
 pallas-traverse = "0.32.0"
 pallas-addresses = "0.32.0"
-whisky-common = { version = "1.0.3", path = "../whisky-common" }
-whisky-pallas = { version = "1.0.3", path = "../whisky-pallas" }
-whisky-csl = { version = "1.0.3", path = "../whisky-csl" }
+whisky-common = { version = "1.0.5", path = "../whisky-common" }
+whisky-pallas = { version = "1.0.5", path = "../whisky-pallas" }
+whisky-csl = { version = "1.0.5", path = "../whisky-csl" }

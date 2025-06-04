@@ -2,8 +2,8 @@ use crate::{errors::*, Protocol, TxBuilderBody};
 use std::fmt::Debug;
 
 pub trait TxBuildable: Clone + Debug {
-    fn set_protocol_params(&mut self, protocol_params: Protocol) -> &mut Self;
-    fn set_tx_builder_body(&mut self, tx_builder: TxBuilderBody) -> &mut Self;
+    fn set_protocol_params(&mut self, protocol_params: Protocol);
+    fn set_tx_builder_body(&mut self, tx_builder: TxBuilderBody);
     fn reset_builder(&mut self) -> &mut Self;
 
     fn serialize_tx_body(&mut self) -> Result<String, WError>;

@@ -1,7 +1,7 @@
 use crate::*;
 use async_trait::async_trait;
-use uplc::tx::SlotConfig;
 use whisky_common::Evaluator;
+use whisky_uplc::{evaluate_tx_scripts, uplc::tx::SlotConfig};
 
 #[derive(Clone, Debug)]
 pub struct OfflineTxEvaluator {}

@@ -8,14 +8,12 @@ impl TxBuildable for WhiskyCSL {
         self
     }
 
-    fn set_protocol_params(&mut self, protocol_params: Protocol) -> &mut Self {
+    fn set_protocol_params(&mut self, protocol_params: Protocol) {
         self.core.protocol_params = protocol_params.clone();
-        self
     }
 
-    fn set_tx_builder_body(&mut self, tx_builder_body: TxBuilderBody) -> &mut Self {
+    fn set_tx_builder_body(&mut self, tx_builder_body: TxBuilderBody) {
         self.tx_builder_body = tx_builder_body.clone();
-        self
     }
 
     /// ## Transaction building method

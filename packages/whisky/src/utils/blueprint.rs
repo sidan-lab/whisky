@@ -1,3 +1,5 @@
+use whisky_pallas::apply_params_to_script;
+
 use crate::*;
 
 #[derive(Debug, Clone)]

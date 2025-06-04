@@ -30,6 +30,7 @@ whisky-common = { version = "1.0.5", path = "../whisky-common" }
 whisky-provider = { version = "1.0.5", path = "../whisky-provider" }
 whisky-wallet = { version = "1.0.5", path = "../whisky-wallet" }
 whisky-pallas = { version = "1.0.5", path = "../whisky-pallas" }
+whisky-uplc = { version = "1.0.5", path = "../whisky-uplc" }
 reqwest = "0.12.5"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
 futures = "0.3.31"

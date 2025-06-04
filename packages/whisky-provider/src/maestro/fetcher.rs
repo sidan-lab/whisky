@@ -324,7 +324,7 @@ impl Fetcher for MaestroProvider {
             .iter()
             .map(to_utxo)
             .collect::<Result<Vec<UTxO>, _>>()
-            .map_err(WError::from_err("maestro::fetch_utxos  - to_utxo"))?;
+            .map_err(WError::from_err("maestro::fetch_utxos - to_utxo"))?;
 
         let utxos = match index {
             Some(i) => outputs

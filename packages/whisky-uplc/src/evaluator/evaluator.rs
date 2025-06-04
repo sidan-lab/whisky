@@ -6,7 +6,7 @@ use pallas_traverse::{Era, MultiEraTx};
 use uplc::tx::error::Error as UplcError;
 use uplc::tx::SlotConfig;
 use whisky_common::*;
-use whisky_csl::TxParser;
+use whisky_csl::CSLParser;
 
 pub fn evaluate_tx_scripts(
     tx_hex: &str,
@@ -33,25 +33,17 @@ pub fn evaluate_tx_scripts(
         }
     };
 
-    let tx_outs: Vec<UTxO> = additional_txs
-        .iter()
-        .flat_map(|tx| {
-            let parsed_tx = TxParser::new(tx).unwrap();
-            println!(
-                "txout: {:?}",
-                &parsed_tx.get_tx_outs_utxo().unwrap().clone()
-            );
-            println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
-            parsed_tx.get_tx_outs_utxo().unwrap() // TODO: err handling
-        })
-        .collect();
-
-    // combine inputs and tx_outs
-    let all_inputs: Vec<UTxO> = inputs.iter().chain(tx_outs.iter()).cloned().collect();
+    let mut all_utxos = inputs.to_vec();
+    for additional_tx in additional_txs {
+        let additional_utxos = CSLParser::extract_output_utxos(additional_tx).map_err(
+            WError::from_err("evaluate_tx_scripts - extract_output_utxos"),
+        )?;
+        all_utxos.extend(additional_utxos)
+    }
 
     eval_phase_two(
         &tx,
-        &to_uplc_utxos(&all_inputs)?,
+        &to_uplc_utxos(&all_utxos)?,
         Some(&get_cost_mdls(network)?),
         slot_config,
     )

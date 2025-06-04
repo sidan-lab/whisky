@@ -18,7 +18,7 @@ pub use tx_eval::*;
 use crate::services::*;
 
 pub struct TxBuilder {
-    pub serializer: Box<dyn TxBuildable>,
+    pub serializer: WhiskyCSL,
     pub tx_builder_body: TxBuilderBody,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
@@ -557,7 +557,7 @@ impl TxBuilder {
             self.tx_in(
                 &input.input.tx_hash,
                 input.input.output_index,
-                input.output.amount.as_vec(),
+                &input.output.amount,
                 &input.output.address,
             );
             // self.serializer.core.add_tx_in(PubKeyTxIn {
