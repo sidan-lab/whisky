@@ -1,9 +1,12 @@
-use whisky_common::{PlutusScriptWithdrawal, PubKeyWithdrawal, ScriptSource, SimpleScriptSource, SimpleScriptWithdrawal, WError, Withdrawal};
-use super::context::RedeemerIndex;
-use super::CSLParser;
-use super::context::Script;
 use super::context::ParserContext;
+use super::context::RedeemerIndex;
+use super::context::Script;
+use super::CSLParser;
 use cardano_serialization_lib as csl;
+use whisky_common::{
+    PlutusScriptWithdrawal, PubKeyWithdrawal, ScriptSource, SimpleScriptSource,
+    SimpleScriptWithdrawal, WError, Withdrawal,
+};
 
 impl CSLParser {
     pub fn get_withdrawals(&self) -> &Vec<Withdrawal> {
@@ -28,12 +31,20 @@ pub fn csl_withdrawals_to_withdrawals(
     let len = withdrawals_keys.len();
     for i in 0..len {
         let reward_address = withdrawals_keys.get(i);
-        let reward_address_bech32 = reward_address.to_address().to_bech32(None)
-            .map_err(|e| WError::new("csl_withdrawals_to_withdrawals", &format!("Failed to convert address to bech32: {}", e)))?;
+        let reward_address_bech32 = reward_address.to_address().to_bech32(None).map_err(|e| {
+            WError::new(
+                "csl_withdrawals_to_withdrawals",
+                &format!("Failed to convert address to bech32: {:?}", e),
+            )
+        })?;
         let withdrawal_amount = withdrawals.get(&reward_address);
         if let Some(withdrawal_amount) = withdrawal_amount {
-            let coin = withdrawal_amount.to_str().parse::<u64>()
-                .map_err(|e| WError::new("csl_withdrawals_to_withdrawals", &format!("Failed to parse withdrawal amount: {}", e)))?;
+            let coin = withdrawal_amount.to_str().parse::<u64>().map_err(|e| {
+                WError::new(
+                    "csl_withdrawals_to_withdrawals",
+                    &format!("Failed to parse withdrawal amount: {:?}", e),
+                )
+            })?;
 
             let redeemer = context
                 .script_witness
@@ -66,9 +77,7 @@ pub fn csl_withdrawals_to_withdrawals(
                             )),
                         }));
                     }
-                    Script::ReferencedNative(
-                        inline_simple_script_source,
-                    ) => {
+                    Script::ReferencedNative(inline_simple_script_source) => {
                         result.push(Withdrawal::SimpleScriptWithdrawal(SimpleScriptWithdrawal {
                             address: reward_address_bech32,
                             coin,
@@ -77,9 +86,7 @@ pub fn csl_withdrawals_to_withdrawals(
                             )),
                         }));
                     }
-                   Script::ReferencedPlutus(
-                        inline_script_source,
-                    ) => {
+                    Script::ReferencedPlutus(inline_script_source) => {
                         result.push(Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
                             address: reward_address_bech32,
                             coin,

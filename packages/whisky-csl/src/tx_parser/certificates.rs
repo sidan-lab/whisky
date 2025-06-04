@@ -181,7 +181,7 @@ fn csl_drep_to_drep(csl_drep: &csl::DRep) -> Result<DRep, WError> {
             let drep_id = csl_drep.to_bech32(true).map_err(|e| {
                 WError::new(
                     "csl_drep_to_drep",
-                    &format!("Failed to convert drep to bech32: {}", e),
+                    &format!("Failed to convert drep to bech32: {:?}", e),
                 )
             })?;
             Ok(DRep::DRepId(drep_id))
@@ -192,7 +192,7 @@ fn csl_drep_to_drep(csl_drep: &csl::DRep) -> Result<DRep, WError> {
             let drep_id = csl_drep.to_bech32(true).map_err(|e| {
                 WError::new(
                     "csl_drep_to_drep",
-                    &format!("Failed to convert drep to bech32: {}", e),
+                    &format!("Failed to convert drep to bech32: {:?}", e),
                 )
             })?;
             Ok(DRep::DRepId(drep_id))
@@ -219,7 +219,7 @@ fn csl_cert_to_certificate_type(
                 .map_err(|e| {
                     WError::new(
                         "csl_cert_to_certificate_type",
-                        &format!("Failed to convert address to bech32: {}", e),
+                        &format!("Failed to convert address to bech32: {:?}", e),
                     )
                 })?;
             Ok(Some(CertificateType::RegisterStake(RegisterStake {
@@ -241,7 +241,7 @@ fn csl_cert_to_certificate_type(
                 .map_err(|e| {
                     WError::new(
                         "csl_cert_to_certificate_type",
-                        &format!("Failed to convert address to bech32: {}", e),
+                        &format!("Failed to convert address to bech32: {:?}", e),
                     )
                 })?;
             Ok(Some(CertificateType::DeregisterStake(DeregisterStake {
@@ -262,7 +262,7 @@ fn csl_cert_to_certificate_type(
                 .map_err(|e| {
                     WError::new(
                         "csl_cert_to_certificate_type",
-                        &format!("Failed to convert address to bech32: {}", e),
+                        &format!("Failed to convert address to bech32: {:?}", e),
                     )
                 })?;
             let pool_id = deleg.pool_keyhash().to_hex();
@@ -345,7 +345,7 @@ fn csl_cert_to_certificate_type(
             let drep_id = drep.to_bech32(true).map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert drep to bech32: {}", e),
+                    &format!("Failed to convert drep to bech32: {:?}", e),
                 )
             })?;
             let coin = drep_dereg.coin().to_str().parse::<u64>().unwrap_or(0);
@@ -364,7 +364,7 @@ fn csl_cert_to_certificate_type(
             let drep_id = drep.to_bech32(true).map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert drep to bech32: {}", e),
+                    &format!("Failed to convert drep to bech32: {:?}", e),
                 )
             })?;
             let coin = drep_reg.coin().to_str().parse::<u64>().unwrap_or(0);
@@ -386,7 +386,7 @@ fn csl_cert_to_certificate_type(
             let drep_id = drep.to_bech32(true).map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert drep to bech32: {}", e),
+                    &format!("Failed to convert drep to bech32: {:?}", e),
                 )
             })?;
             let anchor = drep_update.anchor().map(|a| Anchor {
@@ -412,7 +412,7 @@ fn csl_cert_to_certificate_type(
                 .map_err(|e| {
                     WError::new(
                         "csl_cert_to_certificate_type",
-                        &format!("Failed to convert address to bech32: {}", e),
+                        &format!("Failed to convert address to bech32: {:?}", e),
                     )
                 })?;
             let drep = csl_drep_to_drep(&vote_deleg.drep())?;
@@ -437,7 +437,7 @@ fn csl_cert_to_certificate_type(
             .map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert address to bech32: {}", e),
+                    &format!("Failed to convert address to bech32: {:?}", e),
                 )
             })?;
             let pool_key_hash = stake_and_vote_deleg.pool_keyhash().to_hex();
@@ -467,7 +467,7 @@ fn csl_cert_to_certificate_type(
             .map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert address to bech32: {}", e),
+                    &format!("Failed to convert address to bech32: {:?}", e),
                 )
             })?;
             let pool_key_hash = stake_reg_and_deleg.pool_keyhash().to_hex();
@@ -502,7 +502,7 @@ fn csl_cert_to_certificate_type(
             .map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert address to bech32: {}", e),
+                    &format!("Failed to convert address to bech32: {:?}", e),
                 )
             })?;
             let pool_key_hash = stake_vote_reg_and_deleg.pool_keyhash().to_hex();
@@ -538,7 +538,7 @@ fn csl_cert_to_certificate_type(
             .map_err(|e| {
                 WError::new(
                     "csl_cert_to_certificate_type",
-                    &format!("Failed to convert address to bech32: {}", e),
+                    &format!("Failed to convert address to bech32: {:?}", e),
                 )
             })?;
             let drep = csl_drep_to_drep(&vote_reg_and_deleg.drep())?;
@@ -584,7 +584,7 @@ pub fn csl_pool_params_to_pool_params(pool_params: &csl::PoolParams) -> Result<P
         .map_err(|e| {
             WError::new(
                 "csl_pool_params_to_pool_params",
-                &format!("Failed to convert reward address to bech32: {}", e),
+                &format!("Failed to convert reward address to bech32: {:?}", e),
             )
         })?;
 

@@ -1,6 +1,6 @@
 use cardano_serialization_lib::{self as csl};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use whisky_common::{
     Budget, DatumSource, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
     LanguageVersion, ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource,
@@ -97,8 +97,11 @@ impl ParserContext {
             for i in 0..redeemer_list.len() {
                 let redeemer = redeemer_list.get(i);
                 let tag = redeemer.tag().kind();
-                let index = redeemer.index().to_string().parse::<usize>()
-                    .map_err(|e| format!("Failed to parse redeemer index: {}", e))?;
+                let index = redeemer
+                    .index()
+                    .to_string()
+                    .parse::<usize>()
+                    .map_err(|e| format!("Failed to parse redeemer index: {:?}", e))?;
                 let redeemer_index = match tag {
                     csl::RedeemerTagKind::Spend => RedeemerIndex::Spend(index),
                     csl::RedeemerTagKind::Mint => RedeemerIndex::Mint(index),
@@ -253,7 +256,7 @@ fn utxo_to_inline_sources(
     let csl_script_ref = if let Some(script_ref) = &utxo.output.script_ref {
         Some(
             csl::ScriptRef::from_hex(script_ref)
-                .map_err(|e| format!("Failed to parse script ref: {}", e))?,
+                .map_err(|e| format!("Failed to parse script ref: {:?}", e))?,
         )
     } else {
         None
@@ -342,10 +345,10 @@ fn get_datum_hash_from_datum(
 ) -> Result<csl::DataHash, String> {
     if let Some(datum_hash) = datum_hash {
         csl::DataHash::from_hex(datum_hash)
-            .map_err(|e| format!("Failed to parse datum hash: {}", e))
+            .map_err(|e| format!("Failed to parse datum hash: {:?}", e))
     } else {
         let datum = csl::PlutusData::from_hex(datum)
-            .map_err(|e| format!("Failed to parse datum: {}", e))?;
+            .map_err(|e| format!("Failed to parse datum: {:?}", e))?;
         Ok(csl::hash_plutus_data(&datum))
     }
 }
@@ -358,4 +361,4 @@ fn csl_language_version_to_language_version(
         csl::LanguageKind::PlutusV2 => LanguageVersion::V2,
         csl::LanguageKind::PlutusV3 => LanguageVersion::V3,
     }
-} 
+}

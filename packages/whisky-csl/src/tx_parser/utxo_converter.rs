@@ -70,8 +70,12 @@ pub fn utxo_to_tx_in(
         address: Some(utxo.output.address.clone()),
     };
 
-    let address = csl::Address::from_bech32(&utxo.output.address)
-        .map_err(|e| WError::new("utxo_to_tx_in", &format!("Failed to parse address: {}", e)))?;
+    let address = csl::Address::from_bech32(&utxo.output.address).map_err(|e| {
+        WError::new(
+            "utxo_to_tx_in",
+            &format!("Failed to parse address: {:?}", e),
+        )
+    })?;
     let payment_cred = address
         .payment_cred()
         .ok_or_else(|| WError::new("utxo_to_tx_in", "Failed to get payment credential"))?;

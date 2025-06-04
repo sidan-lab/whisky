@@ -51,7 +51,7 @@ impl CSLParser {
         let csl_tx = csl::FixedTransaction::from_hex(tx_hex).map_err(|e| {
             WError::new(
                 "CSLParser - new",
-                &format!("Failed to parse transaction hex: {}", e),
+                &format!("Failed to parse transaction hex: {:?}", e),
             )
         })?;
         let tx_hash = csl_tx.transaction_hash().to_hex();
@@ -68,7 +68,7 @@ impl CSLParser {
             .map_err(|e| {
                 WError::new(
                     "CSLParser - new - fill_resolved_utxos",
-                    &format!("Failed to fill resolved UTxOs: {}", e),
+                    &format!("Failed to fill resolved UTxOs: {:?}", e),
                 )
             })?;
         context
@@ -76,7 +76,10 @@ impl CSLParser {
             .map_err(|e| {
                 WError::new(
                     "CSLParser - new - collect_script_witnesses_from_tx_witnesses_set",
-                    &format!("Failed to collect script witnesses from witness set: {}", e),
+                    &format!(
+                        "Failed to collect script witnesses from witness set: {:?}",
+                        e
+                    ),
                 )
             })?;
         context
@@ -84,7 +87,7 @@ impl CSLParser {
             .map_err(|e| {
                 WError::new(
                     "CSLParser - new - collect_script_witnesses_from_tx_body",
-                    &format!("Failed to collect script witnesses from tx body: {}", e),
+                    &format!("Failed to collect script witnesses from tx body: {:?}", e),
                 )
             })?;
 

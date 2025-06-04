@@ -84,7 +84,7 @@ pub fn csl_votes_to_votes(
                 Voter::DRepId(csl_drep_credential.to_bech32(true).map_err(|e| {
                     WError::new(
                         "csl_votes_to_votes",
-                        &format!("Failed to convert drep to bech32: {}", e),
+                        &format!("Failed to convert drep to bech32: {:?}", e),
                     )
                 })?)
             }
@@ -97,7 +97,7 @@ pub fn csl_votes_to_votes(
                 Voter::DRepId(csl_drep_credential.to_bech32(true).map_err(|e| {
                     WError::new(
                         "csl_votes_to_votes",
-                        &format!("Failed to convert drep to bech32: {}", e),
+                        &format!("Failed to convert drep to bech32: {:?}", e),
                     )
                 })?)
             }

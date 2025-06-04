@@ -36,7 +36,7 @@ fn csl_aux_data_to_metadata(aux_data: &csl::AuxiliaryData) -> Result<Vec<Metadat
             .map_err(|e| {
                 WError::new(
                     "csl_aux_data_to_metadata",
-                    &format!("Failed to decode metadata: {}", e),
+                    &format!("Failed to decode metadata: {:?}", e),
                 )
             })?,
         };

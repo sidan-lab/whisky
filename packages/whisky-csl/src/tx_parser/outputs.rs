@@ -9,7 +9,8 @@ impl CSLParser {
     }
 
     pub fn extract_output_utxos(tx_hex: &str) -> Result<Vec<UTxO>, WError> {
-        let tx = csl::FixedTransaction::from_hex(tx_hex).map_err(WError::from_err("extract_output_utxos"))?;
+        let tx = csl::FixedTransaction::from_hex(tx_hex)
+            .map_err(WError::from_err("extract_output_utxos"))?;
         let outputs = tx.body().outputs();
         let tx_hash = tx.transaction_hash().to_hex();
         let whisky_outputs = csl_outputs_to_outputs(&outputs)?;
@@ -23,7 +24,7 @@ impl CSLParser {
     pub fn extract_output_cbors(tx_hex: &str) -> Result<Vec<String>, WError> {
         let mut output_cbors = Vec::new();
         let csl_tx = csl::FixedTransaction::from_hex(tx_hex)
-        .map_err(WError::from_err("extract_output_cbors"))?;
+            .map_err(WError::from_err("extract_output_cbors"))?;
         let csl_outputs = csl_tx.body().outputs();
         let len = csl_outputs.len();
         for i in 0..len {
@@ -32,7 +33,6 @@ impl CSLParser {
         }
         Ok(output_cbors)
     }
-
 
     pub(super) fn extract_outputs(&mut self) -> Result<(), WError> {
         let outputs = self.csl_tx_body.outputs();
@@ -62,7 +62,7 @@ fn output_to_utxo(output: &Output, tx_hash: &String, index: u32) -> Result<UTxO,
             } else {
                 Some(script.plutus_script().unwrap().hash().to_hex())
             }
-        },
+        }
         None => None,
     };
     Ok(UTxO {
@@ -96,7 +96,7 @@ fn output_reference_script_to_script_source(
                     .map_err(|e| {
                     WError::new(
                         "output_reference_script_to_script_source",
-                        &format!("Failed to convert script to plutus script: {}", e),
+                        &format!("Failed to convert script to plutus script: {:?}", e),
                     )
                 })?,
             );
@@ -107,7 +107,7 @@ fn output_reference_script_to_script_source(
                 &csl::NativeScript::from_hex(&script.script_cbor).map_err(|e| {
                     WError::new(
                         "output_reference_script_to_script_source",
-                        &format!("Failed to convert script to native script: {}", e),
+                        &format!("Failed to convert script to native script: {:?}", e),
                     )
                 })?,
             );
@@ -198,7 +198,7 @@ fn csl_outputs_to_outputs(outputs: &csl::TransactionOutputs) -> Result<Vec<Outpu
             address: output.address().to_bech32(None).map_err(|e| {
                 WError::new(
                     "csl_outputs_to_outputs",
-                    &format!("Failed to convert address to bech32: {}", e),
+                    &format!("Failed to convert address to bech32: {:?}", e),
                 )
             })?,
             amount: value,
