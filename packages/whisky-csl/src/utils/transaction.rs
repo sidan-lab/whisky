@@ -12,7 +12,7 @@ pub fn calculate_tx_hash(tx_hex: &str) -> Result<String, WError> {
     let csl_tx = csl::FixedTransaction::from_hex(tx_hex).map_err(WError::from_err(
         "calculate_tx_hash - invalid transaction hex",
     ))?;
-    Ok(csl::TransactionHash::from(blake2b256(&csl_tx.raw_body())).to_hex())
+    Ok(csl_tx.transaction_hash().to_hex())
 }
 
 pub fn sign_transaction(tx_hex: &str, signing_keys: &[&str]) -> Result<String, WError> {

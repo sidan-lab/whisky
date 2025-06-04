@@ -50,21 +50,16 @@ pub fn evaluate_tx_scripts(
         }
     };
 
-    let tx_outs: Vec<UTxO> = additional_txs
-        .iter()
-        .flat_map(|tx| {
-            let parsed_tx = TxParser::new(tx).unwrap();
-            println!(
-                "txout: {:?}",
-                &parsed_tx.get_tx_outs_utxo().unwrap().clone()
-            );
-            println!("txout_cbor: {:?}", &parsed_tx.get_tx_outs_cbor().clone());
-            parsed_tx.get_tx_outs_utxo().unwrap() // TODO: err handling
-        })
-        .collect();
+    let mut all_utxos = inputs.to_vec();
+    for additional_tx in additional_txs {
+        let additional_utxos = CSLParser::extract_output_utxos(additional_tx)
+            .map_err(
+                WError::from_err("evaluate_tx_scripts - extract_output_utxos"),
+            )?;
+        all_utxos.extend(additional_utxos)
+    }
 
-    // combine inputs and tx_outs
-    let all_inputs: Vec<UTxO> = inputs.iter().chain(tx_outs.iter()).cloned().collect();
+    let all_inputs: Vec<UTxO> = inputs.to_vec();
 
     eval_phase_two(
         &tx,

@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use whisky_csl::{calculate_tx_hash, TxParser};
+use whisky_csl::{calculate_tx_hash, CSLParser};
 
 use uplc::tx::SlotConfig;
 use whisky_common::models::{Network, UTxO};
@@ -34,16 +34,15 @@ impl Evaluator for MaestroProvider {
         let tx_out_cbors: Vec<AdditionalUtxo> = additional_txs
             .iter()
             .flat_map(|tx| {
-                let parsed_tx = TxParser::new(tx);
-                parsed_tx
-                    .unwrap() //TODO: add error handling
-                    .get_tx_outs_cbor()
-                    .iter()
-                    .enumerate() // Add this line to get the index
+                let tx_hash = calculate_tx_hash(tx).unwrap();
+                let utxos = CSLParser::extract_output_cbors(tx).unwrap();
+                utxos
+                    .into_iter()
+                    .enumerate()
                     .map(|(index, txout_cbor)| AdditionalUtxo {
-                        tx_hash: calculate_tx_hash(tx).unwrap(), // TODO: add error handling
-                        index: index as u32,                     // Use the index here
-                        txout_cbor: txout_cbor.to_string(),
+                        tx_hash: tx_hash.clone(),
+                        index: index as u32,
+                        txout_cbor,
                     })
                     .collect::<Vec<AdditionalUtxo>>()
             })

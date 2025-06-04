@@ -30,3 +30,13 @@ pub use tx_parser::*;
 pub use utils::*;
 
 pub use cardano_serialization_lib as csl;
+use whisky_common::TxBuilderBody;
+
+#[derive(Clone, Debug)]
+pub struct WhiskyCSL {
+    pub core: CoreCSL,
+    pub parser: CSLParser,
+    pub tx_builder_body: TxBuilderBody,
+    pub tx_evaluation_multiplier_percentage: u64,
+    pub tx_hex: String,
+}

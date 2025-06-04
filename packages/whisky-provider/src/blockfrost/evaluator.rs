@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use whisky_csl::TxParser;
+use whisky_csl::CSLParser;
 
 use uplc::tx::SlotConfig;
 use whisky_common::models::{Network, UTxO};
@@ -56,33 +56,27 @@ impl Evaluator for BlockfrostProvider {
     async fn evaluate_tx(
         &self,
         tx: &str,
-        _inputs: &[UTxO], // TODO: parse this also into additional_txs
+        _inputs: &[UTxO],
         additional_txs: &[String],
         _network: &Network,
         _slot_config: &SlotConfig,
     ) -> Result<Vec<Action>, WError> {
-        let tx_out_cbors: Vec<serde_json::Value> = additional_txs
-            .iter()
-            .flat_map(|tx| {
-                let parsed_tx = TxParser::new(tx);
-                parsed_tx
-                    .unwrap() //TODO: add error handling
-                    .get_tx_outs_utxo()
-                    .unwrap() // TODO: add error handling
-                    .iter()
-                    .enumerate()
-                    .map(|(index, utxo)| {
-                        let additional_utxo = AdditionalUtxo {
-                            tx_hash: utxo.input.tx_hash.to_string(), // TODO: add error handling
-                            index: index as u32,                     // Use the index here
-                            address: utxo.output.address.to_string(),
-                            value: utxo.output.amount.clone(),
-                        };
-                        additional_utxo.to_ogmios()
-                    })
-                    .collect::<Vec<serde_json::Value>>()
-            })
-            .collect();
+        let mut tx_out_cbors = Vec::new();
+        
+        for tx_str in additional_txs {
+            let utxos = CSLParser::extract_output_utxos(tx_str)
+                .map_err(|e| WError::new("evaluate_tx", &format!("Failed to get output UTXOs: {}", e)))?;
+            
+            for (index, utxo) in utxos.iter().enumerate() {
+                let additional_utxo = AdditionalUtxo {
+                    tx_hash: utxo.input.tx_hash.to_string(),
+                    index: index as u32,
+                    address: utxo.output.address.to_string(),
+                    value: utxo.output.amount.clone(),
+                };
+                tx_out_cbors.push(additional_utxo.to_ogmios());
+            }
+        }
 
         let url = "/utils/txs/evaluate/utxos";
         let body = EvaluateTx {
@@ -119,11 +113,17 @@ impl Evaluator for BlockfrostProvider {
 
         println!("Blockfrost evaluate_tx response: {}", resp);
 
-        let actions = evaluation_map
+        let actions: Result<Vec<Action>, WError> = evaluation_map
             .into_iter()
             .map(|(key, budget)| {
                 // Parse the key to extract the tag and index
                 let parts: Vec<&str> = key.split(':').collect();
+                if parts.len() != 2 {
+                    return Err(WError::new(
+                        "evaluate_tx",
+                        &format!("Invalid key format: {}", key),
+                    ));
+                }
                 let tag = match parts[0] {
                     "spend" => RedeemerTag::Spend,
                     "mint" => RedeemerTag::Mint,
@@ -131,22 +131,29 @@ impl Evaluator for BlockfrostProvider {
                     "reward" => RedeemerTag::Reward,
                     "vote" => RedeemerTag::Vote,
                     "propose" => RedeemerTag::Propose,
-                    _ => panic!("Unknown tag: {}", parts[0]),
+                    _ => return Err(WError::new(
+                        "evaluate_tx",
+                        &format!("Unknown tag: {}", parts[0]),
+                    )),
                 };
-                let index = parts[1].parse::<u32>().expect("Invalid index");
+                let index = parts[1].parse::<u32>()
+                    .map_err(|e| WError::new(
+                        "evaluate_tx",
+                        &format!("Invalid index: {}", e),
+                    ))?;
 
                 // Create an Action
-                Action {
+                Ok(Action {
                     index,
                     budget: Budget {
                         mem: budget.memory,
                         steps: budget.steps,
                     },
                     tag,
-                }
+                })
             })
             .collect();
-        Ok(actions)
+        actions
     }
 }
 

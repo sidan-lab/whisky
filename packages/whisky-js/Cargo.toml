@@ -1,6 +1,6 @@
 [package]
 name = "whisky-js"
-version = "1.0.4"
+version = "1.0.5"
 edition = "2021"
 license = "Apache-2.0"
 description = "Wrapper around the cardano-serialization-lib for easier transaction building, heavily inspired by cardano-cli APIs"
@@ -13,8 +13,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-whisky-csl = { version = "1.0.4", path = "../whisky-csl" }
-whisky-common = { version = "1.0.4", path = "../whisky-common" }
+whisky-csl = { version = "1.0.5", path = "../whisky-csl" }
+whisky-common = { version = "1.0.5", path = "../whisky-common" }
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
