@@ -1,9 +1,9 @@
 use whisky_common::{TxIn, WError};
 use cardano_serialization_lib as csl;
 
-use super::{utxo_converter::utxo_to_tx_in, TxParser};
+use super::{utxo_converter::utxo_to_tx_in, CSLParser};
 
-impl TxParser {
+impl CSLParser {
     pub fn get_inputs(&self) -> &Vec<TxIn> {
         &self.tx_body.inputs
     }
@@ -12,7 +12,7 @@ impl TxParser {
         let csl_tx = csl::FixedTransaction::from_hex(tx_hex)
             .map_err(|e| {
                 WError::new(
-                    "TxParser - extract_all_required_inputs",
+                    "CSLParser - extract_all_required_inputs",
                     &format!("Failed to parse transaction hex: {}", e),
                 )
             })?;

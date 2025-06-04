@@ -1,8 +1,8 @@
 use whisky_common::{Datum, WError};
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_change_datum(&self) -> &Option<Datum> {
         &self.tx_body.change_datum
     }

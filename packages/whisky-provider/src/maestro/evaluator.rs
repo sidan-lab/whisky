@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use whisky_csl::{calculate_tx_hash, TxParser};
+use whisky_csl::{calculate_tx_hash, CSLParser};
 
 use uplc::tx::SlotConfig;
 use whisky_common::models::{Network, UTxO};
@@ -35,7 +35,7 @@ impl Evaluator for MaestroProvider {
             .iter()
             .flat_map(|tx| {
                 let tx_hash = calculate_tx_hash(tx).unwrap();
-                let utxos = TxParser::extract_output_cbors(tx).unwrap();
+                let utxos = CSLParser::extract_output_cbors(tx).unwrap();
                 utxos
                     .into_iter()
                     .enumerate()

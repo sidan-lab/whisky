@@ -2,15 +2,19 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 
 use cardano_serialization_lib::{self as csl};
 use whisky_common::{
-    Anchor, Certificate, CertificateType, CommitteeColdResign, CommitteeHotAuth, DRep, DRepDeregistration, DRepRegistration, DRepUpdate, DelegateStake, DeregisterStake, MultiHostName, PoolMetadata, PoolParams, RegisterPool, RegisterStake, Relay, RetirePool, ScriptCertificate, ScriptSource, SimpleScriptCertificate, SimpleScriptSource, SingleHostAddr, SingleHostName, StakeAndVoteDelegation, StakeRegistrationAndDelegation, StakeVoteRegistrationAndDelegation, VoteDelegation, VoteRegistrationAndDelegation, WError
+    Anchor, Certificate, CertificateType, CommitteeColdResign, CommitteeHotAuth, DRep,
+    DRepDeregistration, DRepRegistration, DRepUpdate, DelegateStake, DeregisterStake,
+    MultiHostName, PoolMetadata, PoolParams, RegisterPool, RegisterStake, Relay, RetirePool,
+    ScriptCertificate, ScriptSource, SimpleScriptCertificate, SimpleScriptSource, SingleHostAddr,
+    SingleHostName, StakeAndVoteDelegation, StakeRegistrationAndDelegation,
+    StakeVoteRegistrationAndDelegation, VoteDelegation, VoteRegistrationAndDelegation, WError,
 };
 
 use crate::tx_parser::context::{RedeemerIndex, Script};
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
-
+impl CSLParser {
     pub fn get_certificates(&self) -> &Vec<Certificate> {
         &self.tx_body.certificates
     }
@@ -577,7 +581,12 @@ pub fn csl_pool_params_to_pool_params(pool_params: &csl::PoolParams) -> Result<P
         .reward_account()
         .to_address()
         .to_bech32(None)
-        .map_err(|e| WError::new("csl_pool_params_to_pool_params", &format!("Failed to convert reward address to bech32: {}", e)))?;
+        .map_err(|e| {
+            WError::new(
+                "csl_pool_params_to_pool_params",
+                &format!("Failed to convert reward address to bech32: {}", e),
+            )
+        })?;
 
     let pool_owners = (0..pool_params.pool_owners().len())
         .map(|i| pool_params.pool_owners().get(i).to_hex())
@@ -613,38 +622,39 @@ pub fn csl_pool_params_to_pool_params(pool_params: &csl::PoolParams) -> Result<P
 pub fn csl_relay_to_relay(relay: &csl::Relay) -> Result<Relay, WError> {
     match relay.kind() {
         csl::RelayKind::SingleHostAddr => {
-            let single_host_addr = relay.as_single_host_addr()
-                .ok_or_else(|| WError::new("csl_relay_to_relay", "Failed to get single host addr"))?;
+            let single_host_addr = relay.as_single_host_addr().ok_or_else(|| {
+                WError::new("csl_relay_to_relay", "Failed to get single host addr")
+            })?;
             Ok(Relay::SingleHostAddr(SingleHostAddr {
                 ipv4: single_host_addr.ipv4().map(|ipv4| {
                     let octets = ipv4.ip();
-                    let ipv4_bytes = <[u8; 4]>::try_from(&octets[..4])
-                        .unwrap_or([0, 0, 0, 0]);
+                    let ipv4_bytes = <[u8; 4]>::try_from(&octets[..4]).unwrap_or([0, 0, 0, 0]);
                     Ipv4Addr::from(ipv4_bytes).to_string()
                 }),
                 ipv6: single_host_addr.ipv6().map(|ipv6| {
                     let octets = ipv6.ip();
-                    let ipv6_bytes = <[u8; 16]>::try_from(&octets[..16])
-                        .unwrap_or([0; 16]);
+                    let ipv6_bytes = <[u8; 16]>::try_from(&octets[..16]).unwrap_or([0; 16]);
                     Ipv6Addr::from(ipv6_bytes).to_string()
                 }),
                 port: single_host_addr.port(),
             }))
         }
         csl::RelayKind::SingleHostName => {
-            let single_host_name = relay.as_single_host_name()
-                .ok_or_else(|| WError::new("csl_relay_to_relay", "Failed to get single host name"))?;
+            let single_host_name = relay.as_single_host_name().ok_or_else(|| {
+                WError::new("csl_relay_to_relay", "Failed to get single host name")
+            })?;
             Ok(Relay::SingleHostName(SingleHostName {
                 domain_name: single_host_name.dns_name().record(),
-            port: single_host_name.port(),
+                port: single_host_name.port(),
             }))
         }
         csl::RelayKind::MultiHostName => {
-            let multi_host_name = relay.as_multi_host_name()
-                .ok_or_else(|| WError::new("csl_relay_to_relay", "Failed to get multi host name"))?;
+            let multi_host_name = relay.as_multi_host_name().ok_or_else(|| {
+                WError::new("csl_relay_to_relay", "Failed to get multi host name")
+            })?;
             Ok(Relay::MultiHostName(MultiHostName {
                 domain_name: multi_host_name.dns_name().record(),
             }))
         }
     }
-} 
+}

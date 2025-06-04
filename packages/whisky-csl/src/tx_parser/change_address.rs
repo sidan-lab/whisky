@@ -1,8 +1,8 @@
 use whisky_common::WError;
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_change_address(&self) -> &String {
         &self.tx_body.change_address
     }

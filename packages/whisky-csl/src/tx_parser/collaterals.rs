@@ -1,8 +1,8 @@
 use whisky_common::{PubKeyTxIn, WError};
 
-use super::{utxo_converter::utxo_to_pub_key_tx_in, TxParser};
+use super::{utxo_converter::utxo_to_pub_key_tx_in, CSLParser};
 
-impl TxParser {
+impl CSLParser {
 
     pub fn get_collaterals(&self) -> &Vec<PubKeyTxIn> {
         &self.tx_body.collaterals

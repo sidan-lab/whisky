@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use whisky_csl::TxParser;
+use whisky_csl::CSLParser;
 
 use uplc::tx::SlotConfig;
 use whisky_common::models::{Network, UTxO};
@@ -64,7 +64,7 @@ impl Evaluator for BlockfrostProvider {
         let mut tx_out_cbors = Vec::new();
         
         for tx_str in additional_txs {
-            let utxos = TxParser::extract_output_utxos(tx_str)
+            let utxos = CSLParser::extract_output_utxos(tx_str)
                 .map_err(|e| WError::new("evaluate_tx", &format!("Failed to get output UTXOs: {}", e)))?;
             
             for (index, utxo) in utxos.iter().enumerate() {

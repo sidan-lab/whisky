@@ -7,6 +7,7 @@ mod inputs;
 mod metadata;
 mod mints;
 mod outputs;
+mod parsable;
 mod reference_inputs;
 mod required_signatures;
 mod utxo_converter;
@@ -21,7 +22,7 @@ use whisky_common::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TxParser {
+pub struct CSLParser {
     pub tx_body: TxBuilderBody,
     pub csl_tx_body: csl::TransactionBody,
     pub csl_witness_set: csl::TransactionWitnessSet,
@@ -30,11 +31,26 @@ pub struct TxParser {
     pub tx_hash: String,
 }
 
-impl TxParser {
-    pub fn new(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxParser, WError> {
+impl CSLParser {
+    pub fn new() -> CSLParser {
+        CSLParser {
+            tx_body: TxBuilderBody::new(),
+            csl_tx_body: csl::TransactionBody::new_tx_body(
+                &csl::TransactionInputs::new(),
+                &csl::TransactionOutputs::new(),
+                &csl::Coin::zero(),
+            ),
+            csl_witness_set: csl::TransactionWitnessSet::new(),
+            csl_aux_data: None,
+            context: ParserContext::new(),
+            tx_hash: "".to_string(),
+        }
+    }
+
+    pub fn parse(&mut self, tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<&mut Self, WError> {
         let csl_tx = csl::FixedTransaction::from_hex(tx_hex).map_err(|e| {
             WError::new(
-                "TxParser - new",
+                "CSLParser - new",
                 &format!("Failed to parse transaction hex: {}", e),
             )
         })?;
@@ -51,7 +67,7 @@ impl TxParser {
             .fill_resolved_utxos(&csl_tx_body, resolved_utxos)
             .map_err(|e| {
                 WError::new(
-                    "TxParser - new - fill_resolved_utxos",
+                    "CSLParser - new - fill_resolved_utxos",
                     &format!("Failed to fill resolved UTxOs: {}", e),
                 )
             })?;
@@ -59,7 +75,7 @@ impl TxParser {
             .collect_script_witnesses_from_tx_witnesses_set(csl_witness_set.clone())
             .map_err(|e| {
                 WError::new(
-                    "TxParser - new - collect_script_witnesses_from_tx_witnesses_set",
+                    "CSLParser - new - collect_script_witnesses_from_tx_witnesses_set",
                     &format!("Failed to collect script witnesses from witness set: {}", e),
                 )
             })?;
@@ -67,78 +83,45 @@ impl TxParser {
             .collect_script_witnesses_from_tx_body(csl_tx_body.clone())
             .map_err(|e| {
                 WError::new(
-                    "TxParser - new - collect_script_witnesses_from_tx_body",
+                    "CSLParser - new - collect_script_witnesses_from_tx_body",
                     &format!("Failed to collect script witnesses from tx body: {}", e),
                 )
             })?;
 
-        let mut tx_parser = TxParser {
-            tx_body,
-            csl_tx_body,
-            csl_witness_set,
-            csl_aux_data,
-            context,
-            tx_hash,
-        };
+        self.tx_body = tx_body;
+        self.csl_tx_body = csl_tx_body;
+        self.csl_witness_set = csl_witness_set;
+        self.csl_aux_data = csl_aux_data;
+        self.context = context;
+        self.tx_hash = tx_hash;
 
-        tx_parser
-            .extract_inputs()
-            .map_err(WError::from_err("TxParser - new - inputs"))?;
-        tx_parser
-            .extract_outputs()
-            .map_err(WError::from_err("TxParser - new - outputs"))?;
-        tx_parser
-            .extract_collaterals()
-            .map_err(WError::from_err("TxParser - new - collaterals"))?;
-        tx_parser
-            .extract_required_signatures()
-            .map_err(WError::from_err("TxParser - new - required_signatures"))?;
-        tx_parser
-            .extract_reference_inputs()
-            .map_err(WError::from_err("TxParser - new - reference_inputs"))?;
-        tx_parser
-            .extract_withdrawals()
-            .map_err(WError::from_err("TxParser - new - withdrawals"))?;
-        tx_parser
-            .extract_mints()
-            .map_err(WError::from_err("TxParser - new - mints"))?;
-        tx_parser
-            .extract_change_address()
-            .map_err(WError::from_err("TxParser - new - change_address"))?;
-        tx_parser
-            .extract_change_datum()
-            .map_err(WError::from_err("TxParser - new - change_datum"))?;
-        tx_parser
-            .extract_metadata()
-            .map_err(WError::from_err("TxParser - new - metadata"))?;
-        tx_parser
-            .extract_validity_range()
-            .map_err(WError::from_err("TxParser - new - validity_range"))?;
-        tx_parser
-            .extract_certificates()
-            .map_err(WError::from_err("TxParser - new - certificates"))?;
-        tx_parser
-            .extract_votes()
-            .map_err(WError::from_err("TxParser - new - votes"))?;
+        self.extract_inputs()
+            .map_err(WError::from_err("CSLParser - new - inputs"))?;
+        self.extract_outputs()
+            .map_err(WError::from_err("CSLParser - new - outputs"))?;
+        self.extract_collaterals()
+            .map_err(WError::from_err("CSLParser - new - collaterals"))?;
+        self.extract_required_signatures()
+            .map_err(WError::from_err("CSLParser - new - required_signatures"))?;
+        self.extract_reference_inputs()
+            .map_err(WError::from_err("CSLParser - new - reference_inputs"))?;
+        self.extract_withdrawals()
+            .map_err(WError::from_err("CSLParser - new - withdrawals"))?;
+        self.extract_mints()
+            .map_err(WError::from_err("CSLParser - new - mints"))?;
+        self.extract_change_address()
+            .map_err(WError::from_err("CSLParser - new - change_address"))?;
+        self.extract_change_datum()
+            .map_err(WError::from_err("CSLParser - new - change_datum"))?;
+        self.extract_metadata()
+            .map_err(WError::from_err("CSLParser - new - metadata"))?;
+        self.extract_validity_range()
+            .map_err(WError::from_err("CSLParser - new - validity_range"))?;
+        self.extract_certificates()
+            .map_err(WError::from_err("CSLParser - new - certificates"))?;
+        self.extract_votes()
+            .map_err(WError::from_err("CSLParser - new - votes"))?;
 
-        Ok(tx_parser)
-    }
-
-    pub fn get_builder_body(&self) -> &TxBuilderBody {
-        &self.tx_body
-    }
-
-    pub fn get_builder_body_without_change(&self) -> TxBuilderBody {
-        let mut tx_body = self.tx_body.clone();
-        let outputs = self.csl_tx_body.outputs();
-        let outputs_len = outputs.len();
-        if outputs_len > 0 {
-            tx_body.outputs.pop();
-        }
-        tx_body
-    }
-
-    pub fn to_tester(&self) -> TxTester {
-        TxTester::new(&self.tx_body)
+        Ok(self)
     }
 }

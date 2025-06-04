@@ -5,11 +5,11 @@ use whisky_common::{
 
 use super::{
     context::{ParserContext, RedeemerIndex, Script},
-    TxParser,
+    CSLParser,
 };
 use cardano_serialization_lib as csl;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_votes(&self) -> &Vec<Vote> {
         &self.tx_body.votes
     }

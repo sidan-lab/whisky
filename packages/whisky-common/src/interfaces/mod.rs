@@ -11,4 +11,4 @@ pub use evaluator::*;
 pub use fetcher::*;
 pub use submitter::*;
 pub use tx_builder::*;
-// pub use tx_parser::*;
+pub use tx_parser::*;

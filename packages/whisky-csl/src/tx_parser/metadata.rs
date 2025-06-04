@@ -1,9 +1,9 @@
 use cardano_serialization_lib as csl;
 use whisky_common::{Metadata, WError};
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_metadata(&self) -> &Vec<Metadata> {
         &self.tx_body.metadata
     }

@@ -1,11 +1,11 @@
 use whisky_common::{PlutusScriptWithdrawal, PubKeyWithdrawal, ScriptSource, SimpleScriptSource, SimpleScriptWithdrawal, WError, Withdrawal};
 use super::context::RedeemerIndex;
-use super::TxParser;
+use super::CSLParser;
 use super::context::Script;
 use super::context::ParserContext;
 use cardano_serialization_lib as csl;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_withdrawals(&self) -> &Vec<Withdrawal> {
         &self.tx_body.withdrawals
     }

@@ -1,6 +1,6 @@
 use whisky_common::{TxBuildable, *};
 
-use super::WhiskyCSL;
+use crate::WhiskyCSL;
 
 impl TxBuildable for WhiskyCSL {
     fn reset_builder(&mut self) -> &mut Self {

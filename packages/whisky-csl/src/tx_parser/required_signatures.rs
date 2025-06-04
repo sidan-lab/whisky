@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use whisky_common::WError;
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_required_signatures(&self) -> &Vec<String> {
         &self.tx_body.required_signatures
     }

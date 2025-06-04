@@ -1,11 +1,11 @@
-use super::TxParser;
+use super::CSLParser;
 use crate::csl;
 use crate::tx_parser::context::{ParserContext, RedeemerIndex, Script};
 use whisky_common::{
     MintItem, MintParameter, ScriptMint, ScriptSource, SimpleScriptMint, SimpleScriptSource, WError,
 };
 
-impl TxParser {
+impl CSLParser {
 
     pub fn get_mints(&self) -> &Vec<MintItem> {
         &self.tx_body.mints

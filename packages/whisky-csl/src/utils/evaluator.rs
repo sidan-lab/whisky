@@ -52,7 +52,7 @@ pub fn evaluate_tx_scripts(
 
     let mut all_utxos = inputs.to_vec();
     for additional_tx in additional_txs {
-        let additional_utxos = TxParser::extract_output_utxos(additional_tx)
+        let additional_utxos = CSLParser::extract_output_utxos(additional_tx)
             .map_err(
                 WError::from_err("evaluate_tx_scripts - extract_output_utxos"),
             )?;

@@ -1,8 +1,8 @@
 use whisky_common::{ValidityRange, WError};
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_validity_range(&self) -> &ValidityRange {
         &self.tx_body.validity_range
     }

@@ -1,9 +1,9 @@
 use cardano_serialization_lib::{self as csl};
 use whisky_common::*;
 
-use super::TxParser;
+use super::CSLParser;
 
-impl TxParser {
+impl CSLParser {
     pub fn get_outputs(&self) -> &Vec<Output> {
         &self.tx_body.outputs
     }

@@ -1,8 +1,8 @@
 use whisky_common::{RefTxIn, WError};
 
-use super::{utxo_converter::utxo_to_ref_tx_in, TxParser};
+use super::{utxo_converter::utxo_to_ref_tx_in, CSLParser};
 
-impl TxParser {
+impl CSLParser {
     pub fn get_reference_inputs(&self) -> &Vec<RefTxIn> {
         &self.tx_body.reference_inputs
     }
