@@ -148,7 +148,8 @@ fn csl_outputs_to_outputs(outputs: &csl::TransactionOutputs) -> Result<Vec<Outpu
                             ),
                         )
                     })?;
-                    let concated_name = policy_id.to_hex() + &asset_name.to_string();
+                    let asset_name_hex = hex::encode(asset_name.name());
+                    let concated_name = policy_id.to_hex() + &asset_name_hex;
 
                     value.push(Asset::new_from_str(
                         &concated_name,

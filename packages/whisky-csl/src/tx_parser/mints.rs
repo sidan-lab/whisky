@@ -51,7 +51,7 @@ pub fn csl_mint_to_mint_item(
 
         for j in 0..assets_len {
             let asset_name = assets_names.get(j);
-            let asset_name_hex = asset_name.to_hex();
+            let asset_name_hex = hex::encode(asset_name.name());
             let amount = assets
                 .get(&asset_name)
                 .ok_or_else(|| {
