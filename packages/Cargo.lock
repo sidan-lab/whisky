@@ -3664,6 +3664,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "whisky-go"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "whisky-common",
+ "whisky-csl",
+]
+
+[[package]]
 name = "whisky-js"
 version = "1.0.5"
 dependencies = [

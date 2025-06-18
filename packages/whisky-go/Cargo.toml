@@ -1,0 +1,13 @@
+[package]
+name = "whisky-go"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+whisky-csl = { version = "1.0.5", path = "../whisky-csl" }
+whisky-common = { version = "1.0.5", path = "../whisky-common" }

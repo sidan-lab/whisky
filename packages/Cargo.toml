@@ -9,5 +9,5 @@ members = [
     "whisky-csl",
     "whisky-wallet",
     "whisky",
-    "whisky-examples"
-]
+    "whisky-examples",
+    "whisky-go"]
