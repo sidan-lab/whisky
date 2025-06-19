@@ -109,7 +109,7 @@ impl TxTester {
                 mint_param.policy_id == policy_id && mint_param.amount > 0
             })
             .collect();
-        filtered_mints.len() == 1
+        filtered_mints.len() == 0
     }
 
     pub fn token_minted_logic(&self, policy_id: &str, asset_name: &str, quantity: i128) -> bool {

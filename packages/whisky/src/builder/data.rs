@@ -19,6 +19,15 @@ impl WData {
             }
         }
     }
+
+    pub fn to_hash(&self) -> Result<String, WError> {
+        let cbor = self.to_cbor()?;
+        let hash = &csl::hash_plutus_data(
+            &csl::PlutusData::from_hex(&cbor).map_err(WError::from_err("WData - to_hash"))?,
+        )
+        .to_hex();
+        Ok(hash.to_string())
+    }
 }
 
 #[derive(Clone, Debug)]
