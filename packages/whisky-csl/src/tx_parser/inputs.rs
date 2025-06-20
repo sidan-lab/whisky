@@ -1,5 +1,5 @@
 use cardano_serialization_lib as csl;
-use whisky_common::{TxIn, WError};
+use whisky_common::{TxIn, UtxoInput, WError};
 
 use super::{utxo_converter::utxo_to_tx_in, CSLParser};
 
@@ -45,6 +45,33 @@ impl CSLParser {
             }
         }
         Ok(required_inputs)
+    }
+
+    pub fn extract_all_required_utxo_input(tx_hex: &str) -> Result<Vec<UtxoInput>, WError> {
+        let required_inputs = CSLParser::extract_all_required_inputs(tx_hex)?;
+        required_inputs
+            .iter()
+            .map(|input| {
+                let parts: Vec<&str> = input.split('#').collect();
+                if parts.len() != 2 {
+                    return Err(WError::new(
+                        "CSLParser - extract_all_required_utxo_input",
+                        &format!("Invalid input format: {}", input),
+                    ));
+                }
+                let tx_hash = parts[0].to_string();
+                let output_index: u32 = parts[1].parse().map_err(|_| {
+                    WError::new(
+                        "CSLParser - extract_all_required_utxo_input",
+                        "Invalid output index",
+                    )
+                })?;
+                Ok(UtxoInput {
+                    tx_hash,
+                    output_index,
+                })
+            })
+            .collect()
     }
 
     pub(super) fn extract_inputs(&mut self) -> Result<(), WError> {

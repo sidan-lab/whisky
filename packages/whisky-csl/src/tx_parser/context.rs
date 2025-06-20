@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use whisky_common::{
     Budget, DatumSource, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
     LanguageVersion, ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource,
-    Redeemer, RefTxIn, UTxO, UtxoInput,
+    Redeemer, RefTxIn, UTxO, UtxoInput, WError,
 };
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -146,7 +146,7 @@ impl ParserContext {
     pub fn collect_script_witnesses_from_tx_body(
         &mut self,
         tx_body: csl::TransactionBody,
-    ) -> Result<(), String> {
+    ) -> Result<(), WError> {
         let inputs = tx_body.inputs();
         let ref_inputs = tx_body.reference_inputs();
         let all_transaction_inputs: Vec<csl::TransactionInput> = inputs
@@ -162,7 +162,7 @@ impl ParserContext {
         for input in all_transaction_inputs {
             let utxo = self.resolved_utxos.get(&input).unwrap();
             let (simple_script_source, plutus_script_source, datum_source) =
-                utxo_to_inline_sources(utxo)?;
+                utxo_to_inline_sources(utxo).map_err(WError::from_err("utxo_to_inline_sources"))?;
             if let Some((datum_source, datum_hash)) = datum_source {
                 self.script_witness
                     .datums
@@ -254,10 +254,12 @@ fn utxo_to_inline_sources(
     String,
 > {
     let csl_script_ref = if let Some(script_ref) = &utxo.output.script_ref {
-        Some(
-            csl::ScriptRef::from_hex(script_ref)
-                .map_err(|e| format!("Failed to parse script ref: {:?}", e))?,
-        )
+        Some(csl::ScriptRef::from_hex(script_ref).map_err(|e| {
+            format!(
+                "Failed to parse script ref: {:?} - {}#{} - with ref: {}",
+                e, utxo.input.tx_hash, utxo.input.output_index, script_ref
+            )
+        })?)
     } else {
         None
     };

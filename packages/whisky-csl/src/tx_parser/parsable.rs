@@ -1,4 +1,4 @@
-use whisky_common::{TxBuilderBody, TxParsable, TxTester, UTxO, WError};
+use whisky_common::{TxBuilderBody, TxParsable, TxTester, UTxO, UtxoInput, WError};
 
 use crate::WhiskyCSL;
 
@@ -10,6 +10,12 @@ impl TxParsable for WhiskyCSL {
         parser.parse(tx_hex, resolved_utxos)?;
         self.parser = parser;
         Ok(())
+    }
+
+    fn get_required_inputs(&mut self, tx_hex: &str) -> Result<Vec<UtxoInput>, WError> {
+        let required_inputs = CSLParser::extract_all_required_utxo_input(tx_hex)
+            .map_err(WError::from_err("WhiskyCSL - get_required_inputs"))?;
+        Ok(required_inputs)
     }
 
     fn get_builder_body(&self) -> TxBuilderBody {
