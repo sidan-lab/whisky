@@ -13,7 +13,7 @@ impl TxParsable for WhiskyCSL {
     }
 
     fn get_builder_body(&self) -> TxBuilderBody {
-        self.tx_builder_body.clone()
+        self.parser.tx_body.clone()
     }
 
     fn get_builder_body_without_change(&self) -> TxBuilderBody {
