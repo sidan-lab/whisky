@@ -62,12 +62,8 @@ impl BlockfrostProvider {
                     NativeScript::from_json(&serde_json::json!(script_json).to_string())
                         .map_err(WError::from_err("json to string"))?;
                 let script_ref = to_script_ref(&ScriptType::Native(script));
-                Ok(Some(
-                    script_ref
-                        .native_script()
-                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
-                        .to_hex(),
-                ))
+                let result = Some(hex::encode(script_ref.to_unwrapped_bytes()));
+                Ok(result)
             }
             Type::PlutusV1 => {
                 let script_cbor = self
@@ -83,12 +79,7 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(
-                    script_ref
-                        .plutus_script()
-                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
-                        .to_hex(),
-                );
+                let result = Some(hex::encode(script_ref.to_unwrapped_bytes()));
 
                 Ok(result)
             }
@@ -106,12 +97,7 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(
-                    script_ref
-                        .plutus_script()
-                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
-                        .to_hex(),
-                );
+                let result = Some(hex::encode(script_ref.to_unwrapped_bytes()));
 
                 Ok(result)
             }
@@ -129,12 +115,7 @@ impl BlockfrostProvider {
                 )
                 .map_err(WError::from_err("from_hex_with_version"))?;
                 let script_ref: ScriptRef = to_script_ref(&ScriptType::Plutus(script));
-                let result = Some(
-                    script_ref
-                        .plutus_script()
-                        .ok_or_else(WError::from_opt("resolve_script_ref", "script_ref"))?
-                        .to_hex(),
-                );
+                let result = Some(hex::encode(script_ref.to_unwrapped_bytes()));
 
                 Ok(result)
             }
