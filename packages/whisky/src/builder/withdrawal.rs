@@ -99,7 +99,8 @@ impl TxBuilder {
                         simple_script_hash: withdrawal_script_hash.to_string(),
                         script_size,
                     },
-                ))
+                ));
+                self.withdrawal_item = Some(Withdrawal::SimpleScriptWithdrawal(withdrawal));
             }
             Withdrawal::PlutusScriptWithdrawal(mut withdrawal) => {
                 withdrawal.script_source =

@@ -369,19 +369,21 @@ fn normalize_script_ref(
 ) -> Result<csl::ScriptRef, String> {
     if script_ref.starts_with("82") {
         let bytes = hex::decode(script_ref.clone())
-            .map_err(|e| format!("Failed to decode script ref hex: {}", e))?;
+            .map_err(|e| format!("Failed to decode script ref hex: {:?}", e))?;
         let mut encoder = Encoder::new(Vec::new());
-        encoder.tag(Tag::new(24)).map_err(|e| "Failed to write tag")?;
+        encoder
+            .tag(Tag::new(24))
+            .map_err(|_| "Failed to write tag")?;
         encoder
             .bytes(&bytes)
-            .map_err(|e| format!("Failed to encode script ref bytes: {}", e))?;
+            .map_err(|e| format!("Failed to encode script ref bytes: {:?}", e))?;
         let write_buffer = encoder.writer().clone();
         csl::ScriptRef::from_bytes(write_buffer)
-            .map_err(|e| format!("Failed to decode script ref hex: {}", e))
+            .map_err(|e| format!("Failed to decode script ref hex: {:?}", e))
     } else {
         csl::ScriptRef::from_hex(&script_ref).map_err(|e| {
             format!(
-                "Failed to parse script ref: {:?} - {}#{} - with ref: {}",
+                "Failed to parse script ref: {:?} - {}#{} - with ref: {:?}",
                 e, tx_input.tx_hash, tx_input.output_index, script_ref
             )
         })
