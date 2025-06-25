@@ -38,6 +38,16 @@ mod tests {
             .to_string(),
             correct_pub_key_address
         );
+        assert_eq!(
+            Address::new(
+                "8f2ac4b2a57a90feb7717c7361c7043af6c3646e9db2b0e616482f73",
+                Some("039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f"),
+                false,
+                false
+            )
+            .to_json_string(),
+            correct_pub_key_address
+        );
     }
 
     #[test]
@@ -59,6 +69,16 @@ mod tests {
                 true
             )
             .to_string(),
+            correct_script_address
+        );
+        assert_eq!(
+            Address::new(
+                "8f2ac4b2a57a90feb7717c7361c7043af6c3646e9db2b0e616482f73",
+                Some("039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f"),
+                true,
+                true
+            )
+            .to_json_string(),
             correct_script_address
         );
     }

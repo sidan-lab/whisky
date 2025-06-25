@@ -41,6 +41,10 @@ mod tests {
             output_reference("hello", 12).to_string(),
             correct_output_reference
         );
+        assert_eq!(
+            OutputReference::from("hello", 12).to_json_string(),
+            correct_output_reference
+        );
     }
 
     #[test]

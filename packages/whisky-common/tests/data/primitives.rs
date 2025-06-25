@@ -6,20 +6,16 @@ mod tests {
     fn test_bool() {
         let correct_bool = "{\"constructor\":1,\"fields\":[]}";
         assert_eq!(bool(true).to_string(), correct_bool);
+        assert_eq!(Bool::new(true).to_json_string(), correct_bool);
     }
 
     #[test]
     fn test_byte_string() {
         let correct_byte_string = "{\"bytes\":\"hello\"}";
         assert_eq!(byte_string("hello").to_string(), correct_byte_string);
-    }
-
-    #[test]
-    fn test_builtin_byte_string() {
-        let correct_builtin_byte_string = "{\"bytes\":\"hello\"}";
         assert_eq!(
-            builtin_byte_string("hello").to_string(),
-            correct_builtin_byte_string
+            ByteString::new("hello").to_json_string(),
+            correct_byte_string
         );
     }
 
@@ -27,12 +23,20 @@ mod tests {
     fn test_integer() {
         let correct_integer = "{\"int\":1}";
         assert_eq!(integer(1).to_string(), correct_integer);
+        assert_eq!(Int::new(1).to_json_string(), correct_integer);
     }
 
     #[test]
     fn test_list() {
-        let correct_list = "{\"list\":[1,2,3]}";
-        assert_eq!(list(vec![1, 2, 3]).to_string(), correct_list);
+        let correct_list = "{\"list\":[{\"int\":1},{\"int\":2},{\"int\":3}]}";
+        assert_eq!(
+            list(vec![integer(1), integer(2), integer(3)]).to_string(),
+            correct_list
+        );
+        assert_eq!(
+            List::new(&[Int::new(1), Int::new(2), Int::new(3)]).to_json_string(),
+            correct_list
+        );
     }
 
     #[test]
@@ -47,15 +51,14 @@ mod tests {
             .to_string(),
             correct_assoc_map
         );
-    }
 
-    #[test]
-    fn test_tuple() {
-        let correct_tuple =
-            "{\"constructor\":0,\"fields\":[{\"bytes\":\"hello\"},{\"bytes\":\"world\"}]}";
         assert_eq!(
-            tuple(builtin_byte_string("hello"), builtin_byte_string("world")).to_string(),
-            correct_tuple
+            Map::new(&[
+                (ByteString::new("hello"), ByteString::new("world")),
+                (ByteString::new("123"), ByteString::new("456"))
+            ])
+            .to_json_string(),
+            correct_assoc_map
         );
     }
 
@@ -69,6 +72,14 @@ mod tests {
                 (byte_string("123"), byte_string("456"))
             ])
             .to_string(),
+            correct_pairs
+        );
+        assert_eq!(
+            Map::new(&[
+                (ByteString::new("hello"), ByteString::new("world")),
+                (ByteString::new("123"), ByteString::new("456"))
+            ])
+            .to_json_string(),
             correct_pairs
         );
     }
