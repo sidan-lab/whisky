@@ -47,6 +47,12 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                         self.to_json().to_string()
                     }
                 }
+
+                impl ::whisky_common::data::ToJsonArray for #name {
+                    fn to_json_array(&self) -> Vec<::serde_json::Value> {
+                        vec![self.to_json()]
+                    }
+                }
             }
         }
         _ => {

@@ -3,7 +3,7 @@ use crate::*;
 use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
-pub struct MintingBlueprint<P = ByteString, R = ByteString>
+pub struct MintingBlueprint<P = (), R = ByteString>
 where
     P: PlutusDataToJson,
     R: PlutusDataToJson,

@@ -37,6 +37,15 @@ where
     }
 }
 
+impl<T> ToJsonArray for Constr<T>
+where
+    T: Clone + PlutusDataToJson + ToJsonArray,
+{
+    fn to_json_array(&self) -> Vec<Value> {
+        vec![self.to_json()]
+    }
+}
+
 impl PlutusDataToJson for () {
     fn to_json(&self) -> Value {
         json!([])
@@ -44,6 +53,12 @@ impl PlutusDataToJson for () {
 
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
+    }
+}
+
+impl ToJsonArray for () {
+    fn to_json_array(&self) -> Vec<Value> {
+        vec![]
     }
 }
 
@@ -94,7 +109,7 @@ macro_rules! impl_constr_fields {
             $($name: PlutusDataToJson + Clone,)+
         {
             fn to_json_array(&self) -> Vec<Value> {
-                let tuple = &**self; // Properly dereference Box<Tuple>
+                let tuple = &**self;
                 let ($($name,)+) = tuple.clone();
                 vec![$($name.to_json(),)+]
             }
@@ -160,6 +175,15 @@ macro_rules! impl_constr_n {
 
                 fn to_json_string(&self) -> String {
                     self.to_json().to_string()
+                }
+            }
+
+            impl<T> ToJsonArray for $name<T>
+            where
+                T: Clone + PlutusDataToJson + ToJsonArray,
+            {
+                fn to_json_array(&self) -> Vec<Value> {
+                    vec![self.to_json()]
                 }
             }
         )+
