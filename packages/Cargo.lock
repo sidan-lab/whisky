@@ -1829,16 +1829,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "minicbor"
-version = "0.26.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a309f581ade7597820083bc275075c4c6986e57e53f8d26f88507cfefc8c987"
-dependencies = [
- "half 2.4.1",
- "minicbor-derive 0.16.2",
-]
-
-[[package]]
 name = "minicbor-derive"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1854,17 +1844,6 @@ name = "minicbor-derive"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd2209fff77f705b00c737016a48e73733d7fbccb8b007194db148f03561fb70"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.90",
-]
-
-[[package]]
-name = "minicbor-derive"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9882ef5c56df184b8ffc107fc6c61e33ee3a654b021961d790a78571bb9d67a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2092,7 +2071,7 @@ dependencies = [
  "cryptoxide",
  "hex",
  "pallas-codec 0.31.0",
- "pallas-crypto 0.31.0",
+ "pallas-crypto",
  "thiserror",
 ]
 
@@ -2123,18 +2102,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallas-codec"
-version = "1.0.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51205265dc1f976a09e845abb4303e6704de54e377d3350ee30be70b26249f7f"
-dependencies = [
- "hex",
- "minicbor 0.26.5",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "pallas-crypto"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2150,20 +2117,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallas-crypto"
-version = "1.0.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d62094c2f70164cd878b4f3ae2f81f79aca79d7b3a2a5db2fa15d09002d5f7d"
-dependencies = [
- "cryptoxide",
- "hex",
- "pallas-codec 1.0.0-alpha.2",
- "rand_core 0.6.4",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "pallas-primitives"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2174,20 +2127,7 @@ dependencies = [
  "hex",
  "log",
  "pallas-codec 0.31.0",
- "pallas-crypto 0.31.0",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "pallas-primitives"
-version = "1.0.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1db6f5bff8e1163e33dd116814c7288866928219cb84c90803f41b2d3ec0edc1"
-dependencies = [
- "hex",
- "pallas-codec 1.0.0-alpha.2",
- "pallas-crypto 1.0.0-alpha.2",
+ "pallas-crypto",
  "serde",
  "serde_json",
 ]
@@ -2202,8 +2142,8 @@ dependencies = [
  "itertools 0.13.0",
  "pallas-addresses",
  "pallas-codec 0.31.0",
- "pallas-crypto 0.31.0",
- "pallas-primitives 0.31.0",
+ "pallas-crypto",
+ "pallas-primitives",
  "paste",
  "serde",
  "thiserror",
@@ -3500,8 +3440,8 @@ dependencies = [
  "once_cell",
  "pallas-addresses",
  "pallas-codec 0.31.0",
- "pallas-crypto 0.31.0",
- "pallas-primitives 0.31.0",
+ "pallas-crypto",
+ "pallas-primitives",
  "pallas-traverse",
  "peg",
  "pretty",
@@ -3649,7 +3589,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3660,7 +3600,7 @@ dependencies = [
  "maestro-rust-sdk",
  "noop_proc_macro",
  "pallas-codec 0.30.2",
- "pallas-primitives 0.31.0",
+ "pallas-primitives",
  "pallas-traverse",
  "rand_os",
  "reqwest 0.12.9",
@@ -3672,26 +3612,27 @@ dependencies = [
  "wasm-bindgen",
  "whisky-common",
  "whisky-csl",
+ "whisky-macros",
  "whisky-provider",
  "whisky-wallet",
 ]
 
 [[package]]
 name = "whisky-common"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "hex",
- "pallas-primitives 1.0.0-alpha.2",
  "schemars",
  "serde",
  "serde_json",
  "uplc",
+ "whisky-macros",
 ]
 
 [[package]]
 name = "whisky-csl"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3700,7 +3641,7 @@ dependencies = [
  "js-sys",
  "noop_proc_macro",
  "pallas-codec 0.31.0",
- "pallas-primitives 0.31.0",
+ "pallas-primitives",
  "pallas-traverse",
  "rand_os",
  "schemars",
@@ -3716,7 +3657,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3726,7 +3667,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-js"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "js-sys",
  "noop_proc_macro",
@@ -3742,8 +3683,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "whisky-macros"
+version = "1.0.9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "whisky-provider"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "dotenv",
@@ -3761,7 +3711,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-wallet"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",

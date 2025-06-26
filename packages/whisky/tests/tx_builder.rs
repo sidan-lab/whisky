@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tx_builder_core_tests {
     use serde_json::{json, to_string};
+    use whisky::data::*;
     use whisky::*;
 
     #[test]
@@ -249,7 +250,7 @@ mod tx_builder_core_tests {
                 100,
             )
             .mint_redeemer_value(&WRedeemer {
-                data: WData::JSON(con_str0(json!([builtin_byte_string("1234abcd")])).to_string()),
+                data: WData::JSON(constr0(json!([builtin_byte_string("1234abcd")])).to_string()),
                 ex_units: Budget {
                     mem: 3386819,
                     steps: 1048170931,

@@ -1,4 +1,4 @@
-use crate::Value;
+use crate::data::Value;
 
 use super::TxTester;
 

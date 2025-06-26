@@ -1,4 +1,4 @@
-use crate::{Datum, Value};
+use crate::{data::Value, Datum};
 
 use super::TxTester;
 

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use whisky_common::*;
+    use whisky_common::{data::Value, *};
     // Operator tests
     #[test]
     fn test_add_asset() {

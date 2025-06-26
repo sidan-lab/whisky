@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use whisky::*;
+    use whisky::{data::*, *};
 
     fn test_fn(tx: &mut WhiskyTx) -> Result<&mut WhiskyTx, WError> {
         let res = tx
@@ -11,7 +11,7 @@ mod tests {
                 123,
                 &WRedeemer {
                     ex_units: Budget::default(),
-                    data: WData::JSON(con_str0(json!([])).to_string()),
+                    data: WData::JSON(constr0(json!([])).to_string()),
                 },
             )?
             .provide_script("123")?;

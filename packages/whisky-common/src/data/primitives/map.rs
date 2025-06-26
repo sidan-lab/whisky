@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::PlutusDataToJson;
+use crate::data::PlutusDataToJson;
 
 #[derive(Clone, Debug)]
 pub struct Map<K, V>

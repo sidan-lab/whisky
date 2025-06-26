@@ -8,7 +8,6 @@ pub mod tx_tester;
 pub mod utils;
 pub use algo::*;
 pub use constants::*;
-pub use data::*;
 pub use errors::*;
 pub use interfaces::*;
 pub use models::*;

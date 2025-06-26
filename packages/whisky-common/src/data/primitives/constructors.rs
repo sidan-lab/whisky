@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::{PlutusDataToJson, ToJsonArray};
+use crate::data::{PlutusDataToJson, ToJsonArray};
 
 #[derive(Clone, Debug)]
 pub struct Constr<T>
@@ -28,8 +28,18 @@ where
     T: Clone + PlutusDataToJson + ToJsonArray,
 {
     fn to_json(&self) -> Value {
-        let fields_json = self.fields.to_constr_fields_array();
+        let fields_json = self.fields.to_json_array();
         constr(self.tag, fields_json)
+    }
+
+    fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
+}
+
+impl PlutusDataToJson for () {
+    fn to_json(&self) -> Value {
+        json!([])
     }
 
     fn to_json_string(&self) -> String {
@@ -76,14 +86,14 @@ pub fn con_str2<T: Into<Value>>(fields: T) -> Value {
 }
 
 #[macro_export]
-macro_rules! impl_plutus_data_tuple {
+macro_rules! impl_constr_fields {
     ( $( $name:ident )+ ) => {
         #[allow(non_snake_case)]
         impl<$($name,)+> ToJsonArray for Box<($($name,)+)>
         where
             $($name: PlutusDataToJson + Clone,)+
         {
-            fn to_constr_fields_array(&self) -> Vec<Value> {
+            fn to_json_array(&self) -> Vec<Value> {
                 let tuple = &**self; // Properly dereference Box<Tuple>
                 let ($($name,)+) = tuple.clone();
                 vec![$($name.to_json(),)+]
@@ -96,7 +106,7 @@ macro_rules! impl_plutus_data_tuple {
             $($name: PlutusDataToJson + Clone,)+
         {
             fn to_json(&self) -> Value {
-                json!(self.to_constr_fields_array())
+                json!(self.to_json_array())
             }
 
             fn to_json_string(&self) -> String {
@@ -106,13 +116,17 @@ macro_rules! impl_plutus_data_tuple {
     }
 }
 
-impl_plutus_data_tuple!(T1);
-impl_plutus_data_tuple!(T1 T2);
-impl_plutus_data_tuple!(T1 T2 T3);
-impl_plutus_data_tuple!(T1 T2 T3 T4);
-impl_plutus_data_tuple!(T1 T2 T3 T4 T5);
+impl_constr_fields!(T1 T2);
+impl_constr_fields!(T1 T2 T3);
+impl_constr_fields!(T1 T2 T3 T4);
+impl_constr_fields!(T1 T2 T3 T4 T5);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9 T10);
 
-// Macro to generate Constr0 through Constr10
+#[macro_export]
 macro_rules! impl_constr_n {
     ($($name:ident: $tag:expr),+) => {
         $(
@@ -140,7 +154,7 @@ macro_rules! impl_constr_n {
                 T: Clone + PlutusDataToJson + ToJsonArray,
             {
                 fn to_json(&self) -> Value {
-                    let fields_json = self.fields.to_constr_fields_array();
+                    let fields_json = self.fields.to_json_array();
                     constr($tag, fields_json)
                 }
 

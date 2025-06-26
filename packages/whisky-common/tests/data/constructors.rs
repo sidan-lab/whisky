@@ -11,8 +11,20 @@ mod tests {
             correct_constr
         );
 
-        let new_box = Box::new(PlutusData::ByteString(ByteString::new("hello")));
+        let constructor = Constr::new(10, ByteString::new("hello")).to_json_string();
+        assert_eq!(constructor, correct_constr);
+    }
 
+    #[test]
+    fn test_constr_2() {
+        let correct_constr =
+            "{\"constructor\":10,\"fields\":[{\"bytes\":\"hello\"},{\"int\":123}]}";
+        assert_eq!(
+            constr(10, json!([byte_string("hello"), integer(123)])).to_string(),
+            correct_constr
+        );
+
+        let new_box = Box::new((ByteString::new("hello"), Int::new(123)));
         let constructor = Constr::new(10, new_box).to_json_string();
         assert_eq!(constructor, correct_constr);
     }

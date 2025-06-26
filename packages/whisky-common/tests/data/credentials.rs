@@ -3,6 +3,29 @@ mod tests {
     use whisky_common::data::*;
 
     #[test]
+    fn test_verification_key() {
+        let correct_vkey = "{\"constructor\":0,\"fields\":[{\"bytes\":\"hello\"}]}";
+        assert_eq!(
+            constr0(vec![byte_string("hello")]).to_string(),
+            correct_vkey
+        );
+        assert_eq!(
+            VerificationKey::from("hello").to_json_string(),
+            correct_vkey
+        );
+    }
+
+    #[test]
+    fn test_script() {
+        let correct_script = "{\"constructor\":1,\"fields\":[{\"bytes\":\"hello\"}]}";
+        assert_eq!(
+            constr1(vec![byte_string("hello")]).to_string(),
+            correct_script
+        );
+        assert_eq!(Script::from("hello").to_json_string(), correct_script);
+    }
+
+    #[test]
     fn test_payment_pub_key_hash() {
         let correct_payment_pub_key_hash = "{\"bytes\":\"hello\"}";
         assert_eq!(

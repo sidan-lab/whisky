@@ -40,6 +40,28 @@ mod tests {
     }
 
     #[test]
+    fn test_tuple() {
+        let correct_list = "{\"list\":[{\"int\":1},{\"int\":2},{\"int\":3}]}";
+        assert_eq!(
+            tuple(vec![integer(1), integer(2), integer(3)]).to_string(),
+            correct_list
+        );
+        assert_eq!(
+            Tuple::new((Int::new(1), Int::new(2), Int::new(3))).to_json_string(),
+            correct_list
+        );
+    }
+
+    #[test]
+    fn test_tuple_2() {
+        let correct_list = "{\"list\":[{\"int\":1},{\"int\":2},{\"bytes\":\"3\"}]}";
+        assert_eq!(
+            Tuple::new((Int::new(1), Int::new(2), ByteString::new("3"))).to_json_string(),
+            correct_list
+        );
+    }
+
+    #[test]
     fn test_assoc_map() {
         let correct_assoc_map =
       "{\"map\":[{\"k\":{\"bytes\":\"hello\"},\"v\":{\"bytes\":\"world\"}},{\"k\":{\"bytes\":\"123\"},\"v\":{\"bytes\":\"456\"}}]}";

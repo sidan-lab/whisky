@@ -1,29 +1,32 @@
+use crate::data::*;
 use crate::*;
-use serde::Serialize;
-use serde_json::json;
 use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
-pub struct MintingBlueprint<T>
+pub struct MintingBlueprint<P = ByteString, R = ByteString>
 where
-    T: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
 {
     pub version: LanguageVersion,
     pub cbor: String,
     pub hash: String,
-    _phantom: PhantomData<T>,
+    _phantom_param: PhantomData<P>,
+    _phantom_redeemer: PhantomData<R>,
 }
 
-impl<T> MintingBlueprint<T>
+impl<P, R> MintingBlueprint<P, R>
 where
-    T: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
 {
     pub fn new(version: LanguageVersion) -> Self {
         Self {
             version,
             cbor: "".to_string(),
             hash: "".to_string(),
-            _phantom: PhantomData,
+            _phantom_param: PhantomData,
+            _phantom_redeemer: PhantomData,
         }
     }
 
@@ -48,27 +51,37 @@ where
         Ok(self)
     }
 
-    pub fn redeemer(redeemer: T) -> String {
-        json!(redeemer).to_string()
+    pub fn params(params: &[P]) -> Vec<String> {
+        params
+            .iter()
+            .map(|p| p.to_json_string())
+            .collect::<Vec<String>>()
+    }
+
+    pub fn redeemer(redeemer: R) -> String {
+        redeemer.to_json_string()
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct WithdrawalBlueprint<T>
+pub struct WithdrawalBlueprint<P = ByteString, R = ByteString>
 where
-    T: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
 {
     pub version: LanguageVersion,
     pub network_id: u8,
     pub cbor: String,
     pub hash: String,
     pub address: String,
-    _phantom: PhantomData<T>,
+    _phantom_param: PhantomData<P>,
+    _phantom_redeemer: PhantomData<R>,
 }
 
-impl<T> WithdrawalBlueprint<T>
+impl<P, R> WithdrawalBlueprint<P, R>
 where
-    T: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
 {
     pub fn new(version: LanguageVersion, network_id: u8) -> Self {
         Self {
@@ -77,7 +90,8 @@ where
             cbor: "".to_string(),
             hash: "".to_string(),
             address: "".to_string(),
-            _phantom: PhantomData,
+            _phantom_param: PhantomData,
+            _phantom_redeemer: PhantomData,
         }
     }
 
@@ -104,17 +118,24 @@ where
         Ok(self)
     }
 
-    pub fn redeemer(redeemer: T) -> String {
-        json!(redeemer).to_string()
+    pub fn params(params: &[P]) -> Vec<String> {
+        params
+            .iter()
+            .map(|p| p.to_json_string())
+            .collect::<Vec<String>>()
+    }
+
+    pub fn redeemer(redeemer: R) -> String {
+        redeemer.to_json_string()
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct SpendingBlueprint<P, R, D>
+pub struct SpendingBlueprint<P = ByteString, R = ByteString, D = ByteString>
 where
-    P: Serialize + 'static,
-    R: Serialize + 'static,
-    D: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
+    D: PlutusDataToJson,
 {
     pub version: LanguageVersion,
     pub network_id: u8,
@@ -129,9 +150,9 @@ where
 
 impl<P, R, D> SpendingBlueprint<P, R, D>
 where
-    P: Serialize + 'static,
-    R: Serialize + 'static,
-    D: Serialize + 'static,
+    P: PlutusDataToJson,
+    R: PlutusDataToJson,
+    D: PlutusDataToJson,
 {
     pub fn new(
         version: LanguageVersion,
@@ -185,15 +206,18 @@ where
         Ok(self)
     }
 
-    pub fn params(params: &[P]) -> String {
-        json!(params).to_string()
+    pub fn params(params: &[P]) -> Vec<String> {
+        params
+            .iter()
+            .map(|p| p.to_json_string())
+            .collect::<Vec<String>>()
     }
 
     pub fn redeemer(redeemer: R) -> String {
-        json!(redeemer).to_string()
+        redeemer.to_json_string()
     }
 
     pub fn datum(datum: D) -> String {
-        json!(datum).to_string()
+        datum.to_json_string()
     }
 }

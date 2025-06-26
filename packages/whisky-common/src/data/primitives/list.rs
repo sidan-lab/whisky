@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::PlutusDataToJson;
+use crate::data::PlutusDataToJson;
 
 #[derive(Clone, Debug)]
 pub struct List<T>
@@ -42,8 +42,4 @@ where
 pub fn list<T: Into<Value>>(p_list: Vec<T>) -> Value {
     let list: Vec<Value> = p_list.into_iter().map(|item| item.into()).collect();
     json!({ "list": list })
-}
-
-pub fn tuple<T: Into<Value>>(p_tuple: Vec<T>) -> Value {
-    list(p_tuple)
 }

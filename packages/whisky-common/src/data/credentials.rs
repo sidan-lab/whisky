@@ -1,8 +1,52 @@
 use serde_json::{json, Value};
 
-use crate::PlutusDataToJson;
+use crate::{
+    data::{ByteString, Constr0, Constr1, PlutusDataToJson, ToJsonArray},
+    impl_constr_type,
+};
 
 use super::{byte_string, constr0, constr1};
+
+#[derive(Clone, Debug)]
+pub enum Credential {
+    VerificationKey(VerificationKey),
+    Script(Script),
+}
+
+impl Credential {
+    pub fn new((hash, is_script): (&str, bool)) -> Self {
+        if is_script {
+            Credential::Script(Script::from(hash))
+        } else {
+            Credential::VerificationKey(VerificationKey::from(hash))
+        }
+    }
+}
+
+impl PlutusDataToJson for Credential {
+    fn to_json(&self) -> Value {
+        match self {
+            Credential::VerificationKey(vk) => vk.to_json(),
+            Credential::Script(script) => script.to_json(),
+        }
+    }
+
+    fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
+}
+
+impl ToJsonArray for Credential {
+    fn to_json_array(&self) -> Vec<Value> {
+        vec![self.to_json()]
+    }
+}
+
+pub type VerificationKey = Constr0<ByteString>;
+impl_constr_type!(VerificationKey, 0,(pub_key_hash: ByteString, &str));
+
+pub type Script = Constr1<ByteString>;
+impl_constr_type!(Script, 1, (script_hash: ByteString, &str));
 
 #[derive(Clone, Debug)]
 pub struct Address {
