@@ -1,11 +1,11 @@
 use serde_json::{json, Value};
 
-use crate::data::{PlutusDataToJson, ToJsonArray};
+use crate::data::PlutusDataJson;
 
 #[derive(Clone, Debug)]
 pub struct Constr<T = ()>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     pub tag: u64,
     pub fields: T,
@@ -13,7 +13,7 @@ where
 
 impl<T> Constr<T>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     pub fn new(tag: u64, fields: T) -> Self {
         Constr {
@@ -23,41 +23,21 @@ where
     }
 }
 
-impl<T> PlutusDataToJson for Constr<T>
+impl<T> PlutusDataJson for Constr<T>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     fn to_json(&self) -> Value {
-        let fields_json = self.fields.to_json_array();
+        let fields_json = self.fields.to_constr_field();
         constr(self.tag, fields_json)
     }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
-    }
 }
 
-impl<T> ToJsonArray for Constr<T>
-where
-    T: Clone + PlutusDataToJson + ToJsonArray,
-{
-    fn to_json_array(&self) -> Vec<Value> {
-        vec![self.to_json()]
-    }
-}
-
-impl PlutusDataToJson for () {
+impl PlutusDataJson for () {
     fn to_json(&self) -> Value {
         json!([])
     }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
-    }
-}
-
-impl ToJsonArray for () {
-    fn to_json_array(&self) -> Vec<Value> {
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
         vec![]
     }
 }
@@ -104,28 +84,18 @@ pub fn con_str2<T: Into<Value>>(fields: T) -> Value {
 macro_rules! impl_constr_fields {
     ( $( $name:ident )+ ) => {
         #[allow(non_snake_case)]
-        impl<$($name,)+> ToJsonArray for Box<($($name,)+)>
+        impl<$($name,)+> PlutusDataJson for Box<($($name,)+)>
         where
-            $($name: PlutusDataToJson + Clone,)+
+            $($name: PlutusDataJson + Clone,)+
         {
-            fn to_json_array(&self) -> Vec<Value> {
+            fn to_json(&self) -> Value {
+                json!(self.to_constr_field())
+            }
+
+            fn to_constr_field(&self) -> Vec<Value> {
                 let tuple = &**self;
                 let ($($name,)+) = tuple.clone();
                 vec![$($name.to_json(),)+]
-            }
-        }
-
-        #[allow(non_snake_case)]
-        impl<$($name,)+> PlutusDataToJson for Box<($($name,)+)>
-        where
-            $($name: PlutusDataToJson + Clone,)+
-        {
-            fn to_json(&self) -> Value {
-                json!(self.to_json_array())
-            }
-
-            fn to_json_string(&self) -> String {
-                self.to_json().to_string()
             }
         }
     }
@@ -148,14 +118,14 @@ macro_rules! impl_constr_n {
             #[derive(Clone, Debug)]
             pub struct $name<T = ()>
             where
-                T: Clone + PlutusDataToJson + ToJsonArray,
+                T: Clone + PlutusDataJson + ,
             {
                 pub fields: T,
             }
 
             impl<T> $name<T>
             where
-                T: Clone + PlutusDataToJson + ToJsonArray,
+                T: Clone + PlutusDataJson + ,
             {
                 pub fn new(fields: T) -> Self {
                     $name {
@@ -164,26 +134,13 @@ macro_rules! impl_constr_n {
                 }
             }
 
-            impl<T> PlutusDataToJson for $name<T>
+            impl<T> PlutusDataJson for $name<T>
             where
-                T: Clone + PlutusDataToJson + ToJsonArray,
+                T: Clone + PlutusDataJson + ,
             {
                 fn to_json(&self) -> Value {
-                    let fields_json = self.fields.to_json_array();
+                    let fields_json = self.fields.to_constr_field();
                     constr($tag, fields_json)
-                }
-
-                fn to_json_string(&self) -> String {
-                    self.to_json().to_string()
-                }
-            }
-
-            impl<T> ToJsonArray for $name<T>
-            where
-                T: Clone + PlutusDataToJson + ToJsonArray,
-            {
-                fn to_json_array(&self) -> Vec<Value> {
-                    vec![self.to_json()]
                 }
             }
         )+

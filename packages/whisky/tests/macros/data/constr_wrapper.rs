@@ -1,6 +1,6 @@
 use serde_json::Value;
 use whisky::impl_constr_wrapper_type;
-use whisky_common::data::{ByteString, Constr0, Credential, PlutusDataToJson};
+use whisky_common::data::{ByteString, Constr0, Credential, PlutusDataJson};
 use whisky_macros::ConstrWrapper;
 
 // Type being tested with both the derive macro and implementation macro
@@ -15,6 +15,22 @@ impl_constr_wrapper_type!(Account, 0, [
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_constr_wrapper_impl() {
+        let inner = Constr0::new(Box::new((
+            ByteString::new("test_account_123"),
+            Credential::new(("master_key_hash", false)),
+            Credential::new(("operation_key_hash", true)),
+        )));
+        let account = Account(inner);
+        let account_from = Account::from(
+            "test_account_123",
+            ("master_key_hash", false),
+            ("operation_key_hash", true),
+        );
+        assert_eq!(account.to_json_string(), account_from.to_json_string());
+    }
 
     #[test]
     fn test_constr_wrapper_derive() {

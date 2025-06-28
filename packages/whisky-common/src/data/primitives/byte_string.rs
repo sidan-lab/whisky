@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::data::{PlutusDataToJson, ToJsonArray};
+use crate::data::PlutusDataJson;
 
 #[derive(Clone, Debug)]
 pub struct ByteString {
@@ -15,18 +15,9 @@ impl ByteString {
     }
 }
 
-impl PlutusDataToJson for ByteString {
+impl PlutusDataJson for ByteString {
     fn to_json(&self) -> Value {
         byte_string(&self.bytes)
-    }
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
-    }
-}
-
-impl ToJsonArray for ByteString {
-    fn to_json_array(&self) -> Vec<Value> {
-        vec![self.to_json()]
     }
 }
 

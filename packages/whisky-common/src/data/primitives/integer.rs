@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataToJson;
+use crate::data::PlutusDataJson;
 
 #[derive(Clone, Debug)]
 pub struct Int {
@@ -13,12 +13,9 @@ impl Int {
     }
 }
 
-impl PlutusDataToJson for Int {
+impl PlutusDataJson for Int {
     fn to_json(&self) -> Value {
         integer(self.int)
-    }
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
     }
 }
 

@@ -1,35 +1,31 @@
 use serde_json::{json, Value};
 
-use crate::data::{PlutusDataToJson, ToJsonArray};
+use crate::data::PlutusDataJson;
 
 #[derive(Clone, Debug)]
 pub struct Tuple<T>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     pub items: T,
 }
 
 impl<T> Tuple<T>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     pub fn new(items: T) -> Self {
         Tuple { items }
     }
 }
 
-impl<T> PlutusDataToJson for Tuple<T>
+impl<T> PlutusDataJson for Tuple<T>
 where
-    T: Clone + PlutusDataToJson + ToJsonArray,
+    T: Clone + PlutusDataJson,
 {
     fn to_json(&self) -> Value {
-        let items_json = self.items.to_json_array();
+        let items_json = self.items.to_constr_field();
         tuple(items_json)
-    }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
     }
 }
 
@@ -42,27 +38,16 @@ pub fn tuple<T: Into<Value>>(p_tuple: Vec<T>) -> Value {
 macro_rules! impl_plutus_data_tuple {
     ( $( $name:ident )+ ) => {
         #[allow(non_snake_case)]
-        impl<$($name,)+> ToJsonArray for ($($name,)+)
+        impl<$($name,)+> PlutusDataJson for ($($name,)+)
         where
-            $($name: PlutusDataToJson + Clone,)+
-        {
-            fn to_json_array(&self) -> Vec<Value> {
-                let ($($name,)+) = self.clone();
-                vec![$($name.to_json(),)+]
-            }
-        }
-
-        #[allow(non_snake_case)]
-        impl<$($name,)+> PlutusDataToJson for ($($name,)+)
-        where
-            $($name: PlutusDataToJson + Clone,)+
+            $($name: PlutusDataJson + Clone,)+
         {
             fn to_json(&self) -> Value {
-                json!(self.to_json_array())
+                json!(self.to_constr_field())
             }
-
-            fn to_json_string(&self) -> String {
-                self.to_json().to_string()
+            fn to_constr_field(&self) -> Vec<Value> {
+                let ($($name,)+) = self.clone();
+                vec![$($name.to_json(),)+]
             }
         }
     }

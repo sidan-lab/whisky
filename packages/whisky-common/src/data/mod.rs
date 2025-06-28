@@ -9,15 +9,14 @@ pub use credentials::*;
 pub use primitives::*;
 pub use value::*;
 
-pub trait PlutusDataToJson: Clone + Debug {
+pub trait PlutusDataJson: Clone + Debug {
     fn to_json(&self) -> serde_json::Value;
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
     }
-}
-
-pub trait ToJsonArray {
-    fn to_json_array(&self) -> Vec<serde_json::Value>;
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
+        vec![self.to_json()]
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -30,7 +29,7 @@ pub enum PlutusData {
     Constr(Constr<Box<PlutusData>>),
 }
 
-impl PlutusDataToJson for PlutusData {
+impl PlutusDataJson for PlutusData {
     fn to_json(&self) -> serde_json::Value {
         match self {
             PlutusData::Integer(int) => int.to_json(),
@@ -45,23 +44,20 @@ impl PlutusDataToJson for PlutusData {
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
     }
-}
 
-impl ToJsonArray for Box<PlutusData> {
-    fn to_json_array(&self) -> Vec<serde_json::Value> {
-        let inner = self.as_ref();
-        match inner {
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
+        match self {
             PlutusData::Integer(int) => vec![int.to_json()],
             PlutusData::ByteString(bytes) => vec![bytes.to_json()],
             PlutusData::List(list) => vec![list.to_json()],
             PlutusData::Map(map) => vec![map.to_json()],
             PlutusData::Bool(bool) => vec![bool.to_json()],
-            PlutusData::Constr(constr) => constr.fields.to_json_array(),
+            PlutusData::Constr(constr) => constr.fields.to_constr_field(),
         }
     }
 }
 
-impl PlutusDataToJson for Box<PlutusData> {
+impl PlutusDataJson for Box<PlutusData> {
     fn to_json(&self) -> serde_json::Value {
         let inner = self.as_ref();
         inner.to_json()
@@ -69,6 +65,18 @@ impl PlutusDataToJson for Box<PlutusData> {
 
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
+    }
+
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
+        let inner = self.as_ref();
+        match inner {
+            PlutusData::Integer(int) => vec![int.to_json()],
+            PlutusData::ByteString(bytes) => vec![bytes.to_json()],
+            PlutusData::List(list) => vec![list.to_json()],
+            PlutusData::Map(map) => vec![map.to_json()],
+            PlutusData::Bool(bool) => vec![bool.to_json()],
+            PlutusData::Constr(constr) => constr.fields.to_constr_field(),
+        }
     }
 }
 

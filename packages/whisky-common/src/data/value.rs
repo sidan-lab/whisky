@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    data::{ByteString, Int, Map, PlutusDataToJson, ToJsonArray},
+    data::{ByteString, Int, Map, PlutusDataJson},
     models::Asset,
 };
 use std::collections::HashMap;
@@ -160,7 +160,7 @@ impl Value {
     }
 }
 
-impl PlutusDataToJson for Value {
+impl PlutusDataJson for Value {
     fn to_json(&self) -> serde_json::Value {
         let mut value_map: HashMap<String, HashMap<String, u64>> = HashMap::new();
 
@@ -197,10 +197,8 @@ impl PlutusDataToJson for Value {
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
     }
-}
 
-impl ToJsonArray for Value {
-    fn to_json_array(&self) -> Vec<serde_json::Value> {
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
         vec![self.to_json()]
     }
 }

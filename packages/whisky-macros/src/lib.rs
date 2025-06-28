@@ -11,8 +11,3 @@ pub fn derive_constr_enum(input: TokenStream) -> TokenStream {
 pub fn derive_constr_wrapper(input: TokenStream) -> TokenStream {
     data::constr_wrapper::derive_constr_wrapper(input)
 }
-
-#[proc_macro_derive(JsonString)]
-pub fn derive_json_string(input: TokenStream) -> TokenStream {
-    data::json_string::derive_json_string(input)
-}

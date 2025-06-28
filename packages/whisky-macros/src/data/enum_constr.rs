@@ -41,14 +41,11 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                             #full_variant_path => ::whisky::data::Constr::new(#index as u64, ()).to_json()
                         }
                     }
-                    // _ => {
-                    //     panic!("Unsupported field type");
-                    // }
                 }
             });
 
             quote! {
-                impl ::whisky::data::PlutusDataToJson for #name {
+                impl ::whisky::data::PlutusDataJson for #name {
                     fn to_json(&self) -> ::serde_json::Value {
                         match self {
                             #(#match_arms,)*
@@ -58,10 +55,8 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                     fn to_json_string(&self) -> String {
                         self.to_json().to_string()
                     }
-                }
 
-                impl ::whisky::data::ToJsonArray for #name {
-                    fn to_json_array(&self) -> Vec<::serde_json::Value> {
+                    fn to_constr_field(&self) -> Vec<::serde_json::Value> {
                         vec![self.to_json()]
                     }
                 }

@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct MintingBlueprint<P = (), R = ByteString>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
 {
     pub version: LanguageVersion,
     pub cbor: String,
@@ -17,8 +17,8 @@ where
 
 impl<P, R> MintingBlueprint<P, R>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
 {
     pub fn new(version: LanguageVersion) -> Self {
         Self {
@@ -66,8 +66,8 @@ where
 #[derive(Debug, Clone)]
 pub struct WithdrawalBlueprint<P = ByteString, R = ByteString>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
 {
     pub version: LanguageVersion,
     pub network_id: u8,
@@ -80,8 +80,8 @@ where
 
 impl<P, R> WithdrawalBlueprint<P, R>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
 {
     pub fn new(version: LanguageVersion, network_id: u8) -> Self {
         Self {
@@ -133,9 +133,9 @@ where
 #[derive(Debug, Clone)]
 pub struct SpendingBlueprint<P = ByteString, R = ByteString, D = ByteString>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
-    D: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
+    D: PlutusDataJson,
 {
     pub version: LanguageVersion,
     pub network_id: u8,
@@ -150,9 +150,9 @@ where
 
 impl<P, R, D> SpendingBlueprint<P, R, D>
 where
-    P: PlutusDataToJson,
-    R: PlutusDataToJson,
-    D: PlutusDataToJson,
+    P: PlutusDataJson,
+    R: PlutusDataJson,
+    D: PlutusDataJson,
 {
     pub fn new(
         version: LanguageVersion,

@@ -3,21 +3,21 @@ use std::iter::FromIterator;
 
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataToJson;
+use crate::data::PlutusDataJson;
 
 #[derive(Clone, Debug)]
 pub struct Map<K, V>
 where
-    K: Clone + PlutusDataToJson,
-    V: Clone + PlutusDataToJson,
+    K: Clone + PlutusDataJson,
+    V: Clone + PlutusDataJson,
 {
     pub map: Vec<(K, V)>,
 }
 
 impl<K, V> Map<K, V>
 where
-    K: Clone + PlutusDataToJson,
-    V: Clone + PlutusDataToJson,
+    K: Clone + PlutusDataJson,
+    V: Clone + PlutusDataJson,
 {
     pub fn new(map_items: &[(K, V)]) -> Self {
         Map {
@@ -39,8 +39,8 @@ where
 // Implement FromIterator for Map to allow .collect() to work
 impl<K, V> FromIterator<(K, V)> for Map<K, V>
 where
-    K: Clone + PlutusDataToJson,
-    V: Clone + PlutusDataToJson,
+    K: Clone + PlutusDataJson,
+    V: Clone + PlutusDataJson,
 {
     fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
         let mut map = Map { map: Vec::new() };
@@ -51,10 +51,10 @@ where
     }
 }
 
-impl<K, V> PlutusDataToJson for Map<K, V>
+impl<K, V> PlutusDataJson for Map<K, V>
 where
-    K: Clone + PlutusDataToJson,
-    V: Clone + PlutusDataToJson,
+    K: Clone + PlutusDataJson,
+    V: Clone + PlutusDataJson,
 {
     fn to_json(&self) -> Value {
         let map_items_json: Vec<(Value, Value)> = self
@@ -63,10 +63,6 @@ where
             .map(|(k, v)| (k.clone().to_json(), v.clone().to_json()))
             .collect();
         pairs(map_items_json)
-    }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
     }
 }
 

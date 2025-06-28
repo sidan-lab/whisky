@@ -1,7 +1,7 @@
 use serde_json::{json, Value};
 
 use crate::{
-    data::{ByteString, Constr0, Constr1, PlutusDataToJson, ToJsonArray},
+    data::{ByteString, Constr0, Constr1, PlutusDataJson},
     impl_constr_type,
 };
 
@@ -23,7 +23,7 @@ impl Credential {
     }
 }
 
-impl PlutusDataToJson for Credential {
+impl PlutusDataJson for Credential {
     fn to_json(&self) -> Value {
         match self {
             Credential::VerificationKey(vk) => vk.to_json(),
@@ -34,10 +34,8 @@ impl PlutusDataToJson for Credential {
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
     }
-}
 
-impl ToJsonArray for Credential {
-    fn to_json_array(&self) -> Vec<Value> {
+    fn to_constr_field(&self) -> Vec<Value> {
         vec![self.to_json()]
     }
 }
@@ -72,7 +70,7 @@ impl Address {
     }
 }
 
-impl PlutusDataToJson for Address {
+impl PlutusDataJson for Address {
     fn to_json(&self) -> Value {
         if self.is_script_payment_key {
             script_address(
@@ -91,6 +89,10 @@ impl PlutusDataToJson for Address {
 
     fn to_json_string(&self) -> String {
         self.to_json().to_string()
+    }
+
+    fn to_constr_field(&self) -> Vec<serde_json::Value> {
+        vec![self.to_json()]
     }
 }
 
