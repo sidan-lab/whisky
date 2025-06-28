@@ -16,7 +16,19 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                     Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
                         // Single field tuple variant like UserSpotAccount(Account)
                         quote! {
-                            #full_variant_path(field) => ::whisky_common::data::Constr::new(#index as u64, field.clone()).to_json()
+                            #full_variant_path(field) => ::whisky::data::Constr::new(#index as u64, field.clone()).to_json()
+                        }
+                    }
+                    Fields::Unnamed(fields) => {
+                        // Multiple fields tuple variant like MintCancelOrderIntent(UserAccount, ByteString)
+                        let field_count = fields.unnamed.len();
+                        let field_names: Vec<_> = (0..field_count).map(|i| syn::Ident::new(&format!("field{}", i), proc_macro2::Span::call_site())).collect();
+                        
+                        let pattern = quote! { #(#field_names),* };
+                        let tuple = quote! { (#(#field_names.clone()),*) };
+                        
+                        quote! {
+                            #full_variant_path(#pattern) => ::whisky::data::Constr::new(#index as u64, Box::new(#tuple)).to_json()
                         }
                     }
                     Fields::Named(_) => {
@@ -26,17 +38,17 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                     Fields::Unit => {
                         // Unit variant like SomeVariant
                         quote! {
-                            #full_variant_path => ::whisky_common::data::Constr::new(#index as u64, ()).to_json()
+                            #full_variant_path => ::whisky::data::Constr::new(#index as u64, ()).to_json()
                         }
                     }
-                    _ => {
-                        panic!("Unsupported field type");
-                    }
+                    // _ => {
+                    //     panic!("Unsupported field type");
+                    // }
                 }
             });
 
             quote! {
-                impl ::whisky_common::data::PlutusDataToJson for #name {
+                impl ::whisky::data::PlutusDataToJson for #name {
                     fn to_json(&self) -> ::serde_json::Value {
                         match self {
                             #(#match_arms,)*
@@ -48,7 +60,7 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                     }
                 }
 
-                impl ::whisky_common::data::ToJsonArray for #name {
+                impl ::whisky::data::ToJsonArray for #name {
                     fn to_json_array(&self) -> Vec<::serde_json::Value> {
                         vec![self.to_json()]
                     }

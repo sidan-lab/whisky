@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::Asset;
+use crate::{
+    data::{ByteString, Int, Map, PlutusDataToJson, ToJsonArray},
+    models::Asset,
+};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -154,6 +157,51 @@ impl Value {
         } else {
             unit.to_string()
         }
+    }
+}
+
+impl PlutusDataToJson for Value {
+    fn to_json(&self) -> serde_json::Value {
+        let mut value_map: HashMap<String, HashMap<String, u64>> = HashMap::new();
+
+        self.0.iter().for_each(|(unit, quantity)| {
+            let sanitized_name = unit.replace("lovelace", "");
+            let policy = &sanitized_name[..56.min(sanitized_name.len())];
+            let token = &sanitized_name[56.min(sanitized_name.len())..];
+
+            value_map
+                .entry(policy.to_string())
+                .or_insert_with(HashMap::new)
+                .entry(token.to_string())
+                .and_modify(|q| *q += quantity)
+                .or_insert(*quantity);
+        });
+
+        let json_map = value_map
+            .into_iter()
+            .map(|(policy, tokens)| {
+                (
+                    ByteString::new(&policy),
+                    tokens
+                        .into_iter()
+                        .map(|(token, quantity)| {
+                            (ByteString::new(&token), Int::new(quantity as i128))
+                        })
+                        .collect(),
+                )
+            })
+            .collect::<Map<ByteString, Map<ByteString, Int>>>();
+        json_map.to_json()
+    }
+
+    fn to_json_string(&self) -> String {
+        self.to_json().to_string()
+    }
+}
+
+impl ToJsonArray for Value {
+    fn to_json_array(&self) -> Vec<serde_json::Value> {
+        vec![self.to_json()]
     }
 }
 

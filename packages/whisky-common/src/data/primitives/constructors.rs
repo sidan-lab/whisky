@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use crate::data::{PlutusDataToJson, ToJsonArray};
 
 #[derive(Clone, Debug)]
-pub struct Constr<T>
+pub struct Constr<T = ()>
 where
     T: Clone + PlutusDataToJson + ToJsonArray,
 {
@@ -146,7 +146,7 @@ macro_rules! impl_constr_n {
     ($($name:ident: $tag:expr),+) => {
         $(
             #[derive(Clone, Debug)]
-            pub struct $name<T>
+            pub struct $name<T = ()>
             where
                 T: Clone + PlutusDataToJson + ToJsonArray,
             {

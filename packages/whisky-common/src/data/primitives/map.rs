@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::iter::FromIterator;
+
 use serde_json::{json, Value};
 
 use crate::data::PlutusDataToJson;
@@ -22,8 +25,29 @@ where
         }
     }
 
+    pub fn from_map(hash_map: HashMap<K, V>) -> Self {
+        Map {
+            map: hash_map.into_iter().collect(),
+        }
+    }
+
     pub fn insert(&mut self, key: K, value: V) {
         self.map.push((key, value));
+    }
+}
+
+// Implement FromIterator for Map to allow .collect() to work
+impl<K, V> FromIterator<(K, V)> for Map<K, V>
+where
+    K: Clone + PlutusDataToJson,
+    V: Clone + PlutusDataToJson,
+{
+    fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
+        let mut map = Map { map: Vec::new() };
+        for (key, value) in iter {
+            map.insert(key, value);
+        }
+        map
     }
 }
 

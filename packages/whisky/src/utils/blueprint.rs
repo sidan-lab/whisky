@@ -51,15 +51,15 @@ where
         Ok(self)
     }
 
-    pub fn params(params: &[P]) -> Vec<String> {
+    pub fn params(&self, params: &[P]) -> Vec<String> {
         params
             .iter()
             .map(|p| p.to_json_string())
             .collect::<Vec<String>>()
     }
 
-    pub fn redeemer(redeemer: R) -> String {
-        redeemer.to_json_string()
+    pub fn redeemer(&self, redeemer: R) -> WData {
+        WData::JSON(redeemer.to_json_string())
     }
 }
 
@@ -118,15 +118,15 @@ where
         Ok(self)
     }
 
-    pub fn params(params: &[P]) -> Vec<String> {
+    pub fn params(&self, params: &[P]) -> Vec<String> {
         params
             .iter()
             .map(|p| p.to_json_string())
             .collect::<Vec<String>>()
     }
 
-    pub fn redeemer(redeemer: R) -> String {
-        redeemer.to_json_string()
+    pub fn redeemer(&self, redeemer: R) -> WData {
+        WData::JSON(redeemer.to_json_string())
     }
 }
 
@@ -206,18 +206,18 @@ where
         Ok(self)
     }
 
-    pub fn params(params: &[P]) -> Vec<String> {
+    pub fn params(&self, params: &[P]) -> Vec<String> {
         params
             .iter()
             .map(|p| p.to_json_string())
             .collect::<Vec<String>>()
     }
 
-    pub fn redeemer(redeemer: R) -> String {
-        redeemer.to_json_string()
+    pub fn redeemer(&self, redeemer: R) -> WData {
+        WData::JSON(redeemer.to_json_string())
     }
 
-    pub fn datum(datum: D) -> String {
-        datum.to_json_string()
+    pub fn datum(&self, datum: D) -> WData {
+        WData::JSON(datum.to_json_string())
     }
 }
