@@ -4,6 +4,13 @@ mod tests {
     use whisky_common::data::*;
 
     #[test]
+    fn test_empty_constr() {
+        let correct_empty_constr = "{\"constructor\":0,\"fields\":[]}";
+        assert_eq!(Constr::new(0, ()).to_json_string(), correct_empty_constr);
+        assert_eq!(constr(0, json!([])).to_string(), correct_empty_constr);
+    }
+
+    #[test]
     fn test_constr() {
         let correct_constr = "{\"constructor\":10,\"fields\":[{\"bytes\":\"hello\"}]}";
         assert_eq!(
