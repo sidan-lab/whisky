@@ -193,14 +193,6 @@ impl PlutusDataJson for Value {
             .collect::<Map<ByteString, Map<ByteString, Int>>>();
         json_map.to_json()
     }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
-    }
-
-    fn to_constr_field(&self) -> Vec<serde_json::Value> {
-        vec![self.to_json()]
-    }
 }
 
 impl Default for Value {

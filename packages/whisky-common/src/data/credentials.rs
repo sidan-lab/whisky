@@ -30,14 +30,6 @@ impl PlutusDataJson for Credential {
             Credential::Script(script) => script.to_json(),
         }
     }
-
-    fn to_json_string(&self) -> String {
-        self.to_json().to_string()
-    }
-
-    fn to_constr_field(&self) -> Vec<Value> {
-        vec![self.to_json()]
-    }
 }
 
 pub type VerificationKey = Constr0<ByteString>;
