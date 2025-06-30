@@ -13,6 +13,7 @@ Remember to follow our [Contributing Guide](CONTRIBUTING.md) before submitting y
 - [ ] `whisky-wallet`
 - [ ] `whisky-csl`
 - [ ] `whisky-common`
+- [ ] `whisky-macros`
 - [ ] `whisky-js`
 
 ## Type of Change

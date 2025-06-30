@@ -554,9 +554,9 @@ dependencies = [
 
 [[package]]
 name = "cardano-serialization-lib"
-version = "14.0.0"
+version = "15.0.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "097bdf373ed3e91b0a2e46b7c017e47a986509b478659f1c688bb28e58b3300d"
+checksum = "dce90222c3b28f994732b0dc2405e21ae0ec509efb074298fd81267c0176ebf9"
 dependencies = [
  "bech32 0.7.3",
  "cbor_event",
@@ -3589,7 +3589,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3612,13 +3612,14 @@ dependencies = [
  "wasm-bindgen",
  "whisky-common",
  "whisky-csl",
+ "whisky-macros",
  "whisky-provider",
  "whisky-wallet",
 ]
 
 [[package]]
 name = "whisky-common"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "hex",
@@ -3626,11 +3627,12 @@ dependencies = [
  "serde",
  "serde_json",
  "uplc",
+ "whisky-macros",
 ]
 
 [[package]]
 name = "whisky-csl"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "cardano-serialization-lib",
  "cryptoxide",
@@ -3655,7 +3657,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3665,7 +3667,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-js"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "js-sys",
  "noop_proc_macro",
@@ -3681,8 +3683,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "whisky-macros"
+version = "1.0.9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "whisky-provider"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "async-trait",
  "dotenv",
@@ -3700,7 +3711,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-wallet"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",

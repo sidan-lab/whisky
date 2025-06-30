@@ -3,6 +3,29 @@ mod tests {
     use whisky_common::data::*;
 
     #[test]
+    fn test_verification_key() {
+        let correct_vkey = "{\"constructor\":0,\"fields\":[{\"bytes\":\"hello\"}]}";
+        assert_eq!(
+            constr0(vec![byte_string("hello")]).to_string(),
+            correct_vkey
+        );
+        assert_eq!(
+            VerificationKey::from("hello").to_json_string(),
+            correct_vkey
+        );
+    }
+
+    #[test]
+    fn test_script() {
+        let correct_script = "{\"constructor\":1,\"fields\":[{\"bytes\":\"hello\"}]}";
+        assert_eq!(
+            constr1(vec![byte_string("hello")]).to_string(),
+            correct_script
+        );
+        assert_eq!(Script::from("hello").to_json_string(), correct_script);
+    }
+
+    #[test]
     fn test_payment_pub_key_hash() {
         let correct_payment_pub_key_hash = "{\"bytes\":\"hello\"}";
         assert_eq!(
@@ -38,6 +61,16 @@ mod tests {
             .to_string(),
             correct_pub_key_address
         );
+        assert_eq!(
+            Address::new(
+                "8f2ac4b2a57a90feb7717c7361c7043af6c3646e9db2b0e616482f73",
+                Some("039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f"),
+                false,
+                false
+            )
+            .to_json_string(),
+            correct_pub_key_address
+        );
     }
 
     #[test]
@@ -59,6 +92,16 @@ mod tests {
                 true
             )
             .to_string(),
+            correct_script_address
+        );
+        assert_eq!(
+            Address::new(
+                "8f2ac4b2a57a90feb7717c7361c7043af6c3646e9db2b0e616482f73",
+                Some("039506b8e57e150bb66f6134f3264d50c3b70ce44d052f4485cf388f"),
+                true,
+                true
+            )
+            .to_json_string(),
             correct_script_address
         );
     }

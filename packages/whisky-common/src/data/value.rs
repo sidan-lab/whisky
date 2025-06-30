@@ -1,18 +1,21 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::Asset;
-use std::collections::HashMap;
+use crate::{
+    data::{ByteString, Int, Map, PlutusDataJson},
+    models::Asset,
+};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct Value(pub HashMap<String, u64>);
+pub struct Value(pub BTreeMap<String, u64>);
 
 impl Value {
     pub fn new() -> Self {
-        Value(HashMap::new())
+        Value(BTreeMap::new())
     }
 
     pub fn from_asset(asset: &Asset) -> Self {
-        let mut asset_map = HashMap::new();
+        let mut asset_map = BTreeMap::new();
         asset_map.insert(
             Value::sanitize_unit(&asset.unit()),
             asset.quantity().parse::<u64>().unwrap(),
@@ -21,7 +24,7 @@ impl Value {
     }
 
     pub fn from_asset_vec(assets: &[Asset]) -> Self {
-        let mut asset_map = HashMap::new();
+        let mut asset_map = BTreeMap::new();
         for asset in assets {
             let current_value = asset_map
                 .entry(Value::sanitize_unit(&asset.unit()))
@@ -154,6 +157,41 @@ impl Value {
         } else {
             unit.to_string()
         }
+    }
+}
+
+impl PlutusDataJson for Value {
+    fn to_json(&self) -> serde_json::Value {
+        let mut value_map: BTreeMap<String, BTreeMap<String, u64>> = BTreeMap::new();
+
+        self.0.iter().for_each(|(unit, quantity)| {
+            let sanitized_name = unit.replace("lovelace", "");
+            let policy = &sanitized_name[..56.min(sanitized_name.len())];
+            let token = &sanitized_name[56.min(sanitized_name.len())..];
+
+            value_map
+                .entry(policy.to_string())
+                .or_insert_with(BTreeMap::new)
+                .entry(token.to_string())
+                .and_modify(|q| *q += quantity)
+                .or_insert(*quantity);
+        });
+
+        let json_map = value_map
+            .into_iter() // Keys will already be sorted
+            .map(|(policy, tokens)| {
+                (
+                    ByteString::new(&policy),
+                    tokens
+                        .into_iter() // Token keys will already be sorted
+                        .map(|(token, quantity)| {
+                            (ByteString::new(&token), Int::new(quantity as i128))
+                        })
+                        .collect(),
+                )
+            })
+            .collect::<Map<ByteString, Map<ByteString, Int>>>();
+        json_map.to_json()
     }
 }
 

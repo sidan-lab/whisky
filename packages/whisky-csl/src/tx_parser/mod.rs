@@ -10,6 +10,7 @@ mod outputs;
 mod parsable;
 mod reference_inputs;
 mod required_signatures;
+mod static_methods;
 mod utxo_converter;
 mod validity_range;
 mod votes;

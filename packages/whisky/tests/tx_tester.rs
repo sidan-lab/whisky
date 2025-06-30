@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tx_tester_tests {
-    use whisky::{Asset, TxParser, UTxO, Value, WData};
+    use whisky::{data::Value, Asset, TxParser, UTxO, WData};
 
     #[tokio::test]
     async fn test_tx_tester() {

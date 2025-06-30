@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use whisky_common::*;
+    use whisky_common::{
+        data::{ByteString, Int, Map, PlutusDataJson, Value},
+        *,
+    };
     // Operator tests
     #[test]
     fn test_add_asset() {
@@ -174,5 +177,62 @@ mod tests {
     fn test_is_empty() {
         let assets = Value::new();
         assert!(assets.is_empty());
+    }
+
+    #[test]
+    fn test_to_json() {
+        let assets = Value::new();
+        let val_map: Map<(), ()> = Map::new(&[]);
+        assert_eq!(assets.to_json_string(), val_map.to_json_string());
+    }
+
+    #[test]
+    fn test_simple_token_value() {
+        let val: Vec<Asset> = vec![Asset::new_from_str(
+            "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc8170074657374696e676e657777616c2e616461",
+            "345",
+        )];
+        let datum: Value = Value::from_asset_vec(&val);
+        let name_map = Map::new(&[(
+            ByteString::new("74657374696e676e657777616c2e616461"),
+            Int::new(345),
+        )]);
+        let val_map = Map::new(&[(
+            ByteString::new("baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700"),
+            name_map,
+        )]);
+        assert_eq!(datum.to_json_string(), val_map.to_json_string());
+    }
+
+    #[test]
+    fn test_to_json_complex_value() {
+        let val: Vec<Asset> = vec![
+            Asset::new_from_str("lovelace", "1000000"),
+            Asset::new_from_str(
+                "baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc8170074657374696e676e657777616c2e616461",
+                "345",
+            ),
+            Asset::new_from_str("baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc817001234", "567"),
+        ];
+        let datum: Value = Value::from_asset_vec(&val);
+
+        let name_map = Map::new(&[
+            (ByteString::new("1234"), Int::new(567)),
+            (
+                ByteString::new("74657374696e676e657777616c2e616461"),
+                Int::new(345),
+            ),
+        ]);
+        let val_map = Map::new(&[
+            (
+                ByteString::new(""),
+                Map::new(&[(ByteString::new(""), Int::new(1000000))]),
+            ),
+            (
+                ByteString::new("baefdc6c5b191be372a794cd8d40d839ec0dbdd3c28957267dc81700"),
+                name_map,
+            ),
+        ]);
+        assert_eq!(datum.to_json_string(), val_map.to_json_string());
     }
 }

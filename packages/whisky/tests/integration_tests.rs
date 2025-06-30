@@ -1,6 +1,7 @@
 mod int_tests {
     use serde_json::{json, to_string};
-    use whisky::*;
+    use whisky::{*,  Credential as TxBuilderCredential};
+    use whisky_common::data::*;
 
     #[test]
     fn test_complex_plutus_mint_spend_with_ref_tx() {
@@ -154,7 +155,7 @@ mod int_tests {
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
             )
             .change_address(wallet_address)
-            .change_output_datum(WData::JSON(con_str0(json!([])).to_string()))
+            .change_output_datum(WData::JSON(constr0(json!([])).to_string()))
             .complete_sync(None);
 
         match res {
@@ -255,7 +256,7 @@ mod int_tests {
             .withdrawal("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j", 0)
             .withdrawal_script("5251010000322253330034a229309b2b2b9a01")
             .withdrawal_redeemer_value(&WRedeemer {
-                data: WData::JSON(con_str0(json!([])).to_string()),
+                data: WData::JSON(constr0(json!([])).to_string()),
                 ex_units: Budget {
                     mem: 2501,
                     steps: 617656,
@@ -343,7 +344,7 @@ mod int_tests {
         .deregister_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
         .certificate_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
         .certificate_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -371,7 +372,7 @@ mod int_tests {
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4",  "7465737431")
         .mint_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -380,7 +381,7 @@ mod int_tests {
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737432")
         .mint_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
@@ -413,7 +414,7 @@ mod int_tests {
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
                 steps: 13042895
@@ -423,7 +424,7 @@ mod int_tests {
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
                 steps: 13042895
@@ -431,7 +432,7 @@ mod int_tests {
         .deregister_stake_certificate(reward_address)
         .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
         .certificate_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
                 steps: 44400485
@@ -439,7 +440,7 @@ mod int_tests {
         .withdrawal_plutus_script_v2()
         .withdrawal(reward_address, 0)
         .withdrawal_redeemer_value(&WRedeemer {            
-            data: WData::JSON(con_str0(json!([])).to_string()),
+            data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
                 steps: 44400485
@@ -631,7 +632,7 @@ mod int_tests {
                 &[Asset::new_from_str("lovelace", "9891607895")],
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
             )
-            .vote(&Voter::ConstitutionalCommitteeHotCred(Credential::KeyHash("e3a4c41d67592a1b8d87c62e5c5d73f7e8db836171945412d13f40f8".to_string())), &RefTxIn {
+            .vote(&Voter::ConstitutionalCommitteeHotCred(TxBuilderCredential::KeyHash("e3a4c41d67592a1b8d87c62e5c5d73f7e8db836171945412d13f40f8".to_string())), &RefTxIn {
                 tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
                 tx_index: 2,
                 script_size: None
