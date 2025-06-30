@@ -11,8 +11,6 @@ mod tests {
     #[derive(Debug, Clone, ConstrEnum)]
     pub enum UserAccount {
         UserSpotAccount(Account),
-        UserFundingAccount(Account),
-        UserMobileAccount(Account),
     }
 
     #[derive(Debug, Clone, ConstrEnum)]

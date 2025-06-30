@@ -12,8 +12,8 @@ impl TxEvaluation for TxBuilder {
         for redeemer_evaluation in tx_evaluation {
             match redeemer_evaluation.tag {
                 RedeemerTag::Spend => {
-                    let input = &mut self.serializer.tx_builder_body.inputs
-                        [redeemer_evaluation.index as usize];
+                    let input =
+                        &mut self.tx_builder_body.inputs[redeemer_evaluation.index as usize];
                     if let TxIn::ScriptTxIn(ScriptTxIn { script_tx_in, .. }) = input {
                         let redeemer: &mut Redeemer = script_tx_in.redeemer.as_mut().unwrap();
                         redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
@@ -22,8 +22,8 @@ impl TxEvaluation for TxBuilder {
                     }
                 }
                 RedeemerTag::Mint => {
-                    let mint_item = &mut self.serializer.tx_builder_body.mints
-                        [redeemer_evaluation.index as usize];
+                    let mint_item =
+                        &mut self.tx_builder_body.mints[redeemer_evaluation.index as usize];
                     if let MintItem::ScriptMint(mint) = mint_item {
                         let redeemer: &mut Redeemer = mint.redeemer.as_mut().unwrap();
                         redeemer.ex_units.mem = redeemer_evaluation.budget.mem * multiplier / 100;
