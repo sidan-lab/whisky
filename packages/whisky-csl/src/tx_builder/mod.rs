@@ -246,27 +246,38 @@ impl WhiskyCSL {
         Ok(self)
     }
 
-    // fn add_collateral_return(&mut self, change_address: String) {
-    //     let current_fee = self
-    //         .tx_builder
-    //         .get_fee_if_set()
-    //         .unwrap()
-    //         .to_string()
-    //         .parse::<u64>()
-    //         .unwrap();
-
-    //     let collateral_amount = 150 * ((current_fee / 100) + 1);
-    //     let _ = self
-    //         .tx_builder
-    //         .set_total_collateral_and_return(
-    //             &to_bignum(collateral_amount),
-    //             &csl::address::Address::from_bech32(&change_address).unwrap(),
-    //         )
-    //         .unwrap();
-    // }
+    pub fn add_collateral_return(&mut self) -> Result<&mut Self, WError> {
+        if self.tx_builder_body.total_collateral.is_some() {
+            match self.tx_builder_body.collateral_return_address.clone() {
+                Some(address) => {
+                    self.set_total_collateral_and_return(
+                        self.tx_builder_body.total_collateral.clone().unwrap(),
+                        address,
+                    )?;
+                }
+                None => {
+                    self.set_total_collateral_and_return(
+                        self.tx_builder_body.total_collateral.clone().unwrap(),
+                        self.tx_builder_body.change_address.clone(),
+                    )?;
+                }
+            }
+        }
+        Ok(self)
+    }
 
     pub fn set_fee(&mut self, fee: String) {
         self.core.set_fee(fee);
+    }
+
+    pub fn set_total_collateral_and_return(
+        &mut self,
+        total_collateral: String,
+        collateral_return_address: String,
+    ) -> Result<&mut Self, WError> {
+        self.core
+            .set_total_collateral_and_return(total_collateral, collateral_return_address)?;
+        Ok(self)
     }
 }
 

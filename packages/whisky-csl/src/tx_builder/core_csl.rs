@@ -1,5 +1,5 @@
 use crate::*;
-use cardano_serialization_lib as csl;
+use cardano_serialization_lib::{self as csl};
 use whisky_common::*;
 
 #[derive(Clone, Debug)]
@@ -339,7 +339,7 @@ impl CoreCSL {
                 )
                 .unwrap(),
                 &csl::BigNum::from_str(&withdrawal.coin.to_string()).map_err(WError::from_err(
-                    "CoreCSL - add_collateral - invalid coin as BigNum",
+                    "CoreCSL - add_pub_key_withdrawal - invalid coin as BigNum",
                 ))?,
             )
             .map_err(WError::from_err("CoreCSL - add_pub_key_withdrawal - add()"))?;
@@ -810,6 +810,35 @@ impl CoreCSL {
             .calc_script_data_hash(&build_csl_cost_models(&network))
             .map_err(WError::from_err(
                 "CoreCSL - add_script_hash - calc_script_data_hash",
+            ))?;
+        Ok(())
+    }
+
+    pub fn set_total_collateral_and_return(
+        &mut self,
+        total_collateral: String,
+        collateral_return_address: String,
+    ) -> Result<(), WError> {
+        let mut output_address = csl::Address::from_bech32(&collateral_return_address);
+        // If the address is not in bech32 format, it might be a Byron address
+        match output_address {
+            Ok(_) => {}
+            Err(_) => {
+                output_address = csl::ByronAddress::from_base58(&collateral_return_address)
+                    .map(|byron_addr| byron_addr.to_address());
+            }
+        };
+
+        self.tx_builder
+            .set_total_collateral_and_return(
+                &csl::BigNum::from_str(&total_collateral)
+                    .expect("Error parsing total_collateral amount"),
+                &output_address.map_err(WError::from_err(
+                    "CoreCSL - add_collateral_return - invalid output_address",
+                ))?,
+            )
+            .map_err(WError::from_err(
+                "CoreCSL - set_total_collateral_and_return - set_total_collateral_and_return",
             ))?;
         Ok(())
     }
