@@ -867,4 +867,84 @@ mod int_tests {
         let decoded_by_csl_tx_after_round_trip = csl::Transaction::from_hex(&tx_hex_round_trip).unwrap();
         assert_eq!(decoded_by_csl_tx, decoded_by_csl_tx_after_round_trip);
     }
+
+    #[test]
+    fn test_set_total_collateral() {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = tx_builder
+        .tx_in(
+                "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
+                3,
+                &[Asset::new_from_str("lovelace", "9692479606")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )        
+        .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
+        .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                6,
+                &[Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )
+        .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                7,
+                &[Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            ) 
+        .set_total_collateral("5000000")
+        .complete_sync(None)
+        .unwrap()
+        .complete_signing()
+        .unwrap();    
+
+        println!("{}", unsigned_tx);
+        assert!(tx_builder.serializer.tx_hex() != *"");
+    }
+
+        #[test]
+    fn test_set_total_collateral_and_collateral_return_address() {
+        let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: None,
+            submitter: None,
+            params: None,
+        });
+
+        let unsigned_tx = tx_builder
+        .tx_in(
+                "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
+                3,
+                &[Asset::new_from_str("lovelace", "9692479606")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )        
+        .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
+        .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                6,
+                &[Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            )
+        .tx_in_collateral(
+                "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+                7,
+                &[Asset::new_from_str("lovelace", "10000000")],
+                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+            ) 
+        .set_total_collateral("5000000")
+        .set_collateral_return_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
+        .complete_sync(None)
+        .unwrap()
+        .complete_signing()
+        .unwrap();    
+
+        println!("{}", unsigned_tx);
+        assert!(tx_builder.serializer.tx_hex() != *"");
+    }
+
 }
