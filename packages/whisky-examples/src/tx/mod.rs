@@ -1,3 +1,4 @@
+mod collateral_return;
 mod complex_transaction;
 mod delegate_stake;
 mod lock_fund;
@@ -5,6 +6,7 @@ mod mint_tokens;
 mod send_lovelace;
 mod unlock_fund;
 
+pub use collateral_return::*;
 pub use complex_transaction::*;
 pub use delegate_stake::*;
 pub use lock_fund::*;

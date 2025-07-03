@@ -1,4 +1,5 @@
 mod certificate;
+mod collateral_return;
 mod complete;
 mod data;
 mod mint;
@@ -8,7 +9,6 @@ mod tx_in;
 mod tx_out;
 mod vote;
 mod withdrawal;
-
 use std::collections::HashMap;
 
 use crate::*;
