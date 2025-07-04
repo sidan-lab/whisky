@@ -24,6 +24,8 @@ pub struct TxBuilderBody {
     pub signing_key: Vec<String>,
     pub fee: Option<String>,
     pub network: Option<Network>,
+    pub total_collateral: Option<String>,
+    pub collateral_return_address: Option<String>,
 }
 
 impl TxBuilderBody {
@@ -48,6 +50,8 @@ impl TxBuilderBody {
             signing_key: vec![],
             fee: None,
             network: None,
+            total_collateral: None,
+            collateral_return_address: None,
         }
     }
 }

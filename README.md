@@ -74,6 +74,10 @@ pub fn send_lovelace(
 }
 ```
 
+# Contributor Guides
+
+Make sure llvm is installed
+
 ## APIs
 
 Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.

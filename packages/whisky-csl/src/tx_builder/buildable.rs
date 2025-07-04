@@ -50,6 +50,7 @@ impl TxBuildable for WhiskyCSL {
             .add_all_metadata()?
             .add_script_hash()?
             .set_fee_if_needed()?
+            .add_collateral_return()?
             .add_change_utxo()?;
 
         self.core.build_tx(true)
@@ -74,7 +75,8 @@ impl TxBuildable for WhiskyCSL {
             .add_all_required_signature()?
             .add_all_metadata()?
             .add_script_hash()?
-            .set_fee_if_needed()?;
+            .set_fee_if_needed()?
+            .add_collateral_return()?;
 
         self.core.build_tx(false)
     }
