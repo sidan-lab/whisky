@@ -5,7 +5,7 @@ use bip39::{Language, Mnemonic};
 use derivation_indices::DerivationIndices;
 pub use mnemonic::MnemonicWallet;
 pub use root_key::RootKeyWallet;
-use whisky_common::WError;
+use whisky_common::{Fetcher, Submitter, WError};
 use whisky_csl::{
     csl::{
         BaseAddress, Bip32PrivateKey, Credential, Ed25519KeyHash, FixedTransaction, PrivateKey,
@@ -34,6 +34,8 @@ pub enum WalletType {
 pub struct Wallet {
     pub wallet_type: WalletType,
     pub network_id: NetworkId,
+    pub fetcher: Option<Box<dyn Fetcher>>,
+    pub submitter: Option<Box<dyn Submitter>>,
 }
 
 pub struct Account {
@@ -56,6 +58,8 @@ impl Wallet {
         Self {
             wallet_type,
             network_id: NetworkId::Preprod,
+            fetcher: None,
+            submitter: None,
         }
     }
 
@@ -63,6 +67,8 @@ impl Wallet {
         Self {
             wallet_type: WalletType::Cli(cli_skey.to_string()),
             network_id: NetworkId::Preprod,
+            fetcher: None,
+            submitter: None,
         }
     }
 
@@ -73,6 +79,8 @@ impl Wallet {
                 derivation_indices: DerivationIndices::default(),
             }),
             network_id: NetworkId::Preprod,
+            fetcher: None,
+            submitter: None,
         }
     }
 
@@ -83,11 +91,23 @@ impl Wallet {
                 derivation_indices: DerivationIndices::default(),
             }),
             network_id: NetworkId::Preprod,
+            fetcher: None,
+            submitter: None,
         }
     }
 
     pub fn with_network_id(mut self, network_id: NetworkId) -> Self {
         self.network_id = network_id;
+        self
+    }
+
+    pub fn with_fetcher<F: Fetcher + 'static>(mut self, fetcher: F) -> Self {
+        self.fetcher = Some(Box::new(fetcher));
+        self
+    }
+
+    pub fn with_submitter<S: Submitter + 'static>(mut self, submitter: S) -> Self {
+        self.submitter = Some(Box::new(submitter));
         self
     }
 
