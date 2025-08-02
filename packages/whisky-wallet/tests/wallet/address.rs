@@ -5,14 +5,9 @@ mod test {
     #[test]
     fn test_get_address_with_params() {
         let mnemonic_phrase = "summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer";
-        let mut wallet = Wallet::new_mnemonic(mnemonic_phrase);
+        let wallet = Wallet::new_mnemonic(mnemonic_phrase);
         let address = wallet
-            .get_address_with_params(
-                0,
-                0,
-                whisky_wallet::AddressType::Payment,
-                Some("e0464447c1f51adaefe1ebfb0dd485a349a70479ced1d198cbdf7fe7"),
-            )
+            .get_change_address(whisky_wallet::AddressType::Payment)
             .unwrap();
 
         assert_eq!(
