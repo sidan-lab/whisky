@@ -3,7 +3,7 @@ mod test {
     use whisky_wallet::Wallet;
 
     #[test]
-    fn test_get_address_with_params() {
+    fn test_get_change_address() {
         let mnemonic_phrase = "summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer";
         let wallet = Wallet::new_mnemonic(mnemonic_phrase);
         let address = wallet

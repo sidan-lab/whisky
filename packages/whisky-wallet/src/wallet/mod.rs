@@ -497,7 +497,7 @@ impl Wallet {
     /// # Errors
     ///
     /// Returns an error if no fetcher is configured or if there's an issue getting the address or fetching UTxOs.
-    pub async fn get_unspent_outputs(
+    pub async fn get_utxos(
         &self,
         address_type: Option<AddressType>,
         asset: Option<&str>,
@@ -515,5 +515,50 @@ impl Wallet {
             .fetch_address_utxos(&address, asset)
             .await
             .map_err(WError::from_err("Failed to fetch UTxOs"))
+    }
+
+    /// Fetches suitable collateral UTXOs from the wallet.
+    ///
+    /// Collateral UTXOs must:
+    /// 1. Contain only lovelace (no other assets)
+    /// 2. Have at least 5,000,000 lovelace (5 ADA)
+    ///
+    /// This method returns the smallest suitable UTxO to minimize locked collateral.
+    ///
+    /// # Arguments
+    ///
+    /// * `address_type` - Optional address type to fetch UTXOs from. Defaults to Payment.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either a vector with the smallest suitable collateral UTxO,
+    /// or an empty vector if no suitable UTxO is found, or an error.
+    pub async fn get_collateral(
+        &self,
+        address_type: Option<AddressType>,
+    ) -> Result<Vec<UTxO>, WError> {
+        let address_type = address_type.unwrap_or(AddressType::Payment);
+        let utxos = self.get_utxos(Some(address_type), None).await?;
+
+        let mut collateral_candidates: Vec<UTxO> = utxos
+            .into_iter()
+            .filter(|utxo| {
+                utxo.output.amount.len() == 1
+                    && utxo.output.amount[0].unit() == "lovelace"
+                    && utxo.output.amount[0].quantity_i128() >= 5_000_000
+            })
+            .collect();
+
+        collateral_candidates.sort_by(|a, b| {
+            let a_quantity = a.output.amount[0].quantity_i128();
+            let b_quantity = b.output.amount[0].quantity_i128();
+            a_quantity.cmp(&b_quantity)
+        });
+
+        if let Some(smallest_utxo) = collateral_candidates.first() {
+            Ok(vec![smallest_utxo.clone()])
+        } else {
+            Ok(vec![])
+        }
     }
 }
