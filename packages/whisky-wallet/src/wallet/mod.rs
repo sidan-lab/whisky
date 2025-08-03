@@ -561,4 +561,34 @@ impl Wallet {
             Ok(vec![])
         }
     }
+
+    /// Submits a transaction to the Cardano blockchain.
+    ///
+    /// This method uses the configured submitter to send the transaction to the network.
+    /// A submitter must be attached to the wallet using `with_submitter` before calling this method.
+    ///
+    /// # Arguments
+    ///
+    /// * `tx_hex` - The transaction in hexadecimal format to submit
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the transaction hash (if successful) or an error
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No submitter is configured for the wallet
+    /// - The submitter encounters an issue while submitting the transaction
+    /// - The transaction format is invalid
+    ///
+    pub async fn submit_tx(&self, tx_hex: &str) -> Result<String, WError> {
+        let submitter = self.submitter.as_ref().ok_or_else(|| {
+            WError::from_err(
+                "Submitter is required to submit transactions. Please provide a submitter.",
+            )("No submitter provided")
+        })?;
+
+        submitter.submit_tx(tx_hex).await
+    }
 }
