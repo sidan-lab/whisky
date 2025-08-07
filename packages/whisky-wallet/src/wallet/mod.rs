@@ -5,7 +5,6 @@ use bip39::{Language, Mnemonic};
 use derivation_indices::DerivationIndices;
 pub use mnemonic::MnemonicWallet;
 pub use root_key::RootKeyWallet;
-use std::time::Instant;
 use whisky_common::WError;
 use whisky_csl::{
     csl::{Bip32PrivateKey, FixedTransaction, PrivateKey, PublicKey},
@@ -153,12 +152,10 @@ impl Wallet {
                 Ok(signed_tx)
             }
             _ => {
-                let start = Instant::now();
                 let signed_tx = self
                     .account
                     .sign_transaction(tx_hex)
                     .map_err(WError::from_err("Wallet - sign_tx"))?;
-                println!("Time taken to sign transaction: {:?}", start.elapsed());
                 Ok(signed_tx.to_string())
             }
         }
