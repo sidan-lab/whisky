@@ -5,6 +5,7 @@ use bip39::{Language, Mnemonic};
 use derivation_indices::DerivationIndices;
 pub use mnemonic::MnemonicWallet;
 pub use root_key::RootKeyWallet;
+use std::time::Instant;
 use whisky_common::WError;
 use whisky_csl::{
     csl::{Bip32PrivateKey, FixedTransaction, PrivateKey, PublicKey},
@@ -19,6 +20,7 @@ pub enum WalletType {
 
 pub struct Wallet {
     pub wallet_type: WalletType,
+    pub account: Account,
 }
 
 pub struct Account {
@@ -37,35 +39,57 @@ impl Account {
 }
 
 impl Wallet {
-    pub fn new(wallet_type: WalletType) -> Self {
-        Self { wallet_type }
+    pub fn new(wallet_type: WalletType) -> Result<Self, WError> {
+        let account =
+            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new"))?;
+        Ok(Self {
+            wallet_type: wallet_type,
+            account,
+        })
     }
 
-    pub fn new_cli(cli_skey: &str) -> Self {
-        Self {
-            wallet_type: WalletType::Cli(cli_skey.to_string()),
-        }
+    pub fn new_cli(cli_skey: &str) -> Result<Self, WError> {
+        let wallet_type = WalletType::Cli(cli_skey.to_string());
+        let account =
+            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new"))?;
+        Ok(Self {
+            wallet_type,
+            account,
+        })
     }
 
-    pub fn new_mnemonic(mnemonic_phrase: &str) -> Self {
-        Self {
-            wallet_type: WalletType::MnemonicWallet(MnemonicWallet {
-                mnemonic_phrase: mnemonic_phrase.to_string(),
-                derivation_indices: DerivationIndices::default(),
-            }),
-        }
+    pub fn new_mnemonic(mnemonic_phrase: &str) -> Result<Self, WError> {
+        let wallet_type = WalletType::MnemonicWallet(MnemonicWallet {
+            mnemonic_phrase: mnemonic_phrase.to_string(),
+            derivation_indices: DerivationIndices::default(),
+        });
+        let account =
+            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new_mnemonic"))?;
+        Ok(Self {
+            wallet_type,
+            account,
+        })
     }
 
-    pub fn new_root_key(root_key: &str) -> Self {
-        Self {
-            wallet_type: WalletType::RootKeyWallet(RootKeyWallet {
-                root_key: root_key.to_string(),
-                derivation_indices: DerivationIndices::default(),
-            }),
-        }
+    pub fn new_root_key(root_key: &str) -> Result<Self, WError> {
+        let wallet_type = WalletType::RootKeyWallet(RootKeyWallet {
+            root_key: root_key.to_string(),
+            derivation_indices: DerivationIndices::default(),
+        });
+        let account = Wallet::get_account(&wallet_type).map_err(WError::from_err(
+            "Wallet - new_root_key - failed to get account",
+        ))?;
+        Ok(Self {
+            wallet_type,
+            account,
+        })
     }
 
-    pub fn payment_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn payment_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.payment_account(account_index, key_index);
@@ -75,10 +99,17 @@ impl Wallet {
             }
             _ => {}
         }
-        self
+        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
+            "Wallet - payment_account - failed to get account",
+        ))?;
+        Ok(self)
     }
 
-    pub fn stake_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn stake_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.stake_account(account_index, key_index);
@@ -88,10 +119,17 @@ impl Wallet {
             }
             _ => {}
         }
-        self
+        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
+            "Wallet - stake_account - failed to get account",
+        ))?;
+        Ok(self)
     }
 
-    pub fn drep_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn drep_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.drep_account(account_index, key_index);
@@ -101,7 +139,10 @@ impl Wallet {
             }
             _ => {}
         }
-        self
+        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
+            "Wallet - drep_account - failed to get account",
+        ))?;
+        Ok(self)
     }
 
     pub fn sign_tx(&self, tx_hex: &str) -> Result<String, WError> {
@@ -112,19 +153,19 @@ impl Wallet {
                 Ok(signed_tx)
             }
             _ => {
-                let account = self
-                    .get_account()
-                    .map_err(WError::from_err("Wallet - sign_tx"))?;
-                let signed_tx = account
+                let start = Instant::now();
+                let signed_tx = self
+                    .account
                     .sign_transaction(tx_hex)
                     .map_err(WError::from_err("Wallet - sign_tx"))?;
+                println!("Time taken to sign transaction: {:?}", start.elapsed());
                 Ok(signed_tx.to_string())
             }
         }
     }
 
-    pub fn get_account(&self) -> Result<Account, WError> {
-        let private_key: PrivateKey = match &self.wallet_type {
+    pub fn get_account(wallet_type: &WalletType) -> Result<Account, WError> {
+        let private_key: PrivateKey = match wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 let mnemonic =
                     Mnemonic::from_phrase(&mnemonic_wallet.mnemonic_phrase, Language::English)
