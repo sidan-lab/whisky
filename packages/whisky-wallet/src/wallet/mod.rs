@@ -43,6 +43,7 @@ pub struct Wallet {
     pub addresses: Addresses,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub submitter: Option<Box<dyn Submitter>>,
+    pub account: Account,
 }
 pub struct Addresses {
     pub base_address: Option<BaseAddress>,
@@ -85,6 +86,10 @@ impl Wallet {
             },
             fetcher: None,
             submitter: None,
+            account: Account {
+                private_key: PrivateKey::default(),
+                public_key: PublicKey::default(),
+            },
         }
     }
 
@@ -134,8 +139,10 @@ impl Wallet {
             mnemonic_phrase: mnemonic_phrase.to_string(),
             derivation_indices: DerivationIndices::default(),
         }));
+        wallet.account =
+            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new_mnemonic"))?;
         wallet.init_addresses();
-        wallet
+        walelt
     }
 
     /// Creates a new root key-based wallet using the provided root key.
@@ -152,6 +159,9 @@ impl Wallet {
             root_key: root_key.to_string(),
             derivation_indices: DerivationIndices::default(),
         }));
+        wallet.account = Wallet::get_account(&wallet_type).map_err(WError::from_err(
+            "Wallet - new_root_key - failed to get account",
+        ))?;
         wallet.init_addresses();
         wallet
     }
@@ -215,7 +225,11 @@ impl Wallet {
     /// # Returns
     ///
     /// A mutable reference to self for method chaining
-    pub fn payment_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn payment_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.payment_account(account_index, key_index);
@@ -225,7 +239,11 @@ impl Wallet {
             }
             _ => {}
         }
-        self.init_addresses()
+        self.init_addresses();
+        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
+            "Wallet - payment_account - failed to get account",
+        ))?;
+        Ok(self)
     }
 
     /// Sets the stake account indices for the wallet.
@@ -240,7 +258,11 @@ impl Wallet {
     /// # Returns
     ///
     /// A mutable reference to self for method chaining
-    pub fn stake_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn stake_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.stake_account(account_index, key_index);
@@ -250,7 +272,10 @@ impl Wallet {
             }
             _ => {}
         }
-        self.init_addresses()
+        self.init_addresses().account = Wallet::get_account(&self.wallet_type).map_err(
+            WError::from_err("Wallet - stake_account - failed to get account"),
+        )?;
+        Ok(self)
     }
 
     /// Sets the delegation representative (DRep) account indices for the wallet.
@@ -265,7 +290,11 @@ impl Wallet {
     /// # Returns
     ///
     /// A mutable reference to self for method chaining
-    pub fn drep_account(&mut self, account_index: u32, key_index: u32) -> &mut Self {
+    pub fn drep_account(
+        &mut self,
+        account_index: u32,
+        key_index: u32,
+    ) -> Result<&mut Self, WError> {
         match &mut self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 mnemonic_wallet.drep_account(account_index, key_index);
@@ -275,7 +304,7 @@ impl Wallet {
             }
             _ => {}
         }
-        self.init_addresses()
+        self
     }
 
     /// Initializes or re-initializes wallet addresses based on the wallet type and current network ID.
@@ -375,11 +404,25 @@ impl Wallet {
         }
     }
 
-    /// Gets the account private and public keys based on the wallet type and derivation indices.
-    ///
-    /// # Returns
-    ///
-    /// A Result containing either an Account with the private and public keys or an error
+    pub fn sign_tx(&self, tx_hex: &str) -> Result<String, WError> {
+        match &self.wallet_type {
+            WalletType::Cli(cli_skey) => {
+                let signed_tx = sign_transaction(tx_hex, &[cli_skey])
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                Ok(signed_tx)
+            }
+            _ => {
+                let account = self
+                    .get_account()
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                let signed_tx = account
+                    .sign_transaction(tx_hex)
+                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                Ok(signed_tx.to_string())
+            }
+        }
+    }
+
     pub fn get_account(&self) -> Result<Account, WError> {
         let private_key: PrivateKey = match &self.wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
