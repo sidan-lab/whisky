@@ -5,7 +5,7 @@ mod test {
     #[test]
     fn test_get_change_address() {
         let mnemonic_phrase = "summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer summer";
-        let wallet = Wallet::new_mnemonic(mnemonic_phrase);
+        let wallet = Wallet::new_mnemonic(mnemonic_phrase).unwrap();
         let address = wallet
             .get_change_address(whisky_wallet::AddressType::Payment)
             .unwrap();

@@ -43,7 +43,7 @@ pub struct Wallet {
     pub addresses: Addresses,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub submitter: Option<Box<dyn Submitter>>,
-    pub account: Account,
+    pub account: Option<Account>,
 }
 pub struct Addresses {
     pub base_address: Option<BaseAddress>,
@@ -76,9 +76,9 @@ impl Account {
 
 impl Wallet {
     // Private helper method for basic wallet initialization
-    fn empty(wallet_type: WalletType) -> Self {
+    fn empty() -> Self {
         Self {
-            wallet_type,
+            wallet_type: WalletType::Cli("".to_string()),
             network_id: NetworkId::Preprod,
             addresses: Addresses {
                 base_address: None,
@@ -86,10 +86,7 @@ impl Wallet {
             },
             fetcher: None,
             submitter: None,
-            account: Account {
-                private_key: PrivateKey::default(),
-                public_key: PublicKey::default(),
-            },
+            account: None,
         }
     }
 
@@ -104,10 +101,15 @@ impl Wallet {
     /// # Returns
     ///
     /// A new `Wallet` instance with initialized addresses
-    pub fn new(wallet_type: WalletType) -> Self {
-        let mut wallet = Self::empty(wallet_type);
+    pub fn new(wallet_type: WalletType) -> Result<Self, WError> {
+        let mut wallet = Self::default();
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new - failed to get account"))?,
+        );
         wallet.init_addresses();
-        wallet
+        Ok(wallet)
     }
 
     /// Creates a new CLI-based wallet using the provided signing key.
@@ -119,10 +121,15 @@ impl Wallet {
     /// # Returns
     ///
     /// A new `Wallet` instance
-    pub fn new_cli(cli_skey: &str) -> Self {
-        let mut wallet = Self::empty(WalletType::Cli(cli_skey.to_string()));
+    pub fn new_cli(cli_skey: &str) -> Result<Self, WError> {
+        let mut wallet = Self::default();
+        wallet.wallet_type = WalletType::Cli(cli_skey.to_string());
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new_cli - failed to get account"))?,
+        );
         wallet.init_addresses();
-        wallet
+        Ok(wallet)
     }
 
     /// Creates a new mnemonic-based wallet using the provided mnemonic phrase.
@@ -134,15 +141,19 @@ impl Wallet {
     /// # Returns
     ///
     /// A new `Wallet` instance with initialized addresses
-    pub fn new_mnemonic(mnemonic_phrase: &str) -> Self {
-        let mut wallet = Self::empty(WalletType::MnemonicWallet(MnemonicWallet {
+    pub fn new_mnemonic(mnemonic_phrase: &str) -> Result<Self, WError> {
+        let wallet_type = WalletType::MnemonicWallet(MnemonicWallet {
             mnemonic_phrase: mnemonic_phrase.to_string(),
             derivation_indices: DerivationIndices::default(),
-        }));
-        wallet.account =
-            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new_mnemonic"))?;
+        });
+        let mut wallet = Self::empty();
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new_mnemonic"))?,
+        );
         wallet.init_addresses();
-        walelt
+        Ok(wallet)
     }
 
     /// Creates a new root key-based wallet using the provided root key.
@@ -154,16 +165,20 @@ impl Wallet {
     /// # Returns
     ///
     /// A new `Wallet` instance with initialized addresses
-    pub fn new_root_key(root_key: &str) -> Self {
-        let mut wallet = Self::empty(WalletType::RootKeyWallet(RootKeyWallet {
+    pub fn new_root_key(root_key: &str) -> Result<Self, WError> {
+        let mut wallet = Self::default();
+        let wallet_type = WalletType::RootKeyWallet(RootKeyWallet {
             root_key: root_key.to_string(),
             derivation_indices: DerivationIndices::default(),
-        }));
-        wallet.account = Wallet::get_account(&wallet_type).map_err(WError::from_err(
-            "Wallet - new_root_key - failed to get account",
-        ))?;
+        });
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type).map_err(WError::from_err(
+                "Wallet - new_root_key - failed to get account",
+            ))?,
+        );
         wallet.init_addresses();
-        wallet
+        Ok(wallet)
     }
 
     /// Sets the network ID for the wallet and reinitializes addresses.
@@ -239,10 +254,12 @@ impl Wallet {
             }
             _ => {}
         }
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - payment_account - failed to get account",
+            ))?,
+        );
         self.init_addresses();
-        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
-            "Wallet - payment_account - failed to get account",
-        ))?;
         Ok(self)
     }
 
@@ -272,9 +289,12 @@ impl Wallet {
             }
             _ => {}
         }
-        self.init_addresses().account = Wallet::get_account(&self.wallet_type).map_err(
-            WError::from_err("Wallet - stake_account - failed to get account"),
-        )?;
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - stake_account - failed to get account",
+            ))?,
+        );
+        self.init_addresses();
         Ok(self)
     }
 
@@ -304,7 +324,13 @@ impl Wallet {
             }
             _ => {}
         }
-        self
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - drep_account - failed to get account",
+            ))?,
+        );
+        self.init_addresses();
+        Ok(self)
     }
 
     /// Initializes or re-initializes wallet addresses based on the wallet type and current network ID.
@@ -412,9 +438,10 @@ impl Wallet {
                 Ok(signed_tx)
             }
             _ => {
-                let account = self
-                    .get_account()
-                    .map_err(WError::from_err("Wallet - sign_tx"))?;
+                let account = self.account.as_ref().ok_or_else(WError::from_opt(
+                    "Wallet - sign_tx",
+                    "get account from wallet",
+                ))?;
                 let signed_tx = account
                     .sign_transaction(tx_hex)
                     .map_err(WError::from_err("Wallet - sign_tx"))?;
@@ -423,8 +450,8 @@ impl Wallet {
         }
     }
 
-    pub fn get_account(&self) -> Result<Account, WError> {
-        let private_key: PrivateKey = match &self.wallet_type {
+    pub fn get_account(wallet_type: &WalletType) -> Result<Account, WError> {
+        let private_key: PrivateKey = match wallet_type {
             WalletType::MnemonicWallet(mnemonic_wallet) => {
                 let mnemonic =
                     Mnemonic::from_phrase(&mnemonic_wallet.mnemonic_phrase, Language::English)
@@ -457,35 +484,6 @@ impl Wallet {
             private_key,
             public_key,
         })
-    }
-
-    /// Signs a transaction using the wallet's private key.
-    ///
-    /// # Arguments
-    ///
-    /// * `tx_hex` - The transaction to sign in hexadecimal format
-    ///
-    /// # Returns
-    ///
-    /// A Result containing either the signed transaction in hexadecimal format or an error
-    pub fn sign_tx(&self, tx_hex: &str) -> Result<String, WError> {
-        match &self.wallet_type {
-            WalletType::Cli(cli_skey) => {
-                let signed_tx = sign_transaction(tx_hex, &[cli_skey]).map_err(WError::from_err(
-                    "Wallet - sign_tx - failed to sign with CLI key",
-                ))?;
-                Ok(signed_tx)
-            }
-            _ => {
-                let account = self
-                    .get_account()
-                    .map_err(WError::from_err("Wallet - sign_tx - failed to get account"))?;
-                let signed_tx = account.sign_transaction(tx_hex).map_err(WError::from_err(
-                    "Wallet - sign_tx - failed to sign transaction",
-                ))?;
-                Ok(signed_tx.to_string())
-            }
-        }
     }
 
     /// Gets a wallet address based on the specified address type.
@@ -633,5 +631,11 @@ impl Wallet {
         })?;
 
         submitter.submit_tx(tx_hex).await
+    }
+}
+
+impl Default for Wallet {
+    fn default() -> Self {
+        Self::empty()
     }
 }
