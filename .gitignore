@@ -8,5 +8,5 @@ rust/pkg
 docs
 
 */**/.env
-
+.DS_Store
 publish

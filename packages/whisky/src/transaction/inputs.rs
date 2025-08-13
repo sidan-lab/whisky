@@ -30,8 +30,8 @@ impl WhiskyTx {
                 .tx_in(
                     &utxo.input.tx_hash,
                     utxo.input.output_index,
-                    &utxo.output.amount,
-                    &utxo.output.address,
+                    Some(&utxo.output.amount),
+                    Some(&utxo.output.address),
                 )
                 .tx_in_redeemer_value(redeemer);
             match &input.datum {
@@ -66,8 +66,8 @@ impl WhiskyTx {
         self.tx_builder.tx_in_collateral(
             &collateral.input.tx_hash,
             collateral.input.output_index,
-            &collateral.output.amount,
-            &collateral.output.address,
+            Some(&collateral.output.amount),
+            Some(&collateral.output.address),
         );
         Ok(self)
     }

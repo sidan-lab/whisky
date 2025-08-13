@@ -74,8 +74,8 @@ impl TxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        amount: &[Asset],
-        address: &str,
+        amount: Option<&[Asset]>,
+        address: Option<&str>,
     ) -> &mut Self {
         if self.tx_in_item.is_some() {
             self.queue_input();
@@ -86,8 +86,8 @@ impl TxBuilder {
                     tx_in: TxInParameter {
                         tx_hash: tx_hash.to_string(),
                         tx_index,
-                        amount: Some(amount.to_vec()),
-                        address: Some(address.to_string()),
+                        amount: amount.map(|a| a.to_vec()),
+                        address: address.map(|a| a.to_string()),
                     },
                     script_tx_in: ScriptTxInParameter {
                         script_source: None,
@@ -102,8 +102,8 @@ impl TxBuilder {
                     tx_in: TxInParameter {
                         tx_hash: tx_hash.to_string(),
                         tx_index,
-                        amount: Some(amount.to_vec()),
-                        address: Some(address.to_string()),
+                        amount: amount.map(|a| a.to_vec()),
+                        address: address.map(|a| a.to_string()),
                     },
                 });
                 self.tx_in_item = Some(item);
@@ -397,8 +397,8 @@ impl TxBuilder {
         &mut self,
         tx_hash: &str,
         tx_index: u32,
-        amount: &[Asset],
-        address: &str,
+        amount: Option<&[Asset]>,
+        address: Option<&str>,
     ) -> &mut Self {
         let collateral_item = self.collateral_item.take();
         if let Some(collateral_item) = collateral_item {
@@ -408,8 +408,8 @@ impl TxBuilder {
             tx_in: TxInParameter {
                 tx_hash: tx_hash.to_string(),
                 tx_index,
-                amount: Some(amount.to_vec()),
-                address: Some(address.to_string()),
+                amount: amount.map(|a| a.to_vec()),
+                address: address.map(|a| a.to_string()),
             },
         });
         self
