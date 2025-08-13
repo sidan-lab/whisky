@@ -9,7 +9,7 @@ mod tx_in;
 mod tx_out;
 mod vote;
 mod withdrawal;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::*;
 pub use data::*;
@@ -39,6 +39,8 @@ pub struct TxBuilder {
     pub selection_threshold: u64,
     pub chained_txs: Vec<String>,
     pub inputs_for_evaluation: HashMap<String, UTxO>,
+    queried_tx_hashes: HashSet<String>,
+    queried_utxos: HashMap<String, Vec<UTxO>>,
 }
 
 pub struct TxBuilderParam {
@@ -85,6 +87,8 @@ impl TxBuilder {
             selection_threshold: 5_000_000,
             chained_txs: vec![],
             inputs_for_evaluation: HashMap::new(),
+            queried_tx_hashes: HashSet::new(),
+            queried_utxos: HashMap::new(),
         }
     }
 
@@ -380,7 +384,8 @@ impl TxBuilder {
             TxIn::PubKeyTxIn(_) => {}
         }
         let input = self.tx_in_item.clone().unwrap();
-        self.input_for_evaluation(&input.to_utxo());
+        // NOTE: moved to complete()
+        // self.input_for_evaluation(&input.to_utxo());
         self.tx_builder_body.inputs.push(input);
         self.tx_in_item = None
     }

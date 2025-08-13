@@ -1,4 +1,5 @@
 use crate::*;
+use futures::future;
 use uplc::tx::SlotConfig;
 
 use super::{TxBuilder, TxEvaluation};
@@ -19,6 +20,16 @@ impl TxBuilder {
         &mut self,
         customized_tx: Option<TxBuilderBody>,
     ) -> Result<&mut Self, WError> {
+        // Check and complete all inputs
+        self.complete_tx_parts().await?;
+
+        let inputs = self.tx_builder_body.inputs.clone();
+        for input in inputs {
+            self.input_for_evaluation(&input.to_utxo());
+        }
+
+        // NOTE: need add sanitize outputs?
+
         self.complete_sync(customized_tx)?;
         match &self.evaluator {
             Some(evaluator) => {
@@ -121,6 +132,229 @@ impl TxBuilder {
         Ok(self)
     }
 
+    async fn complete_tx_parts(&mut self) -> Result<&mut Self, WError> {
+        Self::queue_all_last_item(self);
+
+        let incomplete_tx_ins: Vec<TxIn> = self
+            .tx_builder_body
+            .inputs
+            .iter()
+            .cloned()
+            .chain(
+                self.tx_builder_body
+                    .collaterals
+                    .iter()
+                    .cloned()
+                    .map(TxIn::PubKeyTxIn),
+            )
+            .filter(|tx_in| !Self::is_input_complete(tx_in))
+            .collect();
+
+        self.query_all_tx_info(&incomplete_tx_ins).await?;
+
+        for tx_in in incomplete_tx_ins {
+            self.complete_tx_in_info(&tx_in)?;
+        }
+
+        if self.tx_builder_body.inputs.is_empty() && self.tx_builder_body.collaterals.is_empty() {
+            return Err(WError::new(
+                "TxBuilder - complete_tx_parts",
+                "No inputs or collaterals provided for the transaction",
+            ));
+        }
+
+        Ok(self)
+    }
+    async fn query_all_tx_info(&mut self, incomplete_tx_ins: &Vec<TxIn>) -> Result<(), WError> {
+        if (!incomplete_tx_ins.is_empty()) && self.fetcher.is_none() {
+            return Err(WError::new(
+                "TxBuilder - complete_tx_parts",
+                "Transaction information is incomplete while no fetcher instance is provided. Provide a `fetcher`.",
+            ));
+        }
+
+        let mut to_be_queried: Vec<&str> = Vec::new();
+
+        for current_tx_in in incomplete_tx_ins {
+            let tx_hash = match current_tx_in {
+                TxIn::PubKeyTxIn(pub_key_tx_in) => &pub_key_tx_in.tx_in.tx_hash,
+                TxIn::SimpleScriptTxIn(simple_script_tx_in) => &simple_script_tx_in.tx_in.tx_hash,
+                TxIn::ScriptTxIn(script_tx_in) => &script_tx_in.tx_in.tx_hash,
+            };
+
+            if !self.queried_tx_hashes.contains(tx_hash) {
+                to_be_queried.push(tx_hash);
+                self.queried_tx_hashes.insert(tx_hash.to_string());
+            }
+        }
+
+        let futures_vec = to_be_queried
+            .into_iter()
+            .map(|tx_hash| self.fetcher.as_ref().unwrap().fetch_utxos(tx_hash, None))
+            .collect::<Vec<_>>();
+
+        let results = future::join_all(futures_vec).await;
+        for result in &results {
+            match result {
+                Err(e) => {
+                    return Err(WError::new(
+                        "TxBuilder - query_all_tx_info",
+                        &format!("Failed to query transaction information: {}", e),
+                    ));
+                }
+
+                Ok(utxos) => {
+                    self.queried_utxos
+                        .insert(utxos.first().unwrap().input.tx_hash.clone(), utxos.clone());
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn complete_tx_in_info(&mut self, tx_in: &TxIn) -> Result<(), WError> {
+        if !Self::is_input_info_complete(&tx_in) {
+            self.complete_input_info(tx_in)?;
+        }
+        Ok(())
+    }
+
+    fn complete_input_info(&mut self, tx_in: &TxIn) -> Result<(), WError> {
+        let (tx_hash, tx_index) = match &tx_in {
+            TxIn::PubKeyTxIn(pub_key_tx_in) => (
+                pub_key_tx_in.tx_in.tx_hash.clone(),
+                pub_key_tx_in.tx_in.tx_index.clone(),
+            ),
+            TxIn::SimpleScriptTxIn(simple_script_tx_in) => (
+                simple_script_tx_in.tx_in.tx_hash.clone(),
+                simple_script_tx_in.tx_in.tx_index.clone(),
+            ),
+            TxIn::ScriptTxIn(script_tx_in) => (
+                script_tx_in.tx_in.tx_hash.clone(),
+                script_tx_in.tx_in.tx_index.clone(),
+            ),
+        };
+
+        let utxos = self.queried_utxos.get(&tx_hash).ok_or_else(|| {
+            WError::new(
+                "TxBuilder - complete_input_info",
+                &format!("No UTxOs found for {}", tx_hash),
+            )
+        })?;
+
+        let utxo = utxos
+            .iter()
+            .find(|utxo| utxo.input.output_index == tx_index)
+            .ok_or_else(|| {
+                WError::new(
+                    "TxBuilder - complete_input_info",
+                    &format!("Couldn't find UTxO for {}#{}", tx_hash, tx_index),
+                )
+            })?;
+
+        let amount = &utxo.output.amount;
+        let address = &utxo.output.address;
+
+        if amount.is_empty() {
+            return Err(WError::new(
+                "TxBuilder - complete_input_info",
+                &format!(
+                    "Couldn't find value information for {}#{}",
+                    tx_hash, tx_index
+                ),
+            ));
+        }
+
+        if address.is_empty() {
+            return Err(WError::new(
+                "TxBuilder - complete_input_info",
+                &format!(
+                    "Couldn't find address information for {}#{}",
+                    tx_hash, tx_index
+                ),
+            ));
+        }
+
+        for input in &mut self.tx_builder_body.inputs {
+            match input {
+                TxIn::PubKeyTxIn(pub_key_tx_in)
+                    if pub_key_tx_in.tx_in.tx_hash == tx_hash
+                        && pub_key_tx_in.tx_in.tx_index == tx_index =>
+                {
+                    pub_key_tx_in.tx_in.amount = Some(amount.clone());
+                    pub_key_tx_in.tx_in.address = Some(address.clone());
+                }
+                TxIn::SimpleScriptTxIn(simple_script_tx_in)
+                    if simple_script_tx_in.tx_in.tx_hash == tx_hash
+                        && simple_script_tx_in.tx_in.tx_index == tx_index =>
+                {
+                    simple_script_tx_in.tx_in.amount = Some(amount.clone());
+                    simple_script_tx_in.tx_in.address = Some(address.clone());
+                }
+                TxIn::ScriptTxIn(script_tx_in)
+                    if script_tx_in.tx_in.tx_hash == tx_hash
+                        && script_tx_in.tx_in.tx_index == tx_index =>
+                {
+                    script_tx_in.tx_in.amount = Some(amount.clone());
+                    script_tx_in.tx_in.address = Some(address.clone());
+                }
+                _ => {}
+            }
+        }
+
+        for input in &mut self.tx_builder_body.collaterals {
+            if input.tx_in.tx_hash == tx_hash && input.tx_in.tx_index == tx_index {
+                input.tx_in.amount = Some(amount.clone());
+                input.tx_in.address = Some(address.clone());
+            }
+        }
+
+        Ok(())
+    }
+
+    fn is_input_complete(tx_in: &TxIn) -> bool {
+        match tx_in {
+            TxIn::PubKeyTxIn(_) => Self::is_input_info_complete(tx_in),
+            TxIn::SimpleScriptTxIn(_) => true,
+            TxIn::ScriptTxIn(script_tx_in) => {
+                if let Some(script_source) = &script_tx_in.script_tx_in.script_source {
+                    Self::is_input_info_complete(tx_in)
+                        && Self::is_ref_script_into_complete(script_source)
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    fn is_input_info_complete(tx_in: &TxIn) -> bool {
+        match tx_in {
+            TxIn::PubKeyTxIn(pub_key_tx_in) => {
+                pub_key_tx_in.tx_in.amount.is_some() && pub_key_tx_in.tx_in.address.is_some()
+            }
+            TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
+                simple_script_tx_in.tx_in.amount.is_some()
+                    && simple_script_tx_in.tx_in.address.is_some()
+            }
+            TxIn::ScriptTxIn(script_tx_in) => script_tx_in.script_tx_in.script_source.is_some(),
+        }
+    }
+
+    fn is_ref_script_into_complete(script_source: &ScriptSource) -> bool {
+        match script_source {
+            ScriptSource::ProvidedScriptSource(_) => true,
+            ScriptSource::InlineScriptSource(inline_script_source) => {
+                if inline_script_source.script_hash.is_empty()
+                    || inline_script_source.script_size == 0
+                {
+                    false
+                } else {
+                    true
+                }
+            }
+        }
+    }
     /// ## Transaction building method
     ///
     /// Complete the signing process

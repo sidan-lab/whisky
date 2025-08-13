@@ -53,8 +53,8 @@ mod int_tests {
             .tx_in(
                 "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
                 3,
-                &[Asset::new_from_str("lovelace", "9692479606")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "9692479606")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
             .read_only_tx_in_reference(
                 "8b7ea04a142933b3d8005bf98be906bdba10978891593b383deac933497e2ea7",
@@ -86,11 +86,11 @@ mod int_tests {
             .tx_in(
                 record_tx_hash,
                 record_tx_id,
-                &[Asset::new(
+                Some(&[Asset::new(
                     record_token_policy_id.to_string() + record_token_name_hex,
                     "1".to_string(),
-                )],
-                "addr_test1wz97vqzhce0m4ek4cpnnlzvlaf5gdzck46axlur094lnzcgj0pq2u",
+                )]),
+                Some("addr_test1wz97vqzhce0m4ek4cpnnlzvlaf5gdzck46axlur094lnzcgj0pq2u"),
             )
             .spending_reference_tx_in_inline_datum_present()
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
@@ -145,14 +145,14 @@ mod int_tests {
             .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 6,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
             .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 7,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
             .change_address(wallet_address)
             .change_output_datum(WData::JSON(constr0(json!([])).to_string()))
@@ -186,8 +186,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
@@ -212,8 +212,8 @@ mod int_tests {
             .tx_in(
                 "fbd3e8091c9f0c5fb446be9e58d9235f548546a5a7d5f60ee56e389344db9c5e",
                 0,
-                &[Asset::new_from_str("lovelace", "9496607660")],
-                "addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459",
+                Some(&[Asset::new_from_str("lovelace", "9496607660")]),
+                Some("addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459"),
             )
             .change_address("addr_test1qpjfsrjdr8kk5ffj4jnw02ht3y3td0y0zkcm52rc6w7z7flmy7vplnvz6a7dncss4q5quqwt48tv9dewuvdxqssur9jqc4x459")
             .withdrawal("stake_test1uraj0xqlekpdwlxeugg2s2qwq896n4kzkuhwxxnqggwpjeqe9s9k2", 0)
@@ -242,14 +242,14 @@ mod int_tests {
             .tx_in(
                 "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
                 0,
-                &[Asset::new_from_str("lovelace", "9999639476")],
-                "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+                Some(&[Asset::new_from_str("lovelace", "9999639476")]),
+                Some("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw"),
             )
             .tx_in_collateral(
             "60b6a29a4c164bece283738abd57fa35c0b839f298f15836ee54a875ede87d37",
             0,
-            &[Asset::new_from_str("lovelace", "9999639476")],
-            "addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw",
+            Some(&[Asset::new_from_str("lovelace", "9999639476")]),
+            Some("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw"),
             )
             .change_address("addr_test1yp8ezxpltlrus89uz8g7e07795w0cxn3a7w7nxdac8s4aj7cjpk2t3a6zf9qgpar9k4n0vkg9vfm8hxezy0y99qde6jq58zjfw")
             .withdrawal_plutus_script_v2()
@@ -285,8 +285,8 @@ mod int_tests {
             .tx_in(
                 "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052",
                 80,
-                &[Asset::new_from_str("lovelace", "4633697637")],
-                "addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w",
+                Some(&[Asset::new_from_str("lovelace", "4633697637")]),
+                Some("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w"),
             )
             .change_address("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w")
             .tx_out("addr_test1qr3a9rrclgf9rx90lmll2qnfzfwgrw35ukvgjrk36pmlzu0jemqwylc286744g0tnqkrvu0dkl8r48k0upkfmg7mncpqf0672w", &[Asset::new_from_str("lovelace", "5000000")])
@@ -312,9 +312,10 @@ mod int_tests {
         let unsigned_tx = tx_builder
                 .tx_in("b3b05ac96e1eb4cd3b3cb8150cc48ee006d12683ed1b87ee57122d83235069df",
             0,
-        &[Asset::new_from_str("lovelace", "1488554147")],
-        "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6",)
-        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, &[Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+        Some(&[Asset::new_from_str("lovelace", "1488554147")]),
+        Some("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6"),
+        )
+        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, Some(&[Asset::new_from_str("lovelace", "5000000")]), Some("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6"))
         .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
         .complete_sync(None)
@@ -337,9 +338,9 @@ mod int_tests {
         let unsigned_tx = tx_builder
                 .tx_in("b3b05ac96e1eb4cd3b3cb8150cc48ee006d12683ed1b87ee57122d83235069df",
             0,
-        &[Asset::new_from_str("lovelace", "1488554147")],
-        "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6",)
-        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, &[Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+        Some(&[Asset::new_from_str("lovelace", "1488554147")]),
+        Some("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6"))
+        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, Some(&[Asset::new_from_str("lovelace", "5000000")]), Some("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6"))
         .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .deregister_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
         .certificate_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
@@ -367,8 +368,8 @@ mod int_tests {
         });
 
         let unsigned_tx = tx_builder.
-        tx_in("b68d2e8340d9454c66b0530de8fdeca5bc829c577217b12f0c0beeb7f42b6b18", 0, &[Asset::new_from_str("lovelace", "100000000000")], "addr_test1qrfkkp5dwgj07fljdum677pglfm5707hd8nwj5wgfqdhfp0m7kq4cxp4nznl6v9yp2wxvwl2vsh0mk7eq7g97vczj6uqse4e3j")
-        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, &[Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
+        tx_in("b68d2e8340d9454c66b0530de8fdeca5bc829c577217b12f0c0beeb7f42b6b18", 0, Some(&[Asset::new_from_str("lovelace", "100000000000")]), Some("addr_test1qrfkkp5dwgj07fljdum677pglfm5707hd8nwj5wgfqdhfp0m7kq4cxp4nznl6v9yp2wxvwl2vsh0mk7eq7g97vczj6uqse4e3j"))
+        .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, Some(&[Asset::new_from_str("lovelace", "5000000")]), Some("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6"))
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4",  "7465737431")
         .mint_redeemer_value(&WRedeemer {            
@@ -410,7 +411,7 @@ mod int_tests {
 
         let unsigned_tx = tx_builder
         .spending_plutus_script_v2()
-        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, &[Asset::new_from_str("lovelace", "6904620")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
+        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, Some(&[Asset::new_from_str("lovelace", "6904620")]), Some("addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam"))
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
@@ -420,7 +421,7 @@ mod int_tests {
                 steps: 13042895
             }})
         .spending_plutus_script_v2()
-        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, &[Asset::new_from_str("lovelace", "5159070")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
+        .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, Some(&[Asset::new_from_str("lovelace", "5159070")]), Some("addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam"))
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
         .spending_reference_tx_in_redeemer_value(&WRedeemer {            
@@ -448,7 +449,7 @@ mod int_tests {
         .withdrawal_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 953)
         .read_only_tx_in_reference("d3e7e43ec9c85cfdb90f98fb40bb4edd58fdd3d056e32f827739fe0b915c6eb7", 0, None)
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
-        .tx_in_collateral("3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814", 7, &[Asset::new_from_str("lovelace", "10000000")], "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x")
+        .tx_in_collateral("3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814", 7, Some(&[Asset::new_from_str("lovelace", "10000000")]), Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"))
         .required_signer_hash("258633d7e1be92e432054b2a968a0e447fd4441ef58ab8695317826e")
         .required_signer_hash("5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa")
         .complete_sync(None)
@@ -472,8 +473,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .tx_out("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh", &[Asset::new_from_str("lovelace", "2000000")])
             .tx_out_datum_embed_value(&WData::JSON(json!({
@@ -504,8 +505,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .drep_registration("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7", 500000000, Some(Anchor {
                 anchor_url: "https://raw.githubusercontent.com/HinsonSIDAN/cardano-drep/main/HinsonSIDAN.jsonld".to_string(),
@@ -534,8 +535,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .drep_registration("drep1y2tf2neqf2pevsh3wht7qy3nj2edag95athdggqhc8cy59s6skxy4", 500000000, Some(Anchor {
                 anchor_url: "https://raw.githubusercontent.com/HinsonSIDAN/cardano-drep/main/HinsonSIDAN.jsonld".to_string(),
@@ -565,8 +566,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .vote_delegation_certificate("stake_test1uzdx8vwxvz5wy45fwdrwk2l85ax7j5wtr4cee6a8xc632cc3p6psh", &DRep::DRepId("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7".to_string()))
             .complete_sync(None)
@@ -592,8 +593,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .vote(&Voter::DRepId("drep1j6257gz2swty9ut46lspyvujkt02pd82am2zq97p7p9pv2euzs7".to_string()), &RefTxIn {
                 tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
@@ -629,8 +630,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .vote(&Voter::ConstitutionalCommitteeHotCred(TxBuilderCredential::KeyHash("e3a4c41d67592a1b8d87c62e5c5d73f7e8db836171945412d13f40f8".to_string())), &RefTxIn {
                 tx_hash: "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85".to_string(),
@@ -664,8 +665,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
@@ -713,8 +714,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
             .complete_sync(None)
@@ -737,8 +738,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .tx_out(
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
@@ -765,8 +766,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .tx_out(
                 "DdzFFzCqrhswh7xiYG8RE1TtcvWamhbExTXfsCYaF9PrGWHRLCwCsBH5JkeApUagvo4FZE3DJD3rn5hw8vaMBib2StKMJ77rJHt51jPt",
@@ -793,8 +794,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .tx_out(
                 "DdzFFzCqrhswh7xiYG8RE1TtcvWamhbExTXfsCYaF9PrGWHRLCwCsBH5JkeApUagvo4FZE3DJD3rn5hw8vaMBib2StKMJ77rJHt51jPt",
@@ -821,8 +822,8 @@ mod int_tests {
             .tx_in(
                 "2cb57168ee66b68bd04a0d595060b546edf30c04ae1031b883c9ac797967dd85",
                 3,
-                &[Asset::new_from_str("lovelace", "9891607895")],
-                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                Some(&[Asset::new_from_str("lovelace", "9891607895")]),
+                Some("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh"),
             )
             .tx_out(
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
@@ -881,22 +882,22 @@ mod int_tests {
         .tx_in(
                 "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
                 3,
-                &[Asset::new_from_str("lovelace", "9692479606")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            )        
+                Some(&[Asset::new_from_str("lovelace", "9692479606")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
+            )
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 6,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 7,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            ) 
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
+            )
         .set_total_collateral("5000000")
         .complete_sync(None)
         .unwrap()
@@ -920,22 +921,22 @@ mod int_tests {
         .tx_in(
                 "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
                 3,
-                &[Asset::new_from_str("lovelace", "9692479606")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            )        
+                Some(&[Asset::new_from_str("lovelace", "9692479606")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
+            )
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 6,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
                 7,
-                &[Asset::new_from_str("lovelace", "10000000")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            ) 
+                Some(&[Asset::new_from_str("lovelace", "10000000")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
+            )
         .set_total_collateral("5000000")
         .set_collateral_return_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .complete_sync(None)

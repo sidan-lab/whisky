@@ -12,8 +12,8 @@ pub async fn collateral_return(
         .tx_in_collateral(
             &collateral.input.tx_hash,
             collateral.input.output_index,
-            &collateral.output.amount,
-            &collateral.output.address,
+            Some(&collateral.output.amount),
+            Some(&collateral.output.address),
         )
         .select_utxos_from(inputs, 5000000)
         .set_total_collateral("5000000")

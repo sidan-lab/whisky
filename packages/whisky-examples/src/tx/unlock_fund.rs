@@ -18,8 +18,8 @@ pub async fn unlock_fund(
         .tx_in(
             &script_utxo.input.tx_hash,
             script_utxo.input.output_index,
-            &script_utxo.output.amount,
-            &script_utxo.output.address,
+            Some(&script_utxo.output.amount),
+            Some(&script_utxo.output.address),
         )
         .tx_in_inline_datum_present()
         // .tx_in_datum_value(datum here) or provide datum value
@@ -34,8 +34,8 @@ pub async fn unlock_fund(
         .tx_in_collateral(
             &collateral.input.tx_hash,
             collateral.input.output_index,
-            &collateral.output.amount,
-            &collateral.output.address,
+            Some(&collateral.output.amount),
+            Some(&collateral.output.address),
         )
         .input_for_evaluation(script_utxo)
         .select_utxos_from(inputs, 5000000)

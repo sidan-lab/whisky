@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tx_builder_core_tests {
+    use dotenv::dotenv;
     use serde_json::{json, to_string};
+    use std::env::var;
     use whisky::data::*;
     use whisky::*;
 
@@ -26,8 +28,137 @@ mod tx_builder_core_tests {
         tx_builder.tx_in(
             "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
             1,
-            &[asset],
-            "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+            Some(&[asset]),
+            Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tx_in_without_amount() {
+        dotenv().ok();
+        let provider = BlockfrostProvider::new(
+            var("BLOCKFROST_PREPROD_PROJECT_ID").unwrap().as_str(),
+            "preprod",
+        );
+
+        let binding = provider
+            .fetch_utxos(
+                "002a83bf37b092fc698857c5fff048264e97e79af2a2f0bc03243e4d79d2c5cd",
+                Some(1),
+            )
+            .await
+            .unwrap();
+        let utxo_a = binding.first().unwrap();
+
+        let binding = provider
+            .fetch_utxos(
+                "4a0a78c98e8874e16eacf706d09ce56effd9574402b0338b2b111dd8d10ddfc2",
+                Some(2),
+            )
+            .await
+            .unwrap();
+        let utxo_b = binding.first().unwrap();
+
+        let binding = provider
+            .fetch_utxos(
+                "c936f545c4c73668eafb6648824f6b69ebba537daa785f79511a3fe7de679a3d",
+                Some(2),
+            )
+            .await
+            .unwrap();
+        let collateral = binding.first().unwrap();
+
+        let mut tx_builder_some = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: Some(Box::new(provider.clone())),
+            submitter: None,
+            params: None,
+        });
+
+        let result_some = tx_builder_some
+            .tx_in(
+                "002a83bf37b092fc698857c5fff048264e97e79af2a2f0bc03243e4d79d2c5cd",
+                1,
+                Some(&utxo_a.output.amount),
+                Some(&utxo_a.output.address),
+            )
+            .tx_in(
+                "4a0a78c98e8874e16eacf706d09ce56effd9574402b0338b2b111dd8d10ddfc2",
+                2,
+                    Some(&utxo_b.output.amount),
+                Some(&utxo_b.output.address),
+            )
+            .tx_in_collateral(
+                "c936f545c4c73668eafb6648824f6b69ebba537daa785f79511a3fe7de679a3d",
+                2,
+                Some(&collateral.output.amount),
+                Some(&collateral.output.address),
+            )
+            .tx_out("addr_test1qzh08xdyqhkav7t3z73akejnux3rpc0klywatwkmwletudeql3za4qnqjwhga5hy7rupcn674xm0phd9v8yhfn7xx4wszxyw5t", &[Asset::new_from_str("lovelace", "30000000")])
+            .change_address("addr_test1qre8tjm4mqhhxlzf9qqrn9r7fpy3nmsyfjpv9exw4uhjmpucfslttj9qrd94837wcn8uzwf5tg5dyjnweyvgw0z9ntwsl3q7la")
+            .complete(None)
+            .await;
+
+        let mut tx_builder_none = TxBuilder::new(TxBuilderParam {
+            evaluator: None,
+            fetcher: Some(Box::new(provider.clone())),
+            submitter: None,
+            params: None,
+        });
+
+        let result_none = tx_builder_none
+            .tx_in(
+                "002a83bf37b092fc698857c5fff048264e97e79af2a2f0bc03243e4d79d2c5cd",
+                1,
+                None,
+                None,
+            )
+            .tx_in(
+                "4a0a78c98e8874e16eacf706d09ce56effd9574402b0338b2b111dd8d10ddfc2",
+                2,
+                None,
+                None,
+            )
+            .tx_in_collateral(
+                "c936f545c4c73668eafb6648824f6b69ebba537daa785f79511a3fe7de679a3d",
+                2,
+                None,
+                None,
+            )
+            .tx_out("addr_test1qzh08xdyqhkav7t3z73akejnux3rpc0klywatwkmwletudeql3za4qnqjwhga5hy7rupcn674xm0phd9v8yhfn7xx4wszxyw5t", &[Asset::new_from_str("lovelace", "30000000")])
+            .change_address("addr_test1qre8tjm4mqhhxlzf9qqrn9r7fpy3nmsyfjpv9exw4uhjmpucfslttj9qrd94837wcn8uzwf5tg5dyjnweyvgw0z9ntwsl3q7la")
+            .complete(None)
+            .await;
+
+        match result_some {
+            Ok(_) => {
+                let signed_some = tx_builder_some.complete_signing().unwrap();
+                println!("Signed some: {}", signed_some);
+                assert!(tx_builder_some.serializer.tx_hex() != *"");
+            }
+            Err(e) => {
+                println!("error: {:?}", e);
+                // failing the test case
+                panic!()
+            }
+        }
+
+        match result_none {
+            Ok(_) => {
+                let signed_none = tx_builder_none.complete_signing().unwrap();
+                println!("Signed none: {}", signed_none);
+                assert!(tx_builder_none.serializer.tx_hex() != *"");
+            }
+            Err(e) => {
+                println!("error: {:?}", e);
+                // failing the test case
+                panic!()
+            }
+        }
+
+        assert!(
+            tx_builder_some.complete_signing().unwrap()
+                == tx_builder_none.complete_signing().unwrap()
         );
     }
 
@@ -52,8 +183,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                &[asset],
-                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+                Some(&[asset]),
+                Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
             )
             .spending_reference_tx_in_inline_datum_present()
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
@@ -86,8 +217,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                &[asset],
-                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+                Some(&[asset]),
+                Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
             )
             .tx_in_datum_value(&WData::JSON(data.clone()))
             .spending_reference_tx_in_redeemer_value(&WRedeemer {
@@ -120,8 +251,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                &[asset],
-                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+                Some(&[asset]),
+                Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
             )
             .spending_tx_in_reference(
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998",
@@ -161,8 +292,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                &[asset],
-                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+                Some(&[asset]),
+                Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
             )
             .tx_in_script(script_cbor)
             .tx_in_datum_value(&WData::JSON(data.clone()))
@@ -197,8 +328,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "93fec6deaafabcc394a15552b57b1beca120d9ee90480d1e5cb42ff20118d40a",
                 1,
-                &[asset],
-                "addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6",
+                Some(&[asset]),
+                Some("addr_test1vr3vljjxan0hl6u28fle2l4ds6ugc9t08lwevpauk38t3agx7rtq6"),
             )
             .spending_tx_in_reference(
                 "bb712547a5abe3697f8aba72870e33a52fd2c0401715950197f9b7370d137998",
@@ -234,8 +365,8 @@ mod tx_builder_core_tests {
             .tx_in(
                 "fc1c806abc9981f4bee2ce259f61578c3341012f3d04f22e82e7e40c7e7e3c3c",
                 3,
-                &[Asset::new_from_str("lovelace", "9692479606")],
-                "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
+                Some(&[Asset::new_from_str("lovelace", "9692479606")]),
+                Some("addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x"),
             )
             .mint_plutus_script_v2()
             .mint(
