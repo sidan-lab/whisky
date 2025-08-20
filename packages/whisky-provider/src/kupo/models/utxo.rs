@@ -32,6 +32,9 @@ pub struct KupoUtxo {
     /// The hash of the script of the output
     #[serde(rename = "script_hash", deserialize_with = "Option::deserialize")]
     pub script_hash: Option<String>,
+    /// The resolved script
+    #[serde(rename = "script")]
+    pub script: Option<Script>,
     /// Block reference at which this transaction was included in the ledger
     #[serde(rename = "created_at")]
     pub created_at: Point,
@@ -44,4 +47,10 @@ pub struct KupoUtxo {
 pub struct Point {
     pub slot_no: i128,
     pub header_hash: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Script {
+    pub language: String,
+    pub headerscript_hash: String,
 }
