@@ -27,8 +27,8 @@ pub struct KupoUtxo {
     #[serde(rename = "datum", deserialize_with = "Option::deserialize")]
     pub datum: Option<String>,
     /// The hash of the transaction output datum
-    #[serde(rename = "datum_type")]
-    pub datum_type: String,
+    #[serde(rename = "datum_hash")]
+    pub datum_hash: Option<String>,
     /// The hash of the script of the output
     #[serde(rename = "script_hash", deserialize_with = "Option::deserialize")]
     pub script_hash: Option<String>,

@@ -20,7 +20,7 @@ impl Fetcher for KupoProvider {
         address: &str,
         asset: Option<&str>,
     ) -> Result<Vec<UTxO>, WError> {
-        let url = format!("/matches/{}/unspent", address);
+        let url = format!("/matches/{}?unspent&resolve_hashes", address);
 
         let resp = self
             .kupo_client
@@ -79,7 +79,7 @@ impl Fetcher for KupoProvider {
 
     async fn fetch_utxos(&self, hash: &str, index: Option<u32>) -> Result<Vec<UTxO>, WError> {
         let url = match index {
-            Some(index) => format!("/matches/{}@{}/unspent", index, hash),
+            Some(index) => format!("/matches/{}@{}?unspent&resolve_hashes", index, hash),
             None => format!("/matches/*@{}/unspent", hash),
         };
 
