@@ -36,7 +36,7 @@ impl KupoProvider {
                 (asset[0].to_string(), "".to_string())
             };
             amount.push(Asset::new(
-                format!("{}.{}", policy_id, asset_name),
+                format!("{}{}", policy_id, asset_name),
                 quantity.to_string(),
             ));
         }
