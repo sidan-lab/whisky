@@ -2,6 +2,18 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ScriptVersion {
+    #[serde(rename = "native")]
+    Native,
+    #[serde(rename = "plutus:v1")]
+    Plutusv1,
+    #[serde(rename = "plutus::v2")]
+    Plutusv2,
+    #[serde(rename = "plutus:v3")]
+    Plutusv3,
+}
+
 #[derive(Deserialize, Debug, PartialEq, Clone, Serialize)]
 pub struct KupoValue {
     pub coins: i128,
@@ -51,6 +63,6 @@ pub struct Point {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Script {
-    pub language: String,
-    pub headerscript_hash: String,
+    pub script: String,
+    pub language: ScriptVersion,
 }

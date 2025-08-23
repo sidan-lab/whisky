@@ -2,18 +2,12 @@ use whisky_common::{
     models::{Asset, UTxO, UtxoInput, UtxoOutput},
     WError,
 };
-use whisky_csl::{
-    apply_double_cbor_encoding,
-    csl::{self, NativeScript, PlutusScript, ScriptRef},
+use whisky_csl::csl::{self, NativeScript, PlutusScript};
+
+use crate::{
+    maestro::models::{utxo::Utxo, ScriptVersion},
+    normalize_plutus_script, to_script_ref, ScriptType,
 };
-
-use crate::maestro::models::{utxo::Utxo, ScriptVersion};
-
-#[derive(Debug, Clone)]
-pub enum ScriptType {
-    Plutus(PlutusScript),
-    Native(NativeScript),
-}
 
 pub fn to_utxo(utxo: &Utxo) -> Result<UTxO, WError> {
     let utxo = UTxO {
@@ -102,16 +96,5 @@ pub fn resolve_script(utxo: &Utxo) -> Result<Option<String>, WError> {
     } else {
         Ok(None)
         // TODO: handle none
-    }
-}
-
-pub fn normalize_plutus_script(script_hex: &str) -> Result<String, WError> {
-    apply_double_cbor_encoding(script_hex)
-}
-
-pub fn to_script_ref(script: &ScriptType) -> ScriptRef {
-    match script {
-        ScriptType::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
-        ScriptType::Native(native) => ScriptRef::new_native_script(native),
     }
 }

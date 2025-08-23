@@ -87,10 +87,10 @@ impl Fetcher for KupoProvider {
             .kupo_client
             .get(&url)
             .await
-            .map_err(WError::from_err("kupo::fetch_address_utxos get"))?;
+            .map_err(WError::from_err("kupo::fetch_utxos get"))?;
 
         let kupo_utxos: Vec<KupoUtxo> = serde_json::from_str(&resp)
-            .map_err(WError::from_err("kupo::fetch_address_utxos type error"))?;
+            .map_err(WError::from_err("kupo::fetch_utxos type error"))?;
 
         let utxos: Vec<UTxO> = future::join_all(kupo_utxos.iter().map(|utxo| self.to_utxo(utxo)))
             .await

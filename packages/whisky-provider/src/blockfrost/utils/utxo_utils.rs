@@ -2,21 +2,15 @@ use whisky_common::{
     models::{Asset, UTxO, UtxoInput, UtxoOutput},
     WError,
 };
-use whisky_csl::{
-    apply_double_cbor_encoding,
-    csl::{self, NativeScript, PlutusScript, ScriptRef},
-};
+use whisky_csl::csl::{self, NativeScript, PlutusScript, ScriptRef};
 
-use crate::blockfrost::{
-    models::{utxo::BlockfrostUtxo, Script, Type},
-    BlockfrostProvider,
+use crate::{
+    blockfrost::{
+        models::{utxo::BlockfrostUtxo, Script, Type},
+        BlockfrostProvider,
+    },
+    normalize_plutus_script, to_script_ref, ScriptType,
 };
-
-#[derive(Debug, Clone)]
-pub enum ScriptType {
-    Plutus(PlutusScript),
-    Native(NativeScript),
-}
 
 impl BlockfrostProvider {
     pub async fn to_utxo(&self, utxo: &BlockfrostUtxo) -> Result<UTxO, WError> {
@@ -120,16 +114,5 @@ impl BlockfrostProvider {
                 Ok(result)
             }
         }
-    }
-}
-
-pub fn normalize_plutus_script(script_hex: &str) -> Result<String, WError> {
-    apply_double_cbor_encoding(script_hex)
-}
-
-pub fn to_script_ref(script: &ScriptType) -> ScriptRef {
-    match script {
-        ScriptType::Plutus(plutus) => ScriptRef::new_plutus_script(plutus),
-        ScriptType::Native(native) => ScriptRef::new_native_script(native),
     }
 }

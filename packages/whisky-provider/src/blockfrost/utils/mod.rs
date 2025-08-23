@@ -10,4 +10,3 @@ pub use address_utils::*;
 pub use block_utils::*;
 pub use epoch_utils::*;
 pub use transaction_utils::*;
-pub use utxo_utils::*;
