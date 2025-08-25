@@ -19,7 +19,7 @@ impl KupoProvider {
             output: UtxoOutput {
                 address: utxo.address.clone(),
                 amount: self.to_amount(&utxo.value)?,
-                data_hash: utxo.datum.clone(),
+                data_hash: utxo.datum_hash.clone(),
                 plutus_data: utxo.datum.clone(),
                 script_ref: self.resolve_script(utxo.script.clone())?,
                 script_hash: utxo.script_hash.clone(),

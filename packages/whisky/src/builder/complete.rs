@@ -28,7 +28,6 @@ impl TxBuilder {
                 };
                 let inputs_for_evaluation: Vec<_> =
                     self.inputs_for_evaluation.values().cloned().collect();
-
                 let tx_evaluation_result = evaluator
                     .evaluate_tx(
                         &self.serializer.tx_hex,
@@ -74,7 +73,6 @@ impl TxBuilder {
     ) -> Result<&mut Self, WError> {
         if customized_tx.is_some() {
             self.tx_builder_body = customized_tx.unwrap();
-            println!("customized_tx: {:?}", self.tx_builder_body);
         } else {
             self.queue_all_last_item();
             if !self.extra_inputs.is_empty() {

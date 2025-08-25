@@ -21,7 +21,6 @@ impl Fetcher for KupoProvider {
         asset: Option<&str>,
     ) -> Result<Vec<UTxO>, WError> {
         let url = format!("/matches/{}?unspent&resolve_hashes", address);
-
         let resp = self
             .kupo_client
             .get(&url)
@@ -30,7 +29,6 @@ impl Fetcher for KupoProvider {
 
         let kupo_utxos: Vec<KupoUtxo> = serde_json::from_str(&resp)
             .map_err(WError::from_err("kupo::fetch_address_utxos type error"))?;
-
         let utxos: Vec<UTxO> = future::join_all(kupo_utxos.iter().map(|utxo| self.to_utxo(utxo)))
             .await
             .into_iter()
