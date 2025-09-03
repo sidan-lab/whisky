@@ -45,7 +45,7 @@ pub fn sign_transaction(tx_hex: &str, signing_keys: &[&str]) -> Result<String, W
     {
         Some(raw_auxiliary_data) => csl::FixedTransaction::new_with_auxiliary(
             &unsigned_transaction.raw_body(),
-            &unsigned_transaction.raw_witness_set(),
+            &witness_set.to_bytes(),
             raw_auxiliary_data,
             true,
         )
