@@ -1,9 +1,6 @@
 use super::phase_two::{eval_phase_two, PhaseTwoEvalResult};
 use crate::*;
-use cardano_serialization_lib::{self as csl, JsError};
-use cquisitor_lib::validators::input_contexts::ValidationInputContext;
-use cquisitor_lib::validators::validation_result::ValidationResult;
-use cquisitor_lib::validators::validator::validate_transaction;
+use cardano_serialization_lib::{self as csl};
 use pallas_codec::utils::NonEmptyKeyValuePairs;
 use pallas_codec::utils::{Bytes, CborWrap, PositiveCoin};
 use pallas_primitives::conway::{Redeemer, RedeemerTag as PRedeemerTag};
@@ -307,11 +304,4 @@ pub fn to_pallas_multi_asset_value(assets: &Vec<Asset>) -> Result<Value, WError>
     }
     let pallas_multi_asset = pallas_codec::utils::NonEmptyKeyValuePairs::Def(multi_asset);
     Ok(Value::Multiasset(coins, pallas_multi_asset))
-}
-
-pub fn full_evaluate_tx(
-    tx_hex: &str,
-    validation_context: ValidationInputContext,
-) -> Result<ValidationResult, JsError> {
-    validate_transaction(tx_hex, validation_context).map_err(|e| JsError::from_str(&e.to_string()))
 }

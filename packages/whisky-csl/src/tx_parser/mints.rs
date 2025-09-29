@@ -6,7 +6,6 @@ use whisky_common::{
 };
 
 impl CSLParser {
-
     pub fn get_mints(&self) -> &Vec<MintItem> {
         &self.tx_body.mints
     }

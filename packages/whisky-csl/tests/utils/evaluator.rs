@@ -30,7 +30,7 @@ mod tests {
                     script_hash: None,
                     script_ref: None,
                 }
-            },
+        },
                   UTxO {
                       input: UtxoInput {
                           tx_hash: "604943e070ffbf81cc09bb2942029f5f5361108a3c0b96a7309e6aa70370ad98".to_string(),

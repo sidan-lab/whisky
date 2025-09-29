@@ -3815,6 +3815,7 @@ dependencies = [
 name = "whisky-js"
 version = "1.0.10"
 dependencies = [
+ "cquisitor-lib",
  "js-sys",
  "noop_proc_macro",
  "rand_os",

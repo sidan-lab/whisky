@@ -1,6 +1,6 @@
 mod int_tests {
     use serde_json::{json, to_string};
-    use whisky::{*,  Credential as TxBuilderCredential};
+    use whisky::{Credential as TxBuilderCredential, *};
     use whisky_common::data::*;
 
     #[test]
@@ -193,7 +193,8 @@ mod int_tests {
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -343,13 +344,13 @@ mod int_tests {
         .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .deregister_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
         .certificate_script("5251010000322253330034a229309b2b2b9a01", Some(LanguageVersion::V2))
-        .certificate_redeemer_value(&WRedeemer {            
+        .certificate_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
                 steps: 14000000
             }})
-        .complete_sync(None)    
+        .complete_sync(None)
         .unwrap()
         .complete_signing().unwrap();
 
@@ -371,7 +372,7 @@ mod int_tests {
         .tx_in_collateral("541e2c5e6af1661a08aedf53fc4fb66aee00885629100196abbe42b05121adff", 5, &[Asset::new_from_str("lovelace", "5000000")], "addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4",  "7465737431")
-        .mint_redeemer_value(&WRedeemer {            
+        .mint_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
@@ -380,7 +381,7 @@ mod int_tests {
         .minting_script("5251010000322253330034a229309b2b2b9a01")
         .mint_plutus_script_v2()
         .mint(1, "d8906ca5c7ba124a0407a32dab37b2c82b13b3dcd9111e42940dcea4", "7465737432")
-        .mint_redeemer_value(&WRedeemer {            
+        .mint_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 7000000,
@@ -413,7 +414,7 @@ mod int_tests {
         .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, &[Asset::new_from_str("lovelace", "6904620")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
-        .spending_reference_tx_in_redeemer_value(&WRedeemer {            
+        .spending_reference_tx_in_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
@@ -423,7 +424,7 @@ mod int_tests {
         .tx_in("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, &[Asset::new_from_str("lovelace", "5159070")], "addr_test1zrrpfzell3549ulhjwar3juz8dv8qcc99kfvlwrfzu2sw76u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9shn8fam")
         .spending_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 1, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", 950)
         .tx_in_inline_datum_present()
-        .spending_reference_tx_in_redeemer_value(&WRedeemer {            
+        .spending_reference_tx_in_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 35588,
@@ -431,7 +432,7 @@ mod int_tests {
             }})
         .deregister_stake_certificate(reward_address)
         .certificate_tx_in_reference("e4e94d4369b5a1b6366d468bf01bf4d332d29abd8061889e6d80fc5074248ed1", 0, "237948b06719bdca9c9ae03c7d9f70a070514758a4fb4514ba2c2ecb", Some(LanguageVersion::V2), 953)
-        .certificate_redeemer_value(&WRedeemer {            
+        .certificate_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
@@ -439,7 +440,7 @@ mod int_tests {
             }})
         .withdrawal_plutus_script_v2()
         .withdrawal(reward_address, 0)
-        .withdrawal_redeemer_value(&WRedeemer {            
+        .withdrawal_redeemer_value(&WRedeemer {
             data: WData::JSON(constr0(json!([])).to_string()),
             ex_units: Budget {
                 mem: 120022,
@@ -454,7 +455,7 @@ mod int_tests {
         .complete_sync(None)
         .unwrap()
         .complete_signing()
-        .unwrap();    
+        .unwrap();
 
         println!("{}", unsigned_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -475,16 +476,23 @@ mod int_tests {
                 &[Asset::new_from_str("lovelace", "9891607895")],
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
             )
-            .tx_out("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh", &[Asset::new_from_str("lovelace", "2000000")])
-            .tx_out_datum_embed_value(&WData::JSON(json!({
-                "constructor": 0,
-                "fields": []
-              }).to_string()))
+            .tx_out(
+                "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
+                &[Asset::new_from_str("lovelace", "2000000")],
+            )
+            .tx_out_datum_embed_value(&WData::JSON(
+                json!({
+                  "constructor": 0,
+                  "fields": []
+                })
+                .to_string(),
+            ))
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -558,7 +566,6 @@ mod int_tests {
             submitter: None,
             params: None,
         });
-
 
         let unsigned_tx = tx_builder
             .change_address("addr_test1qpsmz8q2xj43wg597pnpp0ffnlvr8fpfydff0wcsyzqyrxguk5v6wzdvfjyy8q5ysrh8wdxg9h0u4ncse4cxhd7qhqjqk8pse6")
@@ -672,7 +679,8 @@ mod int_tests {
             .set_fee("500000")
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -706,7 +714,7 @@ mod int_tests {
                 coins_per_utxo_size: 4310,
                 min_fee_ref_script_cost_per_byte: 15,
                 decentralisation: 0.0,
-            })
+            }),
         });
         let signed_tx = tx_builder
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
@@ -716,10 +724,13 @@ mod int_tests {
                 &[Asset::new_from_str("lovelace", "9891607895")],
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
             )
-            .register_stake_certificate("stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j")
+            .register_stake_certificate(
+                "stake_test17rvfqm99c7apyjsyq73jm2ehktyzkyanmnv3z8jzjsxuafq5a6z2j",
+            )
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -742,12 +753,13 @@ mod int_tests {
             )
             .tx_out(
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
-                &[]
+                &[],
             )
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -826,17 +838,21 @@ mod int_tests {
             )
             .tx_out(
                 "addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh",
-                &[]
+                &[],
             )
-            .tx_out_inline_datum_value(&WData::JSON(json!({
-                "constructor": 0,
-                "fields": []
-            }).to_string()))
+            .tx_out_inline_datum_value(&WData::JSON(
+                json!({
+                    "constructor": 0,
+                    "fields": []
+                })
+                .to_string(),
+            ))
             .change_address("addr_test1vru4e2un2tq50q4rv6qzk7t8w34gjdtw3y2uzuqxzj0ldrqqactxh")
             .signing_key("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b")
             .complete_sync(None)
             .unwrap()
-            .complete_signing().unwrap();
+            .complete_signing()
+            .unwrap();
 
         println!("{}", signed_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
@@ -858,13 +874,12 @@ mod int_tests {
         let mut new_tx_builder = TxBuilder::new_core();
         new_tx_builder.tx_builder_body = body.clone();
 
-        new_tx_builder
-            .complete_sync(None)
-            .unwrap();
+        new_tx_builder.complete_sync(None).unwrap();
 
         let tx_hex_round_trip = new_tx_builder.tx_hex();
         let decoded_by_csl_tx = csl::Transaction::from_hex(&tx_hex).unwrap();
-        let decoded_by_csl_tx_after_round_trip = csl::Transaction::from_hex(&tx_hex_round_trip).unwrap();
+        let decoded_by_csl_tx_after_round_trip =
+            csl::Transaction::from_hex(&tx_hex_round_trip).unwrap();
         assert_eq!(decoded_by_csl_tx, decoded_by_csl_tx_after_round_trip);
     }
 
@@ -883,7 +898,7 @@ mod int_tests {
                 3,
                 &[Asset::new_from_str("lovelace", "9692479606")],
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            )        
+        )
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
@@ -896,18 +911,18 @@ mod int_tests {
                 7,
                 &[Asset::new_from_str("lovelace", "10000000")],
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            ) 
+        )
         .set_total_collateral("5000000")
         .complete_sync(None)
         .unwrap()
         .complete_signing()
-        .unwrap();    
+        .unwrap();
 
         println!("{}", unsigned_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
     }
 
-        #[test]
+    #[test]
     fn test_set_total_collateral_and_collateral_return_address() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
             evaluator: None,
@@ -922,7 +937,7 @@ mod int_tests {
                 3,
                 &[Asset::new_from_str("lovelace", "9692479606")],
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            )        
+        )
         .change_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .tx_in_collateral(
                 "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
@@ -935,16 +950,15 @@ mod int_tests {
                 7,
                 &[Asset::new_from_str("lovelace", "10000000")],
                 "addr_test1vpw22xesfv0hnkfw4k5vtrz386tfgkxu6f7wfadug7prl7s6gt89x",
-            ) 
+    )
         .set_total_collateral("5000000")
         .set_collateral_return_address("addr_test1qqjcvv7huxlf9epjq49j4952pez8l4zyrm6c4wrf2vtcym4jg6fd5d54p0k5mqy46ph5z3r59tkhnhjvsxx53dq5rvdsnaeh3a")
         .complete_sync(None)
         .unwrap()
         .complete_signing()
-        .unwrap();    
+        .unwrap();
 
         println!("{}", unsigned_tx);
         assert!(tx_builder.serializer.tx_hex() != *"");
     }
-
 }
