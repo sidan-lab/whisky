@@ -54,19 +54,3 @@ pub fn eval_phase_two(
         None => Ok(vec![]),
     }
 }
-
-// fn trim_cost_modes(cost_mdls: Option<&CostModels>) -> Option<CostModels> {
-//     match cost_mdls {
-//         None => None,
-//         Some(mdls) => {
-//             Some(CostModels {
-//                 plutus_v1: mdls.plutus_v1.clone(),
-//                 plutus_v2: mdls.plutus_v2.clone(),
-//                 plutus_v3: match &mdls.plutus_v3 {
-//                     None => None,
-//                     Some(mdls_vec) => Some(mdls_vec[0..251].to_vec())
-//                 }
-//             })
-//         }
-//     }
-// }
