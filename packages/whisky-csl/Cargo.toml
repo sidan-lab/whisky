@@ -30,7 +30,7 @@ noop_proc_macro = "0.3.0"
 pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
 pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
-cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git" }
+cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git", rev = "866ea4b550685d87ea1bbd634c8622d29b39f0bc" }
 
 # wasm
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
@@ -43,7 +43,7 @@ wasm-bindgen-futures = "=0.4.40"
 pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
 pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
-cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git" }
+cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git", rev = "866ea4b550685d87ea1bbd634c8622d29b39f0bc" }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
