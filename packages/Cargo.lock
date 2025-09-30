@@ -749,7 +749,7 @@ dependencies = [
 [[package]]
 name = "cquisitor-lib"
 version = "0.1.0-beta.24"
-source = "git+https://github.com/cardananium/cquisitor-lib.git?rev=866ea4b550685d87ea1bbd634c8622d29b39f0bc#866ea4b550685d87ea1bbd634c8622d29b39f0bc"
+source = "git+https://github.com/cardananium/cquisitor-lib.git?rev=d2c6673bc2ec97e8a1899c9bd6774e0379318f5c#d2c6673bc2ec97e8a1899c9bd6774e0379318f5c"
 dependencies = [
  "anyhow",
  "bech32 0.11.0",
