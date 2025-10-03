@@ -33,4 +33,5 @@ lto = true
 
 [dev-dependencies]
 dotenv = "0.15.0"
+whisky-provider = { path = "../whisky-provider" }
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
