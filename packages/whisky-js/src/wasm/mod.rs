@@ -5,12 +5,14 @@ mod tx_evaluator;
 mod tx_parser;
 mod tx_validator;
 mod utils;
+mod validation_context;
 pub use transaction::*;
 pub use tx_builder::*;
 pub use tx_evaluator::*;
 pub use tx_parser::*;
 pub use tx_validator::*;
 pub use utils::*;
+pub use validation_context::*;
 
 use whisky_common::*;
 

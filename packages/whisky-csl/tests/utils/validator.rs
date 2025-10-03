@@ -159,7 +159,7 @@ mod tests {
             vec![],
             vec![],
         );
-        let result = validate_tx(tx_hex, validation_context);
+        let result = validate_tx(tx_hex, validation_context.clone());
         assert!(result.is_ok());
     }
 }
