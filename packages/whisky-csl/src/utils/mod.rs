@@ -8,6 +8,7 @@ mod script;
 mod staking;
 mod transaction;
 mod ungroup;
+mod validator;
 mod value;
 mod vote;
 
@@ -20,5 +21,6 @@ pub use script::*;
 pub use staking::*;
 pub use transaction::*;
 pub use ungroup::*;
+pub use validator::*;
 pub use value::*;
 pub use vote::*;

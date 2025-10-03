@@ -1,6 +1,6 @@
 [package]
 name = "whisky-common"
-version = "1.0.10"
+version = "1.0.11"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
@@ -8,10 +8,10 @@ readme = "../../README.md"
 authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltadefi.io>"]
 
 [dependencies]
-uplc = "=1.1.9"
+uplc = "=1.1.10"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1.0.136"
 schemars = "0.8.8"
 async-trait = "0.1.79"
-whisky-macros = { version = "1.0.10", path = "../whisky-macros" }
+whisky-macros = { version = "1.0.11", path = "../whisky-macros" }

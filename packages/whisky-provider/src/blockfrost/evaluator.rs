@@ -62,11 +62,12 @@ impl Evaluator for BlockfrostProvider {
         _slot_config: &SlotConfig,
     ) -> Result<Vec<Action>, WError> {
         let mut tx_out_cbors = Vec::new();
-        
+
         for tx_str in additional_txs {
-            let utxos = CSLParser::extract_output_utxos(tx_str)
-                .map_err(|e| WError::new("evaluate_tx", &format!("Failed to get output UTXOs: {}", e)))?;
-            
+            let utxos = CSLParser::extract_output_utxos(tx_str).map_err(|e| {
+                WError::new("evaluate_tx", &format!("Failed to get output UTXOs: {}", e))
+            })?;
+
             for (index, utxo) in utxos.iter().enumerate() {
                 let additional_utxo = AdditionalUtxo {
                     tx_hash: utxo.input.tx_hash.to_string(),
@@ -131,16 +132,16 @@ impl Evaluator for BlockfrostProvider {
                     "reward" => RedeemerTag::Reward,
                     "vote" => RedeemerTag::Vote,
                     "propose" => RedeemerTag::Propose,
-                    _ => return Err(WError::new(
-                        "evaluate_tx",
-                        &format!("Unknown tag: {}", parts[0]),
-                    )),
+                    _ => {
+                        return Err(WError::new(
+                            "evaluate_tx",
+                            &format!("Unknown tag: {}", parts[0]),
+                        ))
+                    }
                 };
-                let index = parts[1].parse::<u32>()
-                    .map_err(|e| WError::new(
-                        "evaluate_tx",
-                        &format!("Invalid index: {}", e),
-                    ))?;
+                let index = parts[1]
+                    .parse::<u32>()
+                    .map_err(|e| WError::new("evaluate_tx", &format!("Invalid index: {}", e)))?;
 
                 // Create an Action
                 Ok(Action {

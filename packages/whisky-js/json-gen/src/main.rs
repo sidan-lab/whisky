@@ -8,8 +8,12 @@ macro_rules! gen_json_schema {
     ($name:ident) => {
         //let out_dir = std::env::var_os("OUT_DIR").expect("no env");
         let dest_path = Path::new(&"schemas").join(&format!("{}.json", stringify!($name)));
-        fs::write(&dest_path, serde_json::to_string_pretty(&schemars::schema_for!($name)).unwrap()).unwrap();
-    }
+        fs::write(
+            &dest_path,
+            serde_json::to_string_pretty(&schemars::schema_for!($name)).unwrap(),
+        )
+        .unwrap();
+    };
 }
 
 fn main() {

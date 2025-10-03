@@ -8,9 +8,7 @@ impl CSLParser {
         &self.tx_body.required_signatures
     }
 
-    pub(super) fn extract_required_signatures(
-        &mut self,
-    ) -> Result<(), WError> {
+    pub(super) fn extract_required_signatures(&mut self) -> Result<(), WError> {
         let mut required_signatures = HashSet::new();
         let required_signers = self.csl_tx_body.required_signers();
         if let Some(required_signers) = required_signers {

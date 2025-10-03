@@ -5,13 +5,12 @@ use syn::{parse_macro_input, Data, DeriveInput, Fields};
 pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-    
+
     let implementation = match &input.data {
         Data::Enum(data_enum) => {
             let match_arms = data_enum.variants.iter().enumerate().map(|(index, variant)| {
                 let variant_name = &variant.ident;
                 let full_variant_path = quote! { #name::#variant_name };
-                
                 match &variant.fields {
                     Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
                         // Single field tuple variant like UserSpotAccount(Account)
@@ -23,13 +22,9 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                         // Multiple fields tuple variant like MintCancelOrderIntent(UserAccount, ByteString)
                         let field_count = fields.unnamed.len();
                         let field_names: Vec<_> = (0..field_count).map(|i| syn::Ident::new(&format!("field{}", i), proc_macro2::Span::call_site())).collect();
-                        
                         let pattern = quote! { #(#field_names),* };
                         let tuple = quote! { (#(#field_names.clone()),*) };
-                        
-                        quote! {
-                            #full_variant_path(#pattern) => ::whisky::data::Constr::new(#index as u64, Box::new(#tuple)).to_json()
-                        }
+                        quote! {#full_variant_path(#pattern) => ::whisky::data::Constr::new(#index as u64, Box::new(#tuple)).to_json()}
                     }
                     Fields::Named(_) => {
                         // Named fields - you can extend this if needed
@@ -51,7 +46,7 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
                             #(#match_arms,)*
                         }
                     }
-                    
+
                     fn to_json_string(&self) -> String {
                         self.to_json().to_string()
                     }
