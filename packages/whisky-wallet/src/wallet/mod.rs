@@ -1,15 +1,30 @@
 pub mod derivation_indices;
 pub mod mnemonic;
 pub mod root_key;
+
 use bip39::{Language, Mnemonic};
 use derivation_indices::DerivationIndices;
 pub use mnemonic::MnemonicWallet;
 pub use root_key::RootKeyWallet;
-use whisky_common::WError;
+use whisky_common::{Fetcher, Submitter, UTxO, WError};
 use whisky_csl::{
-    csl::{Bip32PrivateKey, FixedTransaction, PrivateKey, PublicKey},
+    csl::{
+        BaseAddress, Bip32PrivateKey, Credential, EnterpriseAddress, FixedTransaction, PrivateKey,
+        PublicKey,
+    },
     sign_transaction,
 };
+
+#[derive(Copy, Clone)]
+pub enum NetworkId {
+    Preprod = 0, // Default
+    Mainnet = 1,
+}
+
+pub enum AddressType {
+    Enterprise,
+    Payment,
+}
 
 pub enum WalletType {
     MnemonicWallet(MnemonicWallet),
@@ -17,9 +32,22 @@ pub enum WalletType {
     Cli(String),
 }
 
+/// Represents a Cardano wallet.
+///
+/// A wallet manages addresses and cryptographic keys needed for transaction
+/// signing and verification. It supports different wallet types, including
+/// mnemonic-based, root key-based, and CLI-based wallets.
 pub struct Wallet {
     pub wallet_type: WalletType,
-    pub account: Account,
+    pub network_id: NetworkId,
+    pub addresses: Addresses,
+    pub fetcher: Option<Box<dyn Fetcher>>,
+    pub submitter: Option<Box<dyn Submitter>>,
+    pub account: Option<Account>,
+}
+pub struct Addresses {
+    pub base_address: Option<BaseAddress>,
+    pub enterprise_address: Option<EnterpriseAddress>,
 }
 
 pub struct Account {
@@ -28,6 +56,15 @@ pub struct Account {
 }
 
 impl Account {
+    /// Signs a transaction using the account's private key.
+    ///
+    /// # Arguments
+    ///
+    /// * `tx_hex` - The transaction to sign in hexadecimal format
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the signed transaction in hexadecimal format or an error
     pub fn sign_transaction(&self, tx_hex: &str) -> Result<String, WError> {
         let mut tx = FixedTransaction::from_hex(tx_hex)
             .map_err(WError::from_err("Account - failed to deserialize tx hex"))?;
@@ -38,52 +75,171 @@ impl Account {
 }
 
 impl Wallet {
+    // Private helper method for basic wallet initialization
+    fn empty() -> Self {
+        Self {
+            wallet_type: WalletType::Cli("".to_string()),
+            network_id: NetworkId::Preprod,
+            addresses: Addresses {
+                base_address: None,
+                enterprise_address: None,
+            },
+            fetcher: None,
+            submitter: None,
+            account: None,
+        }
+    }
+
+    /// Creates a new wallet with the specified wallet type.
+    ///
+    /// This is a generic constructor that initializes addresses based on the wallet type.
+    ///
+    /// # Arguments
+    ///
+    /// * `wallet_type` - The type of wallet to create
+    ///
+    /// # Returns
+    ///
+    /// A new `Wallet` instance with initialized addresses
     pub fn new(wallet_type: WalletType) -> Result<Self, WError> {
-        let account =
-            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new"))?;
-        Ok(Self {
-            wallet_type: wallet_type,
-            account,
-        })
+        let mut wallet = Self::default();
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new - failed to get account"))?,
+        );
+        wallet.init_addresses();
+        Ok(wallet)
     }
 
+    /// Creates a new CLI-based wallet using the provided signing key.
+    ///
+    /// # Arguments
+    ///
+    /// * `cli_skey` - The signing key string in hex format
+    ///
+    /// # Returns
+    ///
+    /// A new `Wallet` instance
     pub fn new_cli(cli_skey: &str) -> Result<Self, WError> {
-        let wallet_type = WalletType::Cli(cli_skey.to_string());
-        let account =
-            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new"))?;
-        Ok(Self {
-            wallet_type,
-            account,
-        })
+        let mut wallet = Self::default();
+        wallet.wallet_type = WalletType::Cli(cli_skey.to_string());
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new_cli - failed to get account"))?,
+        );
+        wallet.init_addresses();
+        Ok(wallet)
     }
 
+    /// Creates a new mnemonic-based wallet using the provided mnemonic phrase.
+    ///
+    /// # Arguments
+    ///
+    /// * `mnemonic_phrase` - The BIP39 mnemonic phrase
+    ///
+    /// # Returns
+    ///
+    /// A new `Wallet` instance with initialized addresses
     pub fn new_mnemonic(mnemonic_phrase: &str) -> Result<Self, WError> {
         let wallet_type = WalletType::MnemonicWallet(MnemonicWallet {
             mnemonic_phrase: mnemonic_phrase.to_string(),
             derivation_indices: DerivationIndices::default(),
         });
-        let account =
-            Wallet::get_account(&wallet_type).map_err(WError::from_err("Wallet - new_mnemonic"))?;
-        Ok(Self {
-            wallet_type,
-            account,
-        })
+        let mut wallet = Self::empty();
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type)
+                .map_err(WError::from_err("Wallet - new_mnemonic"))?,
+        );
+        wallet.init_addresses();
+        Ok(wallet)
     }
 
+    /// Creates a new root key-based wallet using the provided root key.
+    ///
+    /// # Arguments
+    ///
+    /// * `root_key` - The bech32-encoded root key
+    ///
+    /// # Returns
+    ///
+    /// A new `Wallet` instance with initialized addresses
     pub fn new_root_key(root_key: &str) -> Result<Self, WError> {
+        let mut wallet = Self::default();
         let wallet_type = WalletType::RootKeyWallet(RootKeyWallet {
             root_key: root_key.to_string(),
             derivation_indices: DerivationIndices::default(),
         });
-        let account = Wallet::get_account(&wallet_type).map_err(WError::from_err(
-            "Wallet - new_root_key - failed to get account",
-        ))?;
-        Ok(Self {
-            wallet_type,
-            account,
-        })
+        wallet.wallet_type = wallet_type;
+        wallet.account = Some(
+            Self::get_account(&wallet.wallet_type).map_err(WError::from_err(
+                "Wallet - new_root_key - failed to get account",
+            ))?,
+        );
+        wallet.init_addresses();
+        Ok(wallet)
     }
 
+    /// Sets the network ID for the wallet and reinitializes addresses.
+    ///
+    /// # Arguments
+    ///
+    /// * `network_id` - The network ID to use (Preprod or Mainnet)
+    ///
+    /// # Returns
+    ///
+    /// The updated wallet with reinitialized addresses
+    pub fn with_network_id(mut self, network_id: NetworkId) -> Self {
+        self.network_id = network_id;
+        self.init_addresses();
+        self
+    }
+
+    /// Attaches a fetcher implementation to the wallet.
+    ///
+    /// A fetcher is used to fetch UTxOs and other blockchain data.
+    ///
+    /// # Arguments
+    ///
+    /// * `fetcher` - The fetcher implementation to use
+    ///
+    /// # Returns
+    ///
+    /// The updated wallet with fetcher capability
+    pub fn with_fetcher<F: Fetcher + 'static>(mut self, fetcher: F) -> Self {
+        self.fetcher = Some(Box::new(fetcher));
+        self
+    }
+
+    /// Attaches a submitter implementation to the wallet.
+    ///
+    /// A submitter is used to submit transactions to the blockchain.
+    ///
+    /// # Arguments
+    ///
+    /// * `submitter` - The submitter implementation to use
+    ///
+    /// # Returns
+    ///
+    /// The updated wallet with submitter capability
+    pub fn with_submitter<S: Submitter + 'static>(mut self, submitter: S) -> Self {
+        self.submitter = Some(Box::new(submitter));
+        self
+    }
+
+    /// Sets the payment account indices for the wallet.
+    ///
+    /// This updates the derivation path for the payment address.
+    ///
+    /// # Arguments
+    ///
+    /// * `account_index` - The account index to use
+    /// * `key_index` - The key index to use
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to self for method chaining
     pub fn payment_account(
         &mut self,
         account_index: u32,
@@ -98,12 +254,27 @@ impl Wallet {
             }
             _ => {}
         }
-        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
-            "Wallet - payment_account - failed to get account",
-        ))?;
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - payment_account - failed to get account",
+            ))?,
+        );
+        self.init_addresses();
         Ok(self)
     }
 
+    /// Sets the stake account indices for the wallet.
+    ///
+    /// This updates the derivation path for the stake address.
+    ///
+    /// # Arguments
+    ///
+    /// * `account_index` - The account index to use
+    /// * `key_index` - The key index to use
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to self for method chaining
     pub fn stake_account(
         &mut self,
         account_index: u32,
@@ -118,12 +289,27 @@ impl Wallet {
             }
             _ => {}
         }
-        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
-            "Wallet - stake_account - failed to get account",
-        ))?;
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - stake_account - failed to get account",
+            ))?,
+        );
+        self.init_addresses();
         Ok(self)
     }
 
+    /// Sets the delegation representative (DRep) account indices for the wallet.
+    ///
+    /// This updates the derivation path for the DRep address.
+    ///
+    /// # Arguments
+    ///
+    /// * `account_index` - The account index to use
+    /// * `key_index` - The key index to use
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to self for method chaining
     pub fn drep_account(
         &mut self,
         account_index: u32,
@@ -138,10 +324,110 @@ impl Wallet {
             }
             _ => {}
         }
-        self.account = Wallet::get_account(&self.wallet_type).map_err(WError::from_err(
-            "Wallet - drep_account - failed to get account",
-        ))?;
+        self.account = Some(
+            Self::get_account(&self.wallet_type).map_err(WError::from_err(
+                "Wallet - drep_account - failed to get account",
+            ))?,
+        );
+        self.init_addresses();
         Ok(self)
+    }
+
+    /// Initializes or re-initializes wallet addresses based on the wallet type and current network ID.
+    ///
+    /// This method generates base and enterprise addresses for mnemonic and root key wallets.
+    /// It's automatically called when constructing a wallet or when changing wallet parameters
+    /// that affect addresses.
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to self for method chaining.
+    ///
+    /// # Panics
+    ///
+    /// May panic if there are issues creating a mnemonic or decoding a root key.
+    /// Consider using a version that returns Result instead if you need to handle these errors.
+    pub fn init_addresses(&mut self) -> &mut Self {
+        self.addresses = match &self.wallet_type {
+            WalletType::MnemonicWallet(mnemonic_wallet) => {
+                let mnemonic =
+                    Mnemonic::from_phrase(&mnemonic_wallet.mnemonic_phrase, Language::English)
+                        .map_err(WError::from_err(
+                            "Wallet - init_addresses - failed to create mnemonic",
+                        ))
+                        .unwrap();
+                let entropy = mnemonic.entropy();
+                let mut root_key = Bip32PrivateKey::from_bip39_entropy(entropy, &[]);
+                for index in mnemonic_wallet.derivation_indices.0.iter().take(3) {
+                    root_key = root_key.derive(index.clone());
+                }
+
+                let payment_credential = Credential::from_keyhash(
+                    &root_key
+                        .derive(mnemonic_wallet.derivation_indices.0[3].clone())
+                        .derive(mnemonic_wallet.derivation_indices.0[4].clone())
+                        .to_public()
+                        .to_raw_key()
+                        .hash(),
+                );
+
+                let stake_credential = Credential::from_keyhash(
+                    &root_key.derive(2).derive(0).to_public().to_raw_key().hash(),
+                );
+
+                self.create_addresses(payment_credential, stake_credential)
+            }
+            WalletType::RootKeyWallet(root_key_wallet) => {
+                let mut root_key = Bip32PrivateKey::from_bech32(&root_key_wallet.root_key)
+                    .map_err(WError::from_err(
+                        "Wallet - init_addresses - invalid root key hex",
+                    ))
+                    .unwrap();
+                for index in root_key_wallet.derivation_indices.0.iter().take(3) {
+                    root_key = root_key.derive(index.clone());
+                }
+
+                let payment_credential = Credential::from_keyhash(
+                    &root_key
+                        .derive(root_key_wallet.derivation_indices.0[3].clone())
+                        .derive(root_key_wallet.derivation_indices.0[4].clone())
+                        .to_public()
+                        .to_raw_key()
+                        .hash(),
+                );
+
+                let stake_credential = Credential::from_keyhash(
+                    &root_key.derive(2).derive(0).to_public().to_raw_key().hash(),
+                );
+
+                self.create_addresses(payment_credential, stake_credential)
+            }
+            WalletType::Cli(_private_key) => Addresses {
+                base_address: None,
+                enterprise_address: None,
+            },
+        };
+        self
+    }
+
+    /// Helper method to create addresses from payment and stake credentials.
+    /// This reduces code duplication between wallet types.
+    fn create_addresses(
+        &self,
+        payment_credential: Credential,
+        stake_credential: Credential,
+    ) -> Addresses {
+        Addresses {
+            base_address: Some(BaseAddress::new(
+                self.network_id as u8,
+                &payment_credential,
+                &stake_credential,
+            )),
+            enterprise_address: Some(EnterpriseAddress::new(
+                self.network_id as u8,
+                &payment_credential,
+            )),
+        }
     }
 
     pub fn sign_tx(&self, tx_hex: &str) -> Result<String, WError> {
@@ -152,8 +438,11 @@ impl Wallet {
                 Ok(signed_tx)
             }
             _ => {
-                let signed_tx = self
-                    .account
+                let account = self.account.as_ref().ok_or_else(WError::from_opt(
+                    "Wallet - sign_tx",
+                    "get account from wallet",
+                ))?;
+                let signed_tx = account
                     .sign_transaction(tx_hex)
                     .map_err(WError::from_err("Wallet - sign_tx"))?;
                 Ok(signed_tx.to_string())
@@ -195,5 +484,158 @@ impl Wallet {
             private_key,
             public_key,
         })
+    }
+
+    /// Gets a wallet address based on the specified address type.
+    ///
+    /// # Arguments
+    ///
+    /// * `address_type` - The type of address to get (Payment or Enterprise)
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the bech32-encoded address or an error
+    pub fn get_change_address(&self, address_type: AddressType) -> Result<String, WError> {
+        match address_type {
+            AddressType::Payment => {
+                if let Some(base_address) = &self.addresses.base_address {
+                    let address = base_address.to_address();
+                    address.to_bech32(None).map_err(WError::from_err(
+                        "Failed to convert payment address to bech32",
+                    ))
+                } else {
+                    Err(WError::from_err(
+                        "Base address not available for this wallet type",
+                    )("Base address not initialized"))
+                }
+            }
+            AddressType::Enterprise => {
+                if let Some(enterprise_address) = &self.addresses.enterprise_address {
+                    let address = enterprise_address.to_address();
+                    address.to_bech32(None).map_err(WError::from_err(
+                        "Failed to convert enterprise address to bech32",
+                    ))
+                } else {
+                    Err(WError::from_err(
+                        "Enterprise address not available for this wallet type",
+                    )("Enterprise address not initialized"))
+                }
+            }
+        }
+    }
+
+    /// Fetches unspent transaction outputs (UTxOs) for a wallet address.
+    ///
+    /// # Arguments
+    ///
+    /// * `address_type` - Optional address type (Payment or Enterprise). Defaults to Payment if not specified.
+    /// * `asset` - Optional asset ID to filter UTxOs. If specified, only UTxOs containing the asset will be returned.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either a vector of UTxOs or an error
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if no fetcher is configured or if there's an issue getting the address or fetching UTxOs.
+    pub async fn get_utxos(
+        &self,
+        address_type: Option<AddressType>,
+        asset: Option<&str>,
+    ) -> Result<Vec<UTxO>, WError> {
+        let fetcher = self.fetcher.as_ref().ok_or_else(|| {
+            WError::from_err("Fetcher is required to fetch UTxOs. Please provide a fetcher.")(
+                "No fetcher provided",
+            )
+        })?;
+
+        let address_type = address_type.unwrap_or(AddressType::Payment);
+        let address = self.get_change_address(address_type)?;
+
+        fetcher
+            .fetch_address_utxos(&address, asset)
+            .await
+            .map_err(WError::from_err("Failed to fetch UTxOs"))
+    }
+
+    /// Fetches suitable collateral UTXOs from the wallet.
+    ///
+    /// Collateral UTXOs must:
+    /// 1. Contain only lovelace (no other assets)
+    /// 2. Have at least 5,000,000 lovelace (5 ADA)
+    ///
+    /// This method returns the smallest suitable UTxO to minimize locked collateral.
+    ///
+    /// # Arguments
+    ///
+    /// * `address_type` - Optional address type to fetch UTXOs from. Defaults to Payment.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either a vector with the smallest suitable collateral UTxO,
+    /// or an empty vector if no suitable UTxO is found, or an error.
+    pub async fn get_collateral(
+        &self,
+        address_type: Option<AddressType>,
+    ) -> Result<Vec<UTxO>, WError> {
+        let address_type = address_type.unwrap_or(AddressType::Payment);
+        let utxos = self.get_utxos(Some(address_type), None).await?;
+
+        let mut collateral_candidates: Vec<UTxO> = utxos
+            .into_iter()
+            .filter(|utxo| {
+                utxo.output.amount.len() == 1
+                    && utxo.output.amount[0].unit() == "lovelace"
+                    && utxo.output.amount[0].quantity_i128() >= 5_000_000
+            })
+            .collect();
+
+        collateral_candidates.sort_by(|a, b| {
+            let a_quantity = a.output.amount[0].quantity_i128();
+            let b_quantity = b.output.amount[0].quantity_i128();
+            a_quantity.cmp(&b_quantity)
+        });
+
+        if let Some(smallest_utxo) = collateral_candidates.first() {
+            Ok(vec![smallest_utxo.clone()])
+        } else {
+            Ok(vec![])
+        }
+    }
+
+    /// Submits a transaction to the Cardano blockchain.
+    ///
+    /// This method uses the configured submitter to send the transaction to the network.
+    /// A submitter must be attached to the wallet using `with_submitter` before calling this method.
+    ///
+    /// # Arguments
+    ///
+    /// * `tx_hex` - The transaction in hexadecimal format to submit
+    ///
+    /// # Returns
+    ///
+    /// A Result containing either the transaction hash (if successful) or an error
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - No submitter is configured for the wallet
+    /// - The submitter encounters an issue while submitting the transaction
+    /// - The transaction format is invalid
+    ///
+    pub async fn submit_tx(&self, tx_hex: &str) -> Result<String, WError> {
+        let submitter = self.submitter.as_ref().ok_or_else(|| {
+            WError::from_err(
+                "Submitter is required to submit transactions. Please provide a submitter.",
+            )("No submitter provided")
+        })?;
+
+        submitter.submit_tx(tx_hex).await
+    }
+}
+
+impl Default for Wallet {
+    fn default() -> Self {
+        Self::empty()
     }
 }

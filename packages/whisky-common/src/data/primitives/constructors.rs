@@ -110,6 +110,8 @@ impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7);
 impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8);
 impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9);
 impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9 T10);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11);
+impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12);
 
 #[macro_export]
 macro_rules! impl_constr_n {

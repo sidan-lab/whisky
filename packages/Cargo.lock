@@ -3874,6 +3874,7 @@ dependencies = [
  "uplc",
  "whisky-common",
  "whisky-csl",
+ "whisky-provider",
 ]
 
 [[package]]
