@@ -133,6 +133,7 @@ impl CSLParser {
         self.csl_witness_set = csl_witness_set;
         self.csl_aux_data = csl_aux_data;
         self.context = context;
+        self.tx_hex = tx_hex.to_string();
         self.tx_hash = tx_hash;
 
         self.extract_inputs()
