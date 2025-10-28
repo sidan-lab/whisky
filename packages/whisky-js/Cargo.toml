@@ -22,7 +22,7 @@ uplc = "=1.1.10"
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
-cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git", rev = "d2c6673bc2ec97e8a1899c9bd6774e0379318f5c" }
+cquisitor-lib = "0.1.0-beta.25"
 
 # wasm
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
@@ -33,7 +33,7 @@ wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = { version = "0.1", features = ["wasm-bindgen"] }
 js-sys = "=0.3.69"
 wasm-bindgen-futures = "=0.4.40"
-cquisitor-lib = { git = "https://github.com/cardananium/cquisitor-lib.git", rev = "d2c6673bc2ec97e8a1899c9bd6774e0379318f5c" }
+cquisitor-lib = "0.1.0-beta.25"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

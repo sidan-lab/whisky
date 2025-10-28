@@ -748,36 +748,6 @@ dependencies = [
 
 [[package]]
 name = "cquisitor-lib"
-version = "0.1.0-beta.24"
-source = "git+https://github.com/cardananium/cquisitor-lib.git?rev=d2c6673bc2ec97e8a1899c9bd6774e0379318f5c#d2c6673bc2ec97e8a1899c9bd6774e0379318f5c"
-dependencies = [
- "anyhow",
- "bech32 0.11.0",
- "blst",
- "bs58",
- "cardano-serialization-lib",
- "console_error_panic_hook",
- "cryptoxide",
- "hex",
- "itertools 0.14.0",
- "js-sys",
- "minicbor 0.19.0",
- "noop_proc_macro",
- "pallas-codec 0.31.0",
- "pallas-crypto",
- "pallas-primitives",
- "pallas-traverse",
- "schemars 0.9.0",
- "serde",
- "serde-wasm-bindgen 0.6.5",
- "serde_json",
- "uplc",
- "wasm-bindgen",
- "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "cquisitor-lib"
 version = "0.1.0-beta.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5d67624775b7d97c81ad5aefed9eebbb6684551a6efb35323b6e113ad0de504"
@@ -814,7 +784,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "110df8c2a45011b2d8a33fc76483a6f5c3274bcc382ec4de2da804c5a872c8a9"
 dependencies = [
  "half 1.8.3",
- "minicbor-derive 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minicbor-derive 0.13.0",
 ]
 
 [[package]]
@@ -1921,21 +1891,12 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "minicbor"
-version = "0.19.0"
-source = "git+https://gitlab.com/lisicky/minicbor#0d20bbe1826169e0a1b1a0bb997dfb78a8380df3"
-dependencies = [
- "half 1.8.3",
- "minicbor-derive 0.13.0 (git+https://gitlab.com/lisicky/minicbor)",
-]
-
-[[package]]
-name = "minicbor"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d15f4203d71fdf90903c2696e55426ac97a363c67b218488a73b534ce7aca10"
 dependencies = [
  "half 1.8.3",
- "minicbor-derive 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minicbor-derive 0.13.0",
 ]
 
 [[package]]
@@ -1953,16 +1914,6 @@ name = "minicbor-derive"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1154809406efdb7982841adb6311b3d095b46f78342dd646736122fe6b19e267"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "minicbor-derive"
-version = "0.13.0"
-source = "git+https://gitlab.com/lisicky/minicbor#0d20bbe1826169e0a1b1a0bb997dfb78a8380df3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3821,7 +3772,7 @@ name = "whisky-csl"
 version = "1.0.13"
 dependencies = [
  "cardano-serialization-lib",
- "cquisitor-lib 0.1.0-beta.25",
+ "cquisitor-lib",
  "cryptoxide",
  "getrandom",
  "hex",
@@ -3856,7 +3807,7 @@ dependencies = [
 name = "whisky-js"
 version = "1.0.13"
 dependencies = [
- "cquisitor-lib 0.1.0-beta.24",
+ "cquisitor-lib",
  "js-sys",
  "noop_proc_macro",
  "rand_os",
