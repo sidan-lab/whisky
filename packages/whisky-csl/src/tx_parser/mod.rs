@@ -29,6 +29,7 @@ pub struct CSLParser {
     pub csl_witness_set: csl::TransactionWitnessSet,
     pub csl_aux_data: Option<csl::AuxiliaryData>,
     pub context: ParserContext,
+    pub tx_hex: String,
     pub tx_hash: String,
 }
 
@@ -44,8 +45,43 @@ impl CSLParser {
             csl_witness_set: csl::TransactionWitnessSet::new(),
             csl_aux_data: None,
             context: ParserContext::new(),
+            tx_hex: "".to_string(),
             tx_hash: "".to_string(),
         }
+    }
+
+    pub fn new_with_body(tx_hex: &str) -> Result<CSLParser, WError> {
+        let csl_tx = csl::FixedTransaction::from_hex(tx_hex).map_err(|e| {
+            WError::new(
+                "CSLParser - new",
+                &format!("Failed to parse transaction hex: {:?}", e),
+            )
+        })?;
+        let mut parser = CSLParser {
+            tx_body: TxBuilderBody::new(),
+            csl_tx_body: csl::TransactionBody::new_tx_body(
+                &csl::TransactionInputs::new(),
+                &csl::TransactionOutputs::new(),
+                &csl::Coin::zero(),
+            ),
+            csl_witness_set: csl::TransactionWitnessSet::new(),
+            csl_aux_data: None,
+            context: ParserContext::new(),
+            tx_hex: tx_hex.to_string(),
+            tx_hash: "".to_string(),
+        };
+
+        let tx_hash = csl_tx.transaction_hash().to_hex();
+        let csl_tx_body = csl_tx.body();
+        let csl_witness_set = csl_tx.witness_set();
+        let csl_aux_data = csl_tx.auxiliary_data();
+
+        parser.csl_tx_body = csl_tx_body;
+        parser.csl_witness_set = csl_witness_set;
+        parser.csl_aux_data = csl_aux_data;
+        parser.tx_hash = tx_hash;
+
+        Ok(parser)
     }
 
     pub fn parse(&mut self, tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<&mut Self, WError> {
