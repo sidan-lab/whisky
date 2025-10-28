@@ -777,6 +777,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "cquisitor-lib"
+version = "0.1.0-beta.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5d67624775b7d97c81ad5aefed9eebbb6684551a6efb35323b6e113ad0de504"
+dependencies = [
+ "anyhow",
+ "bech32 0.11.0",
+ "blst",
+ "bs58",
+ "cardano-serialization-lib",
+ "console_error_panic_hook",
+ "cquisitor-minicbor",
+ "cryptoxide",
+ "hex",
+ "itertools 0.14.0",
+ "js-sys",
+ "noop_proc_macro",
+ "pallas-codec 0.31.0",
+ "pallas-crypto",
+ "pallas-primitives",
+ "pallas-traverse",
+ "schemars 0.9.0",
+ "serde",
+ "serde-wasm-bindgen 0.6.5",
+ "serde_json",
+ "uplc",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
+name = "cquisitor-minicbor"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "110df8c2a45011b2d8a33fc76483a6f5c3274bcc382ec4de2da804c5a872c8a9"
+dependencies = [
+ "half 1.8.3",
+ "minicbor-derive 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "crc"
 version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3734,7 +3775,7 @@ dependencies = [
 
 [[package]]
 name = "whisky"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "async-trait",
  "cryptoxide",
@@ -3764,7 +3805,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-common"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "async-trait",
  "hex",
@@ -3777,10 +3818,10 @@ dependencies = [
 
 [[package]]
 name = "whisky-csl"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "cardano-serialization-lib",
- "cquisitor-lib",
+ "cquisitor-lib 0.1.0-beta.25",
  "cryptoxide",
  "getrandom",
  "hex",
@@ -3803,7 +3844,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-examples"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -3813,9 +3854,9 @@ dependencies = [
 
 [[package]]
 name = "whisky-js"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
- "cquisitor-lib",
+ "cquisitor-lib 0.1.0-beta.24",
  "js-sys",
  "noop_proc_macro",
  "rand_os",
@@ -3831,7 +3872,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-macros"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3840,7 +3881,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-provider"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "async-trait",
  "dotenv",
@@ -3858,7 +3899,7 @@ dependencies = [
 
 [[package]]
 name = "whisky-wallet"
-version = "1.0.12"
+version = "1.0.13"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
