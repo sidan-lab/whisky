@@ -6,7 +6,7 @@ use whisky_common::WError;
 use crate::{blake2b256, CSLParser};
 
 impl CSLParser {
-    pub fn check_all_required_signers(&mut self, tx_hex: &str) -> Result<bool, WError> {
+    pub fn check_all_required_signers(&mut self) -> Result<bool, WError> {
         self.extract_required_signatures()
             .map_err(WError::from_err(
                 "CSLParser - check_all_required_signers - required_signatures",
@@ -15,7 +15,7 @@ impl CSLParser {
         let signers = &self.tx_body.required_signatures;
         let mut signer_set: HashSet<String> = HashSet::new();
 
-        let fixed_tx = csl::FixedTransaction::from_hex(tx_hex).map_err(WError::from_err(
+        let fixed_tx = csl::FixedTransaction::from_hex(&self.tx_hex).map_err(WError::from_err(
             "CSLParser - check_all_required_signers - from_hex",
         ))?;
         for signer in signers {
