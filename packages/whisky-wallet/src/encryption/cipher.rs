@@ -78,8 +78,26 @@ pub fn decrypt_with_cipher(encrypted_data_json: &str, key: &str) -> Result<Strin
             "decrypt_with_cipher - Base64 decode of ciphertext failed",
         ))?;
 
+    // Handle salt - support both new format (with salt) and legacy format (without salt)
+    let salt = if let Some(salt_base64) = encrypted_data["salt"].as_str() {
+        // New format: use the provided salt
+        if !salt_base64.is_empty() {
+            general_purpose::STANDARD
+                .decode(salt_base64)
+                .map_err(WError::from_err(
+                    "decrypt_with_cipher - Base64 decode of salt failed",
+                ))?
+        } else {
+            // Empty salt string: use zero-filled salt of IV length for backward compatibility
+            vec![0u8; iv.len()]
+        }
+    } else {
+        // Legacy format: use zero-filled salt of IV length for backward compatibility
+        vec![0u8; iv.len()]
+    };
+
     // Derive a cryptographic key from the input key using PBKDF2 and SHA-256
-    let salt = vec![0u8; iv.len()]; // Using the same length as the IV
+    // Matches frontend: 100,000 iterations, SHA-256, 256-bit key
     let mut derived_key = vec![0u8; 32]; // AES-256 requires a 256-bit key (32 bytes)
 
     // PBKDF2 key derivation (HMAC-SHA-256)
@@ -96,7 +114,9 @@ pub fn decrypt_with_cipher(encrypted_data_json: &str, key: &str) -> Result<Strin
     // Decrypt the data
     let decrypted_data = cipher
         .decrypt(nonce, ciphertext.as_ref())
-        .map_err(WError::from_err("decrypt_with_cipher - Decryption failed"))?;
+        .map_err(WError::from_err(
+            "decrypt_with_cipher - Decryption failed (incorrect password or corrupted data)",
+        ))?;
 
     // Convert the decrypted data back to a string
     let decrypted_str = String::from_utf8(decrypted_data).map_err(WError::from_err(
