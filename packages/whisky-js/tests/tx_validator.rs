@@ -1,10 +1,4 @@
-use cquisitor_lib::validators::{
-    common::{GovernanceActionType, LocalCredential},
-    validator::validate_transaction_js,
-};
-use serde_json::json;
-use wasm_bindgen::JsError;
-use whisky_js::{js_validate_tx, ValidationInputContextJS};
+use whisky_js::js_validate_tx;
 
 #[test]
 fn test_validator_js() {
