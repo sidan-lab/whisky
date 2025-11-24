@@ -1,9 +1,9 @@
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataJson;
+use crate::data::{PlutusData, PlutusDataJson};
 
 #[derive(Clone, Debug)]
-pub struct Tuple<T>
+pub struct Tuple<T = PlutusData>
 where
     T: Clone + PlutusDataJson,
 {
@@ -53,6 +53,7 @@ macro_rules! impl_plutus_data_tuple {
     }
 }
 
+impl_plutus_data_tuple!(T1);
 impl_plutus_data_tuple!(T1 T2);
 impl_plutus_data_tuple!(T1 T2 T3);
 impl_plutus_data_tuple!(T1 T2 T3 T4);

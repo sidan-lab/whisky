@@ -1,16 +1,9 @@
-use serde_json::Value;
-use whisky::impl_constr_wrapper_type;
-use whisky_common::data::{ByteString, Constr0, Credential, PlutusDataJson};
-use whisky_macros::ConstrWrapper;
+use whisky::data::{ByteString, Constr0, Credential, PlutusDataJson};
+use whisky_macros::ImplConstr;
 
-// Type being tested with both the derive macro and implementation macro
-#[derive(Debug, Clone, ConstrWrapper)]
+// Type being tested with ImplConstr that now includes ConstrWrapper functionality
+#[derive(Debug, Clone, ImplConstr)]
 pub struct Account(Constr0<Box<(ByteString, Credential, Credential)>>);
-impl_constr_wrapper_type!(Account, 0, [
-    (account_id: ByteString, &str),
-    (master_key: Credential, (&str, bool)),
-    (operation_key: Credential, (&str, bool)),
-]);
 
 #[cfg(test)]
 mod tests {

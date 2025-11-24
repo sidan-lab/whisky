@@ -45,6 +45,7 @@
 //! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
 pub mod builder;
+pub mod data;
 pub mod parser;
 pub mod services;
 pub mod transaction;
@@ -52,6 +53,7 @@ pub mod utils;
 pub use builder::*;
 pub use parser::*;
 pub use transaction::*;
+pub use utils::*;
 pub use whisky_common::*;
 pub use whisky_csl::*;
 pub use whisky_macros::*;

@@ -7,8 +7,8 @@ pub fn derive_constr_wrapper(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let expanded = quote! {
-        impl ::whisky::data::PlutusDataJson for #name {
-            fn to_json(&self) -> Value {
+        impl whisky::data::PlutusDataJson for #name {
+            fn to_json(&self) -> ::serde_json::Value {
                 self.0.to_json()
             }
 
@@ -16,7 +16,7 @@ pub fn derive_constr_wrapper(input: TokenStream) -> TokenStream {
                 self.to_json().to_string()
             }
 
-            fn to_constr_field(&self) -> Vec<Value> {
+            fn to_constr_field(&self) -> Vec<::serde_json::Value> {
                 vec![self.0.to_json()]
             }
         }

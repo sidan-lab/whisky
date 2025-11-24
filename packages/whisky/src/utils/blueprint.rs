@@ -1,6 +1,6 @@
-use crate::data::*;
 use crate::*;
 use std::marker::PhantomData;
+use whisky_common::data::{ByteString, PlutusDataJson};
 
 #[derive(Debug, Clone)]
 pub struct MintingBlueprint<P = (), R = ByteString>

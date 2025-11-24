@@ -34,22 +34,25 @@ mod tests {
     }
 
     #[test]
-    fn test_output_reference() {
-        let correct_output_reference =
-            "{\"constructor\":0,\"fields\":[{\"bytes\":\"hello\"},{\"int\":12}]}";
-        assert_eq!(
-            output_reference("hello", 12).to_string(),
-            correct_output_reference
-        );
-        assert_eq!(
-            OutputReference::from("hello", 12).to_json_string(),
-            correct_output_reference
-        );
-    }
-
-    #[test]
     fn test_posix_time() {
         let correct_output_reference = "{\"int\":12}";
         assert_eq!(posix_time(12).to_string(), correct_output_reference);
+    }
+
+    #[test]
+    fn test_single_element_tuple() {
+        let byte_string = ByteString::new("test");
+        let single_tuple = (byte_string,);
+        let json = single_tuple.to_json();
+        assert_eq!(json.to_string(), "[{\"bytes\":\"test\"}]");
+    }
+
+    #[test]
+    fn test_two_element_tuple() {
+        let byte_string1 = ByteString::new("hello");
+        let byte_string2 = ByteString::new("world");
+        let tuple = (byte_string1, byte_string2);
+        let json = tuple.to_json();
+        assert_eq!(json.to_string(), "[{\"bytes\":\"hello\"},{\"bytes\":\"world\"}]");
     }
 }

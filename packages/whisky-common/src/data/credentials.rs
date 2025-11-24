@@ -1,9 +1,7 @@
 use serde_json::{json, Value};
 
-use crate::{
-    data::{ByteString, Constr0, Constr1, PlutusDataJson},
-    impl_constr_type,
-};
+use crate::data::{ByteString, Constr0, Constr1, PlutusDataJson};
+use whisky_macros::ImplConstr;
 
 use super::{byte_string, constr0, constr1};
 
@@ -23,6 +21,12 @@ impl Credential {
     }
 }
 
+#[derive(Clone, Debug, ImplConstr)]
+pub struct VerificationKey(pub Constr0<ByteString>);
+
+#[derive(Clone, Debug, ImplConstr)]
+pub struct Script(pub Constr1<ByteString>);
+
 impl PlutusDataJson for Credential {
     fn to_json(&self) -> Value {
         match self {
@@ -31,12 +35,6 @@ impl PlutusDataJson for Credential {
         }
     }
 }
-
-pub type VerificationKey = Constr0<ByteString>;
-impl_constr_type!(VerificationKey, 0,(pub_key_hash: ByteString, &str));
-
-pub type Script = Constr1<ByteString>;
-impl_constr_type!(Script, 1, (script_hash: ByteString, &str));
 
 #[derive(Clone, Debug)]
 pub struct Address {

@@ -13,3 +13,9 @@ pub use interfaces::*;
 pub use models::*;
 pub use tx_tester::*;
 pub use utils::*;
+
+// Re-export Blueprint at root level
+pub use data::blueprint::Blueprint;
+
+// Re-export proc macros
+pub use whisky_macros::impl_constr_type;

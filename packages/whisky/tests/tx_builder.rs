@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tx_builder_core_tests {
     use serde_json::{json, to_string};
-    use whisky::data::*;
-    use whisky::*;
+    use whisky::{data::*, *};
 
     #[test]
     fn test_tx_builder_tx_builder_core() {

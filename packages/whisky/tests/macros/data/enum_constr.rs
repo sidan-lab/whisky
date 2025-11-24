@@ -2,10 +2,9 @@
 mod tests {
     use super::super::constr_wrapper::Account;
     use whisky::{
-        data::{Constr, Constr2},
+        data::{Bool, ByteString, Constr, Constr0, Constr2, Int, PlutusDataJson, Tuple, Value},
         Asset,
     };
-    use whisky_common::data::{Bool, ByteString, Constr0, Int, PlutusDataJson, Tuple, Value};
     use whisky_macros::ConstrEnum;
 
     #[derive(Debug, Clone, ConstrEnum)]

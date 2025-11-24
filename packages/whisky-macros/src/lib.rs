@@ -11,3 +11,13 @@ pub fn derive_constr_enum(input: TokenStream) -> TokenStream {
 pub fn derive_constr_wrapper(input: TokenStream) -> TokenStream {
     data::constr_wrapper::derive_constr_wrapper(input)
 }
+
+#[proc_macro]
+pub fn impl_constr_type(input: TokenStream) -> TokenStream {
+    data::impl_constr_type::impl_constr_type_macro(input)
+}
+
+#[proc_macro_derive(ImplConstr, attributes(constr))]
+pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
+    data::impl_constr_derive::derive_impl_constr(input)
+}
