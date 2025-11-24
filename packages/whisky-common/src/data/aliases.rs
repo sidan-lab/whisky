@@ -1,7 +1,3 @@
-use crate::{
-    data::{ByteString, Constr0, Int},
-    impl_constr_type,
-};
 use serde_json::Value;
 
 use super::{
@@ -28,7 +24,3 @@ pub fn tx_out_ref(tx_hash: &str, index: i128) -> Value {
 pub fn output_reference(tx_hash: &str, index: i128) -> Value {
     constr0(vec![byte_string(tx_hash), integer(index)])
 }
-
-// Type alias
-pub type OutputReference = Constr0<Box<(ByteString, Int)>>;
-impl_constr_type!(OutputReference, 0, [(tx_hash: ByteString, &str), (index: Int, i128)]);

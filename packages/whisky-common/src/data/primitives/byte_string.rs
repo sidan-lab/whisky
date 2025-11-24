@@ -28,3 +28,15 @@ pub fn byte_string(bytes: &str) -> Value {
 pub fn builtin_byte_string(bytes: &str) -> Value {
     json!({ "bytes": bytes })
 }
+
+pub type ByteArray = ByteString;
+
+pub type ScriptHash = ByteString;
+
+pub type PolicyId = ByteString;
+
+pub type AssetName = ByteString;
+
+pub type PubKeyHash = ByteString;
+
+pub type VerificationKeyHash = ByteString;
