@@ -78,6 +78,13 @@ pub fn send_lovelace(
 
 Make sure llvm is installed
 
+# Maintainers List
+
+- Hinson Wong (Github Handle: HinsonSIDAN) - Maintainer
+- Tsz Wai (Github Handle: twwu123) - Maintainer
+- Ken Lau (Github Handle: kenlau666) - Maintainer
+- Anson Chui (Github Handle: AnsonSIDAN) - Project Manager
+
 ## APIs
 
 Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.
