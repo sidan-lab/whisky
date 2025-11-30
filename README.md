@@ -93,6 +93,6 @@ Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/wh
 
 # Community Channel Invite
 
-Please join SIDAN Lab's discord server for regular update.
+Please join SIDAN Lab's discord server for regular update using https://discord.gg/prJvB6b6p4.
 
 Please view SIDAN Lab's dedicated channel for any SIDAN - Whisky V2 - Cardano Rust SDK with Pallas Catalyst Project Update in https://discord.com/channels/1166784293805228061/1441817320245952532.
