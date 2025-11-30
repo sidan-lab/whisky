@@ -83,6 +83,7 @@ Make sure llvm is installed
 - Hinson Wong (Github Handle: HinsonSIDAN) - Maintainer
 - Tsz Wai (Github Handle: twwu123) - Maintainer
 - Ken Lau (Github Handle: kenlau666) - Maintainer
+- Anson Chui (Github Handle: AnsonSIDAN) - Project Manager
 
 ## APIs
 
