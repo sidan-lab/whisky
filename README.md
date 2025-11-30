@@ -90,3 +90,9 @@ Make sure llvm is installed
 Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.
 
 ![Alt](https://repobeats.axiom.co/api/embed/2e35716a9dd3250972c06ca2b4c7f1846ef7c51e.svg "Repobeats analytics image")
+
+# Community Channel Invite
+
+Please join SIDAN Lab's discord server for regular update.
+
+Please view SIDAN Lab's dedicated channel for any SIDAN - Whisky V2 - Cardano Rust SDK with Pallas Catalyst Project Update in https://discord.com/channels/1166784293805228061/1441817320245952532.
