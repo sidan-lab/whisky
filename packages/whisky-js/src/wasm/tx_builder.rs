@@ -1,7 +1,7 @@
 use crate::*;
 use wasm::WasmResult;
 use whisky_common::*;
-use whisky_csl::WhiskyCSL;
+use whisky_csl::{tx_prototype::TransactionPrototype, WhiskyCSL};
 
 /// ## WASM Transaction building method
 ///
@@ -40,5 +40,34 @@ pub fn js_serialize_tx_body(tx_builder_body_json: &str, params_json: &str) -> Wa
     match tx_builder.unbalanced_serialize_tx_body() {
         Ok(tx_hex) => WasmResult::new("success".to_string(), tx_hex.to_string()),
         Err(e) => WasmResult::new_error("failure".to_string(), format!("{:?}", e.to_string())),
+    }
+}
+
+/// ## WASM Transaction Prototype to Hex
+///
+/// Convert a TransactionPrototype JSON to CBOR hex string
+///
+/// ### Arguments
+///
+/// * `tx_json` - The transaction prototype, serialized as JSON string
+///
+/// ### Returns
+///
+/// * `String` - the transaction CBOR hex
+#[wasm_bindgen]
+pub fn js_tx_prototype_to_hex(tx_json: &str) -> WasmResult {
+    let tx_prototype: TransactionPrototype = match serde_json::from_str(tx_json) {
+        Ok(tx) => tx,
+        Err(e) => {
+            return WasmResult::new_error(
+                "failure".to_string(),
+                format!("Invalid TransactionPrototype JSON: {:?}", e),
+            )
+        }
+    };
+
+    match tx_prototype.to_hex() {
+        Ok(hex) => WasmResult::new("success".to_string(), hex),
+        Err(e) => WasmResult::new_error("failure".to_string(), format!("{:?}", e)),
     }
 }
