@@ -1,0 +1,14 @@
+[package]
+name = "whisky-pallas"
+version = "1.0.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Wrapper around the TxPipe's Pallas for easier transaction building, heavily inspired by cardano-cli APIs"
+readme = "../../README.md"
+authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltadefi.io>"]
+
+[dependencies]
+hex = "0.4.3"
+pallas = "1.0.0-alpha.3"
+serde = "1.0.219"
+ouroboros = "0.18"
