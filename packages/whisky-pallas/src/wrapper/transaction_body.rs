@@ -1,13 +1,18 @@
+use std::collections::BTreeMap;
+use std::str::FromStr;
+
+use hex::FromHex;
 use pallas::codec::utils::{NonEmptySet, Set};
 use pallas::ledger::primitives::conway::{
     Certificate as PallasCertificate, TransactionBody as PallasTransactionBody,
     TransactionInput as PallasTransactionInput, TransactionOutput as PallasTransactionOutput,
 };
-use pallas::ledger::primitives::Fragment;
+use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
 use crate::wrapper::Certificate;
+use pallas::crypto::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TransactionBody<'a> {
@@ -21,6 +26,9 @@ impl<'a> TransactionBody<'a> {
         fee: u64,
         ttl: Option<u64>,
         certificates: Option<Vec<Certificate>>,
+        withdrawals: Option<Vec<(RewardAccount, u64)>>,
+        auxiliary_data_hash: Option<String>,
+        validity_interval_start: Option<u64>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -29,21 +37,21 @@ impl<'a> TransactionBody<'a> {
                 fee: fee,
                 ttl: ttl,
                 certificates: Self::parse_certificates(certificates),
-                withdrawals: None,             // Placeholder implementation
-                auxiliary_data_hash: None,     // Placeholder implementation
-                validity_interval_start: None, // Placeholder implementation
-                mint: None,                    // Placeholder implementation
-                script_data_hash: None,        // Placeholder implementation
-                collateral: None,              // Placeholder implementation
-                required_signers: None,        // Placeholder implementation
-                network_id: None,              // Placeholder implementation
-                collateral_return: None,       // Placeholder implementation
-                total_collateral: None,        // Placeholder implementation
-                reference_inputs: None,        // Placeholder implementation
-                voting_procedures: None,       // Placeholder implementation
-                proposal_procedures: None,     // Placeholder implementation
-                treasury_value: None,          // Placeholder implementation
-                donation: None,                // Placeholder implementation
+                withdrawals: Self::parse_withdrawals(withdrawals),
+                auxiliary_data_hash: Self::parse_auxiliary_data_hash(auxiliary_data_hash),
+                validity_interval_start: validity_interval_start,
+                mint: None,                // Placeholder implementation
+                script_data_hash: None,    // Placeholder implementation
+                collateral: None,          // Placeholder implementation
+                required_signers: None,    // Placeholder implementation
+                network_id: None,          // Placeholder implementation
+                collateral_return: None,   // Placeholder implementation
+                total_collateral: None,    // Placeholder implementation
+                reference_inputs: None,    // Placeholder implementation
+                voting_procedures: None,   // Placeholder implementation
+                proposal_procedures: None, // Placeholder implementation
+                treasury_value: None,      // Placeholder implementation
+                donation: None,            // Placeholder implementation
             },
         }) // Placeholder implementation
     }
@@ -77,10 +85,26 @@ impl<'a> TransactionBody<'a> {
     ) -> Option<NonEmptySet<PallasCertificate>> {
         match certificates {
             Some(certs) => {
-                let pallas_certs: Vec<pallas::ledger::primitives::conway::Certificate> =
+                let pallas_certs: Vec<PallasCertificate> =
                     certs.into_iter().map(|cert| cert.inner).collect();
                 NonEmptySet::from_vec(pallas_certs)
             }
+            None => None,
+        }
+    }
+
+    fn parse_withdrawals(
+        withdrawals: Option<Vec<(RewardAccount, u64)>>,
+    ) -> Option<BTreeMap<RewardAccount, Coin>> {
+        match withdrawals {
+            Some(wds) => Some(BTreeMap::from_iter(wds.into_iter())),
+            None => None,
+        }
+    }
+
+    fn parse_auxiliary_data_hash(auxiliary_data_hash: Option<String>) -> Option<Hash<32>> {
+        match auxiliary_data_hash {
+            Some(hash_str) => Some(Hash::from_str(&hash_str).expect("Invalid auxiliary hash")),
             None => None,
         }
     }
