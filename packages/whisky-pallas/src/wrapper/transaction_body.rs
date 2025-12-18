@@ -12,7 +12,7 @@ use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
-use crate::wrapper::{Certificate, MultiassetNonZeroInt};
+use crate::wrapper::{Certificate, MultiassetNonZeroInt, RequiredSigners};
 use pallas::crypto::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -33,6 +33,7 @@ impl<'a> TransactionBody<'a> {
         mint: Option<MultiassetNonZeroInt>,
         script_data_hash: Option<String>,
         collateral: Option<Vec<TransactionInput>>,
+        required_signers: Option<RequiredSigners>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -46,16 +47,16 @@ impl<'a> TransactionBody<'a> {
                 validity_interval_start: validity_interval_start,
                 mint: Self::parse_mint(mint),
                 script_data_hash: Self::parse_script_data_hash(script_data_hash),
-                collateral: Self::parse_collateral(collateral), // Placeholder implementation
-                required_signers: None,                         // Placeholder implementation
-                network_id: None,                               // Placeholder implementation
-                collateral_return: None,                        // Placeholder implementation
-                total_collateral: None,                         // Placeholder implementation
-                reference_inputs: None,                         // Placeholder implementation
-                voting_procedures: None,                        // Placeholder implementation
-                proposal_procedures: None,                      // Placeholder implementation
-                treasury_value: None,                           // Placeholder implementation
-                donation: None,                                 // Placeholder implementation
+                collateral: Self::parse_collateral(collateral),
+                required_signers: Self::parse_required_signers(required_signers),
+                network_id: None,          // Placeholder implementation
+                collateral_return: None,   // Placeholder implementation
+                total_collateral: None,    // Placeholder implementation
+                reference_inputs: None,    // Placeholder implementation
+                voting_procedures: None,   // Placeholder implementation
+                proposal_procedures: None, // Placeholder implementation
+                treasury_value: None,      // Placeholder implementation
+                donation: None,            // Placeholder implementation
             },
         }) // Placeholder implementation
     }
@@ -129,5 +130,11 @@ impl<'a> TransactionBody<'a> {
             Some(vec) => NonEmptySet::from_vec(vec),
             None => None,
         }
+    }
+
+    fn parse_required_signers(
+        required_signers: Option<RequiredSigners>,
+    ) -> Option<NonEmptySet<Hash<28>>> {
+        required_signers.map(|rs| rs.inner)
     }
 }
