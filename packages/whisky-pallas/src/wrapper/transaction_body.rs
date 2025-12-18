@@ -31,6 +31,8 @@ impl<'a> TransactionBody<'a> {
         auxiliary_data_hash: Option<String>,
         validity_interval_start: Option<u64>,
         mint: Option<MultiassetNonZeroInt>,
+        script_data_hash: Option<String>,
+        collateral: Option<Vec<TransactionInput>>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -43,17 +45,17 @@ impl<'a> TransactionBody<'a> {
                 auxiliary_data_hash: Self::parse_auxiliary_data_hash(auxiliary_data_hash),
                 validity_interval_start: validity_interval_start,
                 mint: Self::parse_mint(mint),
-                script_data_hash: None,    // Placeholder implementation
-                collateral: None,          // Placeholder implementation
-                required_signers: None,    // Placeholder implementation
-                network_id: None,          // Placeholder implementation
-                collateral_return: None,   // Placeholder implementation
-                total_collateral: None,    // Placeholder implementation
-                reference_inputs: None,    // Placeholder implementation
-                voting_procedures: None,   // Placeholder implementation
-                proposal_procedures: None, // Placeholder implementation
-                treasury_value: None,      // Placeholder implementation
-                donation: None,            // Placeholder implementation
+                script_data_hash: Self::parse_script_data_hash(script_data_hash),
+                collateral: Self::parse_collateral(collateral), // Placeholder implementation
+                required_signers: None,                         // Placeholder implementation
+                network_id: None,                               // Placeholder implementation
+                collateral_return: None,                        // Placeholder implementation
+                total_collateral: None,                         // Placeholder implementation
+                reference_inputs: None,                         // Placeholder implementation
+                voting_procedures: None,                        // Placeholder implementation
+                proposal_procedures: None,                      // Placeholder implementation
+                treasury_value: None,                           // Placeholder implementation
+                donation: None,                                 // Placeholder implementation
             },
         }) // Placeholder implementation
     }
@@ -108,5 +110,24 @@ impl<'a> TransactionBody<'a> {
 
     fn parse_mint(mint: Option<MultiassetNonZeroInt>) -> Option<PallasMultiasset<NonZeroInt>> {
         mint.map(|ma| ma.inner)
+    }
+
+    fn parse_script_data_hash(script_data_hash: Option<String>) -> Option<Hash<32>> {
+        script_data_hash
+            .map(|hash_str| Hash::from_str(&hash_str).expect("Invalid script data hash"))
+    }
+
+    fn parse_collateral(
+        collateral: Option<Vec<TransactionInput>>,
+    ) -> Option<NonEmptySet<PallasTransactionInput>> {
+        let collatera_vec = collateral.map(|inputs| {
+            let pallas_inputs: Vec<PallasTransactionInput> =
+                inputs.into_iter().map(|input| input.inner).collect();
+            pallas_inputs
+        });
+        match collatera_vec {
+            Some(vec) => NonEmptySet::from_vec(vec),
+            None => None,
+        }
     }
 }
