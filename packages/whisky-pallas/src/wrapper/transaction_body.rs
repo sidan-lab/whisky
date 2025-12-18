@@ -4,7 +4,7 @@ use std::str::FromStr;
 use hex::FromHex;
 use pallas::codec::utils::{NonEmptySet, NonZeroInt, Set};
 use pallas::ledger::primitives::conway::{
-    Certificate as PallasCertificate, Multiasset as PallasMultiasset,
+    Certificate as PallasCertificate, Multiasset as PallasMultiasset, NetworkId as PallasNetworkId,
     TransactionBody as PallasTransactionBody, TransactionInput as PallasTransactionInput,
     TransactionOutput as PallasTransactionOutput,
 };
@@ -12,7 +12,7 @@ use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
-use crate::wrapper::{Certificate, MultiassetNonZeroInt, RequiredSigners};
+use crate::wrapper::{Certificate, MultiassetNonZeroInt, NetworkId, RequiredSigners};
 use pallas::crypto::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -34,6 +34,10 @@ impl<'a> TransactionBody<'a> {
         script_data_hash: Option<String>,
         collateral: Option<Vec<TransactionInput>>,
         required_signers: Option<RequiredSigners>,
+        network_id: Option<NetworkId>,
+        collateral_return: Option<TransactionOutput<'a>>,
+        total_collateral: Option<u64>,
+        reference_inputs: Option<Vec<TransactionInput>>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -49,10 +53,10 @@ impl<'a> TransactionBody<'a> {
                 script_data_hash: Self::parse_script_data_hash(script_data_hash),
                 collateral: Self::parse_collateral(collateral),
                 required_signers: Self::parse_required_signers(required_signers),
-                network_id: None,          // Placeholder implementation
-                collateral_return: None,   // Placeholder implementation
-                total_collateral: None,    // Placeholder implementation
-                reference_inputs: None,    // Placeholder implementation
+                network_id: Self::parse_network_id(network_id),
+                collateral_return: Self::parse_collateral_return(collateral_return),
+                total_collateral: total_collateral,
+                reference_inputs: Self::parse_reference_inputs(reference_inputs),
                 voting_procedures: None,   // Placeholder implementation
                 proposal_procedures: None, // Placeholder implementation
                 treasury_value: None,      // Placeholder implementation
@@ -136,5 +140,29 @@ impl<'a> TransactionBody<'a> {
         required_signers: Option<RequiredSigners>,
     ) -> Option<NonEmptySet<Hash<28>>> {
         required_signers.map(|rs| rs.inner)
+    }
+
+    fn parse_network_id(network_id: Option<NetworkId>) -> Option<PallasNetworkId> {
+        network_id.map(|nid| nid.inner)
+    }
+
+    fn parse_collateral_return(
+        collateral_return: Option<TransactionOutput<'a>>,
+    ) -> Option<PallasTransactionOutput<'a>> {
+        collateral_return.map(|cr| cr.inner)
+    }
+
+    fn parse_reference_inputs(
+        reference_inputs: Option<Vec<TransactionInput>>,
+    ) -> Option<NonEmptySet<PallasTransactionInput>> {
+        let ref_inputs_vec = reference_inputs.map(|inputs| {
+            let pallas_inputs: Vec<PallasTransactionInput> =
+                inputs.into_iter().map(|input| input.inner).collect();
+            pallas_inputs
+        });
+        match ref_inputs_vec {
+            Some(vec) => NonEmptySet::from_vec(vec),
+            None => None,
+        }
     }
 }
