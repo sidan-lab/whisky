@@ -1,14 +1,22 @@
+mod anchor;
+mod certificate;
 mod datum;
+mod drep;
 mod multiasset;
 mod script_ref;
+mod stake_credential;
 mod transaction_body;
 mod transaction_input;
 mod transaction_output;
 mod value;
 
+pub use anchor::*;
+pub use certificate::*;
 pub use datum::*;
+pub use drep::*;
 pub use multiasset::*;
 pub use script_ref::*;
+pub use stake_credential::*;
 pub use transaction_body::*;
 pub use transaction_input::*;
 pub use transaction_output::*;

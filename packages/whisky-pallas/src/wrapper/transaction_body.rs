@@ -1,12 +1,13 @@
-use pallas::codec::utils::Set;
+use pallas::codec::utils::{NonEmptySet, Set};
 use pallas::ledger::primitives::conway::{
-    TransactionBody as PallasTransactionBody, TransactionInput as PallasTransactionInput,
-    TransactionOutput as PallasTransactionOutput,
+    Certificate as PallasCertificate, TransactionBody as PallasTransactionBody,
+    TransactionInput as PallasTransactionInput, TransactionOutput as PallasTransactionOutput,
 };
 use pallas::ledger::primitives::Fragment;
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
+use crate::wrapper::Certificate;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TransactionBody<'a> {
@@ -17,14 +18,17 @@ impl<'a> TransactionBody<'a> {
     pub fn new(
         inputs: Vec<TransactionInput>,
         outputs: Vec<TransactionOutput<'a>>,
+        fee: u64,
+        ttl: Option<u64>,
+        certificates: Option<Vec<Certificate>>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
                 inputs: Self::parse_inputs(inputs),
                 outputs: Self::parse_outputs(outputs),
-                fee: 0,                        // Placeholder implementation
-                ttl: None,                     // Placeholder implementation
-                certificates: None,            // Placeholder implementation
+                fee: fee,
+                ttl: ttl,
+                certificates: Self::parse_certificates(certificates),
                 withdrawals: None,             // Placeholder implementation
                 auxiliary_data_hash: None,     // Placeholder implementation
                 validity_interval_start: None, // Placeholder implementation
@@ -66,5 +70,18 @@ impl<'a> TransactionBody<'a> {
 
     fn parse_outputs(outputs: Vec<TransactionOutput<'a>>) -> Vec<PallasTransactionOutput<'a>> {
         outputs.into_iter().map(|output| output.inner).collect()
+    }
+
+    fn parse_certificates(
+        certificates: Option<Vec<Certificate>>,
+    ) -> Option<NonEmptySet<PallasCertificate>> {
+        match certificates {
+            Some(certs) => {
+                let pallas_certs: Vec<pallas::ledger::primitives::conway::Certificate> =
+                    certs.into_iter().map(|cert| cert.inner).collect();
+                NonEmptySet::from_vec(pallas_certs)
+            }
+            None => None,
+        }
     }
 }
