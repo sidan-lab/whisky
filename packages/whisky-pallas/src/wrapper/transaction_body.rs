@@ -2,16 +2,17 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use hex::FromHex;
-use pallas::codec::utils::{NonEmptySet, Set};
+use pallas::codec::utils::{NonEmptySet, NonZeroInt, Set};
 use pallas::ledger::primitives::conway::{
-    Certificate as PallasCertificate, TransactionBody as PallasTransactionBody,
-    TransactionInput as PallasTransactionInput, TransactionOutput as PallasTransactionOutput,
+    Certificate as PallasCertificate, Multiasset as PallasMultiasset,
+    TransactionBody as PallasTransactionBody, TransactionInput as PallasTransactionInput,
+    TransactionOutput as PallasTransactionOutput,
 };
 use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
-use crate::wrapper::Certificate;
+use crate::wrapper::{Certificate, MultiassetNonZeroInt};
 use pallas::crypto::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -29,6 +30,7 @@ impl<'a> TransactionBody<'a> {
         withdrawals: Option<Vec<(RewardAccount, u64)>>,
         auxiliary_data_hash: Option<String>,
         validity_interval_start: Option<u64>,
+        mint: Option<MultiassetNonZeroInt>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -40,7 +42,7 @@ impl<'a> TransactionBody<'a> {
                 withdrawals: Self::parse_withdrawals(withdrawals),
                 auxiliary_data_hash: Self::parse_auxiliary_data_hash(auxiliary_data_hash),
                 validity_interval_start: validity_interval_start,
-                mint: None,                // Placeholder implementation
+                mint: Self::parse_mint(mint),
                 script_data_hash: None,    // Placeholder implementation
                 collateral: None,          // Placeholder implementation
                 required_signers: None,    // Placeholder implementation
@@ -96,16 +98,15 @@ impl<'a> TransactionBody<'a> {
     fn parse_withdrawals(
         withdrawals: Option<Vec<(RewardAccount, u64)>>,
     ) -> Option<BTreeMap<RewardAccount, Coin>> {
-        match withdrawals {
-            Some(wds) => Some(BTreeMap::from_iter(wds.into_iter())),
-            None => None,
-        }
+        withdrawals.map(|wds| BTreeMap::from_iter(wds.into_iter().map(|(ra, coin)| (ra, coin))))
     }
 
     fn parse_auxiliary_data_hash(auxiliary_data_hash: Option<String>) -> Option<Hash<32>> {
-        match auxiliary_data_hash {
-            Some(hash_str) => Some(Hash::from_str(&hash_str).expect("Invalid auxiliary hash")),
-            None => None,
-        }
+        auxiliary_data_hash
+            .map(|hash_str| Hash::from_str(&hash_str).expect("Invalid auxiliary hash"))
+    }
+
+    fn parse_mint(mint: Option<MultiassetNonZeroInt>) -> Option<PallasMultiasset<NonZeroInt>> {
+        mint.map(|ma| ma.inner)
     }
 }
