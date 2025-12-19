@@ -1,18 +1,22 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use hex::FromHex;
 use pallas::codec::utils::{NonEmptySet, NonZeroInt, Set};
 use pallas::ledger::primitives::conway::{
-    Certificate as PallasCertificate, Multiasset as PallasMultiasset, NetworkId as PallasNetworkId,
+    Certificate as PallasCertificate, GovActionId as PallasGovActionId,
+    Multiasset as PallasMultiasset, NetworkId as PallasNetworkId,
     TransactionBody as PallasTransactionBody, TransactionInput as PallasTransactionInput,
-    TransactionOutput as PallasTransactionOutput,
+    TransactionOutput as PallasTransactionOutput, Voter as PallasVoter,
+    VotingProcedure as PallasVotingProcedure, VotingProcedures as PallasVotingProcedures,
 };
 use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
-use crate::wrapper::{Certificate, MultiassetNonZeroInt, NetworkId, RequiredSigners};
+use crate::wrapper::{
+    Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, RequiredSigners, Voter,
+    VotingProdecedure,
+};
 use pallas::crypto::hash::Hash;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -38,6 +42,7 @@ impl<'a> TransactionBody<'a> {
         collateral_return: Option<TransactionOutput<'a>>,
         total_collateral: Option<u64>,
         reference_inputs: Option<Vec<TransactionInput>>,
+        voting_procedure: Option<Vec<VotingProdecedure>>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -163,6 +168,31 @@ impl<'a> TransactionBody<'a> {
         match ref_inputs_vec {
             Some(vec) => NonEmptySet::from_vec(vec),
             None => None,
+        }
+    }
+
+    fn parse_voting_procedures(
+        voting_procedures: Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>,
+    ) -> Option<PallasVotingProcedures> {
+        let mut voting_procedures_map: BTreeMap<
+            PallasVoter,
+            BTreeMap<PallasGovActionId, PallasVotingProcedure>,
+        > = BTreeMap::new();
+        match voting_procedures {
+            None => return None,
+            Some(vp) => {
+                for (voter, actions) in vp {
+                    let pallas_voter = voter.inner;
+                    let mut pallas_action_map: BTreeMap<PallasGovActionId, PallasVotingProcedure> =
+                        BTreeMap::new();
+
+                    for (gov_action_id, voting_procedure) in actions {
+                        pallas_action_map.insert(gov_action_id.inner, voting_procedure.inner);
+                    }
+                    voting_procedures_map.insert(pallas_voter, pallas_action_map);
+                }
+                Some(voting_procedures_map)
+            }
         }
     }
 }

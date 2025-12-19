@@ -7,7 +7,7 @@ use pallas::{
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Anchor {
-    inner: PallasAnchor,
+    pub inner: PallasAnchor,
 }
 
 impl Anchor {

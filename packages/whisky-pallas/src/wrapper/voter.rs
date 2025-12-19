@@ -14,7 +14,7 @@ pub enum VoterKind {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Voter {
-    inner: PallasVoter,
+    pub inner: PallasVoter,
 }
 
 impl Voter {
