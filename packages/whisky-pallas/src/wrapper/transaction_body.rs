@@ -42,7 +42,7 @@ impl<'a> TransactionBody<'a> {
         collateral_return: Option<TransactionOutput<'a>>,
         total_collateral: Option<u64>,
         reference_inputs: Option<Vec<TransactionInput>>,
-        voting_procedure: Option<Vec<VotingProdecedure>>,
+        voting_procedures: Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -62,7 +62,7 @@ impl<'a> TransactionBody<'a> {
                 collateral_return: Self::parse_collateral_return(collateral_return),
                 total_collateral: total_collateral,
                 reference_inputs: Self::parse_reference_inputs(reference_inputs),
-                voting_procedures: None,   // Placeholder implementation
+                voting_procedures: Self::parse_voting_procedures(voting_procedures),
                 proposal_procedures: None, // Placeholder implementation
                 treasury_value: None,      // Placeholder implementation
                 donation: None,            // Placeholder implementation
