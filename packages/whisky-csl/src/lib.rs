@@ -23,10 +23,12 @@
 mod constants;
 pub mod tx_builder;
 pub mod tx_parser;
+pub mod tx_prototype;
 pub mod utils;
 pub use constants::*;
 pub use tx_builder::*;
 pub use tx_parser::*;
+pub use tx_prototype::*;
 pub use utils::*;
 
 pub use cardano_serialization_lib as csl;
