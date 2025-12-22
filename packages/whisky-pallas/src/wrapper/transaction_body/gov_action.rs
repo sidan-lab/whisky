@@ -8,7 +8,7 @@ use pallas::{
     },
 };
 
-use crate::wrapper::{
+use crate::wrapper::transaction_body::{
     parse_rational_number, Constitution, GovActionId, ProtocolParamUpdate, RewardAccount,
     StakeCredential,
 };

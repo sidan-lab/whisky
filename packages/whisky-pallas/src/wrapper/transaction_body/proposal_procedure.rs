@@ -1,6 +1,6 @@
 use pallas::ledger::primitives::{conway::ProposalProcedure as PallasProposalProcedure, Fragment};
 
-use crate::wrapper::{reward_account::RewardAccount, Anchor, GovAction};
+use crate::wrapper::transaction_body::{reward_account::RewardAccount, Anchor, GovAction};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ProposalProcedure {

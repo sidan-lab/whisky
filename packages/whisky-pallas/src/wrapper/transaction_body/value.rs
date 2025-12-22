@@ -1,6 +1,6 @@
 use pallas::ledger::primitives::{conway::Value as PallasValue, Fragment};
 
-use crate::wrapper::MultiassetPositiveCoin;
+use crate::wrapper::transaction_body::MultiassetPositiveCoin;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Value {

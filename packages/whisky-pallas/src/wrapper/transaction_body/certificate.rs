@@ -1,6 +1,6 @@
 use pallas::ledger::primitives::conway::Certificate as PallasCertificate;
 
-use crate::wrapper::{Anchor, DRep, StakeCredential};
+use crate::wrapper::transaction_body::{Anchor, DRep, StakeCredential};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CertificateKind {

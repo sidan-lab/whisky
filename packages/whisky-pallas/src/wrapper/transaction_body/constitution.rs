@@ -5,7 +5,7 @@ use pallas::{
     ledger::primitives::{conway::Constitution as PallasConstitution, Fragment},
 };
 
-use crate::wrapper::Anchor;
+use crate::wrapper::transaction_body::Anchor;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Constitution {

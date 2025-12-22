@@ -12,11 +12,9 @@ use pallas::ledger::primitives::conway::{
 };
 use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
-use crate::wrapper::transaction_input::TransactionInput;
-use crate::wrapper::transaction_output::TransactionOutput;
-use crate::wrapper::{
+use crate::wrapper::transaction_body::{
     Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, ProposalProcedure, RequiredSigners,
-    Voter, VotingProdecedure,
+    TransactionInput, TransactionOutput, Voter, VotingProdecedure,
 };
 use pallas::crypto::hash::Hash;
 

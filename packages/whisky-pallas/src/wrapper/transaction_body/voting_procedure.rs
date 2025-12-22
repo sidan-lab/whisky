@@ -1,6 +1,6 @@
 use pallas::ledger::primitives::{conway::VotingProcedure as PallasVotingProcedure, Fragment};
 
-use crate::wrapper::{Anchor, Vote};
+use crate::wrapper::transaction_body::{Anchor, Vote};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct VotingProdecedure {

@@ -5,7 +5,7 @@ use pallas::ledger::primitives::babbage::{GenPostAlonzoTransactionOutput, GenTra
 use pallas::ledger::primitives::conway::TransactionOutput as PallasTransactionOutput;
 use pallas::ledger::primitives::Fragment;
 
-use crate::wrapper::{Datum, ScriptRef, Value};
+use crate::wrapper::transaction_body::{Datum, ScriptRef, Value};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TransactionOutput<'a> {
