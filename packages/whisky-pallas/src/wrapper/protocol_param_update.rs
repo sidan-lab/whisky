@@ -6,7 +6,7 @@ use pallas::ledger::primitives::conway::{
     PoolVotingThresholds as PallasPoolVotingThresholds,
 };
 use pallas::ledger::primitives::{
-    conway::ProtocolParamUpdate as PallasProtocolParameter, Fragment, RationalNumber,
+    conway::ProtocolParamUpdate as PallasProtocolParamUpdate, Fragment, RationalNumber,
 };
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct CostModels {
@@ -50,11 +50,11 @@ pub struct ExUnits {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ProtocolParameterUpdate {
-    pub inner: PallasProtocolParameter,
+pub struct ProtocolParamUpdate {
+    pub inner: PallasProtocolParamUpdate,
 }
 
-impl ProtocolParameterUpdate {
+impl ProtocolParamUpdate {
     pub fn new(
         minfee_a: Option<u64>,
         minfee_b: Option<u64>,
@@ -88,7 +88,7 @@ impl ProtocolParameterUpdate {
         minfee_refscript_cost_per_byte: Option<(u64, u64)>, // unit interval
     ) -> Result<Self, String> {
         Ok(Self {
-            inner: PallasProtocolParameter {
+            inner: PallasProtocolParamUpdate {
                 minfee_a,
                 minfee_b,
                 max_block_body_size,
@@ -136,7 +136,7 @@ impl ProtocolParameterUpdate {
     }
 
     pub fn decode_bytes(bytes: &[u8]) -> Result<Self, String> {
-        let inner = PallasProtocolParameter::decode_fragment(&bytes)
+        let inner = PallasProtocolParamUpdate::decode_fragment(&bytes)
             .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
         Ok(Self { inner })
     }
