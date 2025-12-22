@@ -10,7 +10,7 @@ pub enum StakeCredentialKind {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct StakeCredential {
-    inner: PallasStakeCredential,
+    pub inner: PallasStakeCredential,
 }
 
 impl StakeCredential {

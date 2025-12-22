@@ -6,7 +6,7 @@ use pallas::{
 };
 
 pub struct RewardAccount {
-    inner: PallasRewardAccount,
+    pub inner: PallasRewardAccount,
 }
 
 impl RewardAccount {
