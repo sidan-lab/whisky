@@ -4,18 +4,19 @@ use std::str::FromStr;
 use pallas::codec::utils::{NonEmptySet, NonZeroInt, Set};
 use pallas::ledger::primitives::conway::{
     Certificate as PallasCertificate, GovActionId as PallasGovActionId,
-    Multiasset as PallasMultiasset, NetworkId as PallasNetworkId,
-    TransactionBody as PallasTransactionBody, TransactionInput as PallasTransactionInput,
-    TransactionOutput as PallasTransactionOutput, Voter as PallasVoter,
-    VotingProcedure as PallasVotingProcedure, VotingProcedures as PallasVotingProcedures,
+    Multiasset as PallasMultiasset, NetworkId as PallasNetworkId, PositiveCoin,
+    ProposalProcedure as PallasProposalProcedure, TransactionBody as PallasTransactionBody,
+    TransactionInput as PallasTransactionInput, TransactionOutput as PallasTransactionOutput,
+    Voter as PallasVoter, VotingProcedure as PallasVotingProcedure,
+    VotingProcedures as PallasVotingProcedures,
 };
 use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
 
 use crate::wrapper::transaction_input::TransactionInput;
 use crate::wrapper::transaction_output::TransactionOutput;
 use crate::wrapper::{
-    Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, RequiredSigners, Voter,
-    VotingProdecedure,
+    Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, ProposalProcedure, RequiredSigners,
+    Voter, VotingProdecedure,
 };
 use pallas::crypto::hash::Hash;
 
@@ -43,6 +44,9 @@ impl<'a> TransactionBody<'a> {
         total_collateral: Option<u64>,
         reference_inputs: Option<Vec<TransactionInput>>,
         voting_procedures: Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>,
+        proposal_procedures: Option<Vec<ProposalProcedure>>,
+        treasury_value: Option<u64>,
+        donation: Option<u64>,
     ) -> Result<Self, String> {
         Ok(Self {
             inner: PallasTransactionBody {
@@ -63,11 +67,12 @@ impl<'a> TransactionBody<'a> {
                 total_collateral: total_collateral,
                 reference_inputs: Self::parse_reference_inputs(reference_inputs),
                 voting_procedures: Self::parse_voting_procedures(voting_procedures),
-                proposal_procedures: None, // Placeholder implementation
-                treasury_value: None,      // Placeholder implementation
-                donation: None,            // Placeholder implementation
+                proposal_procedures: Self::parse_proposal_procedures(proposal_procedures),
+                treasury_value: treasury_value,
+                donation: donation
+                    .map(|d| PositiveCoin::try_from(d).expect("Invalid donation value")),
             },
-        }) // Placeholder implementation
+        })
     }
 
     pub fn encode(&self) -> String {
@@ -193,6 +198,19 @@ impl<'a> TransactionBody<'a> {
                 }
                 Some(voting_procedures_map)
             }
+        }
+    }
+
+    fn parse_proposal_procedures(
+        proposal_procedures: Option<Vec<ProposalProcedure>>,
+    ) -> Option<NonEmptySet<PallasProposalProcedure>> {
+        match proposal_procedures {
+            Some(pp) => {
+                let pallas_pp: Vec<PallasProposalProcedure> =
+                    pp.into_iter().map(|proc| proc.inner).collect();
+                NonEmptySet::from_vec(pallas_pp)
+            }
+            None => None,
         }
     }
 }
