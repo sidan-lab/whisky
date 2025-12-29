@@ -4,9 +4,11 @@ use pallas::codec::utils::Bytes;
 use pallas::ledger::primitives::conway::PlutusScript as PallasPlutusScript;
 use pallas::ledger::primitives::Fragment;
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct PlutusScript<const VERSION: usize> {
     pub inner: PallasPlutusScript<VERSION>,
 }
+
 impl<const VERSION: usize> PlutusScript<VERSION> {
     pub fn new(script: String) -> Result<Self, String> {
         let inner = PallasPlutusScript::<VERSION>(
