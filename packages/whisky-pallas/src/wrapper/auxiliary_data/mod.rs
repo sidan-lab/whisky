@@ -1,3 +1,3 @@
-mod auxiliary_data;
+pub mod auxiliary_data;
 
 pub use auxiliary_data::*;

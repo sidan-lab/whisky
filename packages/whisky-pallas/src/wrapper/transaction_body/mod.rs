@@ -38,6 +38,7 @@ pub use required_signers::*;
 pub use reward_account::*;
 pub use script_ref::*;
 pub use stake_credential::*;
+pub use transaction::*;
 pub use transaction_body::*;
 pub use transaction_input::*;
 pub use transaction_output::*;
