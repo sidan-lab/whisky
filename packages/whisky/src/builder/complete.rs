@@ -30,7 +30,7 @@ impl TxBuilder {
                     self.inputs_for_evaluation.values().cloned().collect();
                 let tx_evaluation_result = evaluator
                     .evaluate_tx(
-                        &self.serializer.tx_hex,
+                        &self.serializer.tx_hex(),
                         &inputs_for_evaluation,
                         &self.chained_txs.clone(),
                         network,
@@ -110,14 +110,13 @@ impl TxBuilder {
                 .cmp(&tx_in_data_b.tx_hash)
                 .then_with(|| tx_in_data_a.tx_index.cmp(&tx_in_data_b.tx_index))
         });
-
-        let tx_hex = self
-            .serializer
-            .set_protocol_params(self.protocol_params.clone().unwrap_or_default())
-            .set_tx_builder_body(self.tx_builder_body.clone())
-            .serialize_tx_body()?;
+        self.serializer
+            .set_protocol_params(self.protocol_params.clone().unwrap_or_default());
+        self.serializer
+            .set_tx_builder_body(self.tx_builder_body.clone());
+        let tx_hex = self.serializer.serialize_tx_body()?;
         self.serializer.reset_builder();
-        self.serializer.tx_hex = tx_hex;
+        self.serializer.set_tx_hex(tx_hex);
         Ok(self)
     }
 

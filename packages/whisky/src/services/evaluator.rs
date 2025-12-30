@@ -8,7 +8,7 @@ pub trait TxEvaluation {
 
 impl TxEvaluation for TxBuilder {
     fn update_redeemer(&mut self, tx_evaluation: Vec<Action>) -> &mut Self {
-        let multiplier = self.serializer.tx_evaluation_multiplier_percentage;
+        let multiplier = self.serializer.tx_evaluation_multiplier_percentage();
         for redeemer_evaluation in tx_evaluation {
             match redeemer_evaluation.tag {
                 RedeemerTag::Spend => {

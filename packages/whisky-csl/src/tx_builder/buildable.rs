@@ -3,19 +3,16 @@ use whisky_common::{TxBuildable, *};
 use crate::WhiskyCSL;
 
 impl TxBuildable for WhiskyCSL {
-    fn reset_builder(&mut self) -> &mut Self {
-        self.core.reset_after_build();
-        self
+    fn reset_builder(&mut self) {
+        self.core.reset_after_build()
     }
 
-    fn set_protocol_params(&mut self, protocol_params: Protocol) -> &mut Self {
-        self.core.protocol_params = protocol_params.clone();
-        self
+    fn set_protocol_params(&mut self, protocol_params: Protocol) {
+        self.core.protocol_params = protocol_params.clone()
     }
 
-    fn set_tx_builder_body(&mut self, tx_builder_body: TxBuilderBody) -> &mut Self {
-        self.tx_builder_body = tx_builder_body.clone();
-        self
+    fn set_tx_builder_body(&mut self, tx_builder_body: TxBuilderBody) {
+        self.tx_builder_body = tx_builder_body.clone()
     }
 
     /// ## Transaction building method
@@ -99,7 +96,19 @@ impl TxBuildable for WhiskyCSL {
         Ok(self.core.tx_hex.to_string())
     }
 
+    fn set_tx_hex(&mut self, tx_hex: String) {
+        self.core.tx_hex = tx_hex;
+    }
+
     fn tx_hex(&mut self) -> String {
         self.core.tx_hex.clone()
+    }
+
+    fn tx_evaluation_multiplier_percentage(&self) -> u64 {
+        self.tx_evaluation_multiplier_percentage
+    }
+
+    fn add_tx_in(&mut self, input: PubKeyTxIn) -> Result<(), WError> {
+        self.core.add_tx_in(input)
     }
 }
