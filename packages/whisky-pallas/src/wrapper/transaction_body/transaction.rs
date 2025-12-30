@@ -6,6 +6,7 @@ use pallas::{
     codec::utils::{KeepRaw, Nullable},
     ledger::primitives::{conway::Tx as PallasTx, Fragment},
 };
+use whisky_common::WError;
 
 #[derive(Clone, Debug)]
 pub struct Transaction<'a> {
@@ -18,7 +19,7 @@ impl<'a> Transaction<'a> {
         transaction_witness_set: WitnessSet<'a>,
         success: bool,
         auxiliary_data: Option<AuxiliaryData>,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WError> {
         let inner = PallasTx {
             transaction_body: KeepRaw::from(transaction_body.inner),
             transaction_witness_set: KeepRaw::from(transaction_witness_set.inner),
@@ -32,17 +33,25 @@ impl<'a> Transaction<'a> {
         Ok(Self { inner })
     }
 
-    pub fn encode(&self) -> String {
-        hex::encode(
-            self.inner
-                .encode_fragment()
-                .expect("encoding failed at Transaction"),
-        )
+    pub fn encode(&self) -> Result<String, WError> {
+        self.inner
+            .encode_fragment()
+            .map(|bytes| hex::encode(bytes))
+            .map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Encoding transaction:",
+                    "Failed to encode fragment",
+                )
+            })
     }
 
-    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, String> {
-        let inner = PallasTx::decode_fragment(&bytes)
-            .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
+    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, WError> {
+        let inner = PallasTx::decode_fragment(&bytes).map_err(|e| {
+            WError::new(
+                "WhiskyPallas - Decoding transaction:",
+                &format!("Fragment decode error: {}", e.to_string()),
+            )
+        })?;
         Ok(Self { inner })
     }
 }

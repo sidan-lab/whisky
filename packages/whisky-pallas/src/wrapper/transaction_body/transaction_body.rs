@@ -11,6 +11,7 @@ use pallas::ledger::primitives::conway::{
     VotingProcedures as PallasVotingProcedures,
 };
 use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
+use whisky_common::WError;
 
 use crate::wrapper::transaction_body::{
     Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, ProposalProcedure, RequiredSigners,
@@ -45,7 +46,18 @@ impl<'a> TransactionBody<'a> {
         proposal_procedures: Option<Vec<ProposalProcedure>>,
         treasury_value: Option<u64>,
         donation: Option<u64>,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WError> {
+        let donation_coin = if let Some(d) = donation {
+            Some(PositiveCoin::try_from(d).map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Creating transaction body:",
+                    "Invalid donation value",
+                )
+            })?)
+        } else {
+            None
+        };
+
         Ok(Self {
             inner: PallasTransactionBody {
                 inputs: Self::parse_inputs(inputs),
@@ -54,10 +66,10 @@ impl<'a> TransactionBody<'a> {
                 ttl: ttl,
                 certificates: Self::parse_certificates(certificates),
                 withdrawals: Self::parse_withdrawals(withdrawals),
-                auxiliary_data_hash: Self::parse_auxiliary_data_hash(auxiliary_data_hash),
+                auxiliary_data_hash: Self::parse_auxiliary_data_hash(auxiliary_data_hash)?,
                 validity_interval_start: validity_interval_start,
                 mint: Self::parse_mint(mint),
-                script_data_hash: Self::parse_script_data_hash(script_data_hash),
+                script_data_hash: Self::parse_script_data_hash(script_data_hash)?,
                 collateral: Self::parse_collateral(collateral),
                 required_signers: Self::parse_required_signers(required_signers),
                 network_id: Self::parse_network_id(network_id),
@@ -67,23 +79,30 @@ impl<'a> TransactionBody<'a> {
                 voting_procedures: Self::parse_voting_procedures(voting_procedures),
                 proposal_procedures: Self::parse_proposal_procedures(proposal_procedures),
                 treasury_value: treasury_value,
-                donation: donation
-                    .map(|d| PositiveCoin::try_from(d).expect("Invalid donation value")),
+                donation: donation_coin,
             },
         })
     }
 
-    pub fn encode(&self) -> String {
-        hex::encode(
-            self.inner
-                .encode_fragment()
-                .expect("encoding failed at TransactionBody"),
-        )
+    pub fn encode(&self) -> Result<String, WError> {
+        self.inner
+            .encode_fragment()
+            .map(|bytes| hex::encode(bytes))
+            .map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Encoding transaction body:",
+                    "Failed to encode fragment",
+                )
+            })
     }
 
-    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, String> {
-        let inner = PallasTransactionBody::decode_fragment(&bytes)
-            .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
+    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, WError> {
+        let inner = PallasTransactionBody::decode_fragment(bytes).map_err(|e| {
+            WError::new(
+                "WhiskyPallas - Decoding transaction body:",
+                &format!("Fragment decode error: {}", e.to_string()),
+            )
+        })?;
         Ok(Self { inner })
     }
 
@@ -116,18 +135,36 @@ impl<'a> TransactionBody<'a> {
         withdrawals.map(|wds| BTreeMap::from_iter(wds.into_iter().map(|(ra, coin)| (ra, coin))))
     }
 
-    fn parse_auxiliary_data_hash(auxiliary_data_hash: Option<String>) -> Option<Hash<32>> {
-        auxiliary_data_hash
-            .map(|hash_str| Hash::from_str(&hash_str).expect("Invalid auxiliary hash"))
+    fn parse_auxiliary_data_hash(
+        auxiliary_data_hash: Option<String>,
+    ) -> Result<Option<Hash<32>>, WError> {
+        match auxiliary_data_hash {
+            Some(hash_str) => Hash::from_str(&hash_str).map(Some).map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Parsing auxiliary data hash:",
+                    "Invalid auxiliary hash format",
+                )
+            }),
+            None => Ok(None),
+        }
     }
 
     fn parse_mint(mint: Option<MultiassetNonZeroInt>) -> Option<PallasMultiasset<NonZeroInt>> {
         mint.map(|ma| ma.inner)
     }
 
-    fn parse_script_data_hash(script_data_hash: Option<String>) -> Option<Hash<32>> {
-        script_data_hash
-            .map(|hash_str| Hash::from_str(&hash_str).expect("Invalid script data hash"))
+    fn parse_script_data_hash(
+        script_data_hash: Option<String>,
+    ) -> Result<Option<Hash<32>>, WError> {
+        match script_data_hash {
+            Some(hash_str) => Hash::from_str(&hash_str).map(Some).map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Parsing script data hash:",
+                    "Invalid script data hash format",
+                )
+            }),
+            None => Ok(None),
+        }
     }
 
     fn parse_collateral(

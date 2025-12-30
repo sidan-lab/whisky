@@ -14,6 +14,7 @@ use pallas::{
         Fragment,
     },
 };
+use whisky_common::WError;
 
 pub struct WitnessSet<'a> {
     pub inner: PallasWitnessSet<'a>,
@@ -29,11 +30,17 @@ impl<'a> WitnessSet<'a> {
         redeemer: Option<Vec<Redeemer>>,
         plutus_v2_script: Option<Vec<PlutusScript<2>>>,
         plutus_v3_script: Option<Vec<PlutusScript<3>>>,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WError> {
         let pallas_vkeywitness: Option<NonEmptySet<PallasVKeyWitness>> = match vkeywitness {
             Some(wits) => Some(
-                NonEmptySet::from_vec(wits.into_iter().map(|w| w.inner).collect())
-                    .expect("VKeyWitness NonEmptySet creation failed"),
+                NonEmptySet::from_vec(wits.into_iter().map(|w| w.inner).collect()).ok_or_else(
+                    || {
+                        WError::new(
+                            "WhiskyPallas - Creating witness set:",
+                            "VKeyWitness NonEmptySet creation failed",
+                        )
+                    },
+                )?,
             ),
             None => None,
         };
@@ -47,7 +54,12 @@ impl<'a> WitnessSet<'a> {
                             .map(|s| KeepRaw::from(s.inner))
                             .collect(),
                     )
-                    .expect("NativeScript NonEmptySet creation failed"),
+                    .ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Creating witness set:",
+                            "NativeScript NonEmptySet creation failed",
+                        )
+                    })?,
                 ),
                 None => None,
             };
@@ -55,8 +67,14 @@ impl<'a> WitnessSet<'a> {
         let pallas_bootstrap_witness: Option<NonEmptySet<PallasBootstrapWitness>> =
             match bootstrap_witness {
                 Some(wits) => Some(
-                    NonEmptySet::from_vec(wits.into_iter().map(|w| w.inner).collect())
-                        .expect("BootstrapWitness NonEmptySet creation failed"),
+                    NonEmptySet::from_vec(wits.into_iter().map(|w| w.inner).collect()).ok_or_else(
+                        || {
+                            WError::new(
+                                "WhiskyPallas - Creating witness set:",
+                                "BootstrapWitness NonEmptySet creation failed",
+                            )
+                        },
+                    )?,
                 ),
                 None => None,
             };
@@ -65,7 +83,12 @@ impl<'a> WitnessSet<'a> {
             match plutus_v1_script {
                 Some(scripts) => Some(
                     NonEmptySet::from_vec(scripts.into_iter().map(|s| s.inner).collect())
-                        .expect("PlutusV1Script NonEmptySet creation failed"),
+                        .ok_or_else(|| {
+                            WError::new(
+                                "WhiskyPallas - Creating witness set:",
+                                "PlutusV1Script NonEmptySet creation failed",
+                            )
+                        })?,
                 ),
                 None => None,
             };
@@ -79,7 +102,12 @@ impl<'a> WitnessSet<'a> {
                             .map(|d| KeepRaw::from(d.inner))
                             .collect(),
                     )
-                    .expect("PlutusData NonEmptySet creation failed"),
+                    .ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Creating witness set:",
+                            "PlutusData NonEmptySet creation failed",
+                        )
+                    })?,
                 )),
                 None => None,
             };
@@ -95,7 +123,12 @@ impl<'a> WitnessSet<'a> {
             match plutus_v2_script {
                 Some(scripts) => Some(
                     NonEmptySet::from_vec(scripts.into_iter().map(|s| s.inner).collect())
-                        .expect("PlutusV2Script NonEmptySet creation failed"),
+                        .ok_or_else(|| {
+                            WError::new(
+                                "WhiskyPallas - Creating witness set:",
+                                "PlutusV2Script NonEmptySet creation failed",
+                            )
+                        })?,
                 ),
                 None => None,
             };
@@ -104,7 +137,12 @@ impl<'a> WitnessSet<'a> {
             match plutus_v3_script {
                 Some(scripts) => Some(
                     NonEmptySet::from_vec(scripts.into_iter().map(|s| s.inner).collect())
-                        .expect("PlutusV3Script NonEmptySet creation failed"),
+                        .ok_or_else(|| {
+                            WError::new(
+                                "WhiskyPallas - Creating witness set:",
+                                "PlutusV3Script NonEmptySet creation failed",
+                            )
+                        })?,
                 ),
                 None => None,
             };
@@ -123,17 +161,25 @@ impl<'a> WitnessSet<'a> {
         Ok(Self { inner })
     }
 
-    pub fn encode(&self) -> String {
-        hex::encode(
-            self.inner
-                .encode_fragment()
-                .expect("encoding failed at WitnessSet"),
-        )
+    pub fn encode(&self) -> Result<String, WError> {
+        self.inner
+            .encode_fragment()
+            .map(|bytes| hex::encode(bytes))
+            .map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Encoding witness set:",
+                    "Failed to encode fragment",
+                )
+            })
     }
 
-    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, String> {
-        let inner = PallasWitnessSet::decode_fragment(&bytes)
-            .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
+    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, WError> {
+        let inner = PallasWitnessSet::decode_fragment(&bytes).map_err(|e| {
+            WError::new(
+                "WhiskyPallas - Decoding witness set:",
+                &format!("Fragment decode error: {}", e.to_string()),
+            )
+        })?;
         Ok(Self { inner })
     }
 }
