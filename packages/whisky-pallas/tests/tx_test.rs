@@ -1,6 +1,5 @@
 use whisky_common::{
-    Asset, Budget, DatumSource, InlineDatumSource, ProvidedScriptSource, PubKeyTxIn, Redeemer,
-    ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange,
+    Asset, Budget, Datum, DatumSource, InlineDatumSource, Output, OutputScriptSource, ProvidedScriptSource, PubKeyTxIn, Redeemer, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange
 };
 use whisky_pallas::tx_builder::core_pallas::CorePallas;
 
@@ -40,7 +39,26 @@ fn test_from_tx_builder_body() {
                 })
             }
         })],
-        outputs: vec![],
+        outputs: vec![
+            Output {
+                address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
+                amount: vec![Asset::new_from_str("lovelace", "4633697637")],
+                datum: Some(Datum::Inline("d87980".to_string())),
+                reference_script: Some(whisky_common::OutputScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                    script_cbor: "525101010023259800a518a4d136564004ae69".to_string(),
+                    language_version: whisky_common::LanguageVersion::V3
+                })),
+            },
+            Output {
+                address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
+                amount: vec![Asset::new_from_str("lovelace", "4633697637")],
+                datum: Some(Datum::Hash("d87980".to_string())),
+                reference_script: Some(whisky_common::OutputScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                    script_cbor: "525101010023259800a518a4d136564004ae69".to_string(),
+                    language_version: whisky_common::LanguageVersion::V3
+                })),
+            }
+        ],
         collaterals: vec![],
         reference_inputs: vec![],
         withdrawals: vec![],
@@ -63,6 +81,5 @@ fn test_from_tx_builder_body() {
     };
     let mut core_pallas = CorePallas::new(tx_builder_body, 100);
     let result = core_pallas.build_tx();
-    assert!(result.is_ok());
     println!("Serialized transaction hex: {}", result.unwrap());
 }

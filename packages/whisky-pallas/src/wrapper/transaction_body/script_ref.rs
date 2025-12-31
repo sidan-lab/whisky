@@ -7,6 +7,7 @@ use pallas::{
         Fragment, PlutusScript,
     },
 };
+use whisky_common::WError;
 
 #[derive(Debug, Clone)]
 pub enum ScriptRefKind {
@@ -22,33 +23,53 @@ pub struct ScriptRef<'a> {
 }
 
 impl<'a> ScriptRef<'a> {
-    pub fn new(script_ref_kind: ScriptRefKind) -> Result<Self, String> {
+    pub fn new(script_ref_kind: ScriptRefKind) -> Result<Self, WError> {
         let pallas_script_ref = match script_ref_kind {
             ScriptRefKind::NativeScript { native_script_hex } => {
-                let bytes = hex::decode(native_script_hex)
-                    .map_err(|e| format!("Hex decode error: {}", e))?;
+                let bytes = hex::decode(native_script_hex).map_err(|e| {
+                    WError::new(
+                        "WhiskyPallas - Creating script ref:",
+                        &format!("Hex decode error: {}", e),
+                    )
+                })?;
                 PallasScriptRef::NativeScript(KeepRaw::from(
-                    NativeScript::decode_fragment(&bytes)
-                        .map_err(|e| format!("Fragment decode error: {}", e))?,
+                    NativeScript::decode_fragment(&bytes).map_err(|e| {
+                        WError::new(
+                            "WhiskyPallas - Creating script ref:",
+                            &format!("Native script fragment decode error: {}", e),
+                        )
+                    })?,
                 ))
             }
             ScriptRefKind::PlutusV1Script {
                 plutus_v1_script_hex,
             } => PallasScriptRef::PlutusV1Script(PlutusScript::<1>(
-                Bytes::from_str(&plutus_v1_script_hex)
-                    .map_err(|e| format!("Invalid Plutus V1 script bytes: {}", e))?,
+                Bytes::from_str(&plutus_v1_script_hex).map_err(|e| {
+                    WError::new(
+                        "WhiskyPallas - Creating script ref:",
+                        &format!("Invalid Plutus V1 script bytes: {}", e),
+                    )
+                })?,
             )),
             ScriptRefKind::PlutusV2Script {
                 plutus_v2_script_hex,
             } => PallasScriptRef::PlutusV2Script(PlutusScript::<2>(
-                Bytes::from_str(&plutus_v2_script_hex)
-                    .map_err(|e| format!("Invalid Plutus V2 script bytes: {}", e))?,
+                Bytes::from_str(&plutus_v2_script_hex).map_err(|e| {
+                    WError::new(
+                        "WhiskyPallas - Creating script ref:",
+                        &format!("Invalid Plutus V2 script bytes: {}", e),
+                    )
+                })?,
             )),
             ScriptRefKind::PlutusV3Script {
                 plutus_v3_script_hex,
             } => PallasScriptRef::PlutusV3Script(PlutusScript::<3>(
-                Bytes::from_str(&plutus_v3_script_hex)
-                    .map_err(|e| format!("Invalid Plutus V3 script bytes: {}", e))?,
+                Bytes::from_str(&plutus_v3_script_hex).map_err(|e| {
+                    WError::new(
+                        "WhiskyPallas - Creating script ref:",
+                        &format!("Invalid Plutus V3 script bytes: {}", e),
+                    )
+                })?,
             )),
         };
 

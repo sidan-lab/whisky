@@ -419,9 +419,9 @@ checksum = "d86b93f97252c47b41663388e6d155714a9d0c398b99f1005cbc5f978b29f445"
 
 [[package]]
 name = "bech32"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d965446196e3b7decd44aa7ee49e31d630118f90ef12f97900f262eb915c951d"
+checksum = "32637268377fc7b10a8c6d51de3e7fba1ce5dd371a96e342b34e6078db558e7f"
 
 [[package]]
 name = "bitflags"
@@ -759,7 +759,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5d67624775b7d97c81ad5aefed9eebbb6684551a6efb35323b6e113ad0de504"
 dependencies = [
  "anyhow",
- "bech32 0.11.0",
+ "bech32 0.11.1",
  "blst",
  "bs58",
  "cardano-serialization-lib",
@@ -4391,6 +4391,7 @@ dependencies = [
 name = "whisky-pallas"
 version = "1.0.0"
 dependencies = [
+ "bech32 0.11.1",
  "hex",
  "ouroboros",
  "pallas",

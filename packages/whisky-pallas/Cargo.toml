@@ -12,4 +12,5 @@ hex = "0.4.3"
 pallas = "1.0.0-alpha.3"
 serde = "1.0.219"
 ouroboros = "0.18"
+bech32 = "0.11.1"
 whisky-common = { version = "1.0.16", path = "../whisky-common" }
