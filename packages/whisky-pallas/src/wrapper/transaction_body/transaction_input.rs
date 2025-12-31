@@ -3,7 +3,7 @@ use pallas::ledger::primitives::conway::TransactionInput as PallasTransactionInp
 use pallas::ledger::primitives::Fragment;
 use whisky_common::WError;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Hash, Eq, Debug, PartialEq, Clone)]
 pub struct TransactionInput {
     pub inner: PallasTransactionInput,
 }

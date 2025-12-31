@@ -1,4 +1,5 @@
 use pallas::ledger::primitives::{conway::Redeemer as PallasRedeemer, Fragment};
+use whisky_common::WError;
 
 use crate::wrapper::witness_set::plutus_data::PlutusData;
 
@@ -27,7 +28,7 @@ impl Redeemer {
         index: u32,
         data: PlutusData,
         ex_units: ExUnits,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, WError> {
         let pallas_tag = match tag {
             RedeemerTag::Spend => pallas::ledger::primitives::conway::RedeemerTag::Spend,
             RedeemerTag::Mint => pallas::ledger::primitives::conway::RedeemerTag::Mint,
@@ -48,17 +49,25 @@ impl Redeemer {
         Ok(Self { inner })
     }
 
-    pub fn encode(&self) -> String {
-        hex::encode(
-            self.inner
-                .encode_fragment()
-                .expect("encoding failed at Redeemer"),
-        )
+    pub fn encode(&self) -> Result<String, WError> {
+        self.inner
+            .encode_fragment()
+            .map(|bytes| hex::encode(bytes))
+            .map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Encoding redeemer:",
+                    "Failed to encode fragment",
+                )
+            })
     }
 
-    pub fn decode_bytes(bytes: &[u8]) -> Result<Self, String> {
-        let inner = PallasRedeemer::decode_fragment(&bytes)
-            .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
+    pub fn decode_bytes(bytes: &[u8]) -> Result<Self, WError> {
+        let inner = PallasRedeemer::decode_fragment(&bytes).map_err(|e| {
+            WError::new(
+                "WhiskyPallas - Decoding redeemer:",
+                &format!("Fragment decode error: {}", e.to_string()),
+            )
+        })?;
         Ok(Self { inner })
     }
 }

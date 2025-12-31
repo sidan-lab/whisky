@@ -22,5 +22,5 @@ pub fn convert_inputs(inputs: &Vec<TxIn>) -> Result<Vec<TransactionInput>, WErro
             };
             TransactionInput::new(tx_hash, tx_index)
         })
-        .collect::<Result<Vec<_>, _>>()
+        .collect::<Result<Vec<TransactionInput>, WError>>()
 }
