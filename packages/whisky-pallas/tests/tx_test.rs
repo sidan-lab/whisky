@@ -1,7 +1,9 @@
 use whisky_common::{
-    Asset, Budget, Datum, DatumSource, InlineDatumSource, MintItem, MintParameter, Output,
-    ProvidedScriptSource, PubKeyTxIn, Redeemer, ScriptMint, ScriptSource, ScriptTxIn,
-    ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange,
+    Asset, Budget,
+    Certificate::{self, BasicCertificate},
+    CertificateType, DRepRegistration, Datum, DatumSource, InlineDatumSource, MintItem,
+    MintParameter, Output, ProvidedScriptSource, PubKeyTxIn, Redeemer, ScriptMint, ScriptSource,
+    ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange,
 };
 use whisky_pallas::{
     tx_builder::core_pallas::CorePallas, wrapper::transaction_body::DRep,
@@ -83,7 +85,13 @@ fn test_from_tx_builder_body() {
                 })),
             }),
         ],
-        certificates: vec![],
+        certificates: vec![
+            Certificate::BasicCertificate(CertificateType::DRepRegistration(DRepRegistration {
+                drep_id: "drep1yfvaekm32jzaway9kmfl6mpgjvv05yj26gyzdrywqxuv5cqtzay4v".to_string(),
+                coin: 5000000,
+                anchor: None,
+            })),
+        ],
         votes: vec![],
         change_address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
         fee: Some(10000.to_string()),
