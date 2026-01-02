@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
-use pallas::ledger::primitives::Fragment;
+use pallas::{interop::utxorpc::spec::cardano::certificate, ledger::primitives::Fragment};
 use whisky_common::{
-    DatumSource::InlineDatumSource,
-    DatumSource::ProvidedDatumSource,
+    Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
+    CertificateType,
+    DatumSource::{self, InlineDatumSource, ProvidedDatumSource},
     LanguageVersion,
-    ScriptSource::{InlineScriptSource, ProvidedScriptSource},
+    ScriptSource::{self, InlineScriptSource, ProvidedScriptSource},
     SimpleScriptTxInParameter::{InlineSimpleScriptSource, ProvidedSimpleScriptSource},
     TxBuilderBody, TxIn, WError,
 };
@@ -14,8 +15,10 @@ use crate::{
     converter::{bytes_from_bech32, convert_value},
     wrapper::{
         transaction_body::{
-            Datum, DatumKind, ScriptRef, ScriptRefKind, Transaction, TransactionBody,
-            TransactionInput, TransactionOutput, Value,
+            Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind, PoolMetadata,
+            Relay, RelayKind, RewardAccount, ScriptRef, ScriptRefKind, StakeCredential,
+            StakeCredentialKind, Transaction, TransactionBody, TransactionInput, TransactionOutput,
+            Value,
         },
         witness_set::{
             native_script::NativeScript,
@@ -41,7 +44,8 @@ pub struct CorePallas {
     pub plutus_v1_scripts_vec: Vec<PlutusScript<1>>,
     pub plutus_v2_scripts_vec: Vec<PlutusScript<2>>,
     pub plutus_v3_scripts_vec: Vec<PlutusScript<3>>,
-    pub redeemers_map: HashMap<TransactionInput, Redeemer>,
+    pub input_redeemers_vec: Vec<(TransactionInput, Redeemer)>,
+    pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
     pub plutus_data_vec: Vec<PlutusData>,
 
     // Potential reference inputs (shouldn't overlap with actual inputs)
@@ -59,15 +63,16 @@ impl CorePallas {
             plutus_v1_scripts_vec: vec![],
             plutus_v2_scripts_vec: vec![],
             plutus_v3_scripts_vec: vec![],
-            redeemers_map: HashMap::new(),
+            input_redeemers_vec: vec![],
+            certificate_redeemers_vec: vec![],
             plutus_data_vec: vec![],
             ref_inputs_vec: vec![],
         }
     }
 
-    fn add_inputs(&mut self) -> Result<Vec<TransactionInput>, WError> {
+    fn process_inputs(&mut self) -> Result<Vec<TransactionInput>, WError> {
         let mut inputs: Vec<TransactionInput> = vec![];
-        for tx_in in &self.tx_builder_body.inputs {
+        for tx_in in self.tx_builder_body.inputs.clone() {
             match tx_in {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input = TransactionInput::new(
@@ -149,48 +154,11 @@ impl CorePallas {
                         )
                     })?;
 
-                    match script_source {
-                        ProvidedScriptSource(provided_script_source) => {
-                            match provided_script_source.language_version {
-                                LanguageVersion::V1 => {
-                                    self.plutus_v1_scripts_vec.push(PlutusScript::<1>::new(
-                                        provided_script_source.script_cbor,
-                                    )?);
-                                }
-                                LanguageVersion::V2 => {
-                                    self.plutus_v2_scripts_vec.push(PlutusScript::<2>::new(
-                                        provided_script_source.script_cbor,
-                                    )?);
-                                }
-                                LanguageVersion::V3 => {
-                                    self.plutus_v3_scripts_vec.push(PlutusScript::<3>::new(
-                                        provided_script_source.script_cbor,
-                                    )?);
-                                }
-                            }
-                        }
-                        InlineScriptSource(inline_script_source) => {
-                            self.ref_inputs_vec.push(TransactionInput::new(
-                                &inline_script_source.ref_tx_in.tx_hash,
-                                inline_script_source.ref_tx_in.tx_index.into(),
-                            )?)
-                        }
-                    }
+                    self.process_script_source(script_source)?;
 
-                    match datum_source {
-                        ProvidedDatumSource(provided_datum_source) => {
-                            self.plutus_data_vec
-                                .push(PlutusData::new(provided_datum_source.data)?);
-                        }
-                        InlineDatumSource(inline_datum_source) => {
-                            self.ref_inputs_vec.push(TransactionInput::new(
-                                &inline_datum_source.tx_hash,
-                                inline_datum_source.tx_index.into(),
-                            )?)
-                        }
-                    }
+                    self.process_datum_source(datum_source)?;
 
-                    self.redeemers_map.insert(
+                    self.input_redeemers_vec.push((
                         input.clone(),
                         Redeemer::new(
                             RedeemerTag::Spend,
@@ -201,14 +169,14 @@ impl CorePallas {
                                 steps: redeemer.ex_units.steps,
                             },
                         )?,
-                    );
+                    ));
                 }
             }
         }
         Ok(inputs)
     }
 
-    fn add_outputs(&mut self) -> Result<Vec<TransactionOutput<'_>>, WError> {
+    fn process_outputs(&mut self) -> Result<Vec<TransactionOutput<'static>>, WError> {
         let mut outputs: Vec<TransactionOutput> = vec![];
         let whisky_outputs = self.tx_builder_body.outputs.clone();
         for output in &whisky_outputs {
@@ -282,12 +250,455 @@ impl CorePallas {
         Ok(outputs)
     }
 
+    fn process_fee(&mut self) -> Result<u64, WError> {
+        self.tx_builder_body
+            .fee
+            .clone()
+            .ok_or_else(|| {
+                WError::new(
+                    "WhiskyPallas - Adding fee:",
+                    "Fee is missing from TxBuilderBody",
+                )
+            })?
+            .parse::<u64>()
+            .map_err(|e| {
+                WError::new(
+                    "WhiskyPallas - Adding fee:",
+                    &format!("Failed to parse fee: {}", e.to_string()),
+                )
+            })
+    }
+
+    fn process_certificates(&mut self) -> Result<Option<Vec<Certificate>>, WError> {
+        let mut certificates: Vec<Certificate> = vec![];
+
+        fn process_certificate_type(cert_type: &CertificateType) -> Result<Certificate, WError> {
+            match cert_type {
+                CertificateType::RegisterStake(register_stake) => {
+                    Ok(Certificate::new(CertificateKind::StakeRegistration {
+                        stake_credential: StakeCredential::from_bech32(
+                            &register_stake.stake_key_address,
+                        )?,
+                    }))?
+                }
+                CertificateType::DeregisterStake(deregister_stake) => {
+                    Ok(Certificate::new(CertificateKind::StakeDeregistration {
+                        stake_credential: StakeCredential::from_bech32(
+                            &deregister_stake.stake_key_address,
+                        )?,
+                    }))?
+                }
+                CertificateType::DelegateStake(delegate_stake) => {
+                    Ok(Certificate::new(CertificateKind::StakeDelegation {
+                        stake_credential: StakeCredential::from_bech32(
+                            &delegate_stake.stake_key_address,
+                        )?,
+                        pool_key_hash: delegate_stake.pool_id.clone(),
+                    }))?
+                }
+                CertificateType::RegisterPool(register_pool) => {
+                    let mut relays: Vec<Relay> = vec![];
+                    for relay in &register_pool.pool_params.relays {
+                        match relay {
+                            whisky_common::Relay::SingleHostAddr(single_host_addr) => {
+                                relays.push(Relay::new(RelayKind::SingleHostAddr(
+                                    single_host_addr.port.map(|p| p.into()),
+                                    single_host_addr.ipv4.clone(),
+                                    single_host_addr.ipv6.clone(),
+                                ))?);
+                            }
+                            whisky_common::Relay::SingleHostName(single_host_name) => {
+                                relays.push(Relay::new(RelayKind::SingleHostName(
+                                    single_host_name.port.map(|p| p.into()),
+                                    single_host_name.domain_name.clone(),
+                                ))?);
+                            }
+                            whisky_common::Relay::MultiHostName(multi_host_name) => {
+                                relays.push(Relay::new(RelayKind::MultiHostName(
+                                    multi_host_name.domain_name.clone(),
+                                ))?);
+                            }
+                        }
+                    }
+                    Ok(Certificate::new(CertificateKind::PoolRegistration {
+                        operator: register_pool.pool_params.operator.clone(),
+                        vrf_keyhash: register_pool.pool_params.vrf_key_hash.clone(),
+                        pledge: register_pool
+                            .pool_params
+                            .pledge
+                            .clone()
+                            .parse::<u64>()
+                            .map_err(|e| {
+                                WError::new(
+                                    "Certificate - Pool Registration: Invalid pledge amount",
+                                    &e.to_string(),
+                                )
+                            })?,
+                        cost: register_pool
+                            .pool_params
+                            .cost
+                            .clone()
+                            .parse::<u64>()
+                            .map_err(|e| {
+                                WError::new(
+                                    "Certificate - Pool Registration: Invalid cost amount",
+                                    &e.to_string(),
+                                )
+                            })?,
+                        margin: register_pool.pool_params.margin,
+                        reward_account: RewardAccount::new(bytes_from_bech32(
+                            &register_pool.pool_params.reward_address,
+                        )?)?,
+                        pool_owners: register_pool.pool_params.owners.clone(),
+                        relays,
+                        pool_metadata: register_pool.pool_params.metadata.clone().map(|metadata| {
+                            PoolMetadata::new(metadata.url, metadata.hash).unwrap()
+                        }),
+                    }))?
+                }
+                CertificateType::RetirePool(retire_pool) => {
+                    Ok(Certificate::new(CertificateKind::PoolRetirement {
+                        pool_key_hash: retire_pool.pool_id.clone(),
+                        epoch: retire_pool.epoch.into(),
+                    }))?
+                }
+                CertificateType::VoteDelegation(vote_delegation) => {
+                    let drep: DRep = match &vote_delegation.drep {
+                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                        whisky_common::DRep::AlwaysNoConfidence => {
+                            DRep::new(DRepKind::NoConfidence)?
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::VoteDeleg {
+                        stake_credential: StakeCredential::from_bech32(
+                            &vote_delegation.stake_key_address,
+                        )?,
+                        drep,
+                    }))?
+                }
+                CertificateType::StakeAndVoteDelegation(stake_and_vote_delegation) => {
+                    let drep: DRep = match &stake_and_vote_delegation.drep {
+                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                        whisky_common::DRep::AlwaysNoConfidence => {
+                            DRep::new(DRepKind::NoConfidence)?
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::StakeVoteDeleg {
+                        stake_credential: StakeCredential::from_bech32(
+                            &stake_and_vote_delegation.stake_key_address,
+                        )?,
+                        pool_key_hash: stake_and_vote_delegation.pool_key_hash.clone(),
+                        drep,
+                    }))?
+                }
+                CertificateType::StakeRegistrationAndDelegation(
+                    stake_registration_and_delegation,
+                ) => Ok(Certificate::new(CertificateKind::StakeRegDeleg {
+                    stake_credential: StakeCredential::from_bech32(
+                        &stake_registration_and_delegation.stake_key_address,
+                    )?,
+                    pool_key_hash: stake_registration_and_delegation.pool_key_hash.clone(),
+                    amount: stake_registration_and_delegation.coin.into(),
+                }))?,
+                CertificateType::VoteRegistrationAndDelegation(
+                    vote_registration_and_delegation,
+                ) => {
+                    let drep: DRep = match &vote_registration_and_delegation.drep {
+                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                        whisky_common::DRep::AlwaysNoConfidence => {
+                            DRep::new(DRepKind::NoConfidence)?
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::VoteRegDeleg {
+                        stake_credential: StakeCredential::from_bech32(
+                            &vote_registration_and_delegation.stake_key_address,
+                        )?,
+                        drep,
+                        amount: vote_registration_and_delegation.coin.into(),
+                    }))?
+                }
+                CertificateType::StakeVoteRegistrationAndDelegation(
+                    stake_vote_registration_and_delegation,
+                ) => {
+                    let drep: DRep = match &stake_vote_registration_and_delegation.drep {
+                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                        whisky_common::DRep::AlwaysNoConfidence => {
+                            DRep::new(DRepKind::NoConfidence)?
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::StakeVoteRegDeleg {
+                        stake_credential: StakeCredential::from_bech32(
+                            &stake_vote_registration_and_delegation.stake_key_address,
+                        )?,
+                        pool_key_hash: stake_vote_registration_and_delegation.pool_key_hash.clone(),
+                        drep,
+                        amount: stake_vote_registration_and_delegation.coin.into(),
+                    }))?
+                }
+                CertificateType::CommitteeHotAuth(committee_hot_auth) => {
+                    Ok(Certificate::new(CertificateKind::AuthCommitteeHot {
+                        committee_cold_cred: StakeCredential::from_bech32(
+                            &committee_hot_auth.committee_cold_key_address,
+                        )?,
+                        committee_hot_cred: StakeCredential::from_bech32(
+                            &committee_hot_auth.committee_hot_key_address,
+                        )?,
+                    }))?
+                }
+                CertificateType::CommitteeColdResign(committee_cold_resign) => {
+                    let anchor: Option<Anchor> = match &committee_cold_resign.anchor {
+                        Some(anchor_data) => Some(Anchor::new(
+                            anchor_data.anchor_url.clone(),
+                            anchor_data.anchor_data_hash.clone(),
+                        )?),
+                        None => None,
+                    };
+
+                    Ok(Certificate::new(CertificateKind::ResignCommitteeCold {
+                        committee_cold_cred: StakeCredential::from_bech32(
+                            &committee_cold_resign.committee_cold_key_address,
+                        )?,
+                        anchor,
+                    }))?
+                }
+                CertificateType::DRepRegistration(drep_registration) => {
+                    let drep: DRep = DRep::from_bech32(&drep_registration.drep_id)?;
+                    let drep_cred = match &drep.inner {
+                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                            StakeCredential::new(StakeCredentialKind::KeyHash {
+                                key_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                            StakeCredential::new(StakeCredentialKind::ScriptHash {
+                                script_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        _ => {
+                            return Err(WError::new(
+                                "Certificate - DRep Registration:",
+                                "DRep must be either Key or Script type",
+                            ));
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::RegDRepCert {
+                        drep_cred,
+                        amount: drep_registration.coin.into(),
+                        anchor: drep_registration.anchor.clone().map(|anchor_data| {
+                            Anchor::new(anchor_data.anchor_url, anchor_data.anchor_data_hash)
+                                .unwrap()
+                        }),
+                    }))?
+                }
+                CertificateType::DRepDeregistration(drep_deregistration) => {
+                    let drep: DRep = DRep::from_bech32(&drep_deregistration.drep_id)?;
+                    let drep_cred = match &drep.inner {
+                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                            StakeCredential::new(StakeCredentialKind::KeyHash {
+                                key_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                            StakeCredential::new(StakeCredentialKind::ScriptHash {
+                                script_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        _ => {
+                            return Err(WError::new(
+                                "Certificate - DRep Deregistration:",
+                                "DRep must be either Key or Script type",
+                            ));
+                        }
+                    };
+                    Ok(Certificate::new(CertificateKind::UnRegDRepCert {
+                        drep_cred,
+                        amount: drep_deregistration.coin.into(),
+                    }))?
+                }
+                CertificateType::DRepUpdate(drep_update) => {
+                    let drep: DRep = DRep::from_bech32(&drep_update.drep_id)?;
+                    let drep_cred = match &drep.inner {
+                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                            StakeCredential::new(StakeCredentialKind::KeyHash {
+                                key_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                            StakeCredential::new(StakeCredentialKind::ScriptHash {
+                                script_hash_hex: hash.to_string(),
+                            })?
+                        }
+                        _ => {
+                            return Err(WError::new(
+                                "Certificate - DRep Update:",
+                                "DRep must be either Key or Script type",
+                            ));
+                        }
+                    };
+
+                    let anchor: Option<Anchor> = match &drep_update.anchor {
+                        Some(anchor_data) => Some(Anchor::new(
+                            anchor_data.anchor_url.clone(),
+                            anchor_data.anchor_data_hash.clone(),
+                        )?),
+                        None => None,
+                    };
+                    Ok(Certificate::new(CertificateKind::UpdateDRepCert {
+                        drep_cred,
+                        anchor,
+                    }))?
+                }
+            }
+        }
+
+        for cert in self.tx_builder_body.certificates.clone() {
+            match cert {
+                BasicCertificate(certificate_type) => {
+                    certificates.push(process_certificate_type(&certificate_type)?);
+                }
+                ScriptCertificate(script_certificate) => {
+                    let cert = process_certificate_type(&script_certificate.cert)?;
+                    let script_source =
+                        script_certificate.script_source.clone().ok_or_else(|| {
+                            WError::new(
+                                "WhiskyPallas - Processing certificates:",
+                                "Script source is missing from script certificate",
+                            )
+                        })?;
+                    self.process_script_source(script_source)?;
+
+                    let redeemer = script_certificate.redeemer.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing certificates:",
+                            "Redeemer is missing from script certificate",
+                        )
+                    })?;
+                    self.certificate_redeemers_vec.push((
+                        cert.clone(),
+                        Redeemer::new(
+                            RedeemerTag::Cert,
+                            0,
+                            PlutusData::new(redeemer.data)?,
+                            ExUnits {
+                                mem: redeemer.ex_units.mem,
+                                steps: redeemer.ex_units.steps,
+                            },
+                        )?,
+                    ));
+
+                    certificates.push(cert);
+                }
+                SimpleScriptCertificate(simple_script_certificate) => {
+                    match simple_script_certificate.simple_script_source {
+                        Some(simple_script_source) => match simple_script_source {
+                            whisky_common::SimpleScriptSource::ProvidedSimpleScriptSource(
+                                provided_simple_script_source,
+                            ) => {
+                                self.native_scripts_vec.push(NativeScript::new_from_hex(
+                                    &provided_simple_script_source.script_cbor,
+                                )?);
+                            }
+                            whisky_common::SimpleScriptSource::InlineSimpleScriptSource(
+                                inline_simple_script_source,
+                            ) => self.ref_inputs_vec.push(TransactionInput::new(
+                                &inline_simple_script_source.ref_tx_in.tx_hash,
+                                inline_simple_script_source.ref_tx_in.tx_index.into(),
+                            )?),
+                        },
+                        None => {
+                            return Err(WError::new(
+                                "WhiskyPallas - Processing certificates:",
+                                "Simple script source is missing from simple script certificate",
+                            ));
+                        }
+                    };
+                    certificates.push(process_certificate_type(&simple_script_certificate.cert)?);
+                }
+            }
+        }
+        if certificates.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(certificates))
+        }
+    }
+
+    fn process_script_source(&mut self, script_source: ScriptSource) -> Result<(), WError> {
+        match script_source {
+            ProvidedScriptSource(provided_script_source) => {
+                match provided_script_source.language_version {
+                    LanguageVersion::V1 => {
+                        self.plutus_v1_scripts_vec
+                            .push(PlutusScript::<1>::new(provided_script_source.script_cbor)?);
+                    }
+                    LanguageVersion::V2 => {
+                        self.plutus_v2_scripts_vec
+                            .push(PlutusScript::<2>::new(provided_script_source.script_cbor)?);
+                    }
+                    LanguageVersion::V3 => {
+                        self.plutus_v3_scripts_vec
+                            .push(PlutusScript::<3>::new(provided_script_source.script_cbor)?);
+                    }
+                }
+            }
+            InlineScriptSource(inline_script_source) => {
+                self.ref_inputs_vec.push(TransactionInput::new(
+                    &inline_script_source.ref_tx_in.tx_hash,
+                    inline_script_source.ref_tx_in.tx_index.into(),
+                )?);
+            }
+        };
+        Ok(())
+    }
+
+    fn process_datum_source(&mut self, datum_source: DatumSource) -> Result<(), WError> {
+        match datum_source {
+            ProvidedDatumSource(provided_datum_source) => {
+                self.plutus_data_vec
+                    .push(PlutusData::new(provided_datum_source.data)?);
+            }
+            InlineDatumSource(inline_datum_source) => {
+                self.ref_inputs_vec.push(TransactionInput::new(
+                    &inline_datum_source.tx_hash,
+                    inline_datum_source.tx_index.into(),
+                )?)
+            }
+        };
+        Ok(())
+    }
+
     pub fn build_tx(&mut self) -> Result<String, WError> {
-        let inputs = self.add_inputs()?;
-        let outputs = self.add_outputs()?;
+        let inputs = self.process_inputs()?;
+        let outputs = self.process_outputs()?;
+        let fee = self.process_fee()?;
+        let ttl = self.tx_builder_body.validity_range.invalid_hereafter;
+        let certificates = self.process_certificates()?;
+
         let tx_body = TransactionBody::new(
-            inputs, outputs, 0, None, None, None, None, None, None, None, None, None, None, None,
-            None, None, None, None, None, None,
+            inputs,
+            outputs,
+            fee,
+            ttl,
+            certificates,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
         )?;
         let witness_set = WitnessSet::new(None, None, None, None, None, None, None, None)?;
         let transaction_bytes = Transaction::new(tx_body, witness_set, true, None)?
