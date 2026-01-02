@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use pallas::codec::utils::{NonEmptySet, NonZeroInt, Set};
+use pallas::codec::utils::{Bytes, NonEmptySet, NonZeroInt, Set};
 use pallas::ledger::primitives::conway::{
     Certificate as PallasCertificate, GovActionId as PallasGovActionId,
     Multiasset as PallasMultiasset, NetworkId as PallasNetworkId, PositiveCoin,
@@ -10,12 +10,12 @@ use pallas::ledger::primitives::conway::{
     Voter as PallasVoter, VotingProcedure as PallasVotingProcedure,
     VotingProcedures as PallasVotingProcedures,
 };
-use pallas::ledger::primitives::{Coin, Fragment, RewardAccount};
+use pallas::ledger::primitives::{Coin, Fragment};
 use whisky_common::WError;
 
 use crate::wrapper::transaction_body::{
     Certificate, GovActionId, MultiassetNonZeroInt, NetworkId, ProposalProcedure, RequiredSigners,
-    TransactionInput, TransactionOutput, Voter, VotingProdecedure,
+    RewardAccount, TransactionInput, TransactionOutput, Voter, VotingProdecedure,
 };
 use pallas::crypto::hash::Hash;
 
@@ -131,8 +131,9 @@ impl<'a> TransactionBody<'a> {
 
     fn parse_withdrawals(
         withdrawals: Option<Vec<(RewardAccount, u64)>>,
-    ) -> Option<BTreeMap<RewardAccount, Coin>> {
-        withdrawals.map(|wds| BTreeMap::from_iter(wds.into_iter().map(|(ra, coin)| (ra, coin))))
+    ) -> Option<BTreeMap<Bytes, Coin>> {
+        withdrawals
+            .map(|wds| BTreeMap::from_iter(wds.into_iter().map(|(ra, coin)| (ra.inner, coin))))
     }
 
     fn parse_auxiliary_data_hash(

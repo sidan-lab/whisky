@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pallas::{interop::utxorpc::spec::cardano::certificate, ledger::primitives::Fragment};
+use pallas::ledger::{primitives::Fragment, traverse::withdrawals};
 use whisky_common::{
     Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
     CertificateType,
@@ -9,6 +9,7 @@ use whisky_common::{
     ScriptSource::{self, InlineScriptSource, ProvidedScriptSource},
     SimpleScriptTxInParameter::{InlineSimpleScriptSource, ProvidedSimpleScriptSource},
     TxBuilderBody, TxIn, WError,
+    Withdrawal::{PlutusScriptWithdrawal, PubKeyWithdrawal, SimpleScriptWithdrawal},
 };
 
 use crate::{
@@ -46,6 +47,7 @@ pub struct CorePallas {
     pub plutus_v3_scripts_vec: Vec<PlutusScript<3>>,
     pub input_redeemers_vec: Vec<(TransactionInput, Redeemer)>,
     pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
+    pub withdrawal_redeemers_vec: Vec<((RewardAccount, u64), Redeemer)>,
     pub plutus_data_vec: Vec<PlutusData>,
 
     // Potential reference inputs (shouldn't overlap with actual inputs)
@@ -65,6 +67,7 @@ impl CorePallas {
             plutus_v3_scripts_vec: vec![],
             input_redeemers_vec: vec![],
             certificate_redeemers_vec: vec![],
+            withdrawal_redeemers_vec: vec![],
             plutus_data_vec: vec![],
             ref_inputs_vec: vec![],
         }
@@ -627,6 +630,89 @@ impl CorePallas {
         }
     }
 
+    fn process_withdrawals(&mut self) -> Result<Option<Vec<(RewardAccount, u64)>>, WError> {
+        let mut withdrawals: Vec<(RewardAccount, u64)> = vec![];
+        for withdrawal in self.tx_builder_body.withdrawals.clone() {
+            match withdrawal {
+                PubKeyWithdrawal(pub_key_withdrawal) => {
+                    let reward_account_bytes = bytes_from_bech32(&pub_key_withdrawal.address)?;
+                    let reward_account = RewardAccount::new(reward_account_bytes)?;
+                    withdrawals.push((reward_account, pub_key_withdrawal.coin));
+                }
+                PlutusScriptWithdrawal(plutus_script_withdrawal) => {
+                    let reward_account_bytes =
+                        bytes_from_bech32(&plutus_script_withdrawal.address)?;
+                    let reward_account = RewardAccount::new(reward_account_bytes)?;
+                    withdrawals.push((reward_account.clone(), plutus_script_withdrawal.coin));
+                    let script_source =
+                        plutus_script_withdrawal
+                            .script_source
+                            .clone()
+                            .ok_or_else(|| {
+                                WError::new(
+                                    "WhiskyPallas - Processing withdrawals:",
+                                    "Script source is missing from plutus script withdrawal",
+                                )
+                            })?;
+                    self.process_script_source(script_source)?;
+
+                    let redeemer = plutus_script_withdrawal.redeemer.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing withdrawals:",
+                            "Redeemer is missing from plutus script withdrawal",
+                        )
+                    })?;
+                    self.withdrawal_redeemers_vec.push((
+                        (reward_account.clone(), plutus_script_withdrawal.coin),
+                        Redeemer::new(
+                            RedeemerTag::Reward,
+                            0,
+                            PlutusData::new(redeemer.data)?,
+                            ExUnits {
+                                mem: redeemer.ex_units.mem,
+                                steps: redeemer.ex_units.steps,
+                            },
+                        )?,
+                    ));
+                }
+                SimpleScriptWithdrawal(simple_script_withdrawal) => {
+                    let reward_account_bytes =
+                        bytes_from_bech32(&simple_script_withdrawal.address)?;
+                    let reward_account = RewardAccount::new(reward_account_bytes)?;
+                    withdrawals.push((reward_account.clone(), simple_script_withdrawal.coin));
+                    match &simple_script_withdrawal.script_source {
+                        Some(simple_script_source) => match simple_script_source {
+                            whisky_common::SimpleScriptSource::ProvidedSimpleScriptSource(
+                                provided_simple_script_source,
+                            ) => {
+                                self.native_scripts_vec.push(NativeScript::new_from_hex(
+                                    &provided_simple_script_source.script_cbor,
+                                )?);
+                            }
+                            whisky_common::SimpleScriptSource::InlineSimpleScriptSource(
+                                inline_simple_script_source,
+                            ) => self.ref_inputs_vec.push(TransactionInput::new(
+                                &inline_simple_script_source.ref_tx_in.tx_hash,
+                                inline_simple_script_source.ref_tx_in.tx_index.into(),
+                            )?),
+                        },
+                        None => {
+                            return Err(WError::new(
+                                "WhiskyPallas - Processing withdrawals:",
+                                "Simple script source is missing from simple script withdrawal",
+                            ));
+                        }
+                    };
+                }
+            }
+        }
+        Ok(if withdrawals.is_empty() {
+            None
+        } else {
+            Some(withdrawals)
+        })
+    }
+
     fn process_script_source(&mut self, script_source: ScriptSource) -> Result<(), WError> {
         match script_source {
             ProvidedScriptSource(provided_script_source) => {
@@ -677,6 +763,7 @@ impl CorePallas {
         let fee = self.process_fee()?;
         let ttl = self.tx_builder_body.validity_range.invalid_hereafter;
         let certificates = self.process_certificates()?;
+        let withdrawals = self.process_withdrawals()?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -684,7 +771,7 @@ impl CorePallas {
             fee,
             ttl,
             certificates,
-            None,
+            withdrawals,
             None,
             None,
             None,

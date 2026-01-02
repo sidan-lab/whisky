@@ -6,6 +6,7 @@ use pallas::{
 };
 use whisky_common::WError;
 
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub struct RewardAccount {
     pub inner: PallasRewardAccount,
 }

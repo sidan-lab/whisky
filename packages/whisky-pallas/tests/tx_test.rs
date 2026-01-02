@@ -1,7 +1,7 @@
 use whisky_common::{
     Asset, Budget, Datum, DatumSource, InlineDatumSource, Output, OutputScriptSource, ProvidedScriptSource, PubKeyTxIn, Redeemer, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange
 };
-use whisky_pallas::tx_builder::core_pallas::CorePallas;
+use whisky_pallas::{tx_builder::core_pallas::CorePallas, wrapper::transaction_body::StakeCredential, wrapper::transaction_body::DRep};
 
 #[test]
 fn test_from_tx_builder_body() {
@@ -66,7 +66,7 @@ fn test_from_tx_builder_body() {
         certificates: vec![],
         votes: vec![],
         change_address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
-        fee: Some(0.to_string()),
+        fee: Some(10000.to_string()),
         required_signatures: vec![],
         change_datum: None,
         metadata: vec![],
@@ -82,4 +82,16 @@ fn test_from_tx_builder_body() {
     let mut core_pallas = CorePallas::new(tx_builder_body, 100);
     let result = core_pallas.build_tx();
     println!("Serialized transaction hex: {}", result.unwrap());
+}
+
+#[test]
+fn test_stake_cred() {
+    let stake_credential = StakeCredential::from_bech32("stake_test1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqp8n5xl");
+    println!("Stake Credential: {:?}", stake_credential);
+}
+
+#[test]
+fn test_drep() {
+    let drep = DRep::from_bech32("drep1yfaaqfzaukju6pr5wa4nhzqglv57p46cjlws424m6hhj3kg2k9vj7");
+    println!("DRep: {:?}", drep);
 }
