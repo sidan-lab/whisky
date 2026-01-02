@@ -30,7 +30,7 @@ pub fn convert_value(asset_vec: &Vec<Asset>) -> Result<Value, WError> {
     } else {
         Ok(Value::new(
             lovelace,
-            Some(MultiassetPositiveCoin::new(multiasset)),
+            Some(MultiassetPositiveCoin::new(multiasset)?),
         ))
     }
 }

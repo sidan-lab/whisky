@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use pallas::ledger::{primitives::Fragment, traverse::withdrawals};
 use whisky_common::{
@@ -16,10 +16,10 @@ use crate::{
     converter::{bytes_from_bech32, convert_value},
     wrapper::{
         transaction_body::{
-            Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind, PoolMetadata,
-            Relay, RelayKind, RewardAccount, ScriptRef, ScriptRefKind, StakeCredential,
-            StakeCredentialKind, Transaction, TransactionBody, TransactionInput, TransactionOutput,
-            Value,
+            Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind,
+            MultiassetNonZeroInt, PoolMetadata, Relay, RelayKind, RewardAccount, ScriptRef,
+            ScriptRefKind, StakeCredential, StakeCredentialKind, Transaction, TransactionBody,
+            TransactionInput, TransactionOutput, Value,
         },
         witness_set::{
             native_script::NativeScript,
@@ -48,6 +48,7 @@ pub struct CorePallas {
     pub input_redeemers_vec: Vec<(TransactionInput, Redeemer)>,
     pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
     pub withdrawal_redeemers_vec: Vec<((RewardAccount, u64), Redeemer)>,
+    pub mint_redeemers_vec: Vec<(String, Redeemer)>,
     pub plutus_data_vec: Vec<PlutusData>,
 
     // Potential reference inputs (shouldn't overlap with actual inputs)
@@ -68,6 +69,7 @@ impl CorePallas {
             input_redeemers_vec: vec![],
             certificate_redeemers_vec: vec![],
             withdrawal_redeemers_vec: vec![],
+            mint_redeemers_vec: vec![],
             plutus_data_vec: vec![],
             ref_inputs_vec: vec![],
         }
@@ -713,6 +715,130 @@ impl CorePallas {
         })
     }
 
+    fn process_mints(&mut self) -> Result<Option<MultiassetNonZeroInt>, WError> {
+        let mut mints: Vec<(String, Vec<(String, i64)>)> = vec![];
+        for mint in self.tx_builder_body.mints.clone() {
+            match mint {
+                whisky_common::MintItem::ScriptMint(script_mint) => {
+                    let mint_param = script_mint.mint;
+                    let existing_policy =
+                        mints.iter_mut().find(|mint| mint.0 == mint_param.policy_id);
+                    if existing_policy.is_some() {
+                        let policy_mint = existing_policy.unwrap();
+                        policy_mint.1.push((
+                            mint_param.asset_name,
+                            mint_param.amount.try_into().map_err(|_| {
+                                WError::new(
+                                    "WhiskyPallas - Processing mints:",
+                                    "Invalid mint amount",
+                                )
+                            })?,
+                        ));
+                    } else {
+                        mints.push((
+                            mint_param.policy_id.clone(),
+                            vec![(
+                                mint_param.asset_name,
+                                mint_param.amount.try_into().map_err(|_| {
+                                    WError::new(
+                                        "WhiskyPallas - Processing mints:",
+                                        "Invalid mint amount",
+                                    )
+                                })?,
+                            )],
+                        ));
+                    }
+
+                    let script_source = script_mint.script_source.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing mints:",
+                            "Script source is missing from script mint",
+                        )
+                    })?;
+                    self.process_script_source(script_source)?;
+
+                    let redeemer = script_mint.redeemer.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing mints:",
+                            "Redeemer is missing from script mint",
+                        )
+                    })?;
+                    self.mint_redeemers_vec.push((
+                        mint_param.policy_id.clone(),
+                        Redeemer::new(
+                            RedeemerTag::Mint,
+                            0,
+                            PlutusData::new(redeemer.data)?,
+                            ExUnits {
+                                mem: redeemer.ex_units.mem,
+                                steps: redeemer.ex_units.steps,
+                            },
+                        )?,
+                    ));
+                }
+                whisky_common::MintItem::SimpleScriptMint(simple_script_mint) => {
+                    let mint_param = simple_script_mint.mint;
+                    let existing_policy =
+                        mints.iter_mut().find(|mint| mint.0 == mint_param.policy_id);
+                    if existing_policy.is_some() {
+                        let policy_mint = existing_policy.unwrap();
+                        policy_mint.1.push((
+                            mint_param.asset_name,
+                            mint_param.amount.try_into().map_err(|_| {
+                                WError::new(
+                                    "WhiskyPallas - Processing mints:",
+                                    "Invalid mint amount",
+                                )
+                            })?,
+                        ));
+                    } else {
+                        mints.push((
+                            mint_param.policy_id.clone(),
+                            vec![(
+                                mint_param.asset_name,
+                                mint_param.amount.try_into().map_err(|_| {
+                                    WError::new(
+                                        "WhiskyPallas - Processing mints:",
+                                        "Invalid mint amount",
+                                    )
+                                })?,
+                            )],
+                        ));
+                    }
+
+                    match &simple_script_mint.script_source {
+                        Some(simple_script_source) => match simple_script_source {
+                            whisky_common::SimpleScriptSource::ProvidedSimpleScriptSource(
+                                provided_simple_script_source,
+                            ) => {
+                                self.native_scripts_vec.push(NativeScript::new_from_hex(
+                                    &provided_simple_script_source.script_cbor,
+                                )?);
+                            }
+                            whisky_common::SimpleScriptSource::InlineSimpleScriptSource(
+                                inline_simple_script_source,
+                            ) => self.ref_inputs_vec.push(TransactionInput::new(
+                                &inline_simple_script_source.ref_tx_in.tx_hash,
+                                inline_simple_script_source.ref_tx_in.tx_index.into(),
+                            )?),
+                        },
+                        None => {
+                            return Err(WError::new(
+                                "WhiskyPallas - Processing mints:",
+                                "Simple script source is missing from simple script mint",
+                            ));
+                        }
+                    };
+                }
+            }
+        }
+        Ok(if mints.is_empty() {
+            None
+        } else {
+            Some(MultiassetNonZeroInt::new(mints)?)
+        })
+    }
+
     fn process_script_source(&mut self, script_source: ScriptSource) -> Result<(), WError> {
         match script_source {
             ProvidedScriptSource(provided_script_source) => {
@@ -764,6 +890,8 @@ impl CorePallas {
         let ttl = self.tx_builder_body.validity_range.invalid_hereafter;
         let certificates = self.process_certificates()?;
         let withdrawals = self.process_withdrawals()?;
+        let validity_interval_start = self.tx_builder_body.validity_range.invalid_before;
+        let mints = self.process_mints()?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -773,8 +901,8 @@ impl CorePallas {
             certificates,
             withdrawals,
             None,
-            None,
-            None,
+            validity_interval_start,
+            mints,
             None,
             None,
             None,
