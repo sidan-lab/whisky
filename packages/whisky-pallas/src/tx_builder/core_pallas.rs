@@ -39,6 +39,7 @@ pub struct CorePallas {
 
     // Required info for balancing transaction
     pub inputs_map: HashMap<TransactionInput, Value>,
+    pub collaterals_map: HashMap<TransactionInput, Value>,
 
     // Required info for generating witness set
     pub native_scripts_vec: Vec<NativeScript>,
@@ -62,6 +63,7 @@ impl CorePallas {
             tx_evaluation_multiplier_percentage,
             tx_hex: String::new(),
             inputs_map: HashMap::new(),
+            collaterals_map: HashMap::new(),
             native_scripts_vec: vec![],
             plutus_v1_scripts_vec: vec![],
             plutus_v2_scripts_vec: vec![],
@@ -839,6 +841,24 @@ impl CorePallas {
         })
     }
 
+    fn process_collaterals(&mut self) -> Result<Option<Vec<TransactionInput>>, WError> {
+        let mut collaterals: Vec<TransactionInput> = vec![];
+        for collateral in self.tx_builder_body.collaterals.clone() {
+            let transaction_input =
+                TransactionInput::new(&collateral.tx_in.tx_hash, collateral.tx_in.tx_index.into())?;
+            collaterals.push(transaction_input.clone());
+            self.collaterals_map.insert(
+                transaction_input.clone(),
+                convert_value(&collateral.tx_in.amount.unwrap())?,
+            );
+        }
+        Ok(if collaterals.is_empty() {
+            None
+        } else {
+            Some(collaterals)
+        })
+    }
+
     fn process_script_source(&mut self, script_source: ScriptSource) -> Result<(), WError> {
         match script_source {
             ProvidedScriptSource(provided_script_source) => {
@@ -892,6 +912,7 @@ impl CorePallas {
         let withdrawals = self.process_withdrawals()?;
         let validity_interval_start = self.tx_builder_body.validity_range.invalid_before;
         let mints = self.process_mints()?;
+        let collaterals = self.process_collaterals()?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -904,7 +925,7 @@ impl CorePallas {
             validity_interval_start,
             mints,
             None,
-            None,
+            collaterals,
             None,
             None,
             None,
