@@ -17,9 +17,10 @@ use crate::{
     wrapper::{
         transaction_body::{
             Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind,
-            MultiassetNonZeroInt, PoolMetadata, Relay, RelayKind, RewardAccount, ScriptRef,
-            ScriptRefKind, StakeCredential, StakeCredentialKind, Transaction, TransactionBody,
-            TransactionInput, TransactionOutput, Value,
+            MultiassetNonZeroInt, NetworkId, NetworkIdKind, PoolMetadata, Relay, RelayKind,
+            RequiredSigners, RewardAccount, ScriptRef, ScriptRefKind, StakeCredential,
+            StakeCredentialKind, Transaction, TransactionBody, TransactionInput, TransactionOutput,
+            Value,
         },
         witness_set::{
             native_script::NativeScript,
@@ -859,6 +860,31 @@ impl CorePallas {
         })
     }
 
+    fn process_required_signers(&mut self) -> Result<Option<RequiredSigners>, WError> {
+        let mut required_signers: Vec<String> = vec![];
+        for signer in self.tx_builder_body.required_signatures.clone() {
+            required_signers.push(signer);
+        }
+        Ok(if required_signers.is_empty() {
+            None
+        } else {
+            Some(RequiredSigners::new(required_signers)?)
+        })
+    }
+
+    fn process_total_collateral(&mut self) -> Result<Option<u64>, WError> {
+        if let Some(total_collateral) = self.tx_builder_body.total_collateral.clone() {
+            Ok(Some(total_collateral.parse::<u64>().map_err(|e| {
+                WError::new(
+                    "WhiskyPallas - Processing total collateral:",
+                    &format!("Failed to parse total collateral: {}", e.to_string()),
+                )
+            })?))
+        } else {
+            Ok(None)
+        }
+    }
+
     fn process_script_source(&mut self, script_source: ScriptSource) -> Result<(), WError> {
         match script_source {
             ProvidedScriptSource(provided_script_source) => {
@@ -887,6 +913,16 @@ impl CorePallas {
         Ok(())
     }
 
+    fn process_reference_inputs(&mut self) -> Result<Option<Vec<TransactionInput>>, WError> {
+        for ref_input in self.tx_builder_body.reference_inputs.clone() {
+            self.ref_inputs_vec.push(TransactionInput::new(
+                &ref_input.tx_hash,
+                ref_input.tx_index.into(),
+            )?);
+        }
+        Ok(Some(self.ref_inputs_vec.clone()))
+    }
+
     fn process_datum_source(&mut self, datum_source: DatumSource) -> Result<(), WError> {
         match datum_source {
             ProvidedDatumSource(provided_datum_source) => {
@@ -913,6 +949,16 @@ impl CorePallas {
         let validity_interval_start = self.tx_builder_body.validity_range.invalid_before;
         let mints = self.process_mints()?;
         let collaterals = self.process_collaterals()?;
+        let required_signers = self.process_required_signers()?;
+        let network_id = match self.tx_builder_body.network.clone() {
+            Some(network) => match network {
+                whisky_common::Network::Mainnet => Some(NetworkId::new(NetworkIdKind::Mainnet)),
+                _ => Some(NetworkId::new(NetworkIdKind::Testnet)),
+            },
+            None => None,
+        };
+        let total_collateral = self.process_total_collateral()?;
+        let reference_inputs = self.process_reference_inputs()?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -926,11 +972,11 @@ impl CorePallas {
             mints,
             None,
             collaterals,
+            required_signers,
+            network_id,
             None,
-            None,
-            None,
-            None,
-            None,
+            total_collateral,
+            reference_inputs,
             None,
             None,
             None,
