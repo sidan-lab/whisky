@@ -1,6 +1,9 @@
 use std::collections::{BTreeMap, HashMap};
 
-use pallas::ledger::{primitives::Fragment, traverse::withdrawals};
+use pallas::{
+    interop::utxorpc::spec::cardano::stake_credential,
+    ledger::{primitives::Fragment, traverse::withdrawals},
+};
 use whisky_common::{
     Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
     CertificateType,
@@ -16,11 +19,11 @@ use crate::{
     converter::{bytes_from_bech32, convert_value},
     wrapper::{
         transaction_body::{
-            Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind,
+            Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind, GovActionId,
             MultiassetNonZeroInt, NetworkId, NetworkIdKind, PoolMetadata, Relay, RelayKind,
             RequiredSigners, RewardAccount, ScriptRef, ScriptRefKind, StakeCredential,
             StakeCredentialKind, Transaction, TransactionBody, TransactionInput, TransactionOutput,
-            Value,
+            Value, Vote, VoteKind, Voter, VoterKind, VotingProdecedure,
         },
         witness_set::{
             native_script::NativeScript,
@@ -51,6 +54,7 @@ pub struct CorePallas {
     pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
     pub withdrawal_redeemers_vec: Vec<((RewardAccount, u64), Redeemer)>,
     pub mint_redeemers_vec: Vec<(String, Redeemer)>,
+    pub vote_redeemers_vec: Vec<(Voter, Redeemer)>,
     pub plutus_data_vec: Vec<PlutusData>,
 
     // Potential reference inputs (shouldn't overlap with actual inputs)
@@ -73,6 +77,7 @@ impl CorePallas {
             certificate_redeemers_vec: vec![],
             withdrawal_redeemers_vec: vec![],
             mint_redeemers_vec: vec![],
+            vote_redeemers_vec: vec![],
             plutus_data_vec: vec![],
             ref_inputs_vec: vec![],
         }
@@ -913,6 +918,185 @@ impl CorePallas {
         Ok(())
     }
 
+    fn process_voting_procedures(
+        &mut self,
+    ) -> Result<Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>, WError> {
+        let mut voting_procedures: Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)> = vec![];
+
+        fn process_vote_type(
+            vote_type: &whisky_common::VoteType,
+        ) -> Result<(Voter, Vec<(GovActionId, VotingProdecedure)>), WError> {
+            let voter = match &vote_type.voter {
+                whisky_common::Voter::ConstitutionalCommitteeHotCred(credential) => {
+                    match credential {
+                        whisky_common::Credential::KeyHash(key_hash_hex) => {
+                            Voter::new(VoterKind::ConstitutionalCommitteKey {
+                                key_hash: key_hash_hex.clone(),
+                            })
+                        }
+                        whisky_common::Credential::ScriptHash(script_hash_hex) => {
+                            Voter::new(VoterKind::ConstitutionalCommitteScript {
+                                script_hash: script_hash_hex.clone(),
+                            })
+                        }
+                    }
+                }?,
+                whisky_common::Voter::DRepId(drep_id) => {
+                    let drep = DRep::from_bech32(&drep_id)?;
+                    match drep.inner {
+                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                            Voter::new(VoterKind::DrepKey {
+                                key_hash: hash.to_string(),
+                            })
+                        }
+                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                            Voter::new(VoterKind::DrepScript {
+                                script_hash: hash.to_string(),
+                            })
+                        }
+                        _ => {
+                            return Err(WError::new(
+                                "Voting Procedure - Voter:",
+                                "DRep must be either Key or Script type",
+                            ));
+                        }
+                    }
+                }?,
+                whisky_common::Voter::StakingPoolKeyHash(stake_credential) => {
+                    let stake_cred = StakeCredential::from_bech32(&stake_credential)?;
+                    match stake_cred.inner {
+                        pallas::ledger::primitives::StakeCredential::ScriptHash(hash) => {
+                            Voter::new(VoterKind::StakePoolKey {
+                                pool_key_hash: hash.to_string(),
+                            })
+                        }
+                        pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                            Voter::new(VoterKind::StakePoolKey {
+                                pool_key_hash: hash.to_string(),
+                            })
+                        }
+                    }
+                }?,
+            };
+
+            let gov_action_id = GovActionId::new(
+                &vote_type.gov_action_id.tx_hash,
+                vote_type.gov_action_id.tx_index.into(),
+            )?;
+
+            let voting_procedure = VotingProdecedure::new(
+                match &vote_type.voting_procedure.vote_kind {
+                    whisky_common::VoteKind::No => Vote::new(VoteKind::No)?,
+                    whisky_common::VoteKind::Yes => Vote::new(VoteKind::Yes)?,
+                    whisky_common::VoteKind::Abstain => Vote::new(VoteKind::Abstain)?,
+                },
+                match &vote_type.voting_procedure.anchor {
+                    Some(anchor_data) => Some(Anchor::new(
+                        anchor_data.anchor_url.clone(),
+                        anchor_data.anchor_data_hash.clone(),
+                    )?),
+                    None => None,
+                },
+            );
+            Ok((voter, vec![(gov_action_id, voting_procedure)]))
+        }
+
+        for vote in self.tx_builder_body.votes.clone() {
+            match vote {
+                whisky_common::Vote::BasicVote(vote_type) => {
+                    let (voter, procedures) = process_vote_type(&vote_type)?;
+                    // Check if voter already exists in voting_procedures
+                    if let Some(existing_voter) =
+                        voting_procedures.iter_mut().find(|(v, _)| *v == voter)
+                    {
+                        existing_voter.1.extend(procedures);
+                    } else {
+                        voting_procedures.push((voter, procedures));
+                    }
+                }
+                whisky_common::Vote::ScriptVote(script_vote) => {
+                    let (voter, procedures) = process_vote_type(&script_vote.vote)?;
+                    // Check if voter already exists in voting_procedures
+                    if let Some(existing_voter) =
+                        voting_procedures.iter_mut().find(|(v, _)| *v == voter)
+                    {
+                        existing_voter.1.extend(procedures);
+                    } else {
+                        voting_procedures.push((voter.clone(), procedures));
+                    }
+
+                    let script_source = script_vote.script_source.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing voting procedures:",
+                            "Script source is missing from script vote",
+                        )
+                    })?;
+                    self.process_script_source(script_source)?;
+
+                    let redeemer = script_vote.redeemer.clone().ok_or_else(|| {
+                        WError::new(
+                            "WhiskyPallas - Processing voting procedures:",
+                            "Redeemer is missing from script vote",
+                        )
+                    })?;
+                    self.vote_redeemers_vec.push((
+                        voter.clone(),
+                        Redeemer::new(
+                            RedeemerTag::Vote,
+                            0,
+                            PlutusData::new(redeemer.data)?,
+                            ExUnits {
+                                mem: redeemer.ex_units.mem,
+                                steps: redeemer.ex_units.steps,
+                            },
+                        )?,
+                    ));
+                }
+                whisky_common::Vote::SimpleScriptVote(simple_script_vote) => {
+                    let (voter, procedures) = process_vote_type(&simple_script_vote.vote)?;
+                    // Check if voter already exists in voting_procedures
+                    if let Some(existing_voter) =
+                        voting_procedures.iter_mut().find(|(v, _)| *v == voter)
+                    {
+                        existing_voter.1.extend(procedures);
+                    } else {
+                        voting_procedures.push((voter, procedures));
+                    }
+
+                    match &simple_script_vote.simple_script_source {
+                        Some(simple_script_source) => match simple_script_source {
+                            whisky_common::SimpleScriptSource::ProvidedSimpleScriptSource(
+                                provided_simple_script_source,
+                            ) => {
+                                self.native_scripts_vec.push(NativeScript::new_from_hex(
+                                    &provided_simple_script_source.script_cbor,
+                                )?);
+                            }
+                            whisky_common::SimpleScriptSource::InlineSimpleScriptSource(
+                                inline_simple_script_source,
+                            ) => self.ref_inputs_vec.push(TransactionInput::new(
+                                &inline_simple_script_source.ref_tx_in.tx_hash,
+                                inline_simple_script_source.ref_tx_in.tx_index.into(),
+                            )?),
+                        },
+                        None => {
+                            return Err(WError::new(
+                                "WhiskyPallas - Processing voting procedures:",
+                                "Simple script source is missing from simple script vote",
+                            ));
+                        }
+                    };
+                }
+            }
+        }
+
+        if voting_procedures.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(voting_procedures))
+        }
+    }
+
     fn process_reference_inputs(&mut self) -> Result<Option<Vec<TransactionInput>>, WError> {
         for ref_input in self.tx_builder_body.reference_inputs.clone() {
             self.ref_inputs_vec.push(TransactionInput::new(
@@ -959,6 +1143,7 @@ impl CorePallas {
         };
         let total_collateral = self.process_total_collateral()?;
         let reference_inputs = self.process_reference_inputs()?;
+        let voting_procedures = self.process_voting_procedures()?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -977,7 +1162,7 @@ impl CorePallas {
             None,
             total_collateral,
             reference_inputs,
-            None,
+            voting_procedures,
             None,
             None,
             None,
