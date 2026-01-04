@@ -1,9 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 
-use pallas::{
-    interop::utxorpc::spec::cardano::stake_credential,
-    ledger::{primitives::Fragment, traverse::withdrawals},
+use pallas::ledger::primitives::conway::{
+    Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag,
 };
+use pallas::ledger::primitives::Fragment;
+use pallas::ledger::traverse::cert;
 use whisky_common::{
     Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
     CertificateType,
@@ -52,7 +53,7 @@ pub struct CorePallas {
     pub plutus_v3_scripts_vec: Vec<PlutusScript<3>>,
     pub input_redeemers_vec: Vec<(TransactionInput, Redeemer)>,
     pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
-    pub withdrawal_redeemers_vec: Vec<((RewardAccount, u64), Redeemer)>,
+    pub withdrawal_redeemers_vec: Vec<(RewardAccount, Redeemer)>,
     pub mint_redeemers_vec: Vec<(String, Redeemer)>,
     pub vote_redeemers_vec: Vec<(Voter, Redeemer)>,
     pub plutus_data_vec: Vec<PlutusData>,
@@ -186,6 +187,12 @@ impl CorePallas {
                 }
             }
         }
+        inputs.sort_by(|a, b| {
+            a.inner
+                .transaction_id
+                .cmp(&b.inner.transaction_id)
+                .then(a.inner.index.cmp(&b.inner.index))
+        });
         Ok(inputs)
     }
 
@@ -673,7 +680,7 @@ impl CorePallas {
                         )
                     })?;
                     self.withdrawal_redeemers_vec.push((
-                        (reward_account.clone(), plutus_script_withdrawal.coin),
+                        reward_account.clone(),
                         Redeemer::new(
                             RedeemerTag::Reward,
                             0,
@@ -1104,7 +1111,26 @@ impl CorePallas {
                 ref_input.tx_index.into(),
             )?);
         }
-        Ok(Some(self.ref_inputs_vec.clone()))
+        Ok(Some(
+            self.ref_inputs_vec
+                .clone()
+                .iter()
+                .filter(|ref_input| {
+                    // Check if the input exists in tx_builder_body
+                    self.tx_builder_body
+                        .inputs
+                        .iter()
+                        .find(|input| {
+                            input.to_utxo().input.tx_hash
+                                == ref_input.inner.transaction_id.to_string()
+                                && input.to_utxo().input.output_index
+                                    == ref_input.inner.index as u32
+                        })
+                        .is_none()
+                })
+                .cloned()
+                .collect(),
+        ))
     }
 
     fn process_datum_source(&mut self, datum_source: DatumSource) -> Result<(), WError> {
@@ -1121,6 +1147,166 @@ impl CorePallas {
             }
         };
         Ok(())
+    }
+
+    fn process_witness_set(
+        &'_ mut self,
+        tx_inputs: Vec<TransactionInput>,
+        certificates: Option<Vec<Certificate>>,
+        withdrawals: Option<Vec<(RewardAccount, u64)>>,
+        mints: Option<MultiassetNonZeroInt>,
+        votes: Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>,
+    ) -> Result<WitnessSet<'_>, WError> {
+        let native_scripts = if self.native_scripts_vec.is_empty() {
+            None
+        } else {
+            Some(self.native_scripts_vec.clone())
+        };
+        let plutus_v1_scripts = if self.plutus_v1_scripts_vec.is_empty() {
+            None
+        } else {
+            Some(self.plutus_v1_scripts_vec.clone())
+        };
+        let plutus_v2_scripts = if self.plutus_v2_scripts_vec.is_empty() {
+            None
+        } else {
+            Some(self.plutus_v2_scripts_vec.clone())
+        };
+        let plutus_v3_scripts = if self.plutus_v3_scripts_vec.is_empty() {
+            None
+        } else {
+            Some(self.plutus_v3_scripts_vec.clone())
+        };
+        let plutus_data = if self.plutus_data_vec.is_empty() {
+            None
+        } else {
+            Some(self.plutus_data_vec.clone())
+        };
+        let mut redeemers: Vec<PallasRedeemer> = vec![];
+        // Update redeemer indexes for input redeemers
+        for (input, redeemer) in self.input_redeemers_vec.clone() {
+            // Find the index of the input in the transaction inputs
+            let index = tx_inputs.iter().position(|tx_input| {
+                tx_input.inner.transaction_id.to_string() == input.inner.transaction_id.to_string()
+                    && tx_input.inner.index == input.inner.index
+            });
+            if let Some(idx) = index {
+                redeemers.push(PallasRedeemer {
+                    tag: PallasRedeemerTag::Spend,
+                    index: idx as u32,
+                    data: redeemer.inner.data.clone(),
+                    ex_units: redeemer.inner.ex_units.clone(),
+                })
+            } else {
+                return Err(WError::new(
+                    "WhiskyPallas - Processing witness set:",
+                    "Input for redeemer not found in transaction inputs",
+                ));
+            }
+        }
+        // Update redeemer indexes for certificate redeemers
+        let certificates = certificates.unwrap_or_default();
+        for (cert, redeemer) in self.certificate_redeemers_vec.clone() {
+            // Find the index of the certificate in the transaction body certificates
+            let index = certificates.iter().position(|c| c == &cert);
+            if let Some(idx) = index {
+                redeemers.push(PallasRedeemer {
+                    tag: PallasRedeemerTag::Cert,
+                    index: idx as u32,
+                    data: redeemer.inner.data.clone(),
+                    ex_units: redeemer.inner.ex_units.clone(),
+                })
+            } else {
+                return Err(WError::new(
+                    "WhiskyPallas - Processing witness set:",
+                    "Certificate for redeemer not found in transaction certificates",
+                ));
+            }
+        }
+        let withdrawals = withdrawals.unwrap_or_default();
+        // Update redeemer indexes for withdrawal redeemers
+        for (reward_account, redeemer) in self.withdrawal_redeemers_vec.clone() {
+            // Find the index of the withdrawal in the transaction body withdrawals
+            let index = withdrawals.iter().position(|w| w.0 == reward_account);
+            if let Some(idx) = index {
+                redeemers.push(PallasRedeemer {
+                    tag: PallasRedeemerTag::Reward,
+                    index: idx as u32,
+                    data: redeemer.inner.data.clone(),
+                    ex_units: redeemer.inner.ex_units.clone(),
+                })
+            } else {
+                return Err(WError::new(
+                    "WhiskyPallas - Processing witness set:",
+                    "Withdrawal for redeemer not found in transaction withdrawals",
+                ));
+            }
+        }
+        let mints = mints.unwrap_or(MultiassetNonZeroInt::new(vec![])?);
+        // Update redeemer indexes for mint redeemers
+        for (policy_id, redeemer) in self.mint_redeemers_vec.clone() {
+            // Find the index of the mint in the transaction body mints
+            let index = mints
+                .inner
+                .keys()
+                .position(|pid| pid.to_string() == policy_id);
+
+            if let Some(idx) = index {
+                redeemers.push(PallasRedeemer {
+                    tag: PallasRedeemerTag::Mint,
+                    index: idx as u32,
+                    data: redeemer.inner.data.clone(),
+                    ex_units: redeemer.inner.ex_units.clone(),
+                })
+            } else {
+                return Err(WError::new(
+                    "WhiskyPallas - Processing witness set:",
+                    "Mint for redeemer not found in transaction mints",
+                ));
+            }
+        }
+
+        // Update redeemer indexes for vote redeemers
+        let votes = votes.unwrap_or_default();
+        for (voter, redeemer) in self.vote_redeemers_vec.clone() {
+            // Find the index of the vote in the transaction body votes
+            let index = votes.iter().position(|(v, _)| *v == voter);
+            if let Some(idx) = index {
+                redeemers.push(PallasRedeemer {
+                    tag: PallasRedeemerTag::Vote,
+                    index: idx as u32,
+                    data: redeemer.inner.data.clone(),
+                    ex_units: redeemer.inner.ex_units.clone(),
+                })
+            } else {
+                return Err(WError::new(
+                    "WhiskyPallas - Processing witness set:",
+                    "Vote for redeemer not found in transaction votes",
+                ));
+            }
+        }
+
+        WitnessSet::new(
+            None,
+            native_scripts,
+            None,
+            plutus_v1_scripts,
+            plutus_data,
+            if redeemers.is_empty() {
+                None
+            } else {
+                Some(
+                    redeemers
+                        .iter()
+                        .map(|redeemer| Redeemer {
+                            inner: redeemer.clone(),
+                        })
+                        .collect(),
+                )
+            },
+            plutus_v2_scripts,
+            plutus_v3_scripts,
+        )
     }
 
     pub fn build_tx(&mut self) -> Result<String, WError> {
@@ -1144,6 +1330,13 @@ impl CorePallas {
         let total_collateral = self.process_total_collateral()?;
         let reference_inputs = self.process_reference_inputs()?;
         let voting_procedures = self.process_voting_procedures()?;
+        let witness_set = self.process_witness_set(
+            inputs.clone(),
+            certificates.clone(),
+            withdrawals.clone(),
+            mints.clone(),
+            voting_procedures.clone(),
+        )?;
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -1163,11 +1356,10 @@ impl CorePallas {
             total_collateral,
             reference_inputs,
             voting_procedures,
-            None,
-            None,
-            None,
+            None, // Proposals are currently not supported
+            None, // Treasury donations are currently not supported
+            None, // Treasury donations are currently not supported
         )?;
-        let witness_set = WitnessSet::new(None, None, None, None, None, None, None, None)?;
         let transaction_bytes = Transaction::new(tx_body, witness_set, true, None)?
             .inner
             .encode_fragment()

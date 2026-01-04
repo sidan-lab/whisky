@@ -3,6 +3,7 @@ use pallas::ledger::primitives::conway::GovActionId as PallasGovActionId;
 use pallas::ledger::primitives::Fragment;
 use whisky_common::WError;
 
+#[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub struct GovActionId {
     pub inner: PallasGovActionId,
 }
