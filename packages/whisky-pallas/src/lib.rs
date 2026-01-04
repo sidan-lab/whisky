@@ -1,5 +1,6 @@
 pub mod converter;
 pub mod tx_builder;
+pub mod utils;
 pub mod wrapper;
 
 use crate::tx_builder::core_pallas::CorePallas;

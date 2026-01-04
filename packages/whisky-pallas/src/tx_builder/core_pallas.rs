@@ -1,10 +1,10 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use pallas::ledger::primitives::conway::{
-    Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag,
+    LanguageView, Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag, ScriptData,
 };
 use pallas::ledger::primitives::Fragment;
-use pallas::ledger::traverse::cert;
+use whisky_common::get_cost_models_from_network;
 use whisky_common::{
     Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
     CertificateType,
@@ -40,7 +40,6 @@ use crate::{
 pub struct CorePallas {
     pub tx_builder_body: TxBuilderBody,
     pub tx_evaluation_multiplier_percentage: u64,
-    pub tx_hex: String,
 
     // Required info for balancing transaction
     pub inputs_map: HashMap<TransactionInput, Value>,
@@ -51,6 +50,9 @@ pub struct CorePallas {
     pub plutus_v1_scripts_vec: Vec<PlutusScript<1>>,
     pub plutus_v2_scripts_vec: Vec<PlutusScript<2>>,
     pub plutus_v3_scripts_vec: Vec<PlutusScript<3>>,
+    pub plutus_v1_used: bool,
+    pub plutus_v2_used: bool,
+    pub plutus_v3_used: bool,
     pub input_redeemers_vec: Vec<(TransactionInput, Redeemer)>,
     pub certificate_redeemers_vec: Vec<(Certificate, Redeemer)>,
     pub withdrawal_redeemers_vec: Vec<(RewardAccount, Redeemer)>,
@@ -67,13 +69,15 @@ impl CorePallas {
         Self {
             tx_builder_body,
             tx_evaluation_multiplier_percentage,
-            tx_hex: String::new(),
             inputs_map: HashMap::new(),
             collaterals_map: HashMap::new(),
             native_scripts_vec: vec![],
             plutus_v1_scripts_vec: vec![],
             plutus_v2_scripts_vec: vec![],
             plutus_v3_scripts_vec: vec![],
+            plutus_v1_used: false,
+            plutus_v2_used: false,
+            plutus_v3_used: false,
             input_redeemers_vec: vec![],
             certificate_redeemers_vec: vec![],
             withdrawal_redeemers_vec: vec![],
@@ -904,14 +908,17 @@ impl CorePallas {
                     LanguageVersion::V1 => {
                         self.plutus_v1_scripts_vec
                             .push(PlutusScript::<1>::new(provided_script_source.script_cbor)?);
+                        self.plutus_v1_used = true;
                     }
                     LanguageVersion::V2 => {
                         self.plutus_v2_scripts_vec
                             .push(PlutusScript::<2>::new(provided_script_source.script_cbor)?);
+                        self.plutus_v2_used = true;
                     }
                     LanguageVersion::V3 => {
                         self.plutus_v3_scripts_vec
                             .push(PlutusScript::<3>::new(provided_script_source.script_cbor)?);
+                        self.plutus_v3_used = true;
                     }
                 }
             }
@@ -920,6 +927,17 @@ impl CorePallas {
                     &inline_script_source.ref_tx_in.tx_hash,
                     inline_script_source.ref_tx_in.tx_index.into(),
                 )?);
+                match inline_script_source.language_version {
+                    LanguageVersion::V1 => {
+                        self.plutus_v1_used = true;
+                    }
+                    LanguageVersion::V2 => {
+                        self.plutus_v2_used = true;
+                    }
+                    LanguageVersion::V3 => {
+                        self.plutus_v3_used = true;
+                    }
+                }
             }
         };
         Ok(())
@@ -1320,6 +1338,7 @@ impl CorePallas {
         let mints = self.process_mints()?;
         let collaterals = self.process_collaterals()?;
         let required_signers = self.process_required_signers()?;
+        let network = self.tx_builder_body.network.clone().unwrap();
         let network_id = match self.tx_builder_body.network.clone() {
             Some(network) => match network {
                 whisky_common::Network::Mainnet => Some(NetworkId::new(NetworkIdKind::Mainnet)),
@@ -1330,6 +1349,16 @@ impl CorePallas {
         let total_collateral = self.process_total_collateral()?;
         let reference_inputs = self.process_reference_inputs()?;
         let voting_procedures = self.process_voting_procedures()?;
+        let cost_models = get_cost_models_from_network(&network);
+        let plutus_version: Option<u8> = if self.plutus_v3_used {
+            Some(2)
+        } else if self.plutus_v2_used {
+            Some(1)
+        } else if self.plutus_v1_used {
+            Some(0)
+        } else {
+            None
+        };
         let witness_set = self.process_witness_set(
             inputs.clone(),
             certificates.clone(),
@@ -1337,6 +1366,24 @@ impl CorePallas {
             mints.clone(),
             voting_procedures.clone(),
         )?;
+        let script_data_hash = match plutus_version {
+            Some(version) => {
+                let cost_model = match version {
+                    0 => cost_models.get(0),
+                    1 => cost_models.get(1),
+                    2 => cost_models.get(2),
+                    _ => None,
+                };
+                let language_view = cost_model.map(|cm| LanguageView(version, cm.clone()));
+                Some(
+                    ScriptData::build_for(&witness_set.inner, &language_view)
+                        .unwrap()
+                        .hash()
+                        .to_string(),
+                )
+            }
+            None => None,
+        };
 
         let tx_body = TransactionBody::new(
             inputs,
@@ -1348,7 +1395,7 @@ impl CorePallas {
             None,
             validity_interval_start,
             mints,
-            None,
+            script_data_hash,
             collaterals,
             required_signers,
             network_id,
