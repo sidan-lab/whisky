@@ -4,15 +4,16 @@ use pallas::ledger::primitives::conway::{
     LanguageView, Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag, ScriptData,
 };
 use pallas::ledger::primitives::Fragment;
-use whisky_common::get_cost_models_from_network;
+use whisky_common::{get_cost_models_from_network, MintItem, Output, PubKeyTxIn, RefTxIn};
 use whisky_common::{
+    Certificate as WhiskyCertificate,
     Certificate::{BasicCertificate, ScriptCertificate, SimpleScriptCertificate},
     CertificateType,
     DatumSource::{self, InlineDatumSource, ProvidedDatumSource},
     LanguageVersion,
     ScriptSource::{self, InlineScriptSource, ProvidedScriptSource},
     SimpleScriptTxInParameter::{InlineSimpleScriptSource, ProvidedSimpleScriptSource},
-    TxBuilderBody, TxIn, WError,
+    TxBuilderBody, TxIn, Vote as WhiskyVote, WError, Withdrawal as WhiskyWithdrawal,
     Withdrawal::{PlutusScriptWithdrawal, PubKeyWithdrawal, SimpleScriptWithdrawal},
 };
 
@@ -38,8 +39,8 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct CorePallas {
-    pub tx_builder_body: TxBuilderBody,
     pub tx_evaluation_multiplier_percentage: u64,
+    pub protocol_params: whisky_common::Protocol,
 
     // Required info for balancing transaction
     pub inputs_map: HashMap<TransactionInput, Value>,
@@ -65,10 +66,10 @@ pub struct CorePallas {
 }
 
 impl CorePallas {
-    pub fn new(tx_builder_body: TxBuilderBody, tx_evaluation_multiplier_percentage: u64) -> Self {
+    pub fn new(tx_evaluation_multiplier_percentage: u64) -> Self {
         Self {
-            tx_builder_body,
             tx_evaluation_multiplier_percentage,
+            protocol_params: whisky_common::Protocol::default(),
             inputs_map: HashMap::new(),
             collaterals_map: HashMap::new(),
             native_scripts_vec: vec![],
@@ -88,9 +89,12 @@ impl CorePallas {
         }
     }
 
-    fn process_inputs(&mut self) -> Result<Vec<TransactionInput>, WError> {
+    fn process_inputs(
+        &mut self,
+        whisky_inputs: Vec<TxIn>,
+    ) -> Result<Vec<TransactionInput>, WError> {
         let mut inputs: Vec<TransactionInput> = vec![];
-        for tx_in in self.tx_builder_body.inputs.clone() {
+        for tx_in in whisky_inputs.clone() {
             match tx_in {
                 TxIn::PubKeyTxIn(pub_key_tx_in) => {
                     let input = TransactionInput::new(
@@ -200,9 +204,12 @@ impl CorePallas {
         Ok(inputs)
     }
 
-    fn process_outputs(&mut self) -> Result<Vec<TransactionOutput<'static>>, WError> {
+    fn process_outputs(
+        &mut self,
+        whisky_outputs: Vec<Output>,
+    ) -> Result<Vec<TransactionOutput<'static>>, WError> {
         let mut outputs: Vec<TransactionOutput> = vec![];
-        let whisky_outputs = self.tx_builder_body.outputs.clone();
+        let whisky_outputs = whisky_outputs.clone();
         for output in &whisky_outputs {
             let datum: Option<Datum> = match &output.datum {
                 Some(datum_source) => match datum_source {
@@ -274,10 +281,8 @@ impl CorePallas {
         Ok(outputs)
     }
 
-    fn process_fee(&mut self) -> Result<u64, WError> {
-        self.tx_builder_body
-            .fee
-            .clone()
+    fn process_fee(&mut self, whisky_fee: Option<String>) -> Result<u64, WError> {
+        whisky_fee
             .ok_or_else(|| {
                 WError::new(
                     "WhiskyPallas - Adding fee:",
@@ -293,7 +298,10 @@ impl CorePallas {
             })
     }
 
-    fn process_certificates(&mut self) -> Result<Option<Vec<Certificate>>, WError> {
+    fn process_certificates(
+        &mut self,
+        whisky_certificates: Vec<WhiskyCertificate>,
+    ) -> Result<Option<Vec<Certificate>>, WError> {
         let mut certificates: Vec<Certificate> = vec![];
 
         fn process_certificate_type(cert_type: &CertificateType) -> Result<Certificate, WError> {
@@ -579,7 +587,7 @@ impl CorePallas {
             }
         }
 
-        for cert in self.tx_builder_body.certificates.clone() {
+        for cert in whisky_certificates.clone() {
             match cert {
                 BasicCertificate(certificate_type) => {
                     certificates.push(process_certificate_type(&certificate_type)?);
@@ -651,9 +659,12 @@ impl CorePallas {
         }
     }
 
-    fn process_withdrawals(&mut self) -> Result<Option<Vec<(RewardAccount, u64)>>, WError> {
+    fn process_withdrawals(
+        &mut self,
+        whisky_withdrawals: Vec<WhiskyWithdrawal>,
+    ) -> Result<Option<Vec<(RewardAccount, u64)>>, WError> {
         let mut withdrawals: Vec<(RewardAccount, u64)> = vec![];
-        for withdrawal in self.tx_builder_body.withdrawals.clone() {
+        for withdrawal in whisky_withdrawals.clone() {
             match withdrawal {
                 PubKeyWithdrawal(pub_key_withdrawal) => {
                     let reward_account_bytes = bytes_from_bech32(&pub_key_withdrawal.address)?;
@@ -734,9 +745,12 @@ impl CorePallas {
         })
     }
 
-    fn process_mints(&mut self) -> Result<Option<MultiassetNonZeroInt>, WError> {
+    fn process_mints(
+        &mut self,
+        whisky_mints: Vec<MintItem>,
+    ) -> Result<Option<MultiassetNonZeroInt>, WError> {
         let mut mints: Vec<(String, Vec<(String, i64)>)> = vec![];
-        for mint in self.tx_builder_body.mints.clone() {
+        for mint in whisky_mints.clone() {
             match mint {
                 whisky_common::MintItem::ScriptMint(script_mint) => {
                     let mint_param = script_mint.mint;
@@ -858,9 +872,12 @@ impl CorePallas {
         })
     }
 
-    fn process_collaterals(&mut self) -> Result<Option<Vec<TransactionInput>>, WError> {
+    fn process_collaterals(
+        &mut self,
+        whisky_collaterals: Vec<PubKeyTxIn>,
+    ) -> Result<Option<Vec<TransactionInput>>, WError> {
         let mut collaterals: Vec<TransactionInput> = vec![];
-        for collateral in self.tx_builder_body.collaterals.clone() {
+        for collateral in whisky_collaterals.clone() {
             let transaction_input =
                 TransactionInput::new(&collateral.tx_in.tx_hash, collateral.tx_in.tx_index.into())?;
             collaterals.push(transaction_input.clone());
@@ -876,9 +893,12 @@ impl CorePallas {
         })
     }
 
-    fn process_required_signers(&mut self) -> Result<Option<RequiredSigners>, WError> {
+    fn process_required_signers(
+        &mut self,
+        whisky_required_signers: Vec<String>,
+    ) -> Result<Option<RequiredSigners>, WError> {
         let mut required_signers: Vec<String> = vec![];
-        for signer in self.tx_builder_body.required_signatures.clone() {
+        for signer in whisky_required_signers.clone() {
             required_signers.push(signer);
         }
         Ok(if required_signers.is_empty() {
@@ -888,8 +908,11 @@ impl CorePallas {
         })
     }
 
-    fn process_total_collateral(&mut self) -> Result<Option<u64>, WError> {
-        if let Some(total_collateral) = self.tx_builder_body.total_collateral.clone() {
+    fn process_total_collateral(
+        &mut self,
+        whisky_total_collateral: Option<String>,
+    ) -> Result<Option<u64>, WError> {
+        if let Some(total_collateral) = whisky_total_collateral.clone() {
             Ok(Some(total_collateral.parse::<u64>().map_err(|e| {
                 WError::new(
                     "WhiskyPallas - Processing total collateral:",
@@ -945,6 +968,7 @@ impl CorePallas {
 
     fn process_voting_procedures(
         &mut self,
+        whisky_votes: Vec<WhiskyVote>,
     ) -> Result<Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>, WError> {
         let mut voting_procedures: Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)> = vec![];
 
@@ -1026,7 +1050,7 @@ impl CorePallas {
             Ok((voter, vec![(gov_action_id, voting_procedure)]))
         }
 
-        for vote in self.tx_builder_body.votes.clone() {
+        for vote in whisky_votes.clone() {
             match vote {
                 whisky_common::Vote::BasicVote(vote_type) => {
                     let (voter, procedures) = process_vote_type(&vote_type)?;
@@ -1122,8 +1146,12 @@ impl CorePallas {
         }
     }
 
-    fn process_reference_inputs(&mut self) -> Result<Option<Vec<TransactionInput>>, WError> {
-        for ref_input in self.tx_builder_body.reference_inputs.clone() {
+    fn process_reference_inputs(
+        &mut self,
+        whisky_ref_inputs: Vec<RefTxIn>,
+        whisky_inputs: Vec<TxIn>,
+    ) -> Result<Option<Vec<TransactionInput>>, WError> {
+        for ref_input in whisky_ref_inputs.clone() {
             self.ref_inputs_vec.push(TransactionInput::new(
                 &ref_input.tx_hash,
                 ref_input.tx_index.into(),
@@ -1135,8 +1163,7 @@ impl CorePallas {
                 .iter()
                 .filter(|ref_input| {
                     // Check if the input exists in tx_builder_body
-                    self.tx_builder_body
-                        .inputs
+                    whisky_inputs
                         .iter()
                         .find(|input| {
                             input.to_utxo().input.tx_hash
@@ -1327,28 +1354,30 @@ impl CorePallas {
         )
     }
 
-    pub fn build_tx(&mut self) -> Result<String, WError> {
-        let inputs = self.process_inputs()?;
-        let outputs = self.process_outputs()?;
-        let fee = self.process_fee()?;
-        let ttl = self.tx_builder_body.validity_range.invalid_hereafter;
-        let certificates = self.process_certificates()?;
-        let withdrawals = self.process_withdrawals()?;
-        let validity_interval_start = self.tx_builder_body.validity_range.invalid_before;
-        let mints = self.process_mints()?;
-        let collaterals = self.process_collaterals()?;
-        let required_signers = self.process_required_signers()?;
-        let network = self.tx_builder_body.network.clone().unwrap();
-        let network_id = match self.tx_builder_body.network.clone() {
+    pub fn build_tx(&mut self, tx_builder_body: TxBuilderBody) -> Result<String, WError> {
+        let inputs = self.process_inputs(tx_builder_body.inputs.clone())?;
+        let outputs = self.process_outputs(tx_builder_body.outputs)?;
+        let fee = self.process_fee(tx_builder_body.fee)?;
+        let ttl = tx_builder_body.validity_range.invalid_hereafter;
+        let certificates = self.process_certificates(tx_builder_body.certificates)?;
+        let withdrawals = self.process_withdrawals(tx_builder_body.withdrawals)?;
+        let validity_interval_start = tx_builder_body.validity_range.invalid_before;
+        let mints = self.process_mints(tx_builder_body.mints)?;
+        let collaterals = self.process_collaterals(tx_builder_body.collaterals)?;
+        let required_signers =
+            self.process_required_signers(tx_builder_body.required_signatures)?;
+        let network = tx_builder_body.network.clone().unwrap();
+        let network_id = match tx_builder_body.network.clone() {
             Some(network) => match network {
                 whisky_common::Network::Mainnet => Some(NetworkId::new(NetworkIdKind::Mainnet)),
                 _ => Some(NetworkId::new(NetworkIdKind::Testnet)),
             },
             None => None,
         };
-        let total_collateral = self.process_total_collateral()?;
-        let reference_inputs = self.process_reference_inputs()?;
-        let voting_procedures = self.process_voting_procedures()?;
+        let total_collateral = self.process_total_collateral(tx_builder_body.total_collateral)?;
+        let reference_inputs = self
+            .process_reference_inputs(tx_builder_body.reference_inputs, tx_builder_body.inputs)?;
+        let voting_procedures = self.process_voting_procedures(tx_builder_body.votes)?;
         let cost_models = get_cost_models_from_network(&network);
         let plutus_version: Option<u8> = if self.plutus_v3_used {
             Some(2)

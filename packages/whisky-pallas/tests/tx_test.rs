@@ -2,8 +2,9 @@ use whisky_common::{
     Asset, Budget,
     Certificate::{self, BasicCertificate},
     CertificateType, DRepRegistration, Datum, DatumSource, InlineDatumSource, MintItem,
-    MintParameter, Output, ProvidedScriptSource, PubKeyTxIn, Redeemer, ScriptMint, ScriptSource,
-    ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter, ValidityRange,
+    MintParameter, Output, ProvidedScriptSource, PubKeyTxIn, Redeemer, RefTxIn, ScriptMint,
+    ScriptSource, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter,
+    ValidityRange,
 };
 use whisky_pallas::{
     tx_builder::core_pallas::CorePallas, wrapper::transaction_body::DRep,
@@ -66,7 +67,23 @@ fn test_from_tx_builder_body() {
             },
         ],
         collaterals: vec![],
-        reference_inputs: vec![],
+        reference_inputs: vec![
+            RefTxIn {
+                tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
+                tx_index: 1,
+                script_size: Some(0)
+            },
+            RefTxIn {
+                tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
+                tx_index: 2,
+                script_size: Some(0)
+            },
+            RefTxIn {
+                tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
+                tx_index: 3,
+                script_size: Some(0)
+            }
+        ],
         withdrawals: vec![],
         mints: vec![
             MintItem::ScriptMint(ScriptMint {
