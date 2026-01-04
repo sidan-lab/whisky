@@ -120,12 +120,12 @@ fn test_from_tx_builder_body() {
             invalid_hereafter: None,
         },
         signing_key: vec![],
-        network: None,
+        network: Some(whisky_common::Network::Preprod),
         total_collateral: None,
         collateral_return_address: None,
     };
-    let mut core_pallas = CorePallas::new(tx_builder_body, 100);
-    let result = core_pallas.build_tx();
+    let mut core_pallas = CorePallas::new(100);
+    let result = core_pallas.build_tx(tx_builder_body.clone());
     println!("Serialized transaction hex: {}", result.unwrap());
 }
 
