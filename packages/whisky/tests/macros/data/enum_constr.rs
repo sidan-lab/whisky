@@ -3,7 +3,7 @@ mod tests {
     use super::super::constr_wrapper::Account;
     use whisky::{
         data::{Bool, ByteString, Constr, Constr0, Constr2, Int, PlutusDataJson, Tuple, Value},
-        Asset,
+        Asset, WData,
     };
     use whisky_macros::ConstrEnum;
 
@@ -174,5 +174,39 @@ mod tests {
         )
         .to_json_string();
         assert_eq!(json, expected);
+    }
+
+    #[test]
+    fn test_abc() {
+        #[derive(Debug, Clone, ConstrEnum)]
+        pub enum UserAccount {
+            UserMobileAccount(Account),
+        }
+
+        let account = Account::from(
+            "508373c93a99495e949ed5101eecb3c4",
+            (
+                "04845038ee499ee8bc0afe56f688f27b2dd76f230d3698a9afcc1b66",
+                false,
+            ),
+            (
+                "b21f857716821354725bc2bd255dc2e5d5fdfa202556039b76c080a5",
+                false,
+            ),
+        );
+        let user_trade_account = UserAccount::UserMobileAccount(account.clone());
+
+        let expect = Constr0::new(account.clone());
+
+        println!(
+            "UserTradeAccount JSON: {}",
+            user_trade_account.to_json_string()
+        );
+        assert_eq!(
+            WData::JSON(expect.to_json_string()).to_cbor().unwrap(),
+            WData::JSON(user_trade_account.to_json_string())
+                .to_cbor()
+                .unwrap()
+        );
     }
 }

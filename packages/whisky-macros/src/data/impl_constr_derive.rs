@@ -170,12 +170,12 @@ pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
-    // Check for #[constr(tag = N)] attribute for custom Constr types
+    // Check for #[constr(N)] attribute for custom tag
     let custom_tag = input.attrs.iter().find_map(|attr| {
         if attr.path.is_ident("constr") {
             attr.parse_args::<syn::LitInt>()
                 .ok()
-                .and_then(|lit| lit.base10_parse::<u32>().ok())
+                .and_then(|lit| lit.base10_parse::<u64>().ok())
         } else {
             None
         }
@@ -203,22 +203,33 @@ pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
         }
     };
 
-    // Analyze the constructor type
-    let (constr_name, tag_opt, fields) = match analyze_constructor(field_ty) {
-        Some(result) => result,
-        None => {
-            return syn::Error::new_spanned(
-                field_ty,
-                "Expected a Constr0, Constr1, Constr2, or Constr type",
-            )
-            .to_compile_error()
-            .into();
+    // Try to analyze the constructor type (for ConstrN types)
+    match analyze_constructor(field_ty) {
+        Some((constr_name, tag_opt, fields)) => {
+            // Inner type is a ConstrN type - use existing behavior
+            generate_constr_wrapper_impl(name, field_ty, &constr_name, tag_opt, custom_tag, &fields)
         }
-    };
+        None => {
+            // Inner type is not a ConstrN type - treat it as a PlutusDataJson implementor
+            // Default tag is 0 unless specified via #[constr(N)]
+            let tag = custom_tag.unwrap_or(0);
+            generate_passthrough_impl(name, field_ty, tag)
+        }
+    }
+}
 
+/// Generate implementation for newtype wrapping a ConstrN type (existing behavior)
+fn generate_constr_wrapper_impl(
+    name: &syn::Ident,
+    _field_ty: &Type,
+    constr_name: &str,
+    tag_opt: Option<u32>,
+    custom_tag: Option<u64>,
+    fields: &[Type],
+) -> TokenStream {
     // Determine the final tag
     let tag = if let Some(t) = tag_opt {
-        t
+        t as u64
     } else if let Some(t) = custom_tag {
         t
     } else {
@@ -245,7 +256,7 @@ pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
         .collect();
 
     // Generate the implementation based on constructor type and field count
-    let constr_ident = syn::Ident::new(&constr_name, Span::call_site());
+    let constr_ident = syn::Ident::new(constr_name, Span::call_site());
 
     let constructor_call = if param_count == 1 {
         // Single field - no Box or tuple wrapper
@@ -295,6 +306,53 @@ pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
 
             fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
                 ::std::vec![self.0.to_json()]
+            }
+        }
+
+        // Also implement PlutusDataJson for Box<Type> to support nested boxing
+        #[automatically_derived]
+        impl PlutusDataJson for ::std::boxed::Box<#name> {
+            fn to_json(&self) -> ::serde_json::Value {
+                self.as_ref().to_json()
+            }
+
+            fn to_json_string(&self) -> ::std::string::String {
+                self.to_json().to_string()
+            }
+
+            fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
+                ::std::vec![self.to_json()]
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+/// Generate implementation for newtype wrapping a type that implements PlutusDataJson
+/// (e.g., types deriving ConstrEnum). Wraps the inner value in a Constr with specified tag.
+fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> TokenStream {
+    let expanded = quote! {
+        impl #name {
+            /// Create a new instance from the inner type
+            pub fn new(inner: #field_ty) -> Self {
+                Self(inner)
+            }
+        }
+
+        // Implement PlutusDataJson by wrapping inner value in a Constr
+        #[automatically_derived]
+        impl PlutusDataJson for #name {
+            fn to_json(&self) -> ::serde_json::Value {
+                whisky::data::Constr::new(#tag, self.0.clone()).to_json()
+            }
+
+            fn to_json_string(&self) -> ::std::string::String {
+                self.to_json().to_string()
+            }
+
+            fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
+                ::std::vec![self.to_json()]
             }
         }
 

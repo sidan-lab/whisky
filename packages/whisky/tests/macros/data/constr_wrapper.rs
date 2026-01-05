@@ -3,7 +3,7 @@ use whisky_macros::ImplConstr;
 
 // Type being tested with ImplConstr that now includes ConstrWrapper functionality
 #[derive(Debug, Clone, ImplConstr)]
-pub struct Account(Constr0<Box<(ByteString, Credential, Credential)>>);
+pub struct Account(pub Constr0<Box<(ByteString, Credential, Credential)>>);
 
 #[cfg(test)]
 mod tests {

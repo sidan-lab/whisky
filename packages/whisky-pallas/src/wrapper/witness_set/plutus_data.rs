@@ -1,7 +1,4 @@
-use pallas::{
-    interop::utxorpc::spec::cardano::plutus_data,
-    ledger::primitives::{conway::PlutusData as PallasPlutusData, Fragment},
-};
+use pallas::ledger::primitives::{conway::PlutusData as PallasPlutusData, Fragment};
 use whisky_common::WError;
 
 #[derive(Debug, Clone)]

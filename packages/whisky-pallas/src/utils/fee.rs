@@ -1,7 +1,4 @@
-use pallas::ledger::primitives::{
-    conway::{TransactionBody, WitnessSet},
-    Fragment,
-};
+use pallas::ledger::primitives::Fragment;
 use whisky_common::{Protocol, WError};
 
 use crate::wrapper::transaction_body::Transaction;

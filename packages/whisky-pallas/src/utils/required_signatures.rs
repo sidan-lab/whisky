@@ -1,6 +1,6 @@
 use pallas::{
     codec::utils::{Bytes, NonEmptySet},
-    ledger::primitives::{conway::VKeyWitness, Fragment},
+    ledger::primitives::conway::VKeyWitness,
 };
 
 pub fn required_signatures_to_mock_witnesses(

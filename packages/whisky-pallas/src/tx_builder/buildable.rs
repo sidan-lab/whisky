@@ -7,10 +7,7 @@ use pallas::{
 use pallas_crypto::key::ed25519::SecretKey;
 use whisky_common::{TxBuildable, TxBuilderBody, WError};
 
-use crate::{
-    wrapper::{transaction_body::Transaction, witness_set::vkey_witness},
-    WhiskyPallas,
-};
+use crate::{wrapper::transaction_body::Transaction, WhiskyPallas};
 
 impl TxBuildable for WhiskyPallas {
     fn set_protocol_params(&mut self, protocol_params: whisky_common::Protocol) {
@@ -42,7 +39,12 @@ impl TxBuildable for WhiskyPallas {
         let transaction_bytes = hex::decode(self.tx_hex.clone()).unwrap();
         let mut transaction = Transaction::decode_bytes(&transaction_bytes)?;
         for signer in &self.tx_builder_body.signing_key {
-            let data = hex::decode(signer).map_err(|e| {
+            let clean_hex = if &signer[0..4] == "5820" && signer.len() == 68 {
+                signer[4..].to_string()
+            } else {
+                signer.to_string()
+            };
+            let data = hex::decode(clean_hex).map_err(|e| {
                 WError::new(
                     "WhiskyPallas CompleteSigning - ",
                     &format!("Failed to decode signing key hex: {}", e.to_string()),

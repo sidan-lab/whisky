@@ -48,6 +48,9 @@ impl DRep {
                 "drep_vkh" => Ok(Self {
                     inner: PallasDRep::Key(Hash::<28>::from(&data[..])),
                 }),
+                "drep" => Ok(Self {
+                    inner: PallasDRep::Key(Hash::<28>::from(&data[..])),
+                }),
                 "drep_script" => Ok(Self {
                     inner: PallasDRep::Script(Hash::<28>::from(&data[..])),
                 }),

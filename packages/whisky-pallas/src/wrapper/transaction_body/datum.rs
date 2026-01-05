@@ -5,7 +5,6 @@ use pallas::{
         traverse::ComputeHash,
     },
 };
-use std::str::FromStr;
 use whisky_common::WError;
 
 #[derive(Debug, PartialEq, Clone)]

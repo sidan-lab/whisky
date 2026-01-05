@@ -1,9 +1,6 @@
 use pallas::{
     codec::utils::PositiveCoin,
-    ledger::primitives::{
-        conway::{Multiasset, Value as PallasValue},
-        Fragment,
-    },
+    ledger::primitives::{conway::Value as PallasValue, Fragment},
 };
 
 use crate::wrapper::transaction_body::MultiassetPositiveCoin;
