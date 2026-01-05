@@ -43,6 +43,7 @@ mod int_tests {
         let record_tx_id = 0;
 
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -177,6 +178,7 @@ mod int_tests {
     #[test]
     fn test_simple_spend() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -203,6 +205,7 @@ mod int_tests {
     #[test]
     fn test_simple_withdraw() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -233,6 +236,7 @@ mod int_tests {
     #[test]
     fn test_plutus_withdraw() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -276,6 +280,7 @@ mod int_tests {
     #[test]
     fn test_native_script_ref() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -304,6 +309,7 @@ mod int_tests {
     #[test]
     fn test_plutus_script_cert_registration() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -329,6 +335,7 @@ mod int_tests {
     #[test]
     fn test_plutus_script_cert_deregistration() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -361,6 +368,7 @@ mod int_tests {
     #[test]
     fn test_mint_two_tokens_with_same_policy() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -401,6 +409,7 @@ mod int_tests {
     #[test]
     fn test_spend_withdraw_and_unreg() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -464,6 +473,7 @@ mod int_tests {
     #[test]
     fn test_embedded_datum_output() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -501,6 +511,7 @@ mod int_tests {
     #[test]
     fn test_register_drep() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -531,6 +542,7 @@ mod int_tests {
     #[test]
     fn test_register_drep_cip129() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -561,6 +573,7 @@ mod int_tests {
     #[test]
     fn test_vote_delegation() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -588,6 +601,7 @@ mod int_tests {
     #[test]
     fn test_drep_vote() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -625,6 +639,7 @@ mod int_tests {
     #[test]
     fn test_cc_vote() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -662,6 +677,7 @@ mod int_tests {
     #[test]
     fn test_simple_spend_with_set_fee() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -689,6 +705,7 @@ mod int_tests {
     #[test]
     fn test_register_stake_with_custom_pp() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -739,6 +756,7 @@ mod int_tests {
     #[test]
     fn test_balance() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -768,6 +786,7 @@ mod int_tests {
     #[test]
     fn output_to_daedalus_address_test() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -796,6 +815,7 @@ mod int_tests {
     #[test]
     fn change_output_to_daedalus_address_test() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -824,6 +844,7 @@ mod int_tests {
     #[test]
     fn test_min_output_with_datum() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -886,6 +907,7 @@ mod int_tests {
     #[test]
     fn test_set_total_collateral() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -925,6 +947,7 @@ mod int_tests {
     #[test]
     fn test_set_total_collateral_and_collateral_return_address() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,

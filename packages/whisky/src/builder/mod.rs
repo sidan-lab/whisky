@@ -42,6 +42,7 @@ pub struct TxBuilder {
 }
 
 pub struct TxBuilderParam {
+    pub serializer: Box<dyn TxBuildable>,
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub submitter: Option<Box<dyn Submitter>>,
@@ -62,7 +63,7 @@ impl TxBuilder {
     /// * `Self` - A new TxBuilder instance
     pub fn new(param: TxBuilderParam) -> Self {
         TxBuilder {
-            serializer: Box::new(WhiskyCSL::new(param.params.clone()).unwrap()),
+            serializer: param.serializer,
             tx_builder_body: TxBuilderBody::new(),
             protocol_params: param.params.clone(),
             tx_in_item: None,
@@ -97,6 +98,7 @@ impl TxBuilder {
     /// * `Self` - A new TxBuilder instance
     pub fn new_core() -> Self {
         Self::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
