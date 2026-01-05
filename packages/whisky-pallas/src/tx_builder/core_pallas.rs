@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use pallas::ledger::primitives::conway::{
     LanguageView, Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag, ScriptData,
+    WitnessSet as PallasWitnessSet,
 };
 use pallas::ledger::primitives::Fragment;
 use whisky_common::{get_cost_models_from_network, MintItem, Output, PubKeyTxIn, RefTxIn};
@@ -17,7 +18,7 @@ use whisky_common::{
     Withdrawal::{PlutusScriptWithdrawal, PubKeyWithdrawal, SimpleScriptWithdrawal},
 };
 
-use crate::utils::calculate_fee;
+use crate::utils::{calculate_fee, required_signatures_to_mock_witnesses};
 use crate::{
     converter::{bytes_from_bech32, convert_value},
     wrapper::{
@@ -1472,6 +1473,7 @@ impl CorePallas {
         let total_script_size = self.total_script_size;
         let protocol_params = self.protocol_params.clone();
         let inputs_map = self.inputs_map.clone();
+        let required_signatures_vec = self.required_signatures_vec.clone();
         let witness_set = self.process_witness_set(
             inputs.clone(),
             certificates.clone(),
@@ -1527,7 +1529,26 @@ impl CorePallas {
                     None, // Treasury donations are currently not supported
                     None, // Treasury donations are currently not supported
                 )?;
-                let mock_tx = Transaction::new(mock_tx_body, witness_set.clone(), true, None)?;
+                let mock_witness_set = PallasWitnessSet {
+                    vkeywitness: required_signatures_to_mock_witnesses(
+                        required_signatures_vec.clone(),
+                    ),
+                    native_script: witness_set.inner.native_script.clone(),
+                    bootstrap_witness: witness_set.inner.bootstrap_witness.clone(),
+                    plutus_v1_script: witness_set.inner.plutus_v1_script.clone(),
+                    plutus_data: witness_set.inner.plutus_data.clone(),
+                    redeemer: witness_set.inner.redeemer.clone(),
+                    plutus_v2_script: witness_set.inner.plutus_v2_script.clone(),
+                    plutus_v3_script: witness_set.inner.plutus_v3_script.clone(),
+                };
+                let mock_tx = Transaction::new(
+                    mock_tx_body,
+                    WitnessSet {
+                        inner: mock_witness_set,
+                    },
+                    true,
+                    None,
+                )?;
                 calculate_fee(mock_tx, total_script_size, protocol_params.clone())?
             }
         };
