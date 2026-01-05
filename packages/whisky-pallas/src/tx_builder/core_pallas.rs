@@ -45,6 +45,7 @@ pub struct CorePallas {
     // Required info for balancing transaction
     pub inputs_map: HashMap<TransactionInput, Value>,
     pub collaterals_map: HashMap<TransactionInput, Value>,
+    pub script_source_ref_inputs: Vec<RefTxIn>,
     pub total_script_size: usize,
 
     // Required info for generating witness set
@@ -73,6 +74,7 @@ impl CorePallas {
             protocol_params: whisky_common::Protocol::default(),
             inputs_map: HashMap::new(),
             collaterals_map: HashMap::new(),
+            script_source_ref_inputs: vec![],
             total_script_size: 0,
             native_scripts_vec: vec![],
             plutus_v1_scripts_vec: vec![],
@@ -952,6 +954,8 @@ impl CorePallas {
                     &inline_script_source.ref_tx_in.tx_hash,
                     inline_script_source.ref_tx_in.tx_index.into(),
                 )?);
+                self.script_source_ref_inputs
+                    .push(inline_script_source.ref_tx_in.clone());
                 match inline_script_source.language_version {
                     LanguageVersion::V1 => {
                         self.plutus_v1_used = true;
@@ -963,7 +967,6 @@ impl CorePallas {
                         self.plutus_v3_used = true;
                     }
                 }
-                self.total_script_size += inline_script_source.script_size;
             }
         };
         Ok(())
@@ -1160,25 +1163,40 @@ impl CorePallas {
                 ref_input.tx_index.into(),
             )?);
         }
-        Ok(Some(
-            self.ref_inputs_vec
-                .clone()
-                .iter()
-                .filter(|ref_input| {
-                    // Check if the input exists in tx_builder_body
-                    whisky_inputs
-                        .iter()
-                        .find(|input| {
-                            input.to_utxo().input.tx_hash
-                                == ref_input.inner.transaction_id.to_string()
-                                && input.to_utxo().input.output_index
-                                    == ref_input.inner.index as u32
-                        })
-                        .is_none()
-                })
-                .cloned()
-                .collect(),
-        ))
+        let final_ref_inputs: Vec<TransactionInput> = self
+            .ref_inputs_vec
+            .clone()
+            .iter()
+            .filter(|ref_input| {
+                // Check if the input exists in tx_builder_body
+                whisky_inputs
+                    .iter()
+                    .find(|input| {
+                        input.to_utxo().input.tx_hash == ref_input.inner.transaction_id.to_string()
+                            && input.to_utxo().input.output_index == ref_input.inner.index as u32
+                    })
+                    .is_none()
+            })
+            .cloned()
+            .collect();
+        for pallas_ref_input in final_ref_inputs.iter() {
+            let Some(script_source_tx_in) =
+                self.script_source_ref_inputs
+                    .iter()
+                    .find(|script_source_tx_in| {
+                        script_source_tx_in.tx_hash
+                            == pallas_ref_input.inner.transaction_id.to_string()
+                            && script_source_tx_in.tx_index == pallas_ref_input.inner.index as u32
+                    })
+            else {
+                continue;
+            };
+            let Some(script_size) = script_source_tx_in.script_size else {
+                continue;
+            };
+            self.total_script_size += script_size;
+        }
+        Ok(Some(final_ref_inputs))
     }
 
     fn process_datum_source(&mut self, datum_source: DatumSource) -> Result<(), WError> {
