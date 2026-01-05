@@ -1455,7 +1455,12 @@ impl CorePallas {
                     None, // Treasury donations are currently not supported
                     None, // Treasury donations are currently not supported
                 )?;
-                calculate_fee(&mock_tx_body.inner, total_script_size, protocol_params)?
+                calculate_fee(
+                    &mock_tx_body.inner,
+                    &witness_set.inner,
+                    total_script_size,
+                    protocol_params,
+                )?
             }
         };
 

@@ -94,7 +94,7 @@ fn test_from_tx_builder_body() {
                 },
                 redeemer: Some(Redeemer {
                     data: "d87980".to_string(),
-                    ex_units: Budget { mem: 0, steps: 0 },
+                    ex_units: Budget { mem: 1000000, steps: 1000000 },
                 }),
                 script_source: Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                     script_cbor: "5101010023259800a518a4d136564004ae69".to_string(),

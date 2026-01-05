@@ -1,12 +1,16 @@
-use pallas::ledger::primitives::{conway::TransactionBody, Fragment};
+use pallas::ledger::primitives::{
+    conway::{TransactionBody, WitnessSet},
+    Fragment,
+};
 use whisky_common::{Protocol, WError};
 
 pub fn calculate_fee(
     transaction_body: &TransactionBody,
+    witness_set: &WitnessSet,
     script_size: usize,
     protocol_params: Protocol,
 ) -> Result<u64, WError> {
-    let mut fee = protocol_params.min_fee_b
+    let fee = protocol_params.min_fee_b
         + transaction_body
             .encode_fragment()
             .map_err(|_| {
@@ -21,8 +25,32 @@ pub fn calculate_fee(
         script_size,
         protocol_params.min_fee_ref_script_cost_per_byte,
     );
-    fee += script_ref_fee;
-    Ok(fee)
+    let Some(redeemers) = &witness_set.redeemer else {
+        return Ok(fee + script_ref_fee);
+    };
+    let script_fee = match redeemers.clone().unwrap() {
+        pallas::ledger::primitives::conway::Redeemers::List(redeemers) => {
+            let mut script_fee: f64 = 0.0;
+            for redeemer in redeemers {
+                let mem_units = redeemer.ex_units.mem;
+                let step_units = redeemer.ex_units.steps;
+                script_fee += mem_units as f64 * protocol_params.price_mem;
+                script_fee += step_units as f64 * protocol_params.price_step;
+            }
+            script_fee.ceil() as u64
+        }
+        pallas::ledger::primitives::conway::Redeemers::Map(btree_map) => {
+            let mut script_fee: f64 = 0.0;
+            for (_, redeemer) in btree_map {
+                let mem_units = redeemer.ex_units.mem;
+                let step_units = redeemer.ex_units.steps;
+                script_fee += mem_units as f64 * protocol_params.price_mem;
+                script_fee += step_units as f64 * protocol_params.price_step;
+            }
+            script_fee.ceil() as u64
+        }
+    };
+    Ok(fee + script_fee + script_ref_fee)
 }
 
 fn calculate_script_ref_fee(script_size: usize, min_fee_ref_script_cost_per_byte: u64) -> u64 {
