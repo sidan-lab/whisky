@@ -23,10 +23,10 @@ use crate::{
     wrapper::{
         transaction_body::{
             Anchor, Certificate, CertificateKind, DRep, DRepKind, Datum, DatumKind, GovActionId,
-            MultiassetNonZeroInt, NetworkId, NetworkIdKind, PoolMetadata, Relay, RelayKind,
-            RequiredSigners, RewardAccount, ScriptRef, ScriptRefKind, StakeCredential,
-            StakeCredentialKind, Transaction, TransactionBody, TransactionInput, TransactionOutput,
-            Value, Vote, VoteKind, Voter, VoterKind, VotingProdecedure,
+            MultiassetNonZeroInt, MultiassetPositiveCoin, NetworkId, NetworkIdKind, PoolMetadata,
+            Relay, RelayKind, RequiredSigners, RewardAccount, ScriptRef, ScriptRefKind,
+            StakeCredential, StakeCredentialKind, Transaction, TransactionBody, TransactionInput,
+            TransactionOutput, Value, Vote, VoteKind, Voter, VoterKind, VotingProdecedure,
         },
         witness_set::{
             native_script::NativeScript,
@@ -1466,6 +1466,57 @@ impl CorePallas {
                 change_value = change_value.add(&value)?;
             }
             // TODO: Add withdrawals and minted values to change_value
+            for (_, amount) in withdrawals.clone().unwrap_or_default() {
+                change_value = change_value.add(&Value::new(amount, None))?;
+            }
+            let mut positive_mint_value = Value::new(0, None);
+            let mut negative_mint_value = Value::new(0, None);
+            if let Some(ma_non_zero_int) = mints.clone() {
+                for (policy_id, assets) in ma_non_zero_int.inner {
+                    for (asset_name, amount) in assets {
+                        if i64::from(amount) > 0 {
+                            positive_mint_value = positive_mint_value.add(&Value::new(
+                                0,
+                                Some(MultiassetPositiveCoin::new(vec![(
+                                    policy_id.to_string(),
+                                    vec![(
+                                        asset_name.to_string(),
+                                        u64::try_from(i64::from(amount)).map_err(|_| {
+                                            WError::new(
+                                                "WhiskyPallas - Building transaction:",
+                                                "Invalid mint amount while balancing change output",
+                                            )
+                                        })?,
+                                    )],
+                                )])?),
+                            ))?;
+                        } else {
+                            negative_mint_value = negative_mint_value.add(&Value::new(
+                                0,
+                                Some(MultiassetPositiveCoin::new(vec![(
+                                    policy_id.to_string(),
+                                    vec![(
+                                        asset_name.to_string(),
+                                        u64::try_from(-i64::from(amount)).map_err(|_| {
+                                            WError::new(
+                                                "WhiskyPallas - Building transaction:",
+                                                "Invalid mint amount while balancing change output",
+                                            )
+                                        })?,
+                                    )],
+                                )])?),
+                            ))?;
+                        }
+                    }
+                }
+            }
+            change_value = change_value.add(&positive_mint_value)?;
+            change_value = change_value.sub(&negative_mint_value).map_err(|_| {
+                WError::new(
+                    "WhiskyPallas - Balancing transaction",
+                    "Burn values not covered by inputs",
+                )
+            })?;
             for output in outputs.iter() {
                 let output_value = match &output.inner {
                     pallas::ledger::primitives::babbage::GenTransactionOutput::PostAlonzo(

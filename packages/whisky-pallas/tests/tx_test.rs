@@ -19,7 +19,7 @@ fn test_from_tx_builder_body() {
                 tx_in: TxInParameter {
                     tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
                     tx_index: 0,
-                    amount: Some(vec![Asset::new_from_str("lovelace", "4633697637")]),
+                    amount: Some(vec![Asset::new_from_str("lovelace", "4633697637"), Asset::new_from_str("0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f07", "1")]),
                     address: Some("addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string()),
                 },
             }),
@@ -101,6 +101,21 @@ fn test_from_tx_builder_body() {
                     language_version: whisky_common::LanguageVersion::V3,
                 })),
             }),
+            MintItem::ScriptMint(ScriptMint {
+                mint: MintParameter {
+                    policy_id: "0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f07".to_string(),
+                    asset_name: "".to_string(),
+                    amount: -1,
+                },
+                redeemer: Some(Redeemer {
+                    data: "d87980".to_string(),
+                    ex_units: Budget { mem: 1000000, steps: 1000000 },
+                }),
+                script_source: Some(ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                    script_cbor: "5101010023259800a518a4d136564004ae69".to_string(),
+                    language_version: whisky_common::LanguageVersion::V3,
+                })),
+            })
         ],
         certificates: vec![
             Certificate::BasicCertificate(CertificateType::DRepRegistration(DRepRegistration {

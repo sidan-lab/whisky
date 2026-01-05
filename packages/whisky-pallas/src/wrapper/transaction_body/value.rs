@@ -42,16 +42,23 @@ impl Value {
                 for (policy_id, assets) in b_ma.iter() {
                     let entry = combined_ma.entry(*policy_id).or_default();
                     for (asset_name, amount) in assets.iter() {
-                        let asset_entry = entry
-                            .entry(asset_name.clone())
-                            .or_insert_with(|| PositiveCoin::try_from(1).unwrap());
-                        let new_amount = u64::from(*asset_entry) + u64::from(amount);
-                        *asset_entry = PositiveCoin::try_from(new_amount).map_err(|_| {
-                            WError::new(
-                                "Value - Add:",
-                                "Failed to create PositiveCoin from added asset amounts",
-                            )
-                        })?;
+                        let asset_entry = entry.entry(asset_name.clone());
+                        match asset_entry {
+                            std::collections::btree_map::Entry::Vacant(_vacant_entry) => {
+                                entry.insert(asset_name.clone(), *amount);
+                            }
+                            std::collections::btree_map::Entry::Occupied(occupied_entry) => {
+                                let new_amount =
+                                    u64::from(*occupied_entry.get()) + u64::from(amount);
+                                *occupied_entry.into_mut() = PositiveCoin::try_from(new_amount)
+                                    .map_err(|_| {
+                                        WError::new(
+                                        "Value - Add:",
+                                        "Failed to create PositiveCoin from added asset amounts",
+                                    )
+                                    })?;
+                            }
+                        }
                     }
                 }
                 Ok(Value {
@@ -79,13 +86,24 @@ impl Value {
                         for (asset_name, amount) in assets.iter() {
                             if let Some(asset_entry) = entry.get_mut(asset_name) {
                                 let new_amount = u64::from(*asset_entry) - u64::from(amount);
-                                *asset_entry = PositiveCoin::try_from(new_amount).map_err(|_| {
+                                if new_amount == 0 {
+                                    entry.remove(asset_name);
+                                } else {
+                                    *asset_entry = PositiveCoin::try_from(new_amount).map_err(|_| {
                                     WError::new(
                                         "Value - Sub:",
                                         "Failed to create PositiveCoin from subtracted asset amounts",
                                     )
                                 })?;
+                                }
                             }
+                        }
+                    }
+                }
+                for (policy_id, _assets) in b_ma.iter() {
+                    if let Some(entry) = combined_ma.get_mut(policy_id) {
+                        if entry.is_empty() {
+                            combined_ma.remove(policy_id);
                         }
                     }
                 }
