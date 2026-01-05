@@ -1455,12 +1455,8 @@ impl CorePallas {
                     None, // Treasury donations are currently not supported
                     None, // Treasury donations are currently not supported
                 )?;
-                calculate_fee(
-                    &mock_tx_body.inner,
-                    &witness_set.inner,
-                    total_script_size,
-                    protocol_params,
-                )?
+                let mock_tx = Transaction::new(mock_tx_body, witness_set.clone(), true, None)?;
+                calculate_fee(mock_tx, total_script_size, protocol_params.clone())?
             }
         };
 
@@ -1496,7 +1492,89 @@ impl CorePallas {
                         )
                     })?;
             }
-            // TODO: subtract deposits from change_value
+            if let Some(certs) = certificates.clone() {
+                for cert in certs {
+                    match cert.inner {
+                        pallas::ledger::primitives::conway::Certificate::StakeRegistration(_) => {
+                            change_value.sub(&Value::new(protocol_params.key_deposit, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::StakeDeregistration(_) => {
+                            change_value =
+                                change_value.add(&Value::new(protocol_params.key_deposit, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::StakeDelegation(_, _) => {}
+                        pallas::ledger::primitives::conway::Certificate::PoolRegistration {
+                            operator: _,
+                            vrf_keyhash: _,
+                            pledge: _,
+                            cost: _,
+                            margin: _,
+                            reward_account: _,
+                            pool_owners: _,
+                            relays: _,
+                            pool_metadata: _,
+                        } => {
+                            change_value = change_value
+                                .sub(&Value::new(protocol_params.pool_deposit, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::PoolRetirement(_, _) => {
+                            change_value = change_value
+                                .add(&Value::new(protocol_params.pool_deposit, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::Reg(_, coin) => {
+                            change_value = change_value.sub(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::UnReg(_, coin) => {
+                            change_value = change_value.add(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::VoteDeleg(_, _) => {}
+                        pallas::ledger::primitives::conway::Certificate::StakeVoteDeleg(
+                            _,
+                            _,
+                            _,
+                        ) => {}
+                        pallas::ledger::primitives::conway::Certificate::StakeRegDeleg(
+                            _,
+                            _,
+                            coin,
+                        ) => {
+                            change_value = change_value.sub(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::VoteRegDeleg(
+                            _,
+                            _,
+                            coin,
+                        ) => {
+                            change_value = change_value.sub(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::StakeVoteRegDeleg(
+                            _,
+                            _,
+                            _,
+                            coin,
+                        ) => {
+                            change_value = change_value.sub(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::AuthCommitteeHot(_, _) => {
+                        }
+                        pallas::ledger::primitives::conway::Certificate::ResignCommitteeCold(
+                            _,
+                            _,
+                        ) => {}
+                        pallas::ledger::primitives::conway::Certificate::RegDRepCert(
+                            _,
+                            coin,
+                            _,
+                        ) => {
+                            change_value = change_value.sub(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::UnRegDRepCert(_, coin) => {
+                            change_value = change_value.add(&Value::new(coin, None))?;
+                        }
+                        pallas::ledger::primitives::conway::Certificate::UpdateDRepCert(_, _) => {}
+                    }
+                }
+            }
             change_value = change_value.sub(&Value::new(fee, None)).map_err(|e| {
                 WError::new(
                     "WhiskyPallas - Building transaction:",

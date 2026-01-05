@@ -1,6 +1,6 @@
 use whisky_common::{
     Asset, Budget,
-    Certificate::{self, BasicCertificate},
+    Certificate::{self},
     CertificateType, DRepRegistration, Datum, DatumSource, InlineDatumSource, MintItem,
     MintParameter, Output, ProvidedScriptSource, PubKeyTxIn, Redeemer, RefTxIn, ScriptMint,
     ScriptSource, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter,

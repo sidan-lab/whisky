@@ -16,6 +16,7 @@ use pallas::{
 };
 use whisky_common::WError;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct WitnessSet<'a> {
     pub inner: PallasWitnessSet<'a>,
 }

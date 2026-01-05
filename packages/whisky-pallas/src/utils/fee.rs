@@ -4,14 +4,17 @@ use pallas::ledger::primitives::{
 };
 use whisky_common::{Protocol, WError};
 
+use crate::wrapper::transaction_body::Transaction;
+
 pub fn calculate_fee(
-    transaction_body: &TransactionBody,
-    witness_set: &WitnessSet,
+    transaction: Transaction,
     script_size: usize,
     protocol_params: Protocol,
 ) -> Result<u64, WError> {
+    let witness_set = &transaction.inner.transaction_witness_set;
     let fee = protocol_params.min_fee_b
-        + transaction_body
+        + transaction
+            .inner
             .encode_fragment()
             .map_err(|_| {
                 WError::new(
