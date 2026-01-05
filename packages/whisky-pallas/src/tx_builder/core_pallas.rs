@@ -45,6 +45,7 @@ pub struct CorePallas {
     // Required info for balancing transaction
     pub inputs_map: HashMap<TransactionInput, Value>,
     pub collaterals_map: HashMap<TransactionInput, Value>,
+    pub total_script_size: usize,
 
     // Required info for generating witness set
     pub native_scripts_vec: Vec<NativeScript>,
@@ -72,6 +73,7 @@ impl CorePallas {
             protocol_params: whisky_common::Protocol::default(),
             inputs_map: HashMap::new(),
             collaterals_map: HashMap::new(),
+            total_script_size: 0,
             native_scripts_vec: vec![],
             plutus_v1_scripts_vec: vec![],
             plutus_v2_scripts_vec: vec![],
@@ -961,6 +963,7 @@ impl CorePallas {
                         self.plutus_v3_used = true;
                     }
                 }
+                self.total_script_size += inline_script_source.script_size;
             }
         };
         Ok(())
