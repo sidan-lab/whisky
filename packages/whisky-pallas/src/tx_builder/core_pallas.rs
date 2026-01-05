@@ -48,6 +48,7 @@ pub struct CorePallas {
     pub collaterals_map: HashMap<TransactionInput, Value>,
     pub script_source_ref_inputs: Vec<RefTxIn>,
     pub total_script_size: usize,
+    pub required_signatures_vec: Vec<String>,
 
     // Required info for generating witness set
     pub native_scripts_vec: Vec<NativeScript>,
@@ -77,6 +78,7 @@ impl CorePallas {
             collaterals_map: HashMap::new(),
             script_source_ref_inputs: vec![],
             total_script_size: 0,
+            required_signatures_vec: vec![],
             native_scripts_vec: vec![],
             plutus_v1_scripts_vec: vec![],
             plutus_v2_scripts_vec: vec![],
@@ -111,6 +113,8 @@ impl CorePallas {
                     })?;
                     let value = convert_value(&asset_vec)?;
                     self.inputs_map.insert(input.clone(), value);
+                    self.required_signatures_vec
+                        .push(bytes_from_bech32(&pub_key_tx_in.tx_in.address.unwrap())?);
                     inputs.push(input);
                 }
                 TxIn::SimpleScriptTxIn(simple_script_tx_in) => {
@@ -286,302 +290,360 @@ impl CorePallas {
         Ok(outputs)
     }
 
+    fn process_certificate_type(
+        &mut self,
+        cert_type: &CertificateType,
+    ) -> Result<Certificate, WError> {
+        match cert_type {
+            CertificateType::RegisterStake(register_stake) => {
+                let stake_cred = StakeCredential::from_bech32(&register_stake.stake_key_address)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeRegistration {
+                    stake_credential: stake_cred,
+                }))?
+            }
+            CertificateType::DeregisterStake(deregister_stake) => {
+                let stake_cred = StakeCredential::from_bech32(&deregister_stake.stake_key_address)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeDeregistration {
+                    stake_credential: stake_cred,
+                }))?
+            }
+            CertificateType::DelegateStake(delegate_stake) => {
+                let stake_cred = StakeCredential::from_bech32(&delegate_stake.stake_key_address)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeDelegation {
+                    stake_credential: stake_cred,
+                    pool_key_hash: delegate_stake.pool_id.clone(),
+                }))?
+            }
+            CertificateType::RegisterPool(register_pool) => {
+                let mut relays: Vec<Relay> = vec![];
+                for relay in &register_pool.pool_params.relays {
+                    match relay {
+                        whisky_common::Relay::SingleHostAddr(single_host_addr) => {
+                            relays.push(Relay::new(RelayKind::SingleHostAddr(
+                                single_host_addr.port.map(|p| p.into()),
+                                single_host_addr.ipv4.clone(),
+                                single_host_addr.ipv6.clone(),
+                            ))?);
+                        }
+                        whisky_common::Relay::SingleHostName(single_host_name) => {
+                            relays.push(Relay::new(RelayKind::SingleHostName(
+                                single_host_name.port.map(|p| p.into()),
+                                single_host_name.domain_name.clone(),
+                            ))?);
+                        }
+                        whisky_common::Relay::MultiHostName(multi_host_name) => {
+                            relays.push(Relay::new(RelayKind::MultiHostName(
+                                multi_host_name.domain_name.clone(),
+                            ))?);
+                        }
+                    }
+                }
+                // TODO: convert pool operator and owners from bech32 if needed
+                Ok(Certificate::new(CertificateKind::PoolRegistration {
+                    operator: register_pool.pool_params.operator.clone(),
+                    vrf_keyhash: register_pool.pool_params.vrf_key_hash.clone(),
+                    pledge: register_pool
+                        .pool_params
+                        .pledge
+                        .clone()
+                        .parse::<u64>()
+                        .map_err(|e| {
+                            WError::new(
+                                "Certificate - Pool Registration: Invalid pledge amount",
+                                &e.to_string(),
+                            )
+                        })?,
+                    cost: register_pool
+                        .pool_params
+                        .cost
+                        .clone()
+                        .parse::<u64>()
+                        .map_err(|e| {
+                            WError::new(
+                                "Certificate - Pool Registration: Invalid cost amount",
+                                &e.to_string(),
+                            )
+                        })?,
+                    margin: register_pool.pool_params.margin,
+                    reward_account: RewardAccount::new(bytes_from_bech32(
+                        &register_pool.pool_params.reward_address,
+                    )?)?,
+                    pool_owners: register_pool.pool_params.owners.clone(),
+                    relays,
+                    pool_metadata: register_pool
+                        .pool_params
+                        .metadata
+                        .clone()
+                        .map(|metadata| PoolMetadata::new(metadata.url, metadata.hash).unwrap()),
+                }))?
+            }
+            CertificateType::RetirePool(retire_pool) => {
+                // TODO: convert pool id from bech32 if needed
+                Ok(Certificate::new(CertificateKind::PoolRetirement {
+                    pool_key_hash: retire_pool.pool_id.clone(),
+                    epoch: retire_pool.epoch.into(),
+                }))?
+            }
+            CertificateType::VoteDelegation(vote_delegation) => {
+                let drep: DRep = match &vote_delegation.drep {
+                    whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                    whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                    whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
+                };
+                let stake_cred = StakeCredential::from_bech32(&vote_delegation.stake_key_address)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::VoteDeleg {
+                    stake_credential: stake_cred,
+                    drep,
+                }))?
+            }
+            CertificateType::StakeAndVoteDelegation(stake_and_vote_delegation) => {
+                let drep: DRep = match &stake_and_vote_delegation.drep {
+                    whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                    whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                    whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
+                };
+                let stake_cred =
+                    StakeCredential::from_bech32(&stake_and_vote_delegation.stake_key_address)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeVoteDeleg {
+                    stake_credential: stake_cred,
+                    pool_key_hash: stake_and_vote_delegation.pool_key_hash.clone(),
+                    drep,
+                }))?
+            }
+            CertificateType::StakeRegistrationAndDelegation(stake_registration_and_delegation) => {
+                let stake_cred = StakeCredential::from_bech32(
+                    &stake_registration_and_delegation.stake_key_address,
+                )?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeRegDeleg {
+                    stake_credential: stake_cred,
+                    pool_key_hash: stake_registration_and_delegation.pool_key_hash.clone(),
+                    amount: stake_registration_and_delegation.coin.into(),
+                }))?
+            }
+            CertificateType::VoteRegistrationAndDelegation(vote_registration_and_delegation) => {
+                let drep: DRep = match &vote_registration_and_delegation.drep {
+                    whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                    whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                    whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
+                };
+                let stake_cred = StakeCredential::from_bech32(
+                    &vote_registration_and_delegation.stake_key_address,
+                )?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::VoteRegDeleg {
+                    stake_credential: stake_cred,
+                    drep,
+                    amount: vote_registration_and_delegation.coin.into(),
+                }))?
+            }
+            CertificateType::StakeVoteRegistrationAndDelegation(
+                stake_vote_registration_and_delegation,
+            ) => {
+                let drep: DRep = match &stake_vote_registration_and_delegation.drep {
+                    whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
+                    whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
+                    whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
+                };
+                let stake_cred = StakeCredential::from_bech32(
+                    &stake_vote_registration_and_delegation.stake_key_address,
+                )?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::StakeVoteRegDeleg {
+                    stake_credential: stake_cred,
+                    pool_key_hash: stake_vote_registration_and_delegation.pool_key_hash.clone(),
+                    drep,
+                    amount: stake_vote_registration_and_delegation.coin.into(),
+                }))?
+            }
+            CertificateType::CommitteeHotAuth(committee_hot_auth) => {
+                let committee_cold_cred =
+                    StakeCredential::from_bech32(&committee_hot_auth.committee_cold_key_address)?;
+                match committee_cold_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::AuthCommitteeHot {
+                    committee_cold_cred,
+                    committee_hot_cred: StakeCredential::from_bech32(
+                        &committee_hot_auth.committee_hot_key_address,
+                    )?,
+                }))?
+            }
+            CertificateType::CommitteeColdResign(committee_cold_resign) => {
+                let anchor: Option<Anchor> = match &committee_cold_resign.anchor {
+                    Some(anchor_data) => Some(Anchor::new(
+                        anchor_data.anchor_url.clone(),
+                        anchor_data.anchor_data_hash.clone(),
+                    )?),
+                    None => None,
+                };
+                let committee_cold_cred = StakeCredential::from_bech32(
+                    &committee_cold_resign.committee_cold_key_address,
+                )?;
+                match committee_cold_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                    }
+                }
+                Ok(Certificate::new(CertificateKind::ResignCommitteeCold {
+                    committee_cold_cred,
+                    anchor,
+                }))?
+            }
+            CertificateType::DRepRegistration(drep_registration) => {
+                let drep: DRep = DRep::from_bech32(&drep_registration.drep_id)?;
+                let drep_cred = match &drep.inner {
+                    pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                        StakeCredential::new(StakeCredentialKind::KeyHash {
+                            key_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                        StakeCredential::new(StakeCredentialKind::ScriptHash {
+                            script_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    _ => {
+                        return Err(WError::new(
+                            "Certificate - DRep Registration:",
+                            "DRep must be either Key or Script type",
+                        ));
+                    }
+                };
+                Ok(Certificate::new(CertificateKind::RegDRepCert {
+                    drep_cred,
+                    amount: drep_registration.coin.into(),
+                    anchor: drep_registration.anchor.clone().map(|anchor_data| {
+                        Anchor::new(anchor_data.anchor_url, anchor_data.anchor_data_hash).unwrap()
+                    }),
+                }))?
+            }
+            CertificateType::DRepDeregistration(drep_deregistration) => {
+                let drep: DRep = DRep::from_bech32(&drep_deregistration.drep_id)?;
+                let drep_cred = match &drep.inner {
+                    pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                        StakeCredential::new(StakeCredentialKind::KeyHash {
+                            key_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                        StakeCredential::new(StakeCredentialKind::ScriptHash {
+                            script_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    _ => {
+                        return Err(WError::new(
+                            "Certificate - DRep Deregistration:",
+                            "DRep must be either Key or Script type",
+                        ));
+                    }
+                };
+                Ok(Certificate::new(CertificateKind::UnRegDRepCert {
+                    drep_cred,
+                    amount: drep_deregistration.coin.into(),
+                }))?
+            }
+            CertificateType::DRepUpdate(drep_update) => {
+                let drep: DRep = DRep::from_bech32(&drep_update.drep_id)?;
+                let drep_cred = match &drep.inner {
+                    pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                        StakeCredential::new(StakeCredentialKind::KeyHash {
+                            key_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                        StakeCredential::new(StakeCredentialKind::ScriptHash {
+                            script_hash_hex: hash.to_string(),
+                        })?
+                    }
+                    _ => {
+                        return Err(WError::new(
+                            "Certificate - DRep Update:",
+                            "DRep must be either Key or Script type",
+                        ));
+                    }
+                };
+
+                let anchor: Option<Anchor> = match &drep_update.anchor {
+                    Some(anchor_data) => Some(Anchor::new(
+                        anchor_data.anchor_url.clone(),
+                        anchor_data.anchor_data_hash.clone(),
+                    )?),
+                    None => None,
+                };
+                Ok(Certificate::new(CertificateKind::UpdateDRepCert {
+                    drep_cred,
+                    anchor,
+                }))?
+            }
+        }
+    }
+
     fn process_certificates(
         &mut self,
         whisky_certificates: Vec<WhiskyCertificate>,
     ) -> Result<Option<Vec<Certificate>>, WError> {
         let mut certificates: Vec<Certificate> = vec![];
 
-        fn process_certificate_type(cert_type: &CertificateType) -> Result<Certificate, WError> {
-            match cert_type {
-                CertificateType::RegisterStake(register_stake) => {
-                    Ok(Certificate::new(CertificateKind::StakeRegistration {
-                        stake_credential: StakeCredential::from_bech32(
-                            &register_stake.stake_key_address,
-                        )?,
-                    }))?
-                }
-                CertificateType::DeregisterStake(deregister_stake) => {
-                    Ok(Certificate::new(CertificateKind::StakeDeregistration {
-                        stake_credential: StakeCredential::from_bech32(
-                            &deregister_stake.stake_key_address,
-                        )?,
-                    }))?
-                }
-                CertificateType::DelegateStake(delegate_stake) => {
-                    Ok(Certificate::new(CertificateKind::StakeDelegation {
-                        stake_credential: StakeCredential::from_bech32(
-                            &delegate_stake.stake_key_address,
-                        )?,
-                        pool_key_hash: delegate_stake.pool_id.clone(),
-                    }))?
-                }
-                CertificateType::RegisterPool(register_pool) => {
-                    let mut relays: Vec<Relay> = vec![];
-                    for relay in &register_pool.pool_params.relays {
-                        match relay {
-                            whisky_common::Relay::SingleHostAddr(single_host_addr) => {
-                                relays.push(Relay::new(RelayKind::SingleHostAddr(
-                                    single_host_addr.port.map(|p| p.into()),
-                                    single_host_addr.ipv4.clone(),
-                                    single_host_addr.ipv6.clone(),
-                                ))?);
-                            }
-                            whisky_common::Relay::SingleHostName(single_host_name) => {
-                                relays.push(Relay::new(RelayKind::SingleHostName(
-                                    single_host_name.port.map(|p| p.into()),
-                                    single_host_name.domain_name.clone(),
-                                ))?);
-                            }
-                            whisky_common::Relay::MultiHostName(multi_host_name) => {
-                                relays.push(Relay::new(RelayKind::MultiHostName(
-                                    multi_host_name.domain_name.clone(),
-                                ))?);
-                            }
-                        }
-                    }
-                    Ok(Certificate::new(CertificateKind::PoolRegistration {
-                        operator: register_pool.pool_params.operator.clone(),
-                        vrf_keyhash: register_pool.pool_params.vrf_key_hash.clone(),
-                        pledge: register_pool
-                            .pool_params
-                            .pledge
-                            .clone()
-                            .parse::<u64>()
-                            .map_err(|e| {
-                                WError::new(
-                                    "Certificate - Pool Registration: Invalid pledge amount",
-                                    &e.to_string(),
-                                )
-                            })?,
-                        cost: register_pool
-                            .pool_params
-                            .cost
-                            .clone()
-                            .parse::<u64>()
-                            .map_err(|e| {
-                                WError::new(
-                                    "Certificate - Pool Registration: Invalid cost amount",
-                                    &e.to_string(),
-                                )
-                            })?,
-                        margin: register_pool.pool_params.margin,
-                        reward_account: RewardAccount::new(bytes_from_bech32(
-                            &register_pool.pool_params.reward_address,
-                        )?)?,
-                        pool_owners: register_pool.pool_params.owners.clone(),
-                        relays,
-                        pool_metadata: register_pool.pool_params.metadata.clone().map(|metadata| {
-                            PoolMetadata::new(metadata.url, metadata.hash).unwrap()
-                        }),
-                    }))?
-                }
-                CertificateType::RetirePool(retire_pool) => {
-                    Ok(Certificate::new(CertificateKind::PoolRetirement {
-                        pool_key_hash: retire_pool.pool_id.clone(),
-                        epoch: retire_pool.epoch.into(),
-                    }))?
-                }
-                CertificateType::VoteDelegation(vote_delegation) => {
-                    let drep: DRep = match &vote_delegation.drep {
-                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
-                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
-                        whisky_common::DRep::AlwaysNoConfidence => {
-                            DRep::new(DRepKind::NoConfidence)?
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::VoteDeleg {
-                        stake_credential: StakeCredential::from_bech32(
-                            &vote_delegation.stake_key_address,
-                        )?,
-                        drep,
-                    }))?
-                }
-                CertificateType::StakeAndVoteDelegation(stake_and_vote_delegation) => {
-                    let drep: DRep = match &stake_and_vote_delegation.drep {
-                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
-                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
-                        whisky_common::DRep::AlwaysNoConfidence => {
-                            DRep::new(DRepKind::NoConfidence)?
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::StakeVoteDeleg {
-                        stake_credential: StakeCredential::from_bech32(
-                            &stake_and_vote_delegation.stake_key_address,
-                        )?,
-                        pool_key_hash: stake_and_vote_delegation.pool_key_hash.clone(),
-                        drep,
-                    }))?
-                }
-                CertificateType::StakeRegistrationAndDelegation(
-                    stake_registration_and_delegation,
-                ) => Ok(Certificate::new(CertificateKind::StakeRegDeleg {
-                    stake_credential: StakeCredential::from_bech32(
-                        &stake_registration_and_delegation.stake_key_address,
-                    )?,
-                    pool_key_hash: stake_registration_and_delegation.pool_key_hash.clone(),
-                    amount: stake_registration_and_delegation.coin.into(),
-                }))?,
-                CertificateType::VoteRegistrationAndDelegation(
-                    vote_registration_and_delegation,
-                ) => {
-                    let drep: DRep = match &vote_registration_and_delegation.drep {
-                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
-                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
-                        whisky_common::DRep::AlwaysNoConfidence => {
-                            DRep::new(DRepKind::NoConfidence)?
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::VoteRegDeleg {
-                        stake_credential: StakeCredential::from_bech32(
-                            &vote_registration_and_delegation.stake_key_address,
-                        )?,
-                        drep,
-                        amount: vote_registration_and_delegation.coin.into(),
-                    }))?
-                }
-                CertificateType::StakeVoteRegistrationAndDelegation(
-                    stake_vote_registration_and_delegation,
-                ) => {
-                    let drep: DRep = match &stake_vote_registration_and_delegation.drep {
-                        whisky_common::DRep::DRepId(drep_id) => DRep::from_bech32(&drep_id)?,
-                        whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
-                        whisky_common::DRep::AlwaysNoConfidence => {
-                            DRep::new(DRepKind::NoConfidence)?
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::StakeVoteRegDeleg {
-                        stake_credential: StakeCredential::from_bech32(
-                            &stake_vote_registration_and_delegation.stake_key_address,
-                        )?,
-                        pool_key_hash: stake_vote_registration_and_delegation.pool_key_hash.clone(),
-                        drep,
-                        amount: stake_vote_registration_and_delegation.coin.into(),
-                    }))?
-                }
-                CertificateType::CommitteeHotAuth(committee_hot_auth) => {
-                    Ok(Certificate::new(CertificateKind::AuthCommitteeHot {
-                        committee_cold_cred: StakeCredential::from_bech32(
-                            &committee_hot_auth.committee_cold_key_address,
-                        )?,
-                        committee_hot_cred: StakeCredential::from_bech32(
-                            &committee_hot_auth.committee_hot_key_address,
-                        )?,
-                    }))?
-                }
-                CertificateType::CommitteeColdResign(committee_cold_resign) => {
-                    let anchor: Option<Anchor> = match &committee_cold_resign.anchor {
-                        Some(anchor_data) => Some(Anchor::new(
-                            anchor_data.anchor_url.clone(),
-                            anchor_data.anchor_data_hash.clone(),
-                        )?),
-                        None => None,
-                    };
-
-                    Ok(Certificate::new(CertificateKind::ResignCommitteeCold {
-                        committee_cold_cred: StakeCredential::from_bech32(
-                            &committee_cold_resign.committee_cold_key_address,
-                        )?,
-                        anchor,
-                    }))?
-                }
-                CertificateType::DRepRegistration(drep_registration) => {
-                    let drep: DRep = DRep::from_bech32(&drep_registration.drep_id)?;
-                    let drep_cred = match &drep.inner {
-                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
-                            StakeCredential::new(StakeCredentialKind::KeyHash {
-                                key_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
-                            StakeCredential::new(StakeCredentialKind::ScriptHash {
-                                script_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        _ => {
-                            return Err(WError::new(
-                                "Certificate - DRep Registration:",
-                                "DRep must be either Key or Script type",
-                            ));
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::RegDRepCert {
-                        drep_cred,
-                        amount: drep_registration.coin.into(),
-                        anchor: drep_registration.anchor.clone().map(|anchor_data| {
-                            Anchor::new(anchor_data.anchor_url, anchor_data.anchor_data_hash)
-                                .unwrap()
-                        }),
-                    }))?
-                }
-                CertificateType::DRepDeregistration(drep_deregistration) => {
-                    let drep: DRep = DRep::from_bech32(&drep_deregistration.drep_id)?;
-                    let drep_cred = match &drep.inner {
-                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
-                            StakeCredential::new(StakeCredentialKind::KeyHash {
-                                key_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
-                            StakeCredential::new(StakeCredentialKind::ScriptHash {
-                                script_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        _ => {
-                            return Err(WError::new(
-                                "Certificate - DRep Deregistration:",
-                                "DRep must be either Key or Script type",
-                            ));
-                        }
-                    };
-                    Ok(Certificate::new(CertificateKind::UnRegDRepCert {
-                        drep_cred,
-                        amount: drep_deregistration.coin.into(),
-                    }))?
-                }
-                CertificateType::DRepUpdate(drep_update) => {
-                    let drep: DRep = DRep::from_bech32(&drep_update.drep_id)?;
-                    let drep_cred = match &drep.inner {
-                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
-                            StakeCredential::new(StakeCredentialKind::KeyHash {
-                                key_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
-                            StakeCredential::new(StakeCredentialKind::ScriptHash {
-                                script_hash_hex: hash.to_string(),
-                            })?
-                        }
-                        _ => {
-                            return Err(WError::new(
-                                "Certificate - DRep Update:",
-                                "DRep must be either Key or Script type",
-                            ));
-                        }
-                    };
-
-                    let anchor: Option<Anchor> = match &drep_update.anchor {
-                        Some(anchor_data) => Some(Anchor::new(
-                            anchor_data.anchor_url.clone(),
-                            anchor_data.anchor_data_hash.clone(),
-                        )?),
-                        None => None,
-                    };
-                    Ok(Certificate::new(CertificateKind::UpdateDRepCert {
-                        drep_cred,
-                        anchor,
-                    }))?
-                }
-            }
-        }
-
         for cert in whisky_certificates.clone() {
             match cert {
                 BasicCertificate(certificate_type) => {
-                    certificates.push(process_certificate_type(&certificate_type)?);
+                    certificates.push(self.process_certificate_type(&certificate_type)?);
                 }
                 ScriptCertificate(script_certificate) => {
-                    let cert = process_certificate_type(&script_certificate.cert)?;
+                    let cert = self.process_certificate_type(&script_certificate.cert)?;
                     let script_source =
                         script_certificate.script_source.clone().ok_or_else(|| {
                             WError::new(
@@ -636,7 +698,8 @@ impl CorePallas {
                             ));
                         }
                     };
-                    certificates.push(process_certificate_type(&simple_script_certificate.cert)?);
+                    certificates
+                        .push(self.process_certificate_type(&simple_script_certificate.cert)?);
                 }
             }
         }
@@ -656,6 +719,8 @@ impl CorePallas {
             match withdrawal {
                 PubKeyWithdrawal(pub_key_withdrawal) => {
                     let reward_account_bytes = bytes_from_bech32(&pub_key_withdrawal.address)?;
+                    self.required_signatures_vec
+                        .push(reward_account_bytes.clone());
                     let reward_account = RewardAccount::new(reward_account_bytes)?;
                     withdrawals.push((reward_account, pub_key_withdrawal.coin));
                 }
@@ -866,6 +931,8 @@ impl CorePallas {
     ) -> Result<Option<Vec<TransactionInput>>, WError> {
         let mut collaterals: Vec<TransactionInput> = vec![];
         for collateral in whisky_collaterals.clone() {
+            self.required_signatures_vec
+                .push(bytes_from_bech32(&collateral.tx_in.address.unwrap())?);
             let transaction_input =
                 TransactionInput::new(&collateral.tx_in.tx_hash, collateral.tx_in.tx_index.into())?;
             collaterals.push(transaction_input.clone());
@@ -887,6 +954,7 @@ impl CorePallas {
     ) -> Result<Option<RequiredSigners>, WError> {
         let mut required_signers: Vec<String> = vec![];
         for signer in whisky_required_signers.clone() {
+            self.required_signatures_vec.push(signer.clone());
             required_signers.push(signer);
         }
         Ok(if required_signers.is_empty() {
@@ -956,94 +1024,98 @@ impl CorePallas {
         Ok(())
     }
 
+    fn process_vote_type(
+        &mut self,
+        vote_type: &whisky_common::VoteType,
+    ) -> Result<(Voter, Vec<(GovActionId, VotingProdecedure)>), WError> {
+        let voter = match &vote_type.voter {
+            whisky_common::Voter::ConstitutionalCommitteeHotCred(credential) => {
+                match credential {
+                    whisky_common::Credential::KeyHash(key_hash_hex) => {
+                        self.required_signatures_vec.push(key_hash_hex.clone());
+                        Voter::new(VoterKind::ConstitutionalCommitteKey {
+                            key_hash: key_hash_hex.clone(),
+                        })
+                    }
+                    whisky_common::Credential::ScriptHash(script_hash_hex) => {
+                        Voter::new(VoterKind::ConstitutionalCommitteScript {
+                            script_hash: script_hash_hex.clone(),
+                        })
+                    }
+                }
+            }?,
+            whisky_common::Voter::DRepId(drep_id) => {
+                let drep = DRep::from_bech32(&drep_id)?;
+                match drep.inner {
+                    pallas::ledger::primitives::conway::DRep::Key(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                        Voter::new(VoterKind::DrepKey {
+                            key_hash: hash.to_string(),
+                        })
+                    }
+                    pallas::ledger::primitives::conway::DRep::Script(hash) => {
+                        Voter::new(VoterKind::DrepScript {
+                            script_hash: hash.to_string(),
+                        })
+                    }
+                    _ => {
+                        return Err(WError::new(
+                            "Voting Procedure - Voter:",
+                            "DRep must be either Key or Script type",
+                        ));
+                    }
+                }
+            }?,
+            whisky_common::Voter::StakingPoolKeyHash(stake_credential) => {
+                let stake_cred = StakeCredential::from_bech32(&stake_credential)?;
+                match stake_cred.inner {
+                    pallas::ledger::primitives::StakeCredential::ScriptHash(hash) => {
+                        Voter::new(VoterKind::StakePoolKey {
+                            pool_key_hash: hash.to_string(),
+                        })
+                    }
+                    pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
+                        self.required_signatures_vec.push(hash.to_string());
+                        Voter::new(VoterKind::StakePoolKey {
+                            pool_key_hash: hash.to_string(),
+                        })
+                    }
+                }
+            }?,
+        };
+
+        let gov_action_id = GovActionId::new(
+            &vote_type.gov_action_id.tx_hash,
+            vote_type.gov_action_id.tx_index.into(),
+        )?;
+
+        let voting_procedure = VotingProdecedure::new(
+            match &vote_type.voting_procedure.vote_kind {
+                whisky_common::VoteKind::No => Vote::new(VoteKind::No)?,
+                whisky_common::VoteKind::Yes => Vote::new(VoteKind::Yes)?,
+                whisky_common::VoteKind::Abstain => Vote::new(VoteKind::Abstain)?,
+            },
+            match &vote_type.voting_procedure.anchor {
+                Some(anchor_data) => Some(Anchor::new(
+                    anchor_data.anchor_url.clone(),
+                    anchor_data.anchor_data_hash.clone(),
+                )?),
+                None => None,
+            },
+        );
+        Ok((voter, vec![(gov_action_id, voting_procedure)]))
+    }
+
     fn process_voting_procedures(
         &mut self,
         whisky_votes: Vec<WhiskyVote>,
     ) -> Result<Option<Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)>>, WError> {
         let mut voting_procedures: Vec<(Voter, Vec<(GovActionId, VotingProdecedure)>)> = vec![];
 
-        fn process_vote_type(
-            vote_type: &whisky_common::VoteType,
-        ) -> Result<(Voter, Vec<(GovActionId, VotingProdecedure)>), WError> {
-            let voter = match &vote_type.voter {
-                whisky_common::Voter::ConstitutionalCommitteeHotCred(credential) => {
-                    match credential {
-                        whisky_common::Credential::KeyHash(key_hash_hex) => {
-                            Voter::new(VoterKind::ConstitutionalCommitteKey {
-                                key_hash: key_hash_hex.clone(),
-                            })
-                        }
-                        whisky_common::Credential::ScriptHash(script_hash_hex) => {
-                            Voter::new(VoterKind::ConstitutionalCommitteScript {
-                                script_hash: script_hash_hex.clone(),
-                            })
-                        }
-                    }
-                }?,
-                whisky_common::Voter::DRepId(drep_id) => {
-                    let drep = DRep::from_bech32(&drep_id)?;
-                    match drep.inner {
-                        pallas::ledger::primitives::conway::DRep::Key(hash) => {
-                            Voter::new(VoterKind::DrepKey {
-                                key_hash: hash.to_string(),
-                            })
-                        }
-                        pallas::ledger::primitives::conway::DRep::Script(hash) => {
-                            Voter::new(VoterKind::DrepScript {
-                                script_hash: hash.to_string(),
-                            })
-                        }
-                        _ => {
-                            return Err(WError::new(
-                                "Voting Procedure - Voter:",
-                                "DRep must be either Key or Script type",
-                            ));
-                        }
-                    }
-                }?,
-                whisky_common::Voter::StakingPoolKeyHash(stake_credential) => {
-                    let stake_cred = StakeCredential::from_bech32(&stake_credential)?;
-                    match stake_cred.inner {
-                        pallas::ledger::primitives::StakeCredential::ScriptHash(hash) => {
-                            Voter::new(VoterKind::StakePoolKey {
-                                pool_key_hash: hash.to_string(),
-                            })
-                        }
-                        pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
-                            Voter::new(VoterKind::StakePoolKey {
-                                pool_key_hash: hash.to_string(),
-                            })
-                        }
-                    }
-                }?,
-            };
-
-            let gov_action_id = GovActionId::new(
-                &vote_type.gov_action_id.tx_hash,
-                vote_type.gov_action_id.tx_index.into(),
-            )?;
-
-            let voting_procedure = VotingProdecedure::new(
-                match &vote_type.voting_procedure.vote_kind {
-                    whisky_common::VoteKind::No => Vote::new(VoteKind::No)?,
-                    whisky_common::VoteKind::Yes => Vote::new(VoteKind::Yes)?,
-                    whisky_common::VoteKind::Abstain => Vote::new(VoteKind::Abstain)?,
-                },
-                match &vote_type.voting_procedure.anchor {
-                    Some(anchor_data) => Some(Anchor::new(
-                        anchor_data.anchor_url.clone(),
-                        anchor_data.anchor_data_hash.clone(),
-                    )?),
-                    None => None,
-                },
-            );
-            Ok((voter, vec![(gov_action_id, voting_procedure)]))
-        }
-
         for vote in whisky_votes.clone() {
             match vote {
                 whisky_common::Vote::BasicVote(vote_type) => {
-                    let (voter, procedures) = process_vote_type(&vote_type)?;
+                    let (voter, procedures) = self.process_vote_type(&vote_type)?;
                     // Check if voter already exists in voting_procedures
                     if let Some(existing_voter) =
                         voting_procedures.iter_mut().find(|(v, _)| *v == voter)
@@ -1054,7 +1126,7 @@ impl CorePallas {
                     }
                 }
                 whisky_common::Vote::ScriptVote(script_vote) => {
-                    let (voter, procedures) = process_vote_type(&script_vote.vote)?;
+                    let (voter, procedures) = self.process_vote_type(&script_vote.vote)?;
                     // Check if voter already exists in voting_procedures
                     if let Some(existing_voter) =
                         voting_procedures.iter_mut().find(|(v, _)| *v == voter)
@@ -1092,7 +1164,7 @@ impl CorePallas {
                     ));
                 }
                 whisky_common::Vote::SimpleScriptVote(simple_script_vote) => {
-                    let (voter, procedures) = process_vote_type(&simple_script_vote.vote)?;
+                    let (voter, procedures) = self.process_vote_type(&simple_script_vote.vote)?;
                     // Check if voter already exists in voting_procedures
                     if let Some(existing_voter) =
                         voting_procedures.iter_mut().find(|(v, _)| *v == voter)
@@ -1465,7 +1537,6 @@ impl CorePallas {
             for (_, value) in inputs_map {
                 change_value = change_value.add(&value)?;
             }
-            // TODO: Add withdrawals and minted values to change_value
             for (_, amount) in withdrawals.clone().unwrap_or_default() {
                 change_value = change_value.add(&Value::new(amount, None))?;
             }
