@@ -76,12 +76,12 @@ fn test_from_tx_builder_body() {
             RefTxIn {
                 tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
                 tx_index: 2,
-                script_size: Some(0)
+                script_size: Some(1000)
             },
             RefTxIn {
                 tx_hash: "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052".to_string(),
                 tx_index: 3,
-                script_size: Some(0)
+                script_size: Some(1000)
             }
         ],
         withdrawals: vec![],
@@ -111,7 +111,7 @@ fn test_from_tx_builder_body() {
         ],
         votes: vec![],
         change_address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
-        fee: Some(10000.to_string()),
+        fee: None,
         required_signatures: vec![],
         change_datum: None,
         metadata: vec![],
@@ -126,6 +126,7 @@ fn test_from_tx_builder_body() {
     };
     let mut core_pallas = CorePallas::new(100);
     let result = core_pallas.build_tx(tx_builder_body.clone());
+    println!("{}", core_pallas.total_script_size);
     println!("Serialized transaction hex: {}", result.unwrap());
 }
 

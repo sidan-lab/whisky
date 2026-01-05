@@ -7,6 +7,7 @@ use pallas::{
 };
 use whisky_common::WError;
 
+#[derive(Debug, Clone)]
 pub struct RequiredSigners {
     pub inner: PallasRequiredSigners,
 }

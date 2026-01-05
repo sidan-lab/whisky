@@ -5,6 +5,7 @@ pub enum NetworkIdKind {
     Testnet,
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct NetworkId {
     pub inner: PallasNetworkId,
 }

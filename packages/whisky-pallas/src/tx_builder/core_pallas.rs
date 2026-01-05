@@ -17,6 +17,7 @@ use whisky_common::{
     Withdrawal::{PlutusScriptWithdrawal, PubKeyWithdrawal, SimpleScriptWithdrawal},
 };
 
+use crate::utils::calculate_fee;
 use crate::{
     converter::{bytes_from_bech32, convert_value},
     wrapper::{
@@ -283,23 +284,6 @@ impl CorePallas {
             )?);
         }
         Ok(outputs)
-    }
-
-    fn process_fee(&mut self, whisky_fee: Option<String>) -> Result<u64, WError> {
-        whisky_fee
-            .ok_or_else(|| {
-                WError::new(
-                    "WhiskyPallas - Adding fee:",
-                    "Fee is missing from TxBuilderBody",
-                )
-            })?
-            .parse::<u64>()
-            .map_err(|e| {
-                WError::new(
-                    "WhiskyPallas - Adding fee:",
-                    &format!("Failed to parse fee: {}", e.to_string()),
-                )
-            })
     }
 
     fn process_certificates(
@@ -1379,7 +1363,6 @@ impl CorePallas {
     pub fn build_tx(&mut self, tx_builder_body: TxBuilderBody) -> Result<String, WError> {
         let inputs = self.process_inputs(tx_builder_body.inputs.clone())?;
         let outputs = self.process_outputs(tx_builder_body.outputs)?;
-        let fee = self.process_fee(tx_builder_body.fee)?;
         let ttl = tx_builder_body.validity_range.invalid_hereafter;
         let certificates = self.process_certificates(tx_builder_body.certificates)?;
         let withdrawals = self.process_withdrawals(tx_builder_body.withdrawals)?;
@@ -1410,6 +1393,8 @@ impl CorePallas {
         } else {
             None
         };
+        let total_script_size = self.total_script_size;
+        let protocol_params = self.protocol_params.clone();
         let witness_set = self.process_witness_set(
             inputs.clone(),
             certificates.clone(),
@@ -1434,6 +1419,39 @@ impl CorePallas {
                 )
             }
             None => None,
+        };
+        let fee = match tx_builder_body.fee {
+            Some(fee) => fee.parse::<u64>().map_err(|e| {
+                WError::new(
+                    "WhiskyPallas - Building transaction:",
+                    &format!("Failed to parse fee: {}", e.to_string()),
+                )
+            })?,
+            None => {
+                let mock_tx_body = TransactionBody::new(
+                    inputs.clone(),
+                    outputs.clone(),
+                    18446744073709551615, // Max u64 as placeholder fee
+                    ttl,
+                    certificates.clone(),
+                    withdrawals.clone(),
+                    None,
+                    validity_interval_start,
+                    mints.clone(),
+                    script_data_hash.clone(),
+                    collaterals.clone(),
+                    required_signers.clone(),
+                    network_id.clone(),
+                    None,
+                    total_collateral,
+                    reference_inputs.clone(),
+                    voting_procedures.clone(),
+                    None, // Proposals are currently not supported
+                    None, // Treasury donations are currently not supported
+                    None, // Treasury donations are currently not supported
+                )?;
+                calculate_fee(&mock_tx_body.inner, total_script_size, protocol_params)?
+            }
         };
 
         let tx_body = TransactionBody::new(
