@@ -4307,6 +4307,7 @@ dependencies = [
  "whisky-common",
  "whisky-csl",
  "whisky-macros",
+ "whisky-pallas",
  "whisky-provider",
  "whisky-wallet",
 ]
@@ -4395,6 +4396,7 @@ dependencies = [
  "hex",
  "ouroboros",
  "pallas",
+ "pallas-crypto 1.0.0-alpha.3",
  "serde",
  "whisky-common",
 ]

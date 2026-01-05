@@ -115,7 +115,6 @@ impl TxBuilder {
         self.serializer
             .set_tx_builder_body(self.tx_builder_body.clone());
         let tx_hex = self.serializer.serialize_tx_body()?;
-        self.serializer.reset_builder();
         self.serializer.set_tx_hex(tx_hex);
         Ok(self)
     }

@@ -10,6 +10,7 @@ authors = ["Wu Tsz Wai <tszwai@deltadefi.io>", "Hinson Wong <hinson.wong@deltade
 [dependencies]
 hex = "0.4.3"
 pallas = "1.0.0-alpha.3"
+pallas-crypto = "1.0.0-alpha.3"
 serde = "1.0.219"
 ouroboros = "0.18"
 bech32 = "0.11.1"

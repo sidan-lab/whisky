@@ -27,6 +27,7 @@ pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
 maestro-rust-sdk = "1.1.3"
 whisky-csl = { version = "1.0.16", path = "../whisky-csl" }
+whisky-pallas = { version = "1.0.0", path = "../whisky-pallas" }
 whisky-common = { version = "1.0.16", path = "../whisky-common" }
 whisky-provider = { version = "1.0.16", path = "../whisky-provider" }
 whisky-wallet = { version = "1.0.16", path = "../whisky-wallet" }

@@ -41,7 +41,6 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct CorePallas {
-    pub tx_evaluation_multiplier_percentage: u64,
     pub protocol_params: whisky_common::Protocol,
 
     // Required info for balancing transaction
@@ -71,10 +70,9 @@ pub struct CorePallas {
 }
 
 impl CorePallas {
-    pub fn new(tx_evaluation_multiplier_percentage: u64) -> Self {
+    pub fn new(protocol_params: whisky_common::Protocol) -> Self {
         Self {
-            tx_evaluation_multiplier_percentage,
-            protocol_params: whisky_common::Protocol::default(),
+            protocol_params,
             inputs_map: HashMap::new(),
             collaterals_map: HashMap::new(),
             script_source_ref_inputs: vec![],
@@ -1448,7 +1446,10 @@ impl CorePallas {
         let collaterals = self.process_collaterals(tx_builder_body.collaterals)?;
         let required_signers =
             self.process_required_signers(tx_builder_body.required_signatures)?;
-        let network = tx_builder_body.network.clone().unwrap();
+        let network = tx_builder_body
+            .network
+            .clone()
+            .unwrap_or(whisky_common::Network::Mainnet);
         let network_id = match tx_builder_body.network.clone() {
             Some(network) => match network {
                 whisky_common::Network::Mainnet => Some(NetworkId::new(NetworkIdKind::Mainnet)),

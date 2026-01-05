@@ -2,8 +2,8 @@ use whisky_common::{
     Asset, Budget,
     Certificate::{self},
     CertificateType, DRepRegistration, Datum, DatumSource, InlineDatumSource, MintItem,
-    MintParameter, Output, ProvidedScriptSource, PubKeyTxIn, Redeemer, RefTxIn, ScriptMint,
-    ScriptSource, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter,
+    MintParameter, Output, Protocol, ProvidedScriptSource, PubKeyTxIn, Redeemer, RefTxIn,
+    ScriptMint, ScriptSource, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter,
     ValidityRange,
 };
 use whisky_pallas::{
@@ -139,7 +139,7 @@ fn test_from_tx_builder_body() {
         total_collateral: None,
         collateral_return_address: None,
     };
-    let mut core_pallas = CorePallas::new(100);
+    let mut core_pallas = CorePallas::new(Protocol::default());
     let result = core_pallas.build_tx(tx_builder_body.clone(), true);
     println!("{}", core_pallas.total_script_size);
     println!("Serialized transaction hex: {}", result.unwrap());
@@ -164,4 +164,13 @@ fn value_test() {
     let v1 = Value::new(1000, None);
     let v2 = Value::new(2000, None);
     println!("{:?}", v1.add(&v2).unwrap());
+}
+
+#[test]
+fn test_private_key() {
+    let key =
+        hex::decode("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b").unwrap();
+    let key_array: [u8; 32] = key.try_into().expect("key must be 32 bytes");
+    let sk = pallas_crypto::key::ed25519::SecretKey::from(key_array);
+    println!("{:?}", sk);
 }
