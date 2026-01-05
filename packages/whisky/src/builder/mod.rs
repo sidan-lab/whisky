@@ -19,7 +19,7 @@ use whisky_common::data::*;
 use crate::services::*;
 
 pub struct TxBuilder {
-    pub serializer: WhiskyCSL,
+    pub serializer: Box<dyn TxBuildable>,
     pub tx_builder_body: TxBuilderBody,
     pub protocol_params: Option<Protocol>,
     pub tx_in_item: Option<TxIn>,
@@ -42,6 +42,7 @@ pub struct TxBuilder {
 }
 
 pub struct TxBuilderParam {
+    pub serializer: Box<dyn TxBuildable>,
     pub evaluator: Option<Box<dyn Evaluator>>,
     pub fetcher: Option<Box<dyn Fetcher>>,
     pub submitter: Option<Box<dyn Submitter>>,
@@ -62,7 +63,7 @@ impl TxBuilder {
     /// * `Self` - A new TxBuilder instance
     pub fn new(param: TxBuilderParam) -> Self {
         TxBuilder {
-            serializer: WhiskyCSL::new(param.params.clone()).unwrap(),
+            serializer: param.serializer,
             tx_builder_body: TxBuilderBody::new(),
             protocol_params: param.params.clone(),
             tx_in_item: None,
@@ -97,6 +98,7 @@ impl TxBuilder {
     /// * `Self` - A new TxBuilder instance
     pub fn new_core() -> Self {
         Self::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -555,7 +557,7 @@ impl TxBuilder {
             .map_err(WError::from_err("add_txos_from - select_utxos"))?;
 
         for input in selected_inputs {
-            self.serializer.core.add_tx_in(PubKeyTxIn {
+            self.serializer.add_tx_in(PubKeyTxIn {
                 tx_in: TxInParameter {
                     tx_hash: input.input.tx_hash.clone(),
                     tx_index: input.input.output_index,

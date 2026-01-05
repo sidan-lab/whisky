@@ -6,6 +6,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_tx_builder_tx_builder_core() {
         TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -16,6 +17,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_tx_in() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -33,6 +35,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_script_tx_in() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -67,6 +70,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_script_tx_in_with_datum_value() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -101,6 +105,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_script_tx_in_with_ref_script() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -141,6 +146,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_script_tx_in_with_script_value() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -177,6 +183,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_read_only_tx_in_reference() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
@@ -223,6 +230,7 @@ mod tx_builder_core_tests {
     #[test]
     fn test_mint() {
         let mut tx_builder = TxBuilder::new(TxBuilderParam {
+            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
             evaluator: None,
             fetcher: None,
             submitter: None,
