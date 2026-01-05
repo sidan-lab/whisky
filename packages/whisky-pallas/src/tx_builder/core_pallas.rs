@@ -1162,6 +1162,7 @@ impl CorePallas {
                 &ref_input.tx_hash,
                 ref_input.tx_index.into(),
             )?);
+            self.script_source_ref_inputs.push(ref_input.clone());
         }
         let final_ref_inputs: Vec<TransactionInput> = self
             .ref_inputs_vec
