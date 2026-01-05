@@ -7,8 +7,8 @@ use whisky_common::{
     ValidityRange,
 };
 use whisky_pallas::{
-    tx_builder::core_pallas::CorePallas, wrapper::transaction_body::DRep,
-    wrapper::transaction_body::StakeCredential,
+    tx_builder::core_pallas::CorePallas,
+    wrapper::transaction_body::{DRep, StakeCredential, Value},
 };
 
 #[test]
@@ -49,7 +49,7 @@ fn test_from_tx_builder_body() {
         outputs: vec![
             Output {
                 address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
-                amount: vec![Asset::new_from_str("lovelace", "4633697637")],
+                amount: vec![Asset::new_from_str("lovelace", "3633697637")],
                 datum: Some(Datum::Inline("d87980".to_string())),
                 reference_script: Some(whisky_common::OutputScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                     script_cbor: "525101010023259800a518a4d136564004ae69".to_string(),
@@ -58,7 +58,7 @@ fn test_from_tx_builder_body() {
             },
             Output {
                 address: "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj".to_string(),
-                amount: vec![Asset::new_from_str("lovelace", "4633697637")],
+                amount: vec![Asset::new_from_str("lovelace", "3633697637")],
                 datum: Some(Datum::Hash("d87980".to_string())),
                 reference_script: Some(whisky_common::OutputScriptSource::ProvidedScriptSource(ProvidedScriptSource {
                     script_cbor: "525101010023259800a518a4d136564004ae69".to_string(),
@@ -125,7 +125,7 @@ fn test_from_tx_builder_body() {
         collateral_return_address: None,
     };
     let mut core_pallas = CorePallas::new(100);
-    let result = core_pallas.build_tx(tx_builder_body.clone());
+    let result = core_pallas.build_tx(tx_builder_body.clone(), true);
     println!("{}", core_pallas.total_script_size);
     println!("Serialized transaction hex: {}", result.unwrap());
 }
@@ -142,4 +142,11 @@ fn test_stake_cred() {
         "stake_test1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqp8n5xl",
     );
     println!("Stake Credential: {:?}", stake_credential);
+}
+
+#[test]
+fn value_test() {
+    let v1 = Value::new(1000, None);
+    let v2 = Value::new(2000, None);
+    println!("{:?}", v1.add(&v2).unwrap());
 }

@@ -1,6 +1,13 @@
-use pallas::ledger::primitives::{conway::Value as PallasValue, Fragment};
+use pallas::{
+    codec::utils::PositiveCoin,
+    ledger::primitives::{
+        conway::{Multiasset, Value as PallasValue},
+        Fragment,
+    },
+};
 
 use crate::wrapper::transaction_body::MultiassetPositiveCoin;
+use whisky_common::WError;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Value {
@@ -19,17 +26,90 @@ impl Value {
         }
     }
 
-    pub fn encode(&self) -> String {
-        hex::encode(
-            self.inner
-                .encode_fragment()
-                .expect("encoding failed at Value"),
-        )
+    pub fn add(&self, other: &Value) -> Result<Value, WError> {
+        match (&self.inner, &other.inner) {
+            (PallasValue::Coin(a), PallasValue::Coin(b)) => Ok(Value {
+                inner: PallasValue::Coin(a + b),
+            }),
+            (PallasValue::Coin(a), PallasValue::Multiasset(b, b_ma)) => Ok(Value {
+                inner: PallasValue::Multiasset(a + b, b_ma.clone()),
+            }),
+            (PallasValue::Multiasset(a, a_ma), PallasValue::Coin(b)) => Ok(Value {
+                inner: PallasValue::Multiasset(a + b, a_ma.clone()),
+            }),
+            (PallasValue::Multiasset(a, a_ma), PallasValue::Multiasset(b, b_ma)) => {
+                let mut combined_ma = a_ma.clone();
+                for (policy_id, assets) in b_ma.iter() {
+                    let entry = combined_ma.entry(*policy_id).or_default();
+                    for (asset_name, amount) in assets.iter() {
+                        let asset_entry = entry
+                            .entry(asset_name.clone())
+                            .or_insert_with(|| PositiveCoin::try_from(1).unwrap());
+                        let new_amount = u64::from(*asset_entry) + u64::from(amount);
+                        *asset_entry = PositiveCoin::try_from(new_amount).map_err(|_| {
+                            WError::new(
+                                "Value - Add:",
+                                "Failed to create PositiveCoin from added asset amounts",
+                            )
+                        })?;
+                    }
+                }
+                Ok(Value {
+                    inner: PallasValue::Multiasset(a + b, combined_ma),
+                })
+            }
+        }
     }
 
-    pub fn decode_bytes(bytes: &[u8]) -> Result<Self, String> {
-        let inner = PallasValue::decode_fragment(&bytes)
-            .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
+    pub fn sub(&self, other: &Value) -> Result<Value, WError> {
+        match (&self.inner, &other.inner) {
+            (PallasValue::Coin(a), PallasValue::Coin(b)) => Ok(Value {
+                inner: PallasValue::Coin(a - b),
+            }),
+            (PallasValue::Coin(a), PallasValue::Multiasset(b, b_ma)) => Ok(Value {
+                inner: PallasValue::Multiasset(a - b, b_ma.clone()),
+            }),
+            (PallasValue::Multiasset(a, a_ma), PallasValue::Coin(b)) => Ok(Value {
+                inner: PallasValue::Multiasset(a - b, a_ma.clone()),
+            }),
+            (PallasValue::Multiasset(a, a_ma), PallasValue::Multiasset(b, b_ma)) => {
+                let mut combined_ma = a_ma.clone();
+                for (policy_id, assets) in b_ma.iter() {
+                    if let Some(entry) = combined_ma.get_mut(policy_id) {
+                        for (asset_name, amount) in assets.iter() {
+                            if let Some(asset_entry) = entry.get_mut(asset_name) {
+                                let new_amount = u64::from(*asset_entry) - u64::from(amount);
+                                *asset_entry = PositiveCoin::try_from(new_amount).map_err(|_| {
+                                    WError::new(
+                                        "Value - Sub:",
+                                        "Failed to create PositiveCoin from subtracted asset amounts",
+                                    )
+                                })?;
+                            }
+                        }
+                    }
+                }
+                Ok(Value {
+                    inner: PallasValue::Multiasset(a - b, combined_ma),
+                })
+            }
+        }
+    }
+
+    pub fn encode(&self) -> Result<String, WError> {
+        let bytes = self.inner.encode_fragment().map_err(|e| {
+            WError::new(
+                "Value - Encode:",
+                &format!("Fragment encoding failed: {}", e),
+            )
+        })?;
+        Ok(hex::encode(bytes))
+    }
+
+    pub fn decode_bytes(bytes: &[u8]) -> Result<Self, WError> {
+        let inner = PallasValue::decode_fragment(bytes).map_err(|e| {
+            WError::new("Value - Decode:", &format!("Fragment decode error: {}", e))
+        })?;
         Ok(Self { inner })
     }
 }

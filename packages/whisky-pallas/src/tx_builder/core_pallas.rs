@@ -1360,9 +1360,13 @@ impl CorePallas {
         )
     }
 
-    pub fn build_tx(&mut self, tx_builder_body: TxBuilderBody) -> Result<String, WError> {
+    pub fn build_tx(
+        &mut self,
+        tx_builder_body: TxBuilderBody,
+        balanced: bool,
+    ) -> Result<String, WError> {
         let inputs = self.process_inputs(tx_builder_body.inputs.clone())?;
-        let outputs = self.process_outputs(tx_builder_body.outputs)?;
+        let mut outputs = self.process_outputs(tx_builder_body.outputs)?;
         let ttl = tx_builder_body.validity_range.invalid_hereafter;
         let certificates = self.process_certificates(tx_builder_body.certificates)?;
         let withdrawals = self.process_withdrawals(tx_builder_body.withdrawals)?;
@@ -1395,6 +1399,7 @@ impl CorePallas {
         };
         let total_script_size = self.total_script_size;
         let protocol_params = self.protocol_params.clone();
+        let inputs_map = self.inputs_map.clone();
         let witness_set = self.process_witness_set(
             inputs.clone(),
             certificates.clone(),
@@ -1453,6 +1458,56 @@ impl CorePallas {
                 calculate_fee(&mock_tx_body.inner, total_script_size, protocol_params)?
             }
         };
+
+        if balanced {
+            let mut change_value: Value = Value::new(0, None);
+            for (_, value) in inputs_map {
+                change_value = change_value.add(&value)?;
+            }
+            // TODO: Add withdrawals and minted values to change_value
+            for output in outputs.iter() {
+                let output_value = match &output.inner {
+                    pallas::ledger::primitives::babbage::GenTransactionOutput::PostAlonzo(
+                        tx_out,
+                    ) => tx_out.value.clone(),
+                    pallas::ledger::primitives::babbage::GenTransactionOutput::Legacy(tx_out) => {
+                        Err(WError::new(
+                            "WhiskyPallas - Building transaction:",
+                            "Legacy outputs are not supported in balanced transactions",
+                        ))
+                    }?,
+                };
+                change_value = change_value
+                    .sub(&Value {
+                        inner: output_value,
+                    })
+                    .map_err(|e| {
+                        WError::new(
+                            "WhiskyPallas - Building transaction:",
+                            &format!(
+                                "Error while balancing change output, inputs less than outputs: {}",
+                                e.to_string()
+                            ),
+                        )
+                    })?;
+            }
+            // TODO: subtract deposits from change_value
+            change_value = change_value.sub(&Value::new(fee, None)).map_err(|e| {
+                WError::new(
+                    "WhiskyPallas - Building transaction:",
+                    &format!(
+                        "Error while balancing change output, inputs less than outputs + fee: {}",
+                        e.to_string()
+                    ),
+                )
+            })?;
+            outputs.push(TransactionOutput::new(
+                &bytes_from_bech32(&tx_builder_body.change_address)?,
+                change_value,
+                None,
+                None,
+            )?)
+        }
 
         let tx_body = TransactionBody::new(
             inputs,

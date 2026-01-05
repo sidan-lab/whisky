@@ -16,13 +16,15 @@ impl TxBuildable for WhiskyPallas {
     }
 
     fn serialize_tx_body(&mut self) -> Result<String, whisky_common::WError> {
-        let tx_hex = self.core.build_tx(self.tx_builder_body.clone())?;
+        let tx_hex = self.core.build_tx(self.tx_builder_body.clone(), true)?;
         self.tx_hex = tx_hex.clone();
         Ok(tx_hex)
     }
 
     fn unbalanced_serialize_tx_body(&mut self) -> Result<String, whisky_common::WError> {
-        todo!()
+        let tx_hex = self.core.build_tx(self.tx_builder_body.clone(), false)?;
+        self.tx_hex = tx_hex.clone();
+        Ok(tx_hex)
     }
 
     fn complete_signing(&mut self) -> Result<String, whisky_common::WError> {
