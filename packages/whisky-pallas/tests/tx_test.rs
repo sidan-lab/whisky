@@ -1,3 +1,9 @@
+use std::str::FromStr;
+
+use pallas::{
+    codec::utils::Bytes,
+    ledger::primitives::{conway::Tx, Fragment, Hash},
+};
 use whisky_common::{
     Asset, Budget,
     Certificate::{self},
@@ -6,10 +12,7 @@ use whisky_common::{
     ScriptMint, ScriptSource, ScriptTxIn, ScriptTxInParameter, TxBuilderBody, TxIn, TxInParameter,
     ValidityRange,
 };
-use whisky_pallas::{
-    tx_builder::core_pallas::CorePallas,
-    wrapper::transaction_body::{DRep, StakeCredential, Value},
-};
+use whisky_pallas::{converter::bytes_from_bech32, tx_builder::core_pallas::CorePallas};
 
 #[test]
 fn test_from_tx_builder_body() {
@@ -140,37 +143,80 @@ fn test_from_tx_builder_body() {
         collateral_return_address: None,
     };
     let mut core_pallas = CorePallas::new(Protocol::default());
-    let result = core_pallas.build_tx(tx_builder_body.clone(), true);
-    println!("{}", core_pallas.total_script_size);
-    println!("Serialized transaction hex: {}", result.unwrap());
-}
+    let result = core_pallas.build_tx(tx_builder_body.clone(), true).unwrap();
+    let tx_bytes = hex::decode(result.clone()).unwrap();
+    let pallas_tx = Tx::decode_fragment(&tx_bytes).unwrap();
+    for (i, input) in pallas_tx.transaction_body.inputs.iter().enumerate() {
+        if i == 0 {
+            assert!(
+                input.transaction_id.to_string()
+                    == "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052"
+            );
 
-#[test]
-fn test_drep() {
-    let drep = DRep::from_bech32("drep1yfaaqfzaukju6pr5wa4nhzqglv57p46cjlws424m6hhj3kg2k9vj7");
-    println!("DRep: {:?}", drep);
-}
+            assert!(input.index == 0);
+        } else if i == 1 {
+            assert!(
+                input.transaction_id.to_string()
+                    == "db0937db0e8a743e6e97e8cf29077af1e951b52e46f2e2c63ef12a3abaaf9052"
+            );
 
-#[test]
-fn test_stake_cred() {
-    let stake_credential = StakeCredential::from_bech32(
-        "stake_test1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqp8n5xl",
-    );
-    println!("Stake Credential: {:?}", stake_credential);
-}
-
-#[test]
-fn value_test() {
-    let v1 = Value::new(1000, None);
-    let v2 = Value::new(2000, None);
-    println!("{:?}", v1.add(&v2).unwrap());
-}
-
-#[test]
-fn test_private_key() {
-    let key =
-        hex::decode("51022b7e38be01d1cc581230e18030e6e1a3e949a1fdd2aeae5f5412154fe82b").unwrap();
-    let key_array: [u8; 32] = key.try_into().expect("key must be 32 bytes");
-    let sk = pallas_crypto::key::ed25519::SecretKey::from(key_array);
-    println!("{:?}", sk);
+            assert!(input.index == 1);
+        }
+    }
+    for (i, output) in pallas_tx.transaction_body.outputs.iter().enumerate() {
+        match output {
+            pallas::ledger::primitives::babbage::GenTransactionOutput::Legacy(_keep_raw) => {}
+            pallas::ledger::primitives::babbage::GenTransactionOutput::PostAlonzo(output) => {
+                if i == 0 {
+                    assert!(output.address.to_string() == bytes_from_bech32(
+                        "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj"
+                    ).unwrap());
+                    match output.value.clone() {
+                        pallas::ledger::primitives::conway::Value::Coin(coin) => {
+                            assert!(coin.to_string() == "3633697637");
+                        }
+                        pallas::ledger::primitives::conway::Value::Multiasset(coin, ma) => {}
+                    };
+                } else if i == 1 {
+                    assert!(output.address.to_string() == bytes_from_bech32(
+                        "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj"
+                    ).unwrap());
+                    match output.value.clone() {
+                        pallas::ledger::primitives::conway::Value::Coin(coin) => {
+                            assert!(coin.to_string() == "3633697637");
+                        }
+                        pallas::ledger::primitives::conway::Value::Multiasset(coin, ma) => {}
+                    };
+                } else if i == 2 {
+                    assert!(output.address.to_string() == bytes_from_bech32(
+                        "addr_test1qzjhvr7xdqmyk6x7ax84rtgs3uasqyrvglz4k08kwhw4q4jp2fnzs02hl5fhjdtw07kkxeyfac0gf9aepnpp4vv3yy2s67j7tj"
+                    ).unwrap());
+                }
+            }
+        }
+    }
+    for (i, mint) in pallas_tx
+        .clone()
+        .transaction_body
+        .mint
+        .clone()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        let (policy_id, assets) = mint;
+        if i == 0 {
+            assert!(
+                policy_id.to_string() == "0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f07"
+            );
+            let mint_amount = assets.get(&Bytes::from_str("").unwrap()).unwrap();
+            assert!(i64::try_from(*mint_amount).unwrap() == -1)
+        } else if i == 1 {
+            assert!(
+                policy_id.to_string() == "bd3ae991b5aafccafe5ca70758bd36a9b2f872f57f6d3a1ffa0eb777"
+            );
+            let mint_amount = assets.get(&Bytes::from_str("").unwrap()).unwrap();
+            assert!(i64::try_from(*mint_amount).unwrap() == 1)
+        }
+    }
 }
