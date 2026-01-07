@@ -16,8 +16,6 @@ pub use data::*;
 pub use tx_eval::*;
 use whisky_common::data::*;
 
-use crate::services::*;
-
 pub struct TxBuilder {
     pub serializer: Box<dyn TxBuildable>,
     pub tx_builder_body: TxBuilderBody,

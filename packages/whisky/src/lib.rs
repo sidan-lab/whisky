@@ -17,9 +17,30 @@
 //! whisky = "^<the-latest-version>"
 //! ```
 //!
+//! ## Feature Flags
+//!
+//! By default, all features are enabled. You can selectively enable features:
+//!
+//! ```toml
+//! # Full (default) - all features
+//! whisky = "1.0.18"
+//!
+//! # Just common types (minimal)
+//! whisky = { version = "1.0.18", default-features = false }
+//!
+//! # Wallet only (includes csl + common)
+//! whisky = { version = "1.0.18", default-features = false, features = ["wallet"] }
+//!
+//! # Provider only (includes csl + common)
+//! whisky = { version = "1.0.18", default-features = false, features = ["provider"] }
+//!
+//! # CSL only (transaction building without wallet/provider)
+//! whisky = { version = "1.0.18", default-features = false, features = ["csl"] }
+//! ```
+//!
 //! ## Getting Started
 //!
-//! ```rust
+//! ```rust,ignore
 //! use whisky::*;
 //!
 //! async fn my_first_whisky_tx(
@@ -44,18 +65,44 @@
 //!
 //! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
-pub mod builder;
+
+// Data module is always available (uses whisky_common + whisky_macros)
 pub mod data;
+
+// CSL-dependent modules
+#[cfg(feature = "csl")]
+pub mod builder;
+#[cfg(feature = "csl")]
 pub mod parser;
-pub mod services;
+#[cfg(feature = "csl")]
 pub mod transaction;
+#[cfg(feature = "csl")]
 pub mod utils;
-pub use builder::*;
-pub use parser::*;
-pub use transaction::*;
-pub use utils::*;
+
+// Services require both csl and provider
+#[cfg(all(feature = "csl", feature = "provider"))]
+pub mod services;
+
+// Always re-export common and macros
 pub use whisky_common::*;
-pub use whisky_csl::*;
 pub use whisky_macros::*;
-pub use whisky_provider::*;
+
+// CSL re-exports
+#[cfg(feature = "csl")]
+pub use builder::*;
+#[cfg(feature = "csl")]
+pub use parser::*;
+#[cfg(feature = "csl")]
+pub use transaction::*;
+#[cfg(feature = "csl")]
+pub use utils::*;
+#[cfg(feature = "csl")]
+pub use whisky_csl::*;
+
+// Wallet re-exports
+#[cfg(feature = "wallet")]
 pub use whisky_wallet::*;
+
+// Provider re-exports
+#[cfg(feature = "provider")]
+pub use whisky_provider::*;
