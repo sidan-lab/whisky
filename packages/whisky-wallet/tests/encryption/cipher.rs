@@ -45,4 +45,29 @@ mod tests {
 
         assert!(result.is_err(), "expected error with wrong password, got success");
     }
+
+    #[test]
+    fn test_encrypt_output_includes_salt() {
+        let data = "test data for encryption";
+        let key = "mySecretPassword123";
+
+        let encrypted = encrypt_with_cipher(data, key, Some(12)).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&encrypted).unwrap();
+
+        assert!(parsed["iv"].as_str().is_some(), "encrypted output should contain iv");
+        assert!(parsed["salt"].as_str().is_some(), "encrypted output should contain salt");
+        assert!(parsed["ciphertext"].as_str().is_some(), "encrypted output should contain ciphertext");
+        assert!(!parsed["salt"].as_str().unwrap().is_empty(), "salt should not be empty");
+    }
+
+    #[test]
+    fn test_encrypt_decrypt_roundtrip_with_salt() {
+        let original = "test data for encryption with random salt";
+        let key = "mySecretPassword123";
+
+        let encrypted = encrypt_with_cipher(original, key, Some(12)).unwrap();
+        let decrypted = decrypt_with_cipher(&encrypted, key).unwrap();
+
+        assert_eq!(original, decrypted);
+    }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "whisky"
-version = "1.0.17"
+version = "1.0.18"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
@@ -27,11 +27,11 @@ pallas-primitives = "0.31.0"
 pallas-traverse = "0.31.0"
 maestro-rust-sdk = "1.1.3"
 whisky-pallas = { version = "1.0.0", path = "../whisky-pallas" }
-whisky-csl = { version = "1.0.17", path = "../whisky-csl" }
-whisky-common = { version = "1.0.17", path = "../whisky-common" }
-whisky-provider = { version = "1.0.17", path = "../whisky-provider" }
-whisky-wallet = { version = "1.0.17", path = "../whisky-wallet" }
-whisky-macros = { version = "1.0.17", path = "../whisky-macros" }
+whisky-csl = { version = "1.0.18", path = "../whisky-csl" }
+whisky-common = { version = "1.0.18", path = "../whisky-common" }
+whisky-provider = { version = "1.0.18", path = "../whisky-provider" }
+whisky-wallet = { version = "1.0.18", path = "../whisky-wallet" }
+whisky-macros = { version = "1.0.18", path = "../whisky-macros" }
 reqwest = "0.12.5"
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"] }
 futures = "0.3.31"

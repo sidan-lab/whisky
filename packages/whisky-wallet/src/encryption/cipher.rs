@@ -16,8 +16,10 @@ pub fn encrypt_with_cipher(
     // Validate the initialization vector size
     let initialization_vector_size = initialization_vector_size.unwrap_or(IV_LENGTH);
 
-    // Derive a cryptographic key from the input key using PBKDF2 and SHA-256
-    let salt = vec![0u8; initialization_vector_size]; // Using a fixed salt (empty for simplicity)
+    // Generate a random salt for PBKDF2 key derivation
+    let mut salt = vec![0u8; initialization_vector_size];
+    rand::thread_rng().fill_bytes(&mut salt);
+
     let mut derived_key = vec![0u8; 32]; // AES-256 requires a 256-bit key (32 bytes)
 
     // PBKDF2 key derivation (HMAC-SHA-256)
@@ -39,11 +41,13 @@ pub fn encrypt_with_cipher(
         .map_err(WError::from_err("encrypt_with_cipher - cipher.encrypt"))?;
 
     // Return the encrypted data as a JSON-like string (base64 encoding)
-    let iv_base64 = general_purpose::STANDARD.encode(&iv); // Use Engine for encoding
-    let ciphertext_base64 = general_purpose::STANDARD.encode(&ciphertext); // Use Engine for encoding
+    let iv_base64 = general_purpose::STANDARD.encode(&iv);
+    let salt_base64 = general_purpose::STANDARD.encode(&salt);
+    let ciphertext_base64 = general_purpose::STANDARD.encode(&ciphertext);
 
     let result = json!({
         "iv": iv_base64,
+        "salt": salt_base64,
         "ciphertext": ciphertext_base64,
     });
 
