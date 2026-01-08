@@ -76,6 +76,15 @@ jobs:
           --locked
           --verbose
 
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+      - name: Build whisky-pallas
+        run: >
+          cd packages/whisky-pallas &&
+          cargo build
+          --locked
+          --verbose
+
       - name: Create .env file
         run: |
           echo "MAESTRO_API_KEY=${MAESTRO_API_KEY}" >> packages/whisky/.env
@@ -144,6 +153,25 @@ jobs:
         env:
           PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
 
+  publish-pallas-crate:
+    needs: [build-test, publish-common-crate]
+    name: Publish whisky-pallas crate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - run: cd packages/whisky-pallas && cargo publish --token ${PUBLISH_KEY}
+        env:
+          PUBLISH_KEY: ${{ secrets.PUBLISH_KEY }}
+
   publish-csl-crate:
     needs: [build-test, publish-common-crate]
     name: Publish whisky-csl crate
@@ -207,6 +235,7 @@ jobs:
         build-test,
         publish-common-crate,
         publish-csl-crate,
+        publish-pallas-crate,
         publish-provider-crate,
         publish-wallet-crate,
       ]
