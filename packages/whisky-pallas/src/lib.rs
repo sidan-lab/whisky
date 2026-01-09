@@ -1,5 +1,6 @@
 pub mod converter;
 pub mod tx_builder;
+pub mod tx_parser;
 pub mod utils;
 pub mod wrapper;
 

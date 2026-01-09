@@ -3,6 +3,7 @@ use whisky_common::WError;
 
 use crate::wrapper::witness_set::plutus_data::PlutusData;
 
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum RedeemerTag {
     Spend,
     Mint,
@@ -12,12 +13,13 @@ pub enum RedeemerTag {
     Propose,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExUnits {
     pub mem: u64,
     pub steps: u64,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Redeemer {
     pub inner: PallasRedeemer,
 }
