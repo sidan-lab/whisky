@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use pallas::{
     codec::utils::Set,
@@ -11,11 +11,14 @@ use pallas::{
     },
 };
 use whisky_common::{
-    DatumSource, InlineScriptSource, InlineSimpleScriptSource, ProvidedDatumSource,
-    ProvidedScriptSource, ProvidedSimpleScriptSource, Redeemer, UTxO, WError,
+    DatumSource, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
+    ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource, Redeemer, UTxO, WError,
 };
 
-use crate::wrapper::witness_set::redeemer::RedeemerTag;
+use crate::wrapper::{
+    transaction_body::{Datum, DatumKind, ScriptRef},
+    witness_set::redeemer::RedeemerTag,
+};
 
 #[derive(Debug, Clone)]
 pub enum Script {
@@ -35,7 +38,7 @@ pub struct RedeemerIndex {
 pub struct ScriptWitness {
     pub datums: HashMap<String, DatumSource>,
     pub redeemers: HashMap<RedeemerIndex, Redeemer>,
-    scripts: HashMap<String, Script>,
+    pub scripts: HashMap<String, Script>,
 }
 
 pub struct ParserContext {
@@ -112,7 +115,7 @@ impl ParserContext {
         Ok(())
     }
 
-    fn collect_script_witnesses_from_tx_witnesses_set(
+    pub fn collect_script_witnesses_from_tx_witnesses_set(
         &mut self,
         witness_set: WitnessSet,
     ) -> Result<(), WError> {
@@ -325,4 +328,151 @@ impl ParserContext {
         }
         Ok(())
     }
+
+    pub fn collect_script_witnesses_from_tx_body(
+        &mut self,
+        tx_body: TransactionBody,
+    ) -> Result<(), WError> {
+        let inputs = tx_body.inputs;
+        let ref_inputs = tx_body.reference_inputs;
+        let collateral_inputs = tx_body.collateral;
+        let mut collected_inputs: Vec<TransactionInput> = Vec::new();
+
+        for input in inputs.iter() {
+            collected_inputs.push(input.clone());
+        }
+        match ref_inputs {
+            Some(ref_input) => {
+                for input in ref_input.iter() {
+                    collected_inputs.push(input.clone());
+                }
+            }
+            _ => {}
+        }
+        match collateral_inputs {
+            Some(collateral_input) => {
+                for input in collateral_input.iter() {
+                    collected_inputs.push(input.clone());
+                }
+            }
+            _ => {}
+        }
+
+        let collected_input_set = Set::from(collected_inputs);
+
+        for input in collected_input_set.iter() {
+            let utxo_option = self.resolved_utxos.get(input);
+            match utxo_option {
+                Some(utxo) => {}
+                None => {
+                    return Err(WError::new(
+                        "WhiskyPallas - ParserContext - collect_script_witnesses_from_tx_body:",
+                        &format!(
+                            "UTxO not found for input: {}#{}",
+                            input.transaction_id.to_string(),
+                            input.index
+                        ),
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+fn utxo_to_inline_sources(
+    utxo: &UTxO,
+) -> Result<(Option<(String, DatumSource)>, Option<(String, Script)>), WError> {
+    let datum_option: Option<(String, DatumSource)> = match &utxo.output.plutus_data {
+        Some(inline_datum) => {
+            let pallas_datum = Datum::new(DatumKind::Data {
+                plutus_data_hex: inline_datum.to_string(),
+            })?;
+            let datum_hash = pallas_datum.hash()?;
+            Some((
+                datum_hash,
+                DatumSource::InlineDatumSource(InlineDatumSource {
+                    tx_hash: utxo.input.tx_hash.clone(),
+                    tx_index: utxo.input.output_index,
+                }),
+            ))
+        }
+        None => None,
+    };
+    let script_option: Option<(String, Script)> = match &utxo.output.script_ref {
+        Some(script_ref) => {
+            let script_bytes = hex::decode(script_ref).map_err(|_| {
+                WError::new("Whisky Pallas Parser - ", "Error decoding script_ref hex")
+            })?;
+            let pallas_script_ref = ScriptRef::decode_bytes(&script_bytes)
+                .map_err(|_| WError::new("Whisky Pallas Parser - ", "Error decoding script ref"))?;
+            match pallas_script_ref.inner {
+                pallas::ledger::primitives::conway::ScriptRef::NativeScript(native_script) => {
+                    Some((
+                        native_script.compute_hash().to_string(),
+                        Script::ProvidedNative(ProvidedSimpleScriptSource {
+                            script_cbor: hex::encode(native_script.encode_fragment().map_err(
+                                |_| {
+                                    WError::new(
+                                        "Whisky Pallas Parser - ",
+                                        "Error parsing native script source from script ref",
+                                    )
+                                },
+                            )?),
+                        }),
+                    ))
+                }
+                pallas::ledger::primitives::conway::ScriptRef::PlutusV1Script(plutus_script) => {
+                    Some((
+                        plutus_script.compute_hash().to_string(),
+                        Script::ProvidedPlutus(ProvidedScriptSource {
+                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
+                                |_| {
+                                    WError::new(
+                                        "Whisky Pallas Parser - ",
+                                        "Error parsing plutus v1 script source from script ref",
+                                    )
+                                },
+                            )?),
+                            language_version: whisky_common::LanguageVersion::V1,
+                        }),
+                    ))
+                }
+                pallas::ledger::primitives::conway::ScriptRef::PlutusV2Script(plutus_script) => {
+                    Some((
+                        plutus_script.compute_hash().to_string(),
+                        Script::ProvidedPlutus(ProvidedScriptSource {
+                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
+                                |_| {
+                                    WError::new(
+                                        "Whisky Pallas Parser - ",
+                                        "Error parsing plutus v2 script source from script ref",
+                                    )
+                                },
+                            )?),
+                            language_version: whisky_common::LanguageVersion::V2,
+                        }),
+                    ))
+                }
+                pallas::ledger::primitives::conway::ScriptRef::PlutusV3Script(plutus_script) => {
+                    Some((
+                        plutus_script.compute_hash().to_string(),
+                        Script::ProvidedPlutus(ProvidedScriptSource {
+                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
+                                |_| {
+                                    WError::new(
+                                        "Whisky Pallas Parser - ",
+                                        "Error parsing plutus v3 script source from script ref",
+                                    )
+                                },
+                            )?),
+                            language_version: whisky_common::LanguageVersion::V3,
+                        }),
+                    ))
+                }
+            }
+        }
+        None => None,
+    };
+    Ok((datum_option, script_option))
 }
