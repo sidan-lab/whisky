@@ -2,6 +2,7 @@ use std::{collections::HashMap, hash::Hash};
 
 use pallas::{
     codec::utils::Set,
+    interop::utxorpc::spec::cardano::script,
     ledger::{
         primitives::{
             conway::{TransactionBody, WitnessSet},
@@ -12,7 +13,8 @@ use pallas::{
 };
 use whisky_common::{
     DatumSource, InlineDatumSource, InlineScriptSource, InlineSimpleScriptSource,
-    ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource, Redeemer, UTxO, WError,
+    ProvidedDatumSource, ProvidedScriptSource, ProvidedSimpleScriptSource, Redeemer, RefTxIn, UTxO,
+    WError,
 };
 
 use crate::wrapper::{
@@ -406,66 +408,67 @@ fn utxo_to_inline_sources(
             })?;
             let pallas_script_ref = ScriptRef::decode_bytes(&script_bytes)
                 .map_err(|_| WError::new("Whisky Pallas Parser - ", "Error decoding script ref"))?;
+            let script_size = pallas_script_ref.encode().map_or(0, |b| b.len() / 2);
             match pallas_script_ref.inner {
                 pallas::ledger::primitives::conway::ScriptRef::NativeScript(native_script) => {
+                    let script_hash = native_script.compute_hash().to_string();
                     Some((
-                        native_script.compute_hash().to_string(),
-                        Script::ProvidedNative(ProvidedSimpleScriptSource {
-                            script_cbor: hex::encode(native_script.encode_fragment().map_err(
-                                |_| {
-                                    WError::new(
-                                        "Whisky Pallas Parser - ",
-                                        "Error parsing native script source from script ref",
-                                    )
-                                },
-                            )?),
+                        script_hash.clone(),
+                        Script::ReferencedNative(InlineSimpleScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: utxo.input.tx_hash.clone(),
+                                tx_index: utxo.input.output_index,
+                                script_size: Some(script_size),
+                            },
+                            simple_script_hash: script_hash,
+                            script_size,
                         }),
                     ))
                 }
                 pallas::ledger::primitives::conway::ScriptRef::PlutusV1Script(plutus_script) => {
+                    let script_hash = plutus_script.compute_hash().to_string();
                     Some((
-                        plutus_script.compute_hash().to_string(),
-                        Script::ProvidedPlutus(ProvidedScriptSource {
-                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
-                                |_| {
-                                    WError::new(
-                                        "Whisky Pallas Parser - ",
-                                        "Error parsing plutus v1 script source from script ref",
-                                    )
-                                },
-                            )?),
+                        script_hash.clone(),
+                        Script::ReferencedPlutus(InlineScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: utxo.input.tx_hash.clone(),
+                                tx_index: utxo.input.output_index,
+                                script_size: Some(script_size),
+                            },
+                            script_hash: script_hash,
                             language_version: whisky_common::LanguageVersion::V1,
+                            script_size: script_size,
                         }),
                     ))
                 }
                 pallas::ledger::primitives::conway::ScriptRef::PlutusV2Script(plutus_script) => {
+                    let script_hash = plutus_script.compute_hash().to_string();
                     Some((
-                        plutus_script.compute_hash().to_string(),
-                        Script::ProvidedPlutus(ProvidedScriptSource {
-                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
-                                |_| {
-                                    WError::new(
-                                        "Whisky Pallas Parser - ",
-                                        "Error parsing plutus v2 script source from script ref",
-                                    )
-                                },
-                            )?),
+                        script_hash.clone(),
+                        Script::ReferencedPlutus(InlineScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: utxo.input.tx_hash.clone(),
+                                tx_index: utxo.input.output_index,
+                                script_size: Some(script_size),
+                            },
+                            script_hash: script_hash,
                             language_version: whisky_common::LanguageVersion::V2,
+                            script_size: script_size,
                         }),
                     ))
                 }
                 pallas::ledger::primitives::conway::ScriptRef::PlutusV3Script(plutus_script) => {
+                    let script_hash = plutus_script.compute_hash().to_string();
                     Some((
-                        plutus_script.compute_hash().to_string(),
-                        Script::ProvidedPlutus(ProvidedScriptSource {
-                            script_cbor: hex::encode(plutus_script.encode_fragment().map_err(
-                                |_| {
-                                    WError::new(
-                                        "Whisky Pallas Parser - ",
-                                        "Error parsing plutus v3 script source from script ref",
-                                    )
-                                },
-                            )?),
+                        script_hash.clone(),
+                        Script::ReferencedPlutus(InlineScriptSource {
+                            ref_tx_in: RefTxIn {
+                                tx_hash: utxo.input.tx_hash.clone(),
+                                tx_index: utxo.input.output_index,
+                                script_size: Some(script_size),
+                            },
+                            script_hash: script_hash,
+                            script_size: script_size,
                             language_version: whisky_common::LanguageVersion::V3,
                         }),
                     ))
