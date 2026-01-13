@@ -62,12 +62,12 @@ impl ParserContext {
 
     pub fn fill_resolved_utxos(
         &mut self,
-        tx_body: TransactionBody,
+        tx_body: &TransactionBody,
         resolved_utxos: &[UTxO],
     ) -> Result<(), WError> {
-        let inputs = tx_body.inputs;
-        let ref_inputs = tx_body.reference_inputs;
-        let collateral_inputs = tx_body.collateral;
+        let inputs = &tx_body.inputs;
+        let ref_inputs = &tx_body.reference_inputs;
+        let collateral_inputs = &tx_body.collateral;
         let mut collected_inputs: Vec<TransactionInput> = Vec::new();
 
         for input in inputs.iter() {
@@ -119,14 +119,14 @@ impl ParserContext {
 
     pub fn collect_script_witnesses_from_tx_witnesses_set(
         &mut self,
-        witness_set: WitnessSet,
+        witness_set: &WitnessSet,
     ) -> Result<(), WError> {
-        let datums = witness_set.plutus_data;
-        let redeemers = witness_set.redeemer;
-        let plutus_v1_scripts = witness_set.plutus_v1_script;
-        let plutus_v2_scripts = witness_set.plutus_v2_script;
-        let plutus_v3_scripts = witness_set.plutus_v3_script;
-        let native_scripts = witness_set.native_script;
+        let datums = &witness_set.plutus_data;
+        let redeemers = &witness_set.redeemer;
+        let plutus_v1_scripts = &witness_set.plutus_v1_script;
+        let plutus_v2_scripts = &witness_set.plutus_v2_script;
+        let plutus_v3_scripts = &witness_set.plutus_v3_script;
+        let native_scripts = &witness_set.native_script;
 
         match datums {
             Some(datum) => {
@@ -145,7 +145,7 @@ impl ParserContext {
         }
 
         match redeemers {
-            Some(redeemer_set) => match redeemer_set.unwrap() {
+            Some(redeemer_set) => match redeemer_set.clone().unwrap() {
                 pallas::ledger::primitives::conway::Redeemers::List(redeemers) => {
                     for redeemer in redeemers {
                         let tag = match redeemer.tag {
@@ -333,11 +333,11 @@ impl ParserContext {
 
     pub fn collect_script_witnesses_from_tx_body(
         &mut self,
-        tx_body: TransactionBody,
+        tx_body: &TransactionBody,
     ) -> Result<(), WError> {
-        let inputs = tx_body.inputs;
-        let ref_inputs = tx_body.reference_inputs;
-        let collateral_inputs = tx_body.collateral;
+        let inputs = &tx_body.inputs;
+        let ref_inputs = &tx_body.reference_inputs;
+        let collateral_inputs = &tx_body.collateral;
         let mut collected_inputs: Vec<TransactionInput> = Vec::new();
 
         for input in inputs.iter() {
@@ -365,7 +365,7 @@ impl ParserContext {
         for input in collected_input_set.iter() {
             let utxo_option = self.resolved_utxos.get(input);
             match utxo_option {
-                Some(utxo) => {}
+                Some(_utxo) => {}
                 None => {
                     return Err(WError::new(
                         "WhiskyPallas - ParserContext - collect_script_witnesses_from_tx_body:",
