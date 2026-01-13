@@ -125,6 +125,8 @@ fn utxo_to_tx_in(
                                 }));
                             }
                         }
+                    } else {
+                        return Ok(TxIn::PubKeyTxIn(PubKeyTxIn { tx_in: tx_in_param }));
                     }
                 }
             }
@@ -139,11 +141,6 @@ fn utxo_to_tx_in(
             ));
         }
     }
-
-    Err(WError::new(
-        "utxo_to_tx_in",
-        "Not implemented for Pallas yet",
-    ))
 }
 
 fn get_datum_for_output(
