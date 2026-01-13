@@ -1,8 +1,8 @@
 use std::{collections::HashMap, hash::Hash};
 
 use pallas::{
+    codec::minicbor::Decoder,
     codec::utils::Set,
-    interop::utxorpc::spec::cardano::script,
     ledger::{
         primitives::{
             conway::{TransactionBody, WitnessSet},
@@ -365,7 +365,19 @@ impl ParserContext {
         for input in collected_input_set.iter() {
             let utxo_option = self.resolved_utxos.get(input);
             match utxo_option {
-                Some(_utxo) => {}
+                Some(utxo) => {
+                    let (datum_source_option, script_source_option) = utxo_to_inline_sources(utxo)?;
+                    if let Some((datum_hash, datum_source)) = datum_source_option {
+                        self.script_witnesses
+                            .datums
+                            .insert(datum_hash, datum_source);
+                    }
+                    if let Some((script_hash, script_source)) = script_source_option {
+                        self.script_witnesses
+                            .scripts
+                            .insert(script_hash, script_source);
+                    }
+                }
                 None => {
                     return Err(WError::new(
                         "WhiskyPallas - ParserContext - collect_script_witnesses_from_tx_body:",
@@ -403,7 +415,8 @@ fn utxo_to_inline_sources(
     };
     let script_option: Option<(String, Script)> = match &utxo.output.script_ref {
         Some(script_ref) => {
-            let script_bytes = hex::decode(script_ref).map_err(|_| {
+            let normalized_script_ref = normalize_script_ref(script_ref)?;
+            let script_bytes = hex::decode(normalized_script_ref).map_err(|_| {
                 WError::new("Whisky Pallas Parser - ", "Error decoding script_ref hex")
             })?;
             let pallas_script_ref = ScriptRef::decode_bytes(&script_bytes)
@@ -478,4 +491,22 @@ fn utxo_to_inline_sources(
         None => None,
     };
     Ok((datum_option, script_option))
+}
+
+fn normalize_script_ref(script_ref: &String) -> Result<String, WError> {
+    if script_ref.starts_with("d8") {
+        let script_bytes = hex::decode(script_ref)
+            .map_err(|_| WError::new("Whisky Pallas Parser - ", "Error decoding script_ref hex"))?;
+        let mut decoder = Decoder::new(&script_bytes);
+        decoder.tag().map_err(|_| {
+            WError::new(
+                "Whisky Pallas Parser - ",
+                "Error decoding script_ref - no tag found",
+            )
+        })?;
+        let decoded_script_bytes = decoder.bytes().unwrap();
+        Ok(ScriptRef::decode_bytes(&decoded_script_bytes)?.encode()?)
+    } else {
+        Ok(script_ref.clone())
+    }
 }
