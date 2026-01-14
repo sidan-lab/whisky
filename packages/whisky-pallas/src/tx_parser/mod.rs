@@ -1,8 +1,9 @@
 mod context;
 mod inputs;
+mod outputs;
 
 use crate::{
-    tx_parser::{context::ParserContext, inputs::extract_inputs},
+    tx_parser::{context::ParserContext, inputs::extract_inputs, outputs::extract_outputs},
     wrapper::transaction_body::Transaction,
 };
 use whisky_common::{TxBuilderBody, UTxO, ValidityRange, WError};
@@ -22,9 +23,10 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
     parser_context.collect_script_witnesses_from_tx_body(&pallas_tx.inner.transaction_body)?;
 
     let inputs = extract_inputs(&pallas_tx.inner, &parser_context)?;
+    let outputs = extract_outputs(&pallas_tx.inner)?;
     Ok(TxBuilderBody {
         inputs,
-        outputs: vec![],
+        outputs,
         collaterals: vec![],
         required_signatures: vec![],
         reference_inputs: vec![],
