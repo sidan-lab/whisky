@@ -9,11 +9,8 @@ use crate::{
     wrapper::witness_set::redeemer::RedeemerTag,
 };
 
-pub fn extract_inputs(
-    pallas_tx: &Tx,
-    parser_context: &ParserContext,
-) -> Result<Vec<whisky_common::TxIn>, WError> {
-    let mut inputs_vec: Vec<whisky_common::TxIn> = Vec::new();
+pub fn extract_inputs(pallas_tx: &Tx, parser_context: &ParserContext) -> Result<Vec<TxIn>, WError> {
+    let mut inputs_vec: Vec<TxIn> = Vec::new();
     let inputs = &pallas_tx.transaction_body.inputs;
     for (index, input) in inputs.iter().enumerate() {
         let tx_in = utxo_to_tx_in(input, parser_context, index)?;
@@ -22,7 +19,7 @@ pub fn extract_inputs(
     Ok(inputs_vec)
 }
 
-fn utxo_to_tx_in(
+pub fn utxo_to_tx_in(
     tx_input: &pallas::ledger::primitives::conway::TransactionInput,
     context: &ParserContext,
     index: usize,

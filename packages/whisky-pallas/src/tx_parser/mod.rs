@@ -1,9 +1,13 @@
+mod collaterals;
 mod context;
 mod inputs;
 mod outputs;
 
 use crate::{
-    tx_parser::{context::ParserContext, inputs::extract_inputs, outputs::extract_outputs},
+    tx_parser::{
+        collaterals::extract_collaterals, context::ParserContext, inputs::extract_inputs,
+        outputs::extract_outputs,
+    },
     wrapper::transaction_body::Transaction,
 };
 use whisky_common::{TxBuilderBody, UTxO, ValidityRange, WError};
@@ -24,10 +28,11 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
 
     let inputs = extract_inputs(&pallas_tx.inner, &parser_context)?;
     let outputs = extract_outputs(&pallas_tx.inner)?;
+    let collaterals = extract_collaterals(&pallas_tx.inner, &parser_context)?;
     Ok(TxBuilderBody {
         inputs,
         outputs,
-        collaterals: vec![],
+        collaterals: collaterals,
         required_signatures: vec![],
         reference_inputs: vec![],
         withdrawals: vec![],
