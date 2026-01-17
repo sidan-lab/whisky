@@ -1,6 +1,6 @@
 [package]
 name = "whisky-wallet"
-version = "1.0.19"
+version = "1.0.20"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
@@ -15,8 +15,8 @@ hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.136"
 uplc = "=1.1.10"
-whisky-csl = { version = "1.0.19", path = "../whisky-csl" }
-whisky-common = { version = "1.0.19", path = "../whisky-common" }
+whisky-csl = { version = "1.0.20", path = "../whisky-csl" }
+whisky-common = { version = "1.0.20", path = "../whisky-common" }
 tiny-bip39 = "2.0.0"
 rand = "0.8"
 aes-gcm = "0.10.3"
