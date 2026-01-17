@@ -92,3 +92,37 @@ pub struct TreeBranch(pub Constr0<Box<(ByteString, PlutusData)>>);
 
 #[derive(Clone, Debug, ImplConstr)]
 pub struct TreeLeaf(pub Constr1<Box<(ByteString, ByteString, ByteString)>>);
+
+// Test generic enum with type parameter (similar to HydraUserIntentDatum<T>)
+#[derive(Clone, Debug, ImplConstr)]
+pub struct UserAccount(pub Constr0<Box<(ByteString, ByteString)>>);
+
+#[derive(Clone, Debug, ImplConstr)]
+pub struct TransferIntent(pub Constr0<Box<(Int, Int)>>);
+
+#[derive(Debug, Clone, ConstrEnum)]
+pub enum GenericDatum<T: PlutusDataJson = PlutusData> {
+    TradeIntent(Box<(UserAccount, T)>),
+    MasterIntent(Box<(UserAccount, T)>),
+}
+
+#[test]
+fn test_generic_enum_with_type_parameter() {
+    // Test with concrete type (TransferIntent)
+    let user = UserAccount::from("user_vk", "app_owner_vk");
+    let intent = TransferIntent::from(100, 200);
+    let datum: GenericDatum<TransferIntent> =
+        GenericDatum::MasterIntent(Box::new((user.clone(), intent)));
+
+    let json = datum.to_json_string();
+    assert!(json.contains("\"constructor\":1")); // MasterIntent is constructor 1
+    assert!(json.contains("\"fields\""));
+
+    // Test with default type (PlutusData)
+    let datum_default: GenericDatum =
+        GenericDatum::TradeIntent(Box::new((user, PlutusData::Integer(Int::new(42)))));
+
+    let json_default = datum_default.to_json_string();
+    assert!(json_default.contains("\"constructor\":0")); // TradeIntent is constructor 0
+    assert!(json_default.contains("\"int\":42")); // Int value is serialized as number
+}

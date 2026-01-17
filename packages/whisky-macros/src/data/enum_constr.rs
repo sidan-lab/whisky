@@ -1,10 +1,22 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{
+    parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, TypeParamBound,
+};
 
 pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
+
+    // Extract generics and add PlutusDataJson bound to all type parameters
+    let mut generics = input.generics.clone();
+    for param in &mut generics.params {
+        if let GenericParam::Type(type_param) = param {
+            let bound: TypeParamBound = parse_quote!(whisky::data::PlutusDataJson);
+            type_param.bounds.push(bound);
+        }
+    }
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let implementation = match &input.data {
         Data::Enum(data_enum) => {
@@ -40,7 +52,7 @@ pub fn derive_plutus_data_to_json(input: TokenStream) -> TokenStream {
             });
 
             quote! {
-                impl whisky::data::PlutusDataJson for #name {
+                impl #impl_generics whisky::data::PlutusDataJson for #name #ty_generics #where_clause {
                     fn to_json(&self) -> ::serde_json::Value {
                         match self {
                             #(#match_arms,)*
