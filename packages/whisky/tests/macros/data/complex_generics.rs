@@ -220,9 +220,9 @@ fn test_mpf_delete_from_json_roundtrip() {
 
 #[test]
 fn test_mpf_proof_insert_from_json_roundtrip() {
-    let original = MPFProof::MPFInsert(MPFInsert::from(vec![
-        ProofStep::Branch(Branch::from(1, "x")),
-    ]));
+    let original = MPFProof::MPFInsert(MPFInsert::from(vec![ProofStep::Branch(Branch::from(
+        1, "x",
+    ))]));
     let json_str = original.to_json_string();
     let parsed = MPFProof::from_json_string(&json_str).unwrap();
     assert_eq!(original.to_json_string(), parsed.to_json_string());
@@ -298,7 +298,10 @@ fn test_full_tree_from_json_roundtrip() {
     let trees = vec![
         Tree::TreeBranch(TreeBranch::from("n1", PlutusData::Integer(Int::new(1)))),
         Tree::TreeLeaf(TreeLeaf::from("k1", "v1", "e1")),
-        Tree::TreeBranch(TreeBranch::from("n2", PlutusData::ByteString(ByteString::new("deadbeef")))),
+        Tree::TreeBranch(TreeBranch::from(
+            "n2",
+            PlutusData::ByteString(ByteString::new("deadbeef")),
+        )),
     ];
     let original = FullTree::from(trees);
     let json_str = original.to_json_string();
@@ -308,9 +311,9 @@ fn test_full_tree_from_json_roundtrip() {
 
 #[test]
 fn test_proofs_from_json_roundtrip() {
-    let mpf_proofs = vec![
-        MPFProof::MPFInsert(MPFInsert::from(vec![ProofStep::Branch(Branch::from(1, "h"))])),
-    ];
+    let mpf_proofs = vec![MPFProof::MPFInsert(MPFInsert::from(vec![
+        ProofStep::Branch(Branch::from(1, "h")),
+    ]))];
     let original = Proofs::from(mpf_proofs);
     let json_str = original.to_json_string();
     let parsed = Proofs::from_json_string(&json_str).unwrap();
