@@ -309,7 +309,17 @@ fn generate_constr_wrapper_impl(
             }
 
             fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
-                let inner = <#field_ty>::from_json(value)
+                // Handle both direct constr JSON and array-wrapped format from enum deserialization
+                let actual_value = if let Some(arr) = value.as_array() {
+                    if arr.len() == 1 {
+                        &arr[0]
+                    } else {
+                        value
+                    }
+                } else {
+                    value
+                };
+                let inner = <#field_ty>::from_json(actual_value)
                     .map_err(::whisky::WError::add_err_trace(concat!(stringify!(#name), "::from_json")))?;
                 Ok(#name(inner))
             }
@@ -366,8 +376,19 @@ fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> To
             }
 
             fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
+                // Handle both direct constr JSON and array-wrapped format from enum deserialization
+                let actual_value = if let Some(arr) = value.as_array() {
+                    if arr.len() == 1 {
+                        &arr[0]
+                    } else {
+                        value
+                    }
+                } else {
+                    value
+                };
+
                 // Expect a Constr with the correct tag wrapping the inner value
-                let actual_tag = value
+                let actual_tag = actual_value
                     .get("constructor")
                     .ok_or_else(|| ::whisky::WError::new(concat!(stringify!(#name), "::from_json"), "missing 'constructor' field"))?
                     .as_u64()
@@ -380,7 +401,7 @@ fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> To
                     ));
                 }
 
-                let fields_json = value
+                let fields_json = actual_value
                     .get("fields")
                     .ok_or_else(|| ::whisky::WError::new(concat!(stringify!(#name), "::from_json"), "missing 'fields' field"))?;
 
