@@ -221,7 +221,7 @@ pub fn derive_impl_constr(input: TokenStream) -> TokenStream {
 /// Generate implementation for newtype wrapping a ConstrN type (existing behavior)
 fn generate_constr_wrapper_impl(
     name: &syn::Ident,
-    _field_ty: &Type,
+    field_ty: &Type,
     constr_name: &str,
     tag_opt: Option<u32>,
     custom_tag: Option<u64>,
@@ -307,6 +307,12 @@ fn generate_constr_wrapper_impl(
             fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
                 ::std::vec![self.0.to_json()]
             }
+
+            fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
+                let inner = <#field_ty>::from_json(value)
+                    .map_err(::whisky::WError::add_err_trace(concat!(stringify!(#name), "::from_json")))?;
+                Ok(#name(inner))
+            }
         }
 
         // Also implement PlutusDataJson for Box<Type> to support nested boxing
@@ -322,6 +328,10 @@ fn generate_constr_wrapper_impl(
 
             fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
                 ::std::vec![self.to_json()]
+            }
+
+            fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
+                <#name>::from_json(value).map(Box::new)
             }
         }
     };
@@ -344,7 +354,7 @@ fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> To
         #[automatically_derived]
         impl PlutusDataJson for #name {
             fn to_json(&self) -> ::serde_json::Value {
-                whisky::data::Constr::new(#tag, self.0.clone()).to_json()
+                ::whisky::data::Constr::new(#tag, self.0.clone()).to_json()
             }
 
             fn to_json_string(&self) -> ::std::string::String {
@@ -353,6 +363,31 @@ fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> To
 
             fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
                 ::std::vec![self.to_json()]
+            }
+
+            fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
+                // Expect a Constr with the correct tag wrapping the inner value
+                let actual_tag = value
+                    .get("constructor")
+                    .ok_or_else(|| ::whisky::WError::new(concat!(stringify!(#name), "::from_json"), "missing 'constructor' field"))?
+                    .as_u64()
+                    .ok_or_else(|| ::whisky::WError::new(concat!(stringify!(#name), "::from_json"), "invalid 'constructor' value"))?;
+
+                if actual_tag != #tag {
+                    return Err(::whisky::WError::new(
+                        concat!(stringify!(#name), "::from_json"),
+                        &format!("expected constructor tag {}, got {}", #tag, actual_tag),
+                    ));
+                }
+
+                let fields_json = value
+                    .get("fields")
+                    .ok_or_else(|| ::whisky::WError::new(concat!(stringify!(#name), "::from_json"), "missing 'fields' field"))?;
+
+                let inner = <#field_ty>::from_json(fields_json)
+                    .map_err(::whisky::WError::add_err_trace(concat!(stringify!(#name), "::from_json")))?;
+
+                Ok(#name(inner))
             }
         }
 
@@ -369,6 +404,10 @@ fn generate_passthrough_impl(name: &syn::Ident, field_ty: &Type, tag: u64) -> To
 
             fn to_constr_field(&self) -> ::std::vec::Vec<::serde_json::Value> {
                 ::std::vec![self.to_json()]
+            }
+
+            fn from_json(value: &::serde_json::Value) -> Result<Self, ::whisky::WError> {
+                <#name>::from_json(value).map(Box::new)
             }
         }
     };

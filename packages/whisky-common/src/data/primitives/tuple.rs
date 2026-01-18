@@ -1,8 +1,8 @@
 use serde_json::{json, Value};
 
-use crate::data::{PlutusData, PlutusDataJson};
+use crate::{data::{PlutusData, PlutusDataJson}, WError};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Tuple<T = PlutusData>
 where
     T: Clone + PlutusDataJson,
@@ -27,6 +27,18 @@ where
         let items_json = self.items.to_constr_field();
         tuple(items_json)
     }
+
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        // Tuple is stored as {"list": [...]}
+        let list = value
+            .get("list")
+            .ok_or_else(|| WError::new("Tuple::from_json", "missing 'list' field"))?;
+
+        let items = T::from_json(list)
+            .map_err(WError::add_err_trace("Tuple::from_json"))?;
+
+        Ok(Tuple { items })
+    }
 }
 
 pub fn tuple<T: Into<Value>>(p_tuple: Vec<T>) -> Value {
@@ -48,6 +60,23 @@ macro_rules! impl_plutus_data_tuple {
             fn to_constr_field(&self) -> Vec<Value> {
                 let ($($name,)+) = self.clone();
                 vec![$($name.to_json(),)+]
+            }
+            fn from_json(value: &Value) -> Result<Self, WError> {
+                let arr = value
+                    .as_array()
+                    .ok_or_else(|| WError::new("tuple::from_json", "expected array"))?;
+
+                let mut iter = arr.iter();
+                $(
+                    let $name = {
+                        let item = iter.next()
+                            .ok_or_else(|| WError::new("tuple::from_json", "not enough elements"))?;
+                        $name::from_json(item)
+                            .map_err(WError::add_err_trace("tuple::from_json"))?
+                    };
+                )+
+
+                Ok(($($name,)+))
             }
         }
     }

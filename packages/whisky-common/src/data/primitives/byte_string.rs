@@ -1,8 +1,8 @@
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataJson;
+use crate::{data::PlutusDataJson, WError};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ByteString {
     pub bytes: String,
 }
@@ -18,6 +18,17 @@ impl ByteString {
 impl PlutusDataJson for ByteString {
     fn to_json(&self) -> Value {
         byte_string(&self.bytes)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        let bytes = value
+            .get("bytes")
+            .ok_or_else(|| WError::new("ByteString::from_json", "missing 'bytes' field"))?
+            .as_str()
+            .ok_or_else(|| WError::new("ByteString::from_json", "invalid 'bytes' value"))?;
+        Ok(ByteString {
+            bytes: bytes.to_string(),
+        })
     }
 }
 
