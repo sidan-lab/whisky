@@ -1,8 +1,8 @@
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataJson;
+use crate::{data::PlutusDataJson, WError};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct List<T>
 where
     T: Clone + PlutusDataJson,
@@ -32,6 +32,26 @@ where
             .map(|item| item.to_json())
             .collect::<Vec<Value>>();
         list(items_json)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        let items_json = value
+            .get("list")
+            .ok_or_else(|| WError::new("List::from_json", "missing 'list' field"))?
+            .as_array()
+            .ok_or_else(|| WError::new("List::from_json", "invalid 'list' value"))?;
+
+        let items = items_json
+            .iter()
+            .enumerate()
+            .map(|(i, item)| {
+                T::from_json(item).map_err(WError::add_err_trace(
+                    Box::leak(format!("List::from_json[{}]", i).into_boxed_str())
+                ))
+            })
+            .collect::<Result<Vec<T>, WError>>()?;
+
+        Ok(List { items })
     }
 }
 

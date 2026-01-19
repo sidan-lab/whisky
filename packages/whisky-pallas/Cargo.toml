@@ -1,6 +1,6 @@
 [package]
 name = "whisky-pallas"
-version = "1.0.0"
+version = "1.0.22"
 edition = "2021"
 license = "Apache-2.0"
 description = "Wrapper around the TxPipe's Pallas for easier transaction building, heavily inspired by cardano-cli APIs"
@@ -14,5 +14,5 @@ pallas-crypto = "1.0.0-alpha.3"
 serde = "1.0.219"
 ouroboros = "0.18"
 bech32 = "0.11.1"
-whisky-common = { version = "1.0.16", path = "../whisky-common" }
 serde_json = "1.0"
+whisky-common = { version = "1.0.22", path = "../whisky-common" }

@@ -3,9 +3,9 @@ use std::iter::FromIterator;
 
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataJson;
+use crate::{data::PlutusDataJson, WError};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Map<K, V>
 where
     K: Clone + PlutusDataJson,
@@ -63,6 +63,38 @@ where
             .map(|(k, v)| (k.clone().to_json(), v.clone().to_json()))
             .collect();
         pairs(map_items_json)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        let map_json = value
+            .get("map")
+            .ok_or_else(|| WError::new("Map::from_json", "missing 'map' field"))?
+            .as_array()
+            .ok_or_else(|| WError::new("Map::from_json", "invalid 'map' value"))?;
+
+        let map = map_json
+            .iter()
+            .enumerate()
+            .map(|(i, item)| {
+                let k_value = item
+                    .get("k")
+                    .ok_or_else(|| WError::new("Map::from_json", "missing 'k' in map entry"))?;
+                let v_value = item
+                    .get("v")
+                    .ok_or_else(|| WError::new("Map::from_json", "missing 'v' in map entry"))?;
+
+                let k = K::from_json(k_value).map_err(WError::add_err_trace(
+                    Box::leak(format!("Map::from_json[{}].k", i).into_boxed_str())
+                ))?;
+                let v = V::from_json(v_value).map_err(WError::add_err_trace(
+                    Box::leak(format!("Map::from_json[{}].v", i).into_boxed_str())
+                ))?;
+
+                Ok((k, v))
+            })
+            .collect::<Result<Vec<(K, V)>, WError>>()?;
+
+        Ok(Map { map })
     }
 }
 

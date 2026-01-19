@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     data::{ByteString, Int, Map, PlutusDataJson},
     models::Asset,
+    WError,
 };
 use std::collections::BTreeMap;
 
@@ -192,6 +193,36 @@ impl PlutusDataJson for Value {
             })
             .collect::<Map<ByteString, Map<ByteString, Int>>>();
         json_map.to_json()
+    }
+
+    fn from_json(value: &serde_json::Value) -> Result<Self, WError> {
+        // Parse as Map<ByteString, Map<ByteString, Int>>
+        let outer_map = Map::<ByteString, Map<ByteString, Int>>::from_json(value)
+            .map_err(WError::add_err_trace("Value::from_json"))?;
+
+        let mut asset_map = BTreeMap::new();
+
+        for (policy_bytes, tokens_map) in outer_map.map {
+            let policy = policy_bytes.bytes;
+
+            for (token_bytes, quantity) in tokens_map.map {
+                let token = token_bytes.bytes;
+                let unit = if policy.is_empty() {
+                    "lovelace".to_string()
+                } else {
+                    format!("{}{}", policy, token)
+                };
+
+                // quantity.int is i128, convert to u64
+                let qty = quantity.int as u64;
+                asset_map
+                    .entry(unit)
+                    .and_modify(|q| *q += qty)
+                    .or_insert(qty);
+            }
+        }
+
+        Ok(Value(asset_map))
     }
 }
 

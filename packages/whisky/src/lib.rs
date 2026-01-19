@@ -66,6 +66,9 @@
 //! All user facing APIs are documentation at the [builder interface](builder/struct.TxBuilder.html).
 //!
 
+// Self-reference alias to allow proc macros to use ::whisky:: path within this crate
+extern crate self as whisky;
+
 // Data module is always available (uses whisky_common + whisky_macros)
 pub mod data;
 

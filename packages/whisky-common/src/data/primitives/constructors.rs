@@ -1,6 +1,6 @@
 use serde_json::{json, Value};
 
-use crate::data::PlutusDataJson;
+use crate::{data::PlutusDataJson, WError};
 
 #[derive(Clone, Debug)]
 pub struct Constr<T = ()>
@@ -28,6 +28,23 @@ where
         let fields_json = self.fields.to_constr_field();
         constr(self.tag, fields_json)
     }
+
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        let tag = value
+            .get("constructor")
+            .ok_or_else(|| WError::new("Constr::from_json", "missing 'constructor' field"))?
+            .as_u64()
+            .ok_or_else(|| WError::new("Constr::from_json", "invalid 'constructor' value"))?;
+
+        let fields_json = value
+            .get("fields")
+            .ok_or_else(|| WError::new("Constr::from_json", "missing 'fields' field"))?;
+
+        let fields = T::from_constr_field(fields_json)
+            .map_err(WError::add_err_trace("Constr::from_json"))?;
+
+        Ok(Constr { tag, fields })
+    }
 }
 
 impl PlutusDataJson for () {
@@ -36,6 +53,16 @@ impl PlutusDataJson for () {
     }
     fn to_constr_field(&self) -> Vec<serde_json::Value> {
         vec![]
+    }
+    fn from_json(value: &Value) -> Result<Self, WError> {
+        // Accept both empty array and empty fields
+        if value.is_array() {
+            let arr = value.as_array().unwrap();
+            if arr.is_empty() {
+                return Ok(());
+            }
+        }
+        Err(WError::new("()::from_json", "expected empty array"))
     }
 }
 
@@ -109,6 +136,24 @@ macro_rules! impl_constr_fields {
                 let ($($name,)+) = tuple.clone();
                 vec![$($name.to_json(),)+]
             }
+
+            fn from_json(value: &Value) -> Result<Self, WError> {
+                let arr = value
+                    .as_array()
+                    .ok_or_else(|| WError::new("Box<tuple>::from_json", "expected array"))?;
+
+                let mut iter = arr.iter();
+                $(
+                    let $name = {
+                        let item = iter.next()
+                            .ok_or_else(|| WError::new("Box<tuple>::from_json", "not enough elements"))?;
+                        $name::from_json(item)
+                            .map_err(WError::add_err_trace("Box<tuple>::from_json"))?
+                    };
+                )+
+
+                Ok(Box::new(($($name,)+)))
+            }
         }
 
         // Implement PlutusDataJson for Box<ConstrFields<(T1, T2, ...)>>
@@ -126,6 +171,24 @@ macro_rules! impl_constr_fields {
                 let tuple = &self.0;
                 let ($($name,)+) = tuple.clone();
                 vec![$($name.to_json(),)+]
+            }
+
+            fn from_json(value: &Value) -> Result<Self, WError> {
+                let arr = value
+                    .as_array()
+                    .ok_or_else(|| WError::new("Box<ConstrFields>::from_json", "expected array"))?;
+
+                let mut iter = arr.iter();
+                $(
+                    let $name = {
+                        let item = iter.next()
+                            .ok_or_else(|| WError::new("Box<ConstrFields>::from_json", "not enough elements"))?;
+                        $name::from_json(item)
+                            .map_err(WError::add_err_trace("Box<ConstrFields>::from_json"))?
+                    };
+                )+
+
+                Ok(Box::new(ConstrFields(($($name,)+))))
             }
         }
 
@@ -173,7 +236,7 @@ impl_constr_fields!(T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17 T
 macro_rules! impl_constr_n {
     ($($name:ident: $tag:expr),+) => {
         $(
-            #[derive(Clone, Debug)]
+            #[derive(Clone, Debug, PartialEq)]
             pub struct $name<T = ()>
             where
                 T: Clone + PlutusDataJson,
@@ -197,6 +260,30 @@ macro_rules! impl_constr_n {
                 fn to_json(&self) -> Value {
                     let fields_json = self.fields.to_constr_field();
                     constr($tag, fields_json)
+                }
+
+                fn from_json(value: &Value) -> Result<Self, WError> {
+                    let tag = value
+                        .get("constructor")
+                        .ok_or_else(|| WError::new(concat!(stringify!($name), "::from_json"), "missing 'constructor' field"))?
+                        .as_u64()
+                        .ok_or_else(|| WError::new(concat!(stringify!($name), "::from_json"), "invalid 'constructor' value"))?;
+
+                    if tag != $tag {
+                        return Err(WError::new(
+                            concat!(stringify!($name), "::from_json"),
+                            &format!("expected constructor tag {}, got {}", $tag, tag),
+                        ));
+                    }
+
+                    let fields_json = value
+                        .get("fields")
+                        .ok_or_else(|| WError::new(concat!(stringify!($name), "::from_json"), "missing 'fields' field"))?;
+
+                    let fields = T::from_constr_field(fields_json)
+                        .map_err(WError::add_err_trace(concat!(stringify!($name), "::from_json")))?;
+
+                    Ok($name { fields })
                 }
             }
         )+
@@ -235,6 +322,10 @@ macro_rules! impl_box_constr {
 
                 fn to_constr_field(&self) -> Vec<Value> {
                     vec![self.to_json()]
+                }
+
+                fn from_json(value: &Value) -> Result<Self, WError> {
+                    $constr::<T>::from_json(value).map(Box::new)
                 }
             }
         )+

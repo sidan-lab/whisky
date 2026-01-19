@@ -1,3 +1,8 @@
+// Self-reference alias to allow proc macros to use ::whisky:: path
+// (proc macros generate code with ::whisky:: paths which work for external crates,
+// and this alias makes them work within whisky-common itself)
+extern crate self as whisky;
+
 pub mod algo;
 pub mod constants;
 pub mod data;
