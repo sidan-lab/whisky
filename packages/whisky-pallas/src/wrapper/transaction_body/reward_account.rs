@@ -33,6 +33,36 @@ impl RewardAccount {
         })
     }
 
+    pub fn to_bech32(&self) -> Result<String, WError> {
+        let bytes = self.inner.to_vec();
+        let header_byte = bytes.first().ok_or_else(|| {
+            WError::new("StakeCredential - Bech32 decode error", "Empty data part")
+        })?;
+        // Check the header byte starts with 111
+        if header_byte >> 5 != 0b111 {
+            return Err(WError::new(
+                "StakeCredential - Bech32 decode error",
+                "Invalid StakeCredential header byte",
+            ));
+        } else {
+            // Determine HRP based on header byte, if last bit is 0, it's testnet, else mainnet
+            let hrp = if header_byte & 0b1 == 0 {
+                "stake_test"
+            } else {
+                "stake"
+            };
+            let bech32_str =
+                bech32::encode::<bech32::Bech32>(bech32::Hrp::parse(hrp).unwrap(), &bytes)
+                    .map_err(|e| WError::new("Bech32 encode error", &format!("{}", e)))?;
+            Ok(bech32_str)
+        }
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, WError> {
+        let inner = Bytes::from(bytes.to_vec());
+        Ok(Self { inner })
+    }
+
     pub fn to_stake_cred(&self) -> Result<StakeCredential, WError> {
         let bytes = self.inner.to_vec();
         let header_byte = bytes.first().ok_or_else(|| {
