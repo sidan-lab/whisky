@@ -1,4 +1,10 @@
-use pallas::ledger::primitives::{conway::Tx, Fragment};
+use pallas::{
+    codec::utils::PositiveCoin,
+    ledger::primitives::{
+        conway::{Tx, Value},
+        Fragment,
+    },
+};
 use whisky_common::{Output, ProvidedScriptSource, ProvidedSimpleScriptSource, WError};
 
 use crate::converter::{bech32_from_bytes, value_to_asset_vec};
@@ -8,11 +14,42 @@ pub fn extract_outputs(pallas_tx: &Tx) -> Result<Vec<Output>, WError> {
     let outputs = &pallas_tx.transaction_body.outputs;
     for output in outputs.iter() {
         match output {
-            pallas::ledger::primitives::babbage::GenTransactionOutput::Legacy(_legacy_output) => {
-                return Err(WError::new(
-                    "Whisky Pallas Parser - ",
-                    "Legacy outputs are not supported",
-                ))
+            pallas::ledger::primitives::babbage::GenTransactionOutput::Legacy(legacy_output) => {
+                let coerced_output = match &legacy_output.amount {
+                    pallas::ledger::primitives::alonzo::Value::Coin(coin) => {
+                        Value::Coin(coin.clone())
+                    }
+                    pallas::ledger::primitives::alonzo::Value::Multiasset(coin, asset_map) => {
+                        let converted_asset_map = asset_map
+                            .into_iter()
+                            .map(|(policy_id, assets)| {
+                                let converted_assets = assets
+                                    .into_iter()
+                                    .map(|(asset_name, amount)| {
+                                        (
+                                            asset_name.clone(),
+                                            PositiveCoin::try_from(amount.clone()).unwrap(),
+                                        )
+                                    })
+                                    .collect();
+                                (policy_id.clone(), converted_assets)
+                            })
+                            .collect();
+                        Value::Multiasset(coin.clone(), converted_asset_map)
+                    }
+                };
+                let tx_out = Output {
+                    address: bech32_from_bytes(&legacy_output.address.to_string())?,
+                    amount: value_to_asset_vec(&&crate::wrapper::transaction_body::Value {
+                        inner: coerced_output,
+                    })?,
+                    datum: match &legacy_output.datum_hash {
+                        Some(datum) => Some(whisky_common::Datum::Hash(datum.to_string())),
+                        None => None,
+                    },
+                    reference_script: None,
+                };
+                outputs_vec.push(tx_out);
             }
             pallas::ledger::primitives::babbage::GenTransactionOutput::PostAlonzo(
                 post_alonzo_output,
