@@ -1,5 +1,5 @@
 [workspace]
-version = "1.0.22"
+version = "1.0.23"
 resolver = "2"
 members = [
     "whisky-common",

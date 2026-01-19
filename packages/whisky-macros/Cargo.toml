@@ -1,6 +1,6 @@
 [package]
 name = "whisky-macros"
-version = "1.0.22"
+version = "1.0.23"
 edition = "2021"
 license = "Apache-2.0"
 description = "The Cardano Rust SDK, inspired by MeshJS"
