@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
+use pallas::codec::utils::PositiveCoin;
 use pallas::ledger::primitives::conway::{
     LanguageView, Redeemer as PallasRedeemer, RedeemerTag as PallasRedeemerTag, ScriptData,
-    WitnessSet as PallasWitnessSet,
+    Value as PallasValue, WitnessSet as PallasWitnessSet,
 };
 use pallas::ledger::primitives::Fragment;
 use whisky_common::{get_cost_models_from_network, MintItem, Output, PubKeyTxIn, RefTxIn};
@@ -295,7 +296,8 @@ impl CorePallas {
     ) -> Result<Certificate, WError> {
         match cert_type {
             CertificateType::RegisterStake(register_stake) => {
-                let stake_cred = StakeCredential::from_bech32(&register_stake.stake_key_address)?;
+                let stake_cred = RewardAccount::from_bech32(&register_stake.stake_key_address)?
+                    .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -307,7 +309,8 @@ impl CorePallas {
                 }))?
             }
             CertificateType::DeregisterStake(deregister_stake) => {
-                let stake_cred = StakeCredential::from_bech32(&deregister_stake.stake_key_address)?;
+                let stake_cred = RewardAccount::from_bech32(&deregister_stake.stake_key_address)?
+                    .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -319,7 +322,8 @@ impl CorePallas {
                 }))?
             }
             CertificateType::DelegateStake(delegate_stake) => {
-                let stake_cred = StakeCredential::from_bech32(&delegate_stake.stake_key_address)?;
+                let stake_cred = RewardAccount::from_bech32(&delegate_stake.stake_key_address)?
+                    .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -407,7 +411,8 @@ impl CorePallas {
                     whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
                     whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
                 };
-                let stake_cred = StakeCredential::from_bech32(&vote_delegation.stake_key_address)?;
+                let stake_cred = RewardAccount::from_bech32(&vote_delegation.stake_key_address)?
+                    .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -426,7 +431,8 @@ impl CorePallas {
                     whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
                 };
                 let stake_cred =
-                    StakeCredential::from_bech32(&stake_and_vote_delegation.stake_key_address)?;
+                    RewardAccount::from_bech32(&stake_and_vote_delegation.stake_key_address)?
+                        .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -440,9 +446,10 @@ impl CorePallas {
                 }))?
             }
             CertificateType::StakeRegistrationAndDelegation(stake_registration_and_delegation) => {
-                let stake_cred = StakeCredential::from_bech32(
+                let stake_cred = RewardAccount::from_bech32(
                     &stake_registration_and_delegation.stake_key_address,
-                )?;
+                )?
+                .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -461,9 +468,10 @@ impl CorePallas {
                     whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
                     whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
                 };
-                let stake_cred = StakeCredential::from_bech32(
+                let stake_cred = RewardAccount::from_bech32(
                     &vote_registration_and_delegation.stake_key_address,
-                )?;
+                )?
+                .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -484,9 +492,10 @@ impl CorePallas {
                     whisky_common::DRep::AlwaysAbstain => DRep::new(DRepKind::Abstain)?,
                     whisky_common::DRep::AlwaysNoConfidence => DRep::new(DRepKind::NoConfidence)?,
                 };
-                let stake_cred = StakeCredential::from_bech32(
+                let stake_cred = RewardAccount::from_bech32(
                     &stake_vote_registration_and_delegation.stake_key_address,
-                )?;
+                )?
+                .to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -502,7 +511,8 @@ impl CorePallas {
             }
             CertificateType::CommitteeHotAuth(committee_hot_auth) => {
                 let committee_cold_cred =
-                    StakeCredential::from_bech32(&committee_hot_auth.committee_cold_key_address)?;
+                    RewardAccount::from_bech32(&committee_hot_auth.committee_cold_key_address)?
+                        .to_stake_cred()?;
                 match committee_cold_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -511,9 +521,10 @@ impl CorePallas {
                 }
                 Ok(Certificate::new(CertificateKind::AuthCommitteeHot {
                     committee_cold_cred,
-                    committee_hot_cred: StakeCredential::from_bech32(
+                    committee_hot_cred: RewardAccount::from_bech32(
                         &committee_hot_auth.committee_hot_key_address,
-                    )?,
+                    )?
+                    .to_stake_cred()?,
                 }))?
             }
             CertificateType::CommitteeColdResign(committee_cold_resign) => {
@@ -524,9 +535,9 @@ impl CorePallas {
                     )?),
                     None => None,
                 };
-                let committee_cold_cred = StakeCredential::from_bech32(
-                    &committee_cold_resign.committee_cold_key_address,
-                )?;
+                let committee_cold_cred =
+                    RewardAccount::from_bech32(&committee_cold_resign.committee_cold_key_address)?
+                        .to_stake_cred()?;
                 match committee_cold_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(_hash) => {}
                     pallas::ledger::primitives::StakeCredential::AddrKeyhash(hash) => {
@@ -1065,8 +1076,8 @@ impl CorePallas {
                     }
                 }
             }?,
-            whisky_common::Voter::StakingPoolKeyHash(stake_credential) => {
-                let stake_cred = StakeCredential::from_bech32(&stake_credential)?;
+            whisky_common::Voter::StakingPoolKeyHash(reward_account) => {
+                let stake_cred = RewardAccount::from_bech32(&reward_account)?.to_stake_cred()?;
                 match stake_cred.inner {
                     pallas::ledger::primitives::StakeCredential::ScriptHash(hash) => {
                         Voter::new(VoterKind::StakePoolKey {
@@ -1616,11 +1627,35 @@ impl CorePallas {
                         tx_out,
                     ) => tx_out.value.clone(),
                     pallas::ledger::primitives::babbage::GenTransactionOutput::Legacy(tx_out) => {
-                        Err(WError::new(
-                            "WhiskyPallas - Building transaction:",
-                            "Legacy outputs are not supported in balanced transactions",
-                        ))
-                    }?,
+                        let legacy_value = &tx_out.amount;
+                        let coerced_value: PallasValue = match legacy_value {
+                            pallas::ledger::primitives::alonzo::Value::Coin(coin) => {
+                                PallasValue::Coin(coin.clone())
+                            }
+                            pallas::ledger::primitives::alonzo::Value::Multiasset(
+                                coin,
+                                asset_map,
+                            ) => {
+                                let converted_asset_map = asset_map
+                                    .into_iter()
+                                    .map(|(policy_id, assets)| {
+                                        let converted_assets = assets
+                                            .into_iter()
+                                            .map(|(asset_name, amount)| {
+                                                (
+                                                    asset_name.clone(),
+                                                    PositiveCoin::try_from(amount.clone()).unwrap(),
+                                                )
+                                            })
+                                            .collect();
+                                        (policy_id.clone(), converted_assets)
+                                    })
+                                    .collect();
+                                PallasValue::Multiasset(coin.clone(), converted_asset_map)
+                            }
+                        };
+                        coerced_value
+                    }
                 };
                 change_value = change_value
                     .sub(&Value {
