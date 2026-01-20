@@ -1,6 +1,7 @@
 mod collaterals;
 mod context;
 mod inputs;
+mod mints;
 mod outputs;
 mod reference_inputs;
 mod required_signers;
@@ -9,7 +10,7 @@ mod withdrawals;
 use crate::{
     tx_parser::{
         collaterals::extract_collaterals, context::ParserContext, inputs::extract_inputs,
-        outputs::extract_outputs, reference_inputs::extract_reference_inputs,
+        mints::extract_mints, outputs::extract_outputs, reference_inputs::extract_reference_inputs,
         required_signers::extract_required_signers, withdrawals::extract_withdrawals,
     },
     wrapper::transaction_body::Transaction,
@@ -36,16 +37,19 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
     let required_signers = extract_required_signers(&pallas_tx.inner)?;
     let reference_inputs = extract_reference_inputs(&pallas_tx.inner, &parser_context)?;
     let withdrawals = extract_withdrawals(&pallas_tx.inner, &parser_context)?;
+    let mints = extract_mints(&pallas_tx.inner, &parser_context)?;
+
+    let change_output = outputs.last().unwrap();
     Ok(TxBuilderBody {
         inputs,
-        outputs,
+        outputs: outputs.clone(),
         collaterals: collaterals,
         required_signatures: required_signers,
         reference_inputs: reference_inputs,
         withdrawals: withdrawals,
-        mints: vec![],
-        change_address: "".to_string(),
-        change_datum: None,
+        mints: mints,
+        change_address: change_output.address.clone(),
+        change_datum: change_output.datum.clone(),
         metadata: vec![],
         validity_range: ValidityRange {
             invalid_before: None,
