@@ -242,6 +242,34 @@ fn build_withdrawal_tx() -> String {
 }
 ```
 
+#### Using Tx Parser to edit transactions
+
+```Rust
+// Build UTxO contexts
+let utxos = vec![utxo_1, utxo_2, utxo_3, utxo_4, utxo_5, utxo_6, utxo_7];
+let tx_hex = "84a700d90102848258202c255d39a6d448b408bdb1734c99dfc8c487ac23fd7ee5e8b431a99bc514980a0882582040e1afc8b735a9daf665926554b0e11902e3ed7e4a31a23b917483d4de42c05e04825820ffb4e04fd430ffd1bdf014990c6d63a5303c1745ff228b70823fc757a04b1c6402825820ffb4e04fd430ffd1bdf014990c6d63a5303c1745ff228b70823fc757a04b1c64030184a3005839104477981671d60af19c524824cacc0a9822ba2a7f32586e57c18156215ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb01821a0016e360a1581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a0243d580028201d81843d87980a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb01821a0075b8d4a1581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a1298be00028201d81858b1d8799fd8799fd87a9f581c57f7ddf8c822daad03fd80823153a61d913e5c9147bd478e3ccd70b3ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581c4477981671d60af19c524824cacc0a9822ba2a7f32586e57c1815621ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd87a801a000985801a1dcd6500ffa300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a004c4b4003d818558203525101010023259800a518a4d136564004ae69a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a0080ef61028201d81858b1d8799fd8799fd87a9f581c57f7ddf8c822daad03fd80823153a61d913e5c9147bd478e3ccd70b3ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581c4477981671d60af19c524824cacc0a9822ba2a7f32586e57c1815621ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd87a801a000985801a1dcd6500ff021a00051ceb0b5820a8fbe851b21a47d77c16808f56a3b4f10d8e5bea42cbc041804e0881a04aabcb0dd90102818258203fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814070ed9010282581cd161d64eef0eeb59f9124f520f8c8f3b717ed04198d54c8b17e604ae581c5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa12d9010282825820efe6fbbdd6b993d96883b96c572bfcaa0a4a138c83bd948dec1751d1bfda09b300825820ac7744adce4f25027f1ca009f5cab1d0858753e62c6081a3a3676cfd5333bb0300a105a482000082d87980821a000382f61a04d45a0382000182d87980821a000382f61a04d45a0382000282d87980821a000382f61a04d45a0382000382d87980821a000382f61a04d45a03f5f6";
+let mut body = parse(tx_hex, &utxos).unwrap();
+
+// Edit body to remove last change output
+body.outputs.pop();
+body.reference_inputs.pop();
+
+let mut tx_builder = TxBuilder::new_core();
+tx_builder.tx_builder_body = body.clone();
+
+// Edit the tx builder body to add a new output
+let tx_hex = tx_builder.tx_out(
+    "addr_test1zp355dxec8k9m5x2uc0yep4yapfpfwhaeqx9wg20eqr5td2u5ayjvx4rk9a29n2tqf4uv4nvfv2yy8tqs0kuue8luh9sygqq0c",
+    &[Asset::new_from_str("lovelace", "5000000")],
+)
+.invalid_before(100)
+.invalid_hereafter(200)
+.required_signer_hash("3f1b5974f4f09f0974be655e4ce94f8a2d087df378b79ef3916c26b2")
+.complete_sync(None).unwrap().tx_hex();
+
+// Resulting transaction will be rebalanced with a new change output
+```
+
 ### Running Unit Tests
 
 The whisky crate includes comprehensive integration tests for both WhiskyPallas and WhiskyCSL serializers. These tests verify transaction building for various scenarios including simple spends, complex Plutus transactions, minting, withdrawals, and governance actions.
@@ -261,6 +289,7 @@ cargo test --package whisky --test pallas_integration_tests test_simple_spend --
 ```
 
 The integration tests cover:
+
 - **Common transactions**: Simple spend, withdrawals, stake registration/deregistration
 - **Complex Plutus transactions**: Minting with script references, spending from script addresses, inline datums
 - **Governance transactions**: DRep registration, vote delegation, voting
