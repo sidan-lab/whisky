@@ -6,6 +6,7 @@ mod mints;
 mod outputs;
 mod reference_inputs;
 mod required_signers;
+mod validity_range;
 mod withdrawals;
 
 use crate::{
@@ -13,11 +14,11 @@ use crate::{
         certificates::extract_certificates, collaterals::extract_collaterals,
         context::ParserContext, inputs::extract_inputs, mints::extract_mints,
         outputs::extract_outputs, reference_inputs::extract_reference_inputs,
-        required_signers::extract_required_signers, withdrawals::extract_withdrawals,
+        required_signers::extract_required_signers, validity_range::extract_validity_range,
+        withdrawals::extract_withdrawals,
     },
     wrapper::transaction_body::Transaction,
 };
-use pallas::ledger::traverse::cert;
 use whisky_common::{TxBuilderBody, UTxO, ValidityRange, WError};
 
 pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WError> {
@@ -42,6 +43,7 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
     let withdrawals = extract_withdrawals(&pallas_tx.inner, &parser_context)?;
     let mints = extract_mints(&pallas_tx.inner, &parser_context)?;
     let certificates = extract_certificates(&pallas_tx.inner, &parser_context)?;
+    let validity_range = extract_validity_range(&pallas_tx.inner)?;
 
     let change_output = outputs.last().unwrap();
     Ok(TxBuilderBody {
@@ -55,10 +57,7 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
         change_address: change_output.address.clone(),
         change_datum: change_output.datum.clone(),
         metadata: vec![],
-        validity_range: ValidityRange {
-            invalid_before: None,
-            invalid_hereafter: None,
-        },
+        validity_range,
         certificates,
         votes: vec![],
         signing_key: vec![],
