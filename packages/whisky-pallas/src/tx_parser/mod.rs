@@ -65,9 +65,9 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
         certificates,
         votes,
         signing_key: vec![],
-        fee: None,
+        fee: None, // These fields are expected to be recalculated by the TxBuilder
         network: None,
-        total_collateral: None,
-        collateral_return_address: None,
+        total_collateral: None, // These fields are expected to be recalculated by the TxBuilder
+        collateral_return_address: None, // These fields are expected to be recalculated by the TxBuilder
     })
 }
