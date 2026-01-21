@@ -66,14 +66,21 @@ pub fn extract_metadata(pallas_tx: &Tx) -> Result<Vec<Metadata>, WError> {
 
 fn metadata_to_json_value(metadatum: &Metadatum) -> Result<serde_json::Value, WError> {
     match metadatum {
-        Metadatum::Int(int) => Ok(serde_json::Value::Number(serde_json::Number::from(
-            i128::try_from(int.clone()).map_err(|_| {
+        Metadatum::Int(int) => {
+            let int_value = i128::try_from(int.clone()).map_err(|_| {
                 WError::new(
                     "WhiskyPallas Parser - ",
                     "metadata to json value, invalid tag",
                 )
-            })?,
-        ))),
+            })?;
+            let int_i64 = i64::try_from(int_value).map_err(|_| {
+                WError::new(
+                    "WhiskyPallas Parser - ",
+                    "metadata to json value, i128 out of i64 range",
+                )
+            })?;
+            Ok(serde_json::Value::Number(serde_json::Number::from(int_i64)))
+        }
         Metadatum::Bytes(bytes) => Ok(serde_json::Value::String(bytes.to_string())),
         Metadatum::Text(string) => Ok(serde_json::Value::String(string.clone())),
         Metadatum::Array(metadatums) => {
