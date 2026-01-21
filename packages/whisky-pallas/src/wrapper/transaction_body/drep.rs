@@ -1,3 +1,4 @@
+use bech32::Hrp;
 use pallas::crypto::hash::Hash;
 use pallas::ledger::primitives::conway::DRep as PallasDRep;
 use pallas::ledger::primitives::Fragment;
@@ -84,6 +85,37 @@ impl DRep {
                 }
             }
         }
+    }
+
+    pub fn to_bech32_cip129(&self) -> Result<String, WError> {
+        let data: Vec<u8> = match &self.inner {
+            PallasDRep::Key(key_hash) => {
+                let mut d = vec![0b0010_0010]; // header byte for key hash
+                d.extend_from_slice(key_hash.as_ref());
+                d
+            }
+            PallasDRep::Script(script_hash) => {
+                let mut d = vec![0b0010_0011]; // header byte for script hash
+                d.extend_from_slice(script_hash.as_ref());
+                d
+            }
+            PallasDRep::Abstain => {
+                return Err(WError::new(
+                    "DRep - Bech32 encode error",
+                    "Cannot encode Abstain DRep to bech32",
+                ))
+            }
+            PallasDRep::NoConfidence => {
+                return Err(WError::new(
+                    "DRep - Bech32 encode error",
+                    "Cannot encode NoConfidence DRep to bech32",
+                ))
+            }
+        };
+
+        let bech32_str = bech32::encode::<bech32::Bech32>(Hrp::parse("drep").unwrap(), &data)
+            .map_err(|e| WError::new("DRep - Bech32 encode error", &e.to_string()))?;
+        Ok(bech32_str)
     }
 
     pub fn encode(&self) -> Result<String, WError> {
