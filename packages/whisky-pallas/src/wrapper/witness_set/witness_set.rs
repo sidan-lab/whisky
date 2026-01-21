@@ -162,6 +162,21 @@ impl<'a> WitnessSet<'a> {
         Ok(Self { inner })
     }
 
+    pub fn empty() -> Self {
+        Self {
+            inner: PallasWitnessSet {
+                vkeywitness: None,
+                native_script: None,
+                bootstrap_witness: None,
+                plutus_v1_script: None,
+                plutus_data: None,
+                redeemer: None,
+                plutus_v2_script: None,
+                plutus_v3_script: None,
+            },
+        }
+    }
+
     pub fn encode(&self) -> Result<String, WError> {
         self.inner
             .encode_fragment()

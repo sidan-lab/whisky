@@ -309,7 +309,7 @@ impl Certificate {
         })
     }
 
-    fn encode(&self) -> String {
+    pub fn encode(&self) -> String {
         hex::encode(
             self.inner
                 .encode_fragment()
@@ -317,7 +317,7 @@ impl Certificate {
         )
     }
 
-    fn decode_bytes(bytes: &[u8]) -> Result<Self, String> {
+    pub fn decode_bytes(bytes: &[u8]) -> Result<Self, String> {
         let inner = PallasCertificate::decode_fragment(&bytes)
             .map_err(|e| format!("Fragment decode error: {}", e.to_string()))?;
         Ok(Self { inner })

@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use pallas::{
     codec::utils::Bytes,
-    ledger::primitives::{conway::Tx, Fragment, Hash},
+    ledger::primitives::{conway::Tx, Fragment},
 };
 use whisky_common::{
     Asset, Budget,
@@ -175,7 +175,7 @@ fn test_from_tx_builder_body() {
                         pallas::ledger::primitives::conway::Value::Coin(coin) => {
                             assert!(coin.to_string() == "3633697637");
                         }
-                        pallas::ledger::primitives::conway::Value::Multiasset(coin, ma) => {}
+                        pallas::ledger::primitives::conway::Value::Multiasset(_, _) => {}
                     };
                 } else if i == 1 {
                     assert!(output.address.to_string() == bytes_from_bech32(
@@ -185,7 +185,7 @@ fn test_from_tx_builder_body() {
                         pallas::ledger::primitives::conway::Value::Coin(coin) => {
                             assert!(coin.to_string() == "3633697637");
                         }
-                        pallas::ledger::primitives::conway::Value::Multiasset(coin, ma) => {}
+                        pallas::ledger::primitives::conway::Value::Multiasset(_, _) => {}
                     };
                 } else if i == 2 {
                     assert!(output.address.to_string() == bytes_from_bech32(

@@ -84,6 +84,33 @@ impl<'a> TransactionBody<'a> {
         })
     }
 
+    pub fn empty() -> Self {
+        Self {
+            inner: PallasTransactionBody {
+                inputs: Set::from(vec![]),
+                outputs: vec![],
+                fee: 0,
+                ttl: None,
+                certificates: None,
+                withdrawals: None,
+                auxiliary_data_hash: None,
+                validity_interval_start: None,
+                mint: None,
+                script_data_hash: None,
+                collateral: None,
+                required_signers: None,
+                network_id: None,
+                collateral_return: None,
+                total_collateral: None,
+                reference_inputs: None,
+                voting_procedures: None,
+                proposal_procedures: None,
+                treasury_value: None,
+                donation: None,
+            },
+        }
+    }
+
     pub fn encode(&self) -> Result<String, WError> {
         self.inner
             .encode_fragment()

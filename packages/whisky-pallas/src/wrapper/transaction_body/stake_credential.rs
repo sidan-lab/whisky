@@ -40,35 +40,6 @@ impl StakeCredential {
         })
     }
 
-    pub fn from_bech32(bech32_str: &str) -> Result<Self, WError> {
-        let (_hrp, data) = bech32::decode(bech32_str)
-            .map_err(|e| WError::new("Bech32 decode error", &format!("{}", e)))?;
-
-        let header_byte = data.first().ok_or_else(|| {
-            WError::new("StakeCredential - Bech32 decode error", "Empty data part")
-        })?;
-
-        // Check the header byte starts with 111
-        if header_byte >> 5 != 0b111 {
-            return Err(WError::new(
-                "StakeCredential - Bech32 decode error",
-                "Invalid StakeCredential header byte",
-            ));
-        } else {
-            // If the 3rd bit is 0, it's a key hash; if it's 1, it's a script hash
-            let is_script_hash = (header_byte >> 4) & 0b1 == 1;
-            if is_script_hash {
-                Ok(StakeCredential {
-                    inner: PallasStakeCredential::ScriptHash(Hash::from(&data[1..])),
-                })
-            } else {
-                Ok(StakeCredential {
-                    inner: PallasStakeCredential::AddrKeyhash(Hash::from(&data[1..])),
-                })
-            }
-        }
-    }
-
     pub fn encode(&self) -> Result<String, WError> {
         let encoded_fragment = self
             .inner

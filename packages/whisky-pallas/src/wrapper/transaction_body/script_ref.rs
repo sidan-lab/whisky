@@ -77,4 +77,20 @@ impl<'a> ScriptRef<'a> {
             inner: pallas_script_ref,
         })
     }
+
+    pub fn encode(&self) -> Result<String, WError> {
+        let encoded_fragment = self
+            .inner
+            .encode_fragment()
+            .map_err(|e| WError::new("ScriptRef - Fragment encode error", &e.to_string()))?;
+        Ok(hex::encode(encoded_fragment))
+    }
+
+    pub fn decode_bytes(bytes: &'a [u8]) -> Result<Self, WError> {
+        let pallas_script_ref = PallasScriptRef::decode_fragment(bytes)
+            .map_err(|e| WError::new("ScriptRef - Fragment decode error", &format!("{}", e)))?;
+        Ok(Self {
+            inner: pallas_script_ref,
+        })
+    }
 }

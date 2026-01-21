@@ -34,3 +34,26 @@ pub fn convert_value(asset_vec: &Vec<Asset>) -> Result<Value, WError> {
         ))
     }
 }
+
+pub fn value_to_asset_vec(value: &Value) -> Result<Vec<Asset>, WError> {
+    let mut assets: Vec<Asset> = Vec::new();
+    match &value.inner {
+        pallas::ledger::primitives::conway::Value::Coin(coin) => {
+            assets.push(Asset::new_from_str("lovelace", &coin.to_string()));
+        }
+        pallas::ledger::primitives::conway::Value::Multiasset(coin, btree_map) => {
+            assets.push(Asset::new_from_str("lovelace", &coin.to_string()));
+            for (policy_id, asset_map) in btree_map {
+                for (asset_name, quantity) in asset_map {
+                    let concated_name =
+                        format!("{}{}", policy_id.to_string(), asset_name.to_string());
+                    assets.push(Asset::new_from_str(
+                        &concated_name,
+                        &u64::from(quantity).to_string(),
+                    ));
+                }
+            }
+        }
+    }
+    Ok(assets)
+}
