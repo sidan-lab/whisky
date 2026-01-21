@@ -2,7 +2,10 @@ mod static_methods;
 
 #[cfg(test)]
 mod tests {
-    use whisky_common::UTxO;
+    use whisky_common::{
+        Budget, LanguageVersion, PlutusScriptWithdrawal, ProvidedScriptSource, Redeemer, UTxO,
+        Withdrawal,
+    };
 
     use whisky_csl::CSLParser;
     #[test]
@@ -47,9 +50,29 @@ mod tests {
         let utxos = vec![utxo_1];
         let tx_hex = "84a600d901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c8142000181825839005867c3b8e27840f556ac268b781578b14c5661fc63ee720dbeab663f9d4dcd7e454d2434164f4efb8edeb358d86a1dad9ec6224cfcbce3e61a05e9c38b021a000c1d7505a1581df033d5840ab19fcfcff60c2ff509d5371124ee1c2670abd96db9e79064000b582075e3ddd00fd933d11169fbfea99e3c57c362d35a3298ba7de73891ea5048d8ae0dd901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c814200a207d9010281583658340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd0105a18203008240821a006acfc01ab2d05e00f5f6";
         let mut tx_parser = CSLParser::new();
-        let result = tx_parser.parse(tx_hex, &utxos);
-        assert!(result.is_ok());
-        assert_eq!(tx_parser.tx_body.withdrawals.len(), 1);
-        println!("{:#?}", tx_parser.tx_body);
+        let result = tx_parser.parse(tx_hex, &utxos).unwrap();
+        let body = result.tx_body.clone();
+        println!("{:#?}", body);
+        assert_eq!(body.inputs.len(), 1);
+        assert_eq!(body.withdrawals.len(), 1);
+        assert_eq!(body.withdrawals.get(0), Some(&Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
+        address: "stake_test17qeatpq2kx0ulnlkpshl2zw4xugjfmsuyec2hktdh8neqeq23t54a".to_string(),
+        coin: 0,
+        script_source: Some(
+            whisky_common::ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                script_cbor: "583658340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd01".to_string(),
+                language_version: LanguageVersion::V3,
+            }),
+        ),
+        redeemer: Some(
+            Redeemer {
+                data: "40".to_string(),
+                ex_units: Budget {
+                    mem: 7000000,
+                    steps: 3000000000,
+                },
+            },
+        ),
+    })));
     }
 }

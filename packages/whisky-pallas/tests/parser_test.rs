@@ -1,4 +1,7 @@
-use whisky_common::UTxO;
+use whisky_common::{
+    Budget, LanguageVersion, PlutusScriptWithdrawal, ProvidedScriptSource, Redeemer, UTxO,
+    Withdrawal,
+};
 use whisky_pallas::{
     tx_parser::parse,
     wrapper::transaction_body::{DRep, RewardAccount},
@@ -16,7 +19,14 @@ fn parser_test() {
 
     let utxos = vec![utxo_1, utxo_2, utxo_3, utxo_4, utxo_5, utxo_6, utxo_7];
     let tx_hex = "84a700d90102848258202c255d39a6d448b408bdb1734c99dfc8c487ac23fd7ee5e8b431a99bc514980a0882582040e1afc8b735a9daf665926554b0e11902e3ed7e4a31a23b917483d4de42c05e04825820ffb4e04fd430ffd1bdf014990c6d63a5303c1745ff228b70823fc757a04b1c6402825820ffb4e04fd430ffd1bdf014990c6d63a5303c1745ff228b70823fc757a04b1c64030184a3005839104477981671d60af19c524824cacc0a9822ba2a7f32586e57c18156215ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb01821a0016e360a1581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a0243d580028201d81843d87980a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb01821a0075b8d4a1581c5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04ba144555344581a1298be00028201d81858b1d8799fd8799fd87a9f581c57f7ddf8c822daad03fd80823153a61d913e5c9147bd478e3ccd70b3ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581c4477981671d60af19c524824cacc0a9822ba2a7f32586e57c1815621ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd87a801a000985801a1dcd6500ffa300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a004c4b4003d818558203525101010023259800a518a4d136564004ae69a300583910634a34d9c1ec5dd0cae61e4c86a4e85214bafdc80c57214fc80745b55ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cb011a0080ef61028201d81858b1d8799fd8799fd87a9f581c57f7ddf8c822daad03fd80823153a61d913e5c9147bd478e3ccd70b3ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd8799fd87a9f581c4477981671d60af19c524824cacc0a9822ba2a7f32586e57c1815621ffd8799fd8799fd8799f581c5ca749261aa3b17aa2cd4b026bc6566c4b14421d6083edce64ffe5cbffffffffd87a801a000985801a1dcd6500ff021a00051ceb0b5820a8fbe851b21a47d77c16808f56a3b4f10d8e5bea42cbc041804e0881a04aabcb0dd90102818258203fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814070ed9010282581cd161d64eef0eeb59f9124f520f8c8f3b717ed04198d54c8b17e604ae581c5ca51b304b1f79d92eada8c58c513e969458dcd27ce4f5bc47823ffa12d9010282825820efe6fbbdd6b993d96883b96c572bfcaa0a4a138c83bd948dec1751d1bfda09b300825820ac7744adce4f25027f1ca009f5cab1d0858753e62c6081a3a3676cfd5333bb0300a105a482000082d87980821a000382f61a04d45a0382000182d87980821a000382f61a04d45a0382000282d87980821a000382f61a04d45a0382000382d87980821a000382f61a04d45a03f5f6";
-    println!("parsed tx body: {:#?}", &parse(tx_hex, &utxos).unwrap())
+    let body = &parse(tx_hex, &utxos).unwrap();
+    println!("parsed tx body: {:#?}", body);
+    assert_eq!(body.inputs.len(), 4);
+    assert_eq!(body.outputs.len(), 4);
+    assert_eq!(body.collaterals.len(), 1);
+    assert_eq!(body.required_signatures.len(), 2);
+    assert_eq!(body.fee, None);
+    assert_eq!(body.reference_inputs.len(), 2);
 }
 
 #[test]
@@ -25,7 +35,28 @@ fn test_withdraw_tx_decode() {
     let utxos = vec![utxo_1];
     let tx_hex = "84a600d901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c8142000181825839005867c3b8e27840f556ac268b781578b14c5661fc63ee720dbeab663f9d4dcd7e454d2434164f4efb8edeb358d86a1dad9ec6224cfcbce3e61a05e9c38b021a000c1d7505a1581df033d5840ab19fcfcff60c2ff509d5371124ee1c2670abd96db9e79064000b582075e3ddd00fd933d11169fbfea99e3c57c362d35a3298ba7de73891ea5048d8ae0dd901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c814200a207d9010281583658340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd0105a18203008240821a006acfc01ab2d05e00f5f6";
     let result = parse(tx_hex, &utxos).unwrap();
-    println!("parsed withdraw tx body: {:#?}", &result)
+    println!("parsed withdraw tx body: {:#?}", &result);
+    assert_eq!(result.inputs.len(), 1);
+    assert_eq!(result.withdrawals.len(), 1);
+    assert_eq!(result.withdrawals.get(0), Some(&Withdrawal::PlutusScriptWithdrawal(PlutusScriptWithdrawal {
+        address: "stake_test17qeatpq2kx0ulnlkpshl2zw4xugjfmsuyec2hktdh8neqeq23t54a".to_string(),
+        coin: 0,
+        script_source: Some(
+            whisky_common::ScriptSource::ProvidedScriptSource(ProvidedScriptSource {
+                script_cbor: "583658340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd01".to_string(),
+                language_version: LanguageVersion::V3,
+            }),
+        ),
+        redeemer: Some(
+            Redeemer {
+                data: "40".to_string(),
+                ex_units: Budget {
+                    mem: 7000000,
+                    steps: 3000000000,
+                },
+            },
+        ),
+    })));
 }
 
 #[test]
