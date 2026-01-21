@@ -20,7 +20,6 @@ use crate::{
     },
     wrapper::transaction_body::Transaction,
 };
-use pallas::ledger::traverse::meta;
 use whisky_common::{TxBuilderBody, UTxO, WError};
 
 pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WError> {

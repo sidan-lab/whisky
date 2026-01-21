@@ -1,9 +1,7 @@
-use pallas::ledger::primitives::{conway::Tx, Fragment};
 use whisky_common::UTxO;
 use whisky_pallas::{
-    converter::{bech32_from_bytes, bytes_from_bech32},
     tx_parser::parse,
-    wrapper::transaction_body::{RewardAccount, StakeCredential},
+    wrapper::transaction_body::{DRep, RewardAccount},
 };
 
 #[test]
@@ -28,4 +26,20 @@ fn test_withdraw_tx_decode() {
     let tx_hex = "84a600d901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c8142000181825839005867c3b8e27840f556ac268b781578b14c5661fc63ee720dbeab663f9d4dcd7e454d2434164f4efb8edeb358d86a1dad9ec6224cfcbce3e61a05e9c38b021a000c1d7505a1581df033d5840ab19fcfcff60c2ff509d5371124ee1c2670abd96db9e79064000b582075e3ddd00fd933d11169fbfea99e3c57c362d35a3298ba7de73891ea5048d8ae0dd901028182582066e9f787106bf68431827fc3cde3db92705e9ca984d404516a2c8014b30c814200a207d9010281583658340101002332259800a518a4d153300249011856616c696461746f722072657475726e65642066616c736500136564004ae715cd0105a18203008240821a006acfc01ab2d05e00f5f6";
     let result = parse(tx_hex, &utxos).unwrap();
     println!("parsed withdraw tx body: {:#?}", &result)
+}
+
+#[test]
+fn stake_credential_test() {
+    let mut bytes =
+        hex::decode("122a7d7854b9d9f42d067bac7295a8e02887afd8f25da48833f78d10").unwrap();
+    bytes.insert(0, 0b11100001);
+    let reward_account = RewardAccount::from_bytes(&bytes).unwrap();
+    println!("reward account: {:#?}", &reward_account.to_bech32());
+}
+
+#[test]
+fn drep_test() {
+    let drep_bech32 = "drep1yfjez5zup0gystdvc933w2mn8k64hcy3krvc2namluwjxdcfhm8wd";
+    let drep = DRep::from_bech32(drep_bech32).unwrap();
+    println!("{:#?}", &drep.to_bech32_cip129().unwrap());
 }
