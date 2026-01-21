@@ -8,6 +8,7 @@ mod outputs;
 mod reference_inputs;
 mod required_signers;
 mod validity_range;
+mod votes;
 mod withdrawals;
 
 use crate::{
@@ -16,7 +17,7 @@ use crate::{
         context::ParserContext, inputs::extract_inputs, metadata::extract_metadata,
         mints::extract_mints, outputs::extract_outputs, reference_inputs::extract_reference_inputs,
         required_signers::extract_required_signers, validity_range::extract_validity_range,
-        withdrawals::extract_withdrawals,
+        votes::extract_votes, withdrawals::extract_withdrawals,
     },
     wrapper::transaction_body::Transaction,
 };
@@ -46,6 +47,7 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
     let certificates = extract_certificates(&pallas_tx.inner, &parser_context)?;
     let validity_range = extract_validity_range(&pallas_tx.inner)?;
     let metadata = extract_metadata(&pallas_tx.inner)?;
+    let votes = extract_votes(&pallas_tx.inner, &parser_context)?;
 
     let change_output = outputs.last().unwrap();
     Ok(TxBuilderBody {
@@ -61,7 +63,7 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
         metadata,
         validity_range,
         certificates,
-        votes: vec![],
+        votes,
         signing_key: vec![],
         fee: None,
         network: None,

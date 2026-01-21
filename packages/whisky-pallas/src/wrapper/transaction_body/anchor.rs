@@ -21,6 +21,13 @@ impl Anchor {
         Ok(Self { inner })
     }
 
+    pub fn to_whisky_anchor(&self) -> whisky_common::Anchor {
+        whisky_common::Anchor {
+            anchor_url: self.inner.url.clone(),
+            anchor_data_hash: self.inner.content_hash.to_string(),
+        }
+    }
+
     pub fn encode(&self) -> Result<String, WError> {
         let encoded_fragment = self
             .inner

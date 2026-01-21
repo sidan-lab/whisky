@@ -19,7 +19,7 @@ use whisky_common::{
 use crate::{
     tx_parser::context::{ParserContext, RedeemerIndex},
     wrapper::{
-        transaction_body::{DRep, DRepKind, RewardAccount},
+        transaction_body::{Anchor, DRep, DRepKind, RewardAccount},
         witness_set::redeemer::RedeemerTag,
     },
 };
@@ -178,15 +178,6 @@ fn pallas_pool_params_to_whisky_pool_params(
             hash: metadata.hash.to_string(),
         }),
     })
-}
-
-fn pallas_anchor_to_whisky_anchor(
-    anchor: &pallas::ledger::primitives::conway::Anchor,
-) -> whisky_common::Anchor {
-    whisky_common::Anchor {
-        anchor_url: anchor.url.clone(),
-        anchor_data_hash: anchor.content_hash.to_string(),
-    }
 }
 
 pub fn extract_certificates(
@@ -603,7 +594,9 @@ pub fn extract_certificates(
                     };
                     let cert_type = CertificateType::CommitteeColdResign(CommitteeColdResign {
                         committee_cold_key_address: stake_address.to_bech32()?,
-                        anchor: anchor.clone().map(|a| pallas_anchor_to_whisky_anchor(&a)),
+                        anchor: anchor
+                            .clone()
+                            .map(|a| Anchor { inner: a }.to_whisky_anchor()),
                     });
                     let cert =
                         handle_stake_credential(stake_credential, cert_type, context, index)?;
@@ -628,7 +621,9 @@ pub fn extract_certificates(
                     }?;
                     let cert_type = CertificateType::DRepRegistration(DRepRegistration {
                         drep_id: drep_id.to_bech32_cip129()?,
-                        anchor: anchor.clone().map(|a| pallas_anchor_to_whisky_anchor(&a)),
+                        anchor: anchor
+                            .clone()
+                            .map(|a| Anchor { inner: a }.to_whisky_anchor()),
                         coin: coin.clone(),
                     });
                     let cert =
@@ -677,7 +672,9 @@ pub fn extract_certificates(
                     }?;
                     let cert_type = CertificateType::DRepUpdate(DRepUpdate {
                         drep_id: drep_id.to_bech32_cip129()?,
-                        anchor: anchor.clone().map(|a| pallas_anchor_to_whisky_anchor(&a)),
+                        anchor: anchor
+                            .clone()
+                            .map(|a| Anchor { inner: a }.to_whisky_anchor()),
                     });
                     let cert =
                         handle_stake_credential(stake_credential, cert_type, context, index)?;
