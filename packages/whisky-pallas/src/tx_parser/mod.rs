@@ -21,6 +21,8 @@ use crate::{
     },
     wrapper::transaction_body::Transaction,
 };
+use pallas::ledger::traverse::ComputeHash;
+use pallas_crypto::key::ed25519::{PublicKey, Signature};
 use whisky_common::{TxBuilderBody, UTxO, WError};
 
 pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WError> {
@@ -70,4 +72,33 @@ pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WEr
         total_collateral: None, // These fields are expected to be recalculated by the TxBuilder
         collateral_return_address: None, // These fields are expected to be recalculated by the TxBuilder
     })
+}
+
+pub fn check_tx_required_signers(tx_hex: &str) -> Result<bool, WError> {
+    let bytes = hex::decode(tx_hex).map_err(|e| {
+        WError::new(
+            "WhiskyPallas - check tx required signers:",
+            &format!("Hex decode error: {}", e),
+        )
+    })?;
+    let pallas_tx = Transaction::decode_bytes(&bytes)?;
+    let required_signers = extract_required_signers(&pallas_tx.inner)?;
+
+    if let Some(signatures) = &pallas_tx.inner.transaction_witness_set.vkeywitness {
+        Ok(required_signers.iter().all(|signer| {
+            signatures.iter().any(|vkey_witness| {
+                let vkey_hex = vkey_witness.vkey.to_string();
+                let public_key =
+                    PublicKey::from(<[u8; 32]>::try_from(vkey_witness.vkey.to_vec()).unwrap());
+                public_key.verify(
+                    pallas_tx.inner.transaction_body.compute_hash(),
+                    &Signature::from(
+                        <[u8; 64]>::try_from(vkey_witness.signature.to_vec()).unwrap(),
+                    ),
+                ) && (vkey_hex == *signer)
+            })
+        }))
+    } else {
+        Ok(required_signers.is_empty())
+    }
 }
