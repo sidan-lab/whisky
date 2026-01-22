@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use whisky_common::DeserializedAddress;
     use whisky_csl::{deserialize_address, serialize_address_obj};
 
     #[test]

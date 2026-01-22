@@ -54,7 +54,6 @@ mod tests {
         assert_eq!(unix_time_to_enclosing_slot(1596059091000, &config), 4492800);
         // 1000000 ms later (1000 seconds = 1000 slots)
         assert_eq!(unix_time_to_enclosing_slot(1596060091000, &config), 4493800);
-        // 1000000 ms later (1000 seconds = 1000 slots)
     }
 
     #[test]
