@@ -230,6 +230,7 @@ pub fn to_pallas_datum(utxo_output: &UtxoOutput) -> Result<Option<DatumOption>, 
         let plutus_data_bytes = hex::decode(inline_datum).map_err(WError::from_err(
             "to_pallas_datum - Invalid plutus data hex",
         ))?;
+        println!("utxo_output: {:?}", utxo_output);
         let datum = CborWrap(PlutusData::decode_fragment(&plutus_data_bytes).map_err(
             WError::from_err("to_pallas_datum - Invalid plutus data bytes"),
         )?);
