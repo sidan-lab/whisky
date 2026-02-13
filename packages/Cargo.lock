@@ -4489,9 +4489,12 @@ dependencies = [
  "hex",
  "ouroboros",
  "pallas",
+ "pallas-codec 0.31.0",
  "pallas-crypto 1.0.0-alpha.4",
+ "pallas-primitives 0.31.0",
  "serde",
  "serde_json",
+ "uplc",
  "whisky-common",
 ]
 

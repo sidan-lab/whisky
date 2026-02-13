@@ -16,3 +16,7 @@ ouroboros = "0.18"
 bech32 = "0.11.1"
 serde_json = "1.0"
 whisky-common = { version = "1.0.24", path = "../whisky-common" }
+uplc = "1.1.10"
+# Need pallas 0.31.0 for uplc compatibility
+pallas-primitives = "0.31.0"
+pallas-codec = "0.31.0"
