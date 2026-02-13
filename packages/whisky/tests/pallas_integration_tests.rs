@@ -968,10 +968,10 @@ mod int_tests {
             match output {
                 pallas_primitives::conway::PseudoTransactionOutput::Legacy(transaction_output) => {
                     match transaction_output.amount {
-                        uplc::Value::Coin(coin) => {
+                        pallas_primitives::alonzo::Value::Coin(coin) => {
                             output_lovelace += coin;
                         }
-                        uplc::Value::Multiasset(coin, _) => {
+                        pallas_primitives::alonzo::Value::Multiasset(coin, _) => {
                             output_lovelace += coin;
                         }
                     }

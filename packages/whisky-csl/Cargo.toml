@@ -23,26 +23,26 @@ whisky-common = { version = "1.0.24", path = "../whisky-common" }
 
 # non-wasm
 [target.'cfg(not(all(target_arch = "wasm32", not(target_os = "emscripten"))))'.dependencies]
-uplc = "=1.1.10"
+uplc.workspace = true
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = "0.1"
 noop_proc_macro = "0.3.0"
-pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
-pallas-primitives = "0.31.0"
-pallas-traverse = "0.31.0"
+pallas-codec = { workspace = true, features = ["num-bigint"] }
+pallas-primitives.workspace = true
+pallas-traverse.workspace = true
 cquisitor-lib = "0.1.0-beta.25"
 
 # wasm
 [target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
 serde-wasm-bindgen = "0.4.5"
-uplc = "=1.1.10"
+uplc.workspace = true
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"] }
 rand_os = { version = "0.1", features = ["wasm-bindgen"] }
 js-sys = "=0.3.69"
 wasm-bindgen-futures = "=0.4.40"
-pallas-codec = { version = "0.31.0", features = ["num-bigint"] }
-pallas-primitives = "0.31.0"
-pallas-traverse = "0.31.0"
+pallas-codec = { workspace = true, features = ["num-bigint"] }
+pallas-primitives.workspace = true
+pallas-traverse.workspace = true
 cquisitor-lib = "0.1.0-beta.25"
 
 [profile.release]

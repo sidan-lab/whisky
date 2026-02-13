@@ -59,13 +59,13 @@ whisky-csl = { version = "1.0.24", path = "../whisky-csl", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
 cryptoxide = { version = "0.4.4", optional = true }
 serde-wasm-bindgen = { version = "0.6.5", optional = true }
-uplc = { version = "=1.1.10", optional = true }
+uplc = { workspace = true, optional = true }
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"], optional = true }
 rand_os = { version = "0.1", optional = true }
 noop_proc_macro = { version = "0.3.0", optional = true }
-pallas-codec = { version = "0.30.2", features = ["num-bigint"], optional = true }
-pallas-primitives = { version = "0.31.0", optional = true }
-pallas-traverse = { version = "0.31.0", optional = true }
+pallas-codec = { workspace = true, features = ["num-bigint"], optional = true }
+pallas-primitives = { workspace = true, optional = true }
+pallas-traverse = { workspace = true, optional = true }
 
 # Optional - wallet feature
 whisky-wallet = { version = "1.0.24", path = "../whisky-wallet", optional = true }
