@@ -4,7 +4,7 @@ mod context;
 mod inputs;
 mod metadata;
 mod mints;
-mod outputs;
+pub mod outputs;
 mod reference_inputs;
 mod required_signers;
 mod validity_range;
@@ -19,11 +19,12 @@ use crate::{
         required_signers::extract_required_signers, validity_range::extract_validity_range,
         votes::extract_votes, withdrawals::extract_withdrawals,
     },
-    wrapper::transaction_body::Transaction,
+    wrapper::transaction_body::{ScriptRef, ScriptRefKind, Transaction},
 };
+
 use pallas::ledger::traverse::ComputeHash;
 use pallas_crypto::key::ed25519::{PublicKey, Signature};
-use whisky_common::{TxBuilderBody, UTxO, WError};
+use whisky_common::{TxBuilderBody, UTxO, UtxoInput, UtxoOutput, WError};
 
 pub fn parse(tx_hex: &str, resolved_utxos: &[UTxO]) -> Result<TxBuilderBody, WError> {
     let bytes = hex::decode(tx_hex).map_err(|e| {
@@ -101,4 +102,92 @@ pub fn check_tx_required_signers(tx_hex: &str) -> Result<bool, WError> {
     } else {
         Ok(required_signers.is_empty())
     }
+}
+
+pub fn extract_tx_utxos(tx_hex: &str) -> Result<Vec<whisky_common::UTxO>, WError> {
+    let bytes = hex::decode(tx_hex).map_err(|e| {
+        WError::new(
+            "WhiskyPallas - extract tx outputs:",
+            &format!("Hex decode error: {}", e),
+        )
+    })?;
+    let pallas_tx = Transaction::decode_bytes(&bytes)?;
+    extract_outputs(&pallas_tx.inner).and_then(|outputs| {
+        outputs
+            .into_iter()
+            .enumerate()
+            .map(|(index, output)| -> Result<UTxO, WError> {
+                let datum_cbor = match output.datum.clone() {
+                    Some(datum) => match datum {
+                        whisky_common::Datum::Inline(s) => Some(s),
+                        whisky_common::Datum::Hash(_) => None,
+                        whisky_common::Datum::Embedded(_) => None,
+                    },
+                    None => None,
+                };
+                let datum_hash = match output.datum {
+                    Some(datum) => match datum {
+                        whisky_common::Datum::Inline(_) => None,
+                        whisky_common::Datum::Hash(s) => Some(s),
+                        whisky_common::Datum::Embedded(s) => Some(s),
+                    },
+                    None => None,
+                };
+                let script_cbor: Option<String> = match output.reference_script {
+                    Some(script) => match script {
+                        whisky_common::OutputScriptSource::ProvidedSimpleScriptSource(
+                            provided_simple_script_source,
+                        ) => Some(
+                            ScriptRef::new(ScriptRefKind::NativeScript {
+                                native_script_hex: provided_simple_script_source.script_cbor,
+                            })
+                            .unwrap()
+                            .encode()?,
+                        ),
+
+                        whisky_common::OutputScriptSource::ProvidedScriptSource(
+                            provided_script_source,
+                        ) => match provided_script_source.language_version {
+                            whisky_common::LanguageVersion::V1 => Some(
+                                ScriptRef::new(ScriptRefKind::PlutusV1Script {
+                                    plutus_v1_script_hex: provided_script_source.script_cbor,
+                                })
+                                .unwrap()
+                                .encode()?,
+                            ),
+                            whisky_common::LanguageVersion::V2 => Some(
+                                ScriptRef::new(ScriptRefKind::PlutusV2Script {
+                                    plutus_v2_script_hex: provided_script_source.script_cbor,
+                                })
+                                .unwrap()
+                                .encode()?,
+                            ),
+                            whisky_common::LanguageVersion::V3 => Some(
+                                ScriptRef::new(ScriptRefKind::PlutusV3Script {
+                                    plutus_v3_script_hex: provided_script_source.script_cbor,
+                                })
+                                .unwrap()
+                                .encode()?,
+                            ),
+                        },
+                    },
+                    None => None,
+                };
+                Ok(UTxO {
+                    input: UtxoInput {
+                        tx_hash: pallas_tx.inner.transaction_body.compute_hash().to_string(),
+                        output_index: index as u32,
+                    },
+                    output: UtxoOutput {
+                        address: output.address,
+                        amount: output.amount,
+                        plutus_data: datum_cbor,
+                        data_hash: datum_hash,
+                        script_ref: script_cbor,
+                        script_hash: None,
+                    },
+                })
+            })
+            .collect()
+    })
 }

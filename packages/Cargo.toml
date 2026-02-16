@@ -12,3 +12,12 @@ members = [
     "whisky",
     "whisky-examples"
 ]
+
+[workspace.dependencies]
+# Downgrade uplc to version compatible with pallas 0.31.0
+uplc = "=1.1.10"
+# Keep at 0.31.0 for cquisitor-lib compatibility
+pallas-codec = "0.31.0"
+pallas-crypto = "0.31.0"
+pallas-primitives = "0.31.0"
+pallas-traverse = "0.31.0"
