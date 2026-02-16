@@ -4492,6 +4492,7 @@ dependencies = [
  "pallas-codec 0.31.0",
  "pallas-crypto 1.0.0-alpha.4",
  "pallas-primitives 0.31.0",
+ "pallas-traverse 0.31.0",
  "serde",
  "serde_json",
  "uplc",

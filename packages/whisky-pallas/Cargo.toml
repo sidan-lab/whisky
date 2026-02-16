@@ -20,3 +20,4 @@ uplc = "1.1.10"
 # Need pallas 0.31.0 for uplc compatibility
 pallas-primitives = "0.31.0"
 pallas-codec = "0.31.0"
+pallas-traverse = "0.31.0"

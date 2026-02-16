@@ -1,13 +1,10 @@
 use pallas::codec::minicbor;
-use pallas::ledger::primitives::conway::{
-    CostModels as PallasCostModels, Redeemer as PallasRedeemer, Tx,
-};
+use pallas::ledger::primitives::conway::{CostModels as PallasCostModels, Tx};
+use pallas_primitives::conway::Redeemer as PallasRedeemer;
 use uplc::machine::cost_model::ExBudget;
 use uplc::tx::error::Error;
 use uplc::tx::{eval, iter_redeemers, DataLookupTable, ResolvedInput, SlotConfig};
 use uplc::Fragment;
-// Import pallas_codec for 0.31.0 types
-use pallas_codec::minicbor as minicbor_031;
 
 pub enum PhaseTwoEvalResult {
     Success(PallasRedeemer),
@@ -70,31 +67,12 @@ pub fn eval_phase_two(
                     &remaining_budget,
                 );
 
-                // Convert back to pallas 1.0.0-alpha.3 Redeemer for result
-                // We need to serialize/deserialize to convert between versions
-                let convert_redeemer =
-                    |r: &pallas_primitives::conway::Redeemer| -> Result<PallasRedeemer, Error> {
-                        let mut r_bytes = Vec::new();
-                        // Use minicbor from pallas 0.31.0 for encoding 0.31.0 types
-                        minicbor_031::encode(r, &mut r_bytes).map_err(|e| {
-                            Error::FragmentDecode(
-                                format!("Failed to encode redeemer: {:?}", e).into(),
-                            )
-                        })?;
-                        // Use pallas 1.0.0-alpha.3's minicbor for decoding into 1.0.0-alpha.3 types
-                        minicbor::decode(&r_bytes).map_err(|e| {
-                            Error::FragmentDecode(
-                                format!("Failed to decode redeemer: {:?}", e).into(),
-                            )
-                        })
-                    };
-
-                let pallas_redeemer = convert_redeemer(&redeemer_for_uplc)?;
+                // The redeemer_for_uplc is already pallas_primitives 0.31.0, so no conversion needed
+                let pallas_redeemer = redeemer_for_uplc.clone();
 
                 match eval_result {
                     Ok(updated_redeemer) => {
-                        let result_redeemer = convert_redeemer(&updated_redeemer)?;
-                        results.push(PhaseTwoEvalResult::Success(result_redeemer))
+                        results.push(PhaseTwoEvalResult::Success(updated_redeemer))
                     }
                     Err(error) => results.push(PhaseTwoEvalResult::Error(pallas_redeemer, error)),
                 }
