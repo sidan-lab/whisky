@@ -1,3 +1,5 @@
+use whisky_pallas::utils::get_script_hash;
+
 use crate::*;
 
 use crate::builder::{WData, WRedeemer};

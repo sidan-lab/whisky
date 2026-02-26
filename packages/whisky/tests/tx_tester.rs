@@ -4,8 +4,7 @@ mod tx_tester_tests {
 
     #[tokio::test]
     async fn test_tx_tester() {
-        let datum = "{\"constructor\":0,\"fields\":[{\"constructor\":0,\"fields\":[{\"constructor\":0,\"fields\":[{\"bytes\":\"41bfc7325343428683bbd0b94a4da41c\"},{\"constructor\":0,\"fields\":[{\"bytes\":\"e1197f10e85bc4a3a812e34e22339e1df56b7fb6386a9510d7a304ff\"}]},{\"constructor\":0,\"fields\":[{\"bytes\":\"7c87b6b5a0963af3eadb107da2ac4e1d34747a4df363858b649aa845\"}]}]}]},{\"map\":[{\"k\":{\"bytes\":\"\"},\"v\":{\"map\":[{\"k\":{\"bytes\":\"\"},\"v\":{\"int\":10000000}}]}}]}]}";
-        let datum_cbor = WData::JSON(datum.to_string()).to_cbor().unwrap();
+        let datum_cbor = "d8799fd8799fd8799f5041bfc7325343428683bbd0b94a4da41cd8799f581ce1197f10e85bc4a3a812e34e22339e1df56b7fb6386a9510d7a304ffffd8799f581c7c87b6b5a0963af3eadb107da2ac4e1d34747a4df363858b649aa845ffffffa140a1401a00989680ff";
 
         let utxo_1: UTxO = serde_json::from_str("{\"input\":{\"outputIndex\":0,\"txHash\":\"1a6157c0c9e170d716aee64b25384cad275770e2ef86df31eeebda4892980723\"},\"output\":{\"address\":\"addr_test1qrs3jlcsapdufgagzt35ug3nncwl26mlkcux49gs673sflmrjfm6y2eu7del3pprckzt4jaal9s7w9gq5kguqs5pf6fq542mmq\",\"amount\":[{\"quantity\":\"10000000000\",\"unit\":\"lovelace\"}],\"dataHash\":null,\"plutusData\":null,\"scriptHash\":null,\"scriptRef\":null}}").unwrap();
         let utxo_2: UTxO = serde_json::from_str("{\"input\":{\"outputIndex\":5,\"txHash\":\"158a0bff150e9c6f68a14fdb1623c363f54e36cb22efc800911bffafa4e53442\"},\"output\":{\"address\":\"addr_test1qra9zdhfa8kteyr3mfe7adkf5nlh8jl5xcg9e7pcp5w9yhyf5tek6vpnha97yd5yw9pezm3wyd77fyrfs3ynftyg7njs5cfz2x\",\"amount\":[{\"quantity\":\"5000000\",\"unit\":\"lovelace\"}],\"dataHash\":null,\"plutusData\":null,\"scriptHash\":null,\"scriptRef\":null}}").unwrap();
@@ -19,7 +18,7 @@ mod tx_tester_tests {
 
         let tx_parser = result.unwrap();
         let mut tx_tester = tx_parser.to_tester();
-
+        println!("TxTesterBody: {:?}", tx_tester.tx_body);
         tx_tester
           .inputs_at("addr_test1qrs3jlcsapdufgagzt35ug3nncwl26mlkcux49gs673sflmrjfm6y2eu7del3pprckzt4jaal9s7w9gq5kguqs5pf6fq542mmq")
           .inputs_value(Value::from_asset(&Asset::new_from_str("lovelace", "10000000000")))

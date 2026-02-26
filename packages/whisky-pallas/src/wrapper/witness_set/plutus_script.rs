@@ -3,6 +3,7 @@ use std::str::FromStr;
 use pallas::codec::utils::Bytes;
 use pallas::ledger::primitives::conway::PlutusScript as PallasPlutusScript;
 use pallas::ledger::primitives::Fragment;
+use pallas::ledger::traverse::ComputeHash;
 use whisky_common::WError;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -42,5 +43,9 @@ impl<const VERSION: usize> PlutusScript<VERSION> {
             )
         })?;
         Ok(Self { inner })
+    }
+
+    pub fn hash(&self) -> String {
+        self.inner.compute_hash().to_string()
     }
 }

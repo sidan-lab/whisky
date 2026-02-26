@@ -5,6 +5,7 @@ mod inputs;
 mod metadata;
 mod mints;
 pub mod outputs;
+mod parsable;
 mod reference_inputs;
 mod required_signers;
 mod validity_range;

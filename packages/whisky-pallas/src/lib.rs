@@ -4,6 +4,8 @@ pub mod tx_parser;
 pub mod utils;
 pub mod wrapper;
 
+pub use utils::address::*;
+
 use crate::tx_builder::core_pallas::CorePallas;
 use whisky_common::{Protocol, TxBuilderBody};
 

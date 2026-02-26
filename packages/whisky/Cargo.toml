@@ -12,29 +12,14 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["full"]
-full = ["csl", "wallet", "provider", "pallas"]
+full = ["wallet", "provider", "pallas"]
 
-# CSL-based transaction building
-csl = [
-    "dep:whisky-csl",
-    "dep:getrandom",
-    "dep:cryptoxide",
-    "dep:serde-wasm-bindgen",
-    "dep:uplc",
-    "dep:wasm-bindgen",
-    "dep:rand_os",
-    "dep:noop_proc_macro",
-    "dep:pallas-codec",
-    "dep:pallas-primitives",
-    "dep:pallas-traverse",
-]
 
-# Wallet functionality (implies csl)
-wallet = ["csl", "dep:whisky-wallet"]
+# Wallet functionality
+wallet = ["pallas", "dep:whisky-wallet"]
 
-# Provider/API functionality (implies csl)
+# Provider/API functionality
 provider = [
-    "csl",
     "dep:whisky-provider",
     "dep:maestro-rust-sdk",
     "dep:reqwest",
@@ -43,7 +28,12 @@ provider = [
 ]
 
 # Pallas integration
-pallas = ["dep:whisky-pallas"]
+pallas = ["dep:whisky-pallas",     
+          "dep:pallas-codec",
+          "dep:pallas-primitives",
+          "dep:pallas-traverse",
+          "dep:uplc"
+          ]
 
 [dependencies]
 # Always required
