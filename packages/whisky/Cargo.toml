@@ -12,11 +12,10 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["full"]
-full = ["wallet", "provider", "pallas"]
-
+full = ["wallet", "provider"]
 
 # Wallet functionality
-wallet = ["pallas", "dep:whisky-wallet"]
+wallet = ["dep:whisky-wallet"]
 
 # Provider/API functionality
 provider = [
@@ -27,35 +26,28 @@ provider = [
     "dep:futures",
 ]
 
-# Pallas integration
-pallas = ["dep:whisky-pallas",     
-          "dep:pallas-codec",
-          "dep:pallas-primitives",
-          "dep:pallas-traverse",
-          "dep:uplc"
-          ]
-
 [dependencies]
 # Always required
 whisky-common = { version = "1.0.25", path = "../whisky-common" }
 whisky-macros = { version = "1.0.25", path = "../whisky-macros" }
+whisky-pallas = { version = "1.0.0", path = "../whisky-pallas" }
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.136"
 async-trait = "0.1.79"
+uplc = { workspace = true }
+pallas-codec = { workspace = true, features = ["num-bigint"] }
+pallas-primitives = { workspace = true }
+pallas-traverse = { workspace = true }
 
 # Optional - CSL feature
 whisky-csl = { version = "1.0.25", path = "../whisky-csl", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
 cryptoxide = { version = "0.4.4", optional = true }
 serde-wasm-bindgen = { version = "0.6.5", optional = true }
-uplc = { workspace = true, optional = true }
 wasm-bindgen = { version = "=0.2.92", features = ["serde-serialize"], optional = true }
 rand_os = { version = "0.1", optional = true }
 noop_proc_macro = { version = "0.3.0", optional = true }
-pallas-codec = { workspace = true, features = ["num-bigint"], optional = true }
-pallas-primitives = { workspace = true, optional = true }
-pallas-traverse = { workspace = true, optional = true }
 
 # Optional - wallet feature
 whisky-wallet = { version = "1.0.25", path = "../whisky-wallet", optional = true }
@@ -67,8 +59,6 @@ reqwest = { version = "0.12.5", optional = true }
 tokio = { version = "1.38.0", features = ["macros", "rt-multi-thread"], optional = true }
 futures = { version = "0.3.31", optional = true }
 
-# Optional - pallas feature
-whisky-pallas = { version = "1.0.0", path = "../whisky-pallas", optional = true }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
