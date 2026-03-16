@@ -1,0 +1,23 @@
+# Lychee link checker configuration
+# https://lychee.cli.rs/
+
+# Exclude known false positives
+exclude = [
+    # Font license files reference external sites that may timeout
+    "adobe\\.com",
+    "nhncorp\\.com",
+    # Auto-generated tracing dispatcher links
+    "dispatcher#",
+    # Deprecated external documentation link
+    "meshjs\\.dev/apis/transaction/builderExample",
+    # Internal cross-references to whisky_csl/whisky_js docs not generated in this build
+    "whisky_csl/builder/trait\\.ITxBuilderCore",
+    "whisky_csl/core/builder/fn\\.js_serialize_tx_body",
+    "whisky_js/builder/trait\\.ITxBuilderCore",
+    "whisky_js/core/builder/fn\\.js_serialize_tx_body",
+]
+
+# Exclude generated static files from Rust docs
+exclude_path = [
+    "docs/static.files",
+]

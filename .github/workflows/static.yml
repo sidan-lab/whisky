@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - add-docs-for-m5 # temporary — remove after verification
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -36,6 +37,10 @@ jobs:
       - name: Build docs
         run: |
           npm run rust:doc
+      - name: Link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --config .lychee.toml ./docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
