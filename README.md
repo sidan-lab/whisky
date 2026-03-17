@@ -11,6 +11,8 @@
 [![Crates.io](https://img.shields.io/crates/v/whisky?style=for-the-badge)](https://crates.io/crates/whisky)
 [![NPM](https://img.shields.io/npm/v/%40sidan-lab%2Fwhisky-js-nodejs?style=for-the-badge)](https://www.npmjs.com/package/@sidan-lab/whisky-js-nodejs)
 
+**[Read the Guide](https://sidan-lab.github.io/whisky/)** | **[API Reference](https://sidan-lab.github.io/whisky/api/whisky/index.html)**
+
   <hr/>
 </div>
 
@@ -308,7 +310,7 @@ Make sure llvm is installed
 
 ## APIs
 
-Please refer to the [hosted documentation](https://sidan-lab.github.io/whisky/whisky/index.html) for the list of endpoints.
+Please refer to the [Guide](https://sidan-lab.github.io/whisky/) and [API Reference](https://sidan-lab.github.io/whisky/api/whisky/index.html) for full documentation.
 
 ![Alt](https://repobeats.axiom.co/api/embed/2e35716a9dd3250972c06ca2b4c7f1846ef7c51e.svg "Repobeats analytics image")
 

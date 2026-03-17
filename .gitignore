@@ -5,9 +5,12 @@ target
 */**/schemas
 */**/output
 rust/pkg
-docs
+docs/*
+!docs/guide/
+docs/guide/book/
 
 */**/.env
 
 publish
+_site
 .claude
