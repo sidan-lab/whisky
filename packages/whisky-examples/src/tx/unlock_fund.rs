@@ -9,7 +9,7 @@ pub async fn unlock_fund(
     collateral: &UTxO,
 ) -> Result<String, WError> {
     let mut tx_builder = TxBuilder::new_core();
-    let pub_key_hash = deserialize_address(my_address).pub_key_hash;
+    let pub_key_hash = deserialize_address(my_address)?.pub_key_hash;
 
     tx_builder
         // .spending_plutus_script_v1()

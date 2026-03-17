@@ -72,35 +72,26 @@ extern crate self as whisky;
 // Data module is always available (uses whisky_common + whisky_macros)
 pub mod data;
 
-// CSL-dependent modules
-#[cfg(feature = "csl")]
+// Pallas-based modules (always available after full migration)
 pub mod builder;
-#[cfg(feature = "csl")]
 pub mod parser;
-#[cfg(feature = "csl")]
 pub mod transaction;
-#[cfg(feature = "csl")]
 pub mod utils;
 
-// Services require both csl and provider
-#[cfg(all(feature = "csl", feature = "provider"))]
+// Services require provider
+#[cfg(feature = "provider")]
 pub mod services;
 
 // Always re-export common and macros
 pub use whisky_common::*;
 pub use whisky_macros::*;
 
-// CSL re-exports
-#[cfg(feature = "csl")]
+// Pallas re-exports
 pub use builder::*;
-#[cfg(feature = "csl")]
 pub use parser::*;
-#[cfg(feature = "csl")]
 pub use transaction::*;
-#[cfg(feature = "csl")]
 pub use utils::*;
-#[cfg(feature = "csl")]
-pub use whisky_csl::*;
+pub use whisky_pallas::*;
 
 // Wallet re-exports
 #[cfg(feature = "wallet")]

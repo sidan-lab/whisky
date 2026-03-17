@@ -8,16 +8,16 @@ pub struct PlutusData {
 
 impl PlutusData {
     pub fn new(plutus_data_hex: String) -> Result<Self, WError> {
-        let bytes = hex::decode(plutus_data_hex).map_err(|e| {
+        let bytes = hex::decode(&plutus_data_hex).map_err(|e| {
             WError::new(
                 "WhiskyPallas - Creating Plutus data:",
-                &format!("Hex decode error: {}", e),
+                &format!("Hex decode error: {} for {}", e, &plutus_data_hex),
             )
         })?;
         let inner = PallasPlutusData::decode_fragment(&bytes).map_err(|e| {
             WError::new(
                 "WhiskyPallas - Creating Plutus data:",
-                &format!("Fragment decode error: {}", e),
+                &format!("Fragment decode error: {} for {}", e, plutus_data_hex),
             )
         })?;
         Ok(Self { inner })

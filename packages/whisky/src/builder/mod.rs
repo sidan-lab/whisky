@@ -15,6 +15,7 @@ use crate::*;
 pub use data::*;
 pub use tx_eval::*;
 use whisky_common::data::*;
+use whisky_pallas::{utils::get_min_utxo_value, WhiskyPallas};
 
 pub struct TxBuilder {
     pub serializer: Box<dyn TxBuildable>,
@@ -96,7 +97,7 @@ impl TxBuilder {
     /// * `Self` - A new TxBuilder instance
     pub fn new_core() -> Self {
         Self::new(TxBuilderParam {
-            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
+            serializer: Box::new(WhiskyPallas::new(None)),
             evaluator: None,
             fetcher: None,
             submitter: None,

@@ -2,7 +2,10 @@ use std::str::FromStr;
 
 use pallas::{
     crypto::hash::Hash,
-    ledger::primitives::{conway::NativeScript as PallasNativeScript, Fragment},
+    ledger::{
+        primitives::{conway::NativeScript as PallasNativeScript, Fragment},
+        traverse::ComputeHash,
+    },
 };
 use whisky_common::WError;
 
@@ -103,5 +106,9 @@ impl NativeScript {
             )
         })?;
         Ok(Self { inner })
+    }
+
+    pub fn hash(&self) -> String {
+        self.inner.compute_hash().to_string()
     }
 }

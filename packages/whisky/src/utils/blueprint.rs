@@ -1,6 +1,9 @@
 use crate::*;
 use std::marker::PhantomData;
 use whisky_common::data::{ByteString, PlutusDataJson};
+use whisky_pallas::utils::{
+    apply_params_to_script, get_script_hash, script_hash_to_stake_address, script_to_address,
+};
 
 #[derive(Debug, Clone)]
 pub struct MintingBlueprint<P = (), R = ByteString>
@@ -39,7 +42,7 @@ where
         let cbor = apply_params_to_script(compiled_code, params, params_type)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         Ok(self)
     }
 
@@ -47,7 +50,7 @@ where
         let cbor = apply_params_to_script(compiled_code, &[], BuilderDataType::CBOR)?;
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         Ok(self)
     }
 
@@ -105,7 +108,7 @@ where
         let hash = get_script_hash(&cbor, self.version.clone()).unwrap();
         self.address = script_hash_to_stake_address(&hash, self.network_id)?;
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         Ok(self)
     }
 
@@ -114,7 +117,7 @@ where
         let hash = get_script_hash(&cbor, self.version.clone())?;
         self.address = script_hash_to_stake_address(&hash, self.network_id)?;
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         Ok(self)
     }
 
@@ -187,7 +190,7 @@ where
 
         let address = script_to_address(self.network_id, &hash, stake_hash);
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         self.address = address;
         Ok(self)
     }
@@ -201,7 +204,7 @@ where
             .map(|(hash, is_script)| (hash.as_str(), *is_script));
         let address = script_to_address(self.network_id, &hash, stake_hash);
         self.hash = hash;
-        self.cbor = cbor;
+        self.cbor = cbor.to_string();
         self.address = address;
         Ok(self)
     }

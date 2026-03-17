@@ -1,13 +1,23 @@
 pub mod address;
+pub mod aiken;
 pub mod constants;
+pub mod data;
 pub mod evaluator;
 pub mod fee;
 pub mod phase_two;
 pub mod required_signatures;
+pub mod script;
+pub mod staking;
+pub mod value;
 
 pub use address::*;
+pub use aiken::*;
 pub use constants::*;
+pub use data::*;
 pub use evaluator::*;
 pub use fee::*;
 pub use phase_two::*;
 pub use required_signatures::*;
+pub use script::*;
+pub use staking::*;
+pub use value::*;

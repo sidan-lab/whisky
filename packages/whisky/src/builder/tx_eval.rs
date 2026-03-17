@@ -2,6 +2,7 @@ use crate::*;
 use async_trait::async_trait;
 use uplc::tx::SlotConfig;
 use whisky_common::Evaluator;
+use whisky_pallas::utils::evaluate_tx_scripts;
 
 use super::TxBuilder;
 

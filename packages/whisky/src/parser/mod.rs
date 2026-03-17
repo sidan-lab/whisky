@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use whisky_common::{Fetcher, TxBuilderBody, TxParsable, TxTester, UTxO, WError};
-use whisky_csl::WhiskyCSL;
+use whisky_pallas::WhiskyPallas;
 
 pub struct TxParser {
     pub fetcher: Option<Box<dyn Fetcher>>,
@@ -12,7 +12,7 @@ impl TxParser {
     pub fn new(fetcher: Option<Box<dyn Fetcher>>) -> Self {
         TxParser {
             fetcher: fetcher,
-            serializer: Box::new(WhiskyCSL::new(None).unwrap()),
+            serializer: Box::new(WhiskyPallas::new(None)),
         }
     }
 

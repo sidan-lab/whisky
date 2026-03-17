@@ -1,0 +1,34 @@
+# Lychee link checker configuration
+# https://lychee.cli.rs/
+
+# Exclude known false positives
+exclude = [
+    # Font license files reference external sites that may timeout
+    "adobe\\.com",
+    "nhncorp\\.com",
+    # Auto-generated tracing dispatcher links
+    "dispatcher#",
+    # Deprecated external documentation link
+    "meshjs\\.dev/apis/transaction/builderExample",
+    # Internal cross-references to whisky_csl/whisky_js docs not generated in this build
+    "whisky_csl/builder/trait\\.ITxBuilderCore",
+    "whisky_csl/core/builder/fn\\.js_serialize_tx_body",
+    "whisky_js/builder/trait\\.ITxBuilderCore",
+    "whisky_js/core/builder/fn\\.js_serialize_tx_body",
+    # mdBook relative ../api/ links resolve correctly over HTTP but not in lychee local file mode
+    "api/whisky/index\\.html",
+    "api/whisky_common/index\\.html",
+    "api/whisky_pallas/index\\.html",
+    "api/whisky_csl/index\\.html",
+    "api/whisky_provider/index\\.html",
+    "api/whisky_wallet/index\\.html",
+    "api/whisky_macros/index\\.html",
+]
+
+# Exclude generated static files from Rust docs and mdBook theme
+exclude_path = [
+    "_site/static.files",
+    "_site/api/static.files",
+    # mdBook 404 page has a root-relative "/" link that lychee can't resolve locally
+    "_site/404.html",
+]
