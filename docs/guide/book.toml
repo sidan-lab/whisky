@@ -1,0 +1,13 @@
+[book]
+authors = ["SIDAN Lab"]
+language = "en"
+src = "src"
+title = "Whisky - Cardano Rust SDK Guide"
+
+[build]
+build-dir = "book"
+
+[output.html]
+git-repository-url = "https://github.com/sidan-lab/whisky"
+edit-url-template = "https://github.com/sidan-lab/whisky/edit/master/docs/guide/src/{path}"
+no-section-label = false
