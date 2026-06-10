@@ -6,7 +6,11 @@ use super::MaestroProvider;
 #[async_trait]
 impl Submitter for MaestroProvider {
     async fn submit_tx(&self, tx_hex: &str) -> Result<String, WError> {
-        let url = "/txmanager";
+        let url = if self.maestro_client.turbo_submit {
+            "/txmanager/turbosubmit"
+        } else {
+            "/txmanager"
+        };
         let maestro_client = &self.maestro_client;
 
         let tx_binary = hex::decode(tx_hex).map_err(WError::from_err("Invalid hex data"))?;
