@@ -13,11 +13,16 @@ use serde::Serialize;
 pub struct Maestro {
     api_key: String,
     http_client: reqwest::Client,
+    turbo_submit: bool,
     pub base_url: String,
 }
 
 impl Maestro {
     pub fn new(api_key: String, network: String) -> Self {
+        Self::new_with_turbo_submit(api_key, network, false)
+    }
+
+    pub fn new_with_turbo_submit(api_key: String, network: String, turbo_submit: bool) -> Self {
         let base_url = format!("https://{}.gomaestro-api.org/v1", &network,);
         let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(300))
@@ -28,6 +33,7 @@ impl Maestro {
             api_key,
             http_client,
             base_url,
+            turbo_submit,
         }
     }
 
@@ -42,8 +48,6 @@ impl Maestro {
             .build()?;
 
         let response = self.http_client.execute(req).await?;
-
-        println!("response: {:?}", response);
 
         if response.status().is_success() {
             *response_body = response.text().await?;
@@ -89,5 +93,14 @@ impl MaestroProvider {
     pub fn new(api_key: &str, network: &str) -> MaestroProvider {
         let maestro_client = Maestro::new(api_key.to_string(), network.to_string());
         MaestroProvider { maestro_client }
+    }
+
+    pub fn new_with_turbo_submit(api_key: &str, network: &str) -> MaestroProvider {
+        Self::new(api_key, network).with_turbo_submit(true)
+    }
+
+    pub fn with_turbo_submit(mut self, turbo_submit: bool) -> MaestroProvider {
+        self.maestro_client.turbo_submit = turbo_submit;
+        self
     }
 }

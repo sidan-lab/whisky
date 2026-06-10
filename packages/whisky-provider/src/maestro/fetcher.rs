@@ -76,7 +76,6 @@ impl Fetcher for MaestroProvider {
             .map(to_utxo)
             .collect::<Result<Vec<_>, _>>()
             .map_err(WError::from_err("maestro::fetch_address_utxos to_utxo"))?;
-        println!("uxtos: {:?}", added_utxos);
 
         while utxos_at_address.next_cursor.is_some() {
             let append_cursor_string = format!(
